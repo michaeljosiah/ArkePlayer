@@ -9,6 +9,14 @@ import 'package:flutter_test/flutter_test.dart';
 // Real files made by packages/arke_media/tool/make_fixtures.py with ffmpeg.
 String fixture(String name) => ['..', '..', 'packages', 'arke_media', 'test', 'fixtures', name].join(Platform.pathSeparator);
 
+class _Poster implements VideoPoster {
+  @override
+  Future<bool> save(String video, String jpeg) async {
+    File(jpeg).writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xD9]);
+    return true;
+  }
+}
+
 class _NoPdf implements PdfPeek {
   @override
   Future<PdfFacts> peek(String path) async => const PdfFacts(pages: 24);
@@ -19,7 +27,7 @@ void main() {
   late LibraryStore store;
   late Directory scratch;
 
-  FileImporter importer({int? free}) => FileImporter(store: store, freeBytes: (_) async => free, pdf: _NoPdf());
+  FileImporter importer({int? free}) => FileImporter(store: store, freeBytes: (_) async => free, pdf: _NoPdf(), poster: _Poster());
   PickedFile picked(String path, [String? name]) => PickedFile.path(path, name: name);
   Future<List<String>> folders() async =>
       (await store.itemDirectory('x').parent.exists()) ? [await for (final entry in store.itemDirectory('x').parent.list()) entry.path] : const <String>[];
@@ -49,6 +57,7 @@ void main() {
     expect(items[FileFormat.m4b]!.cover, isNotNull);
     expect(items[FileFormat.epub]!.author, 'Ines Varga');
     expect(items[FileFormat.mp4]!.captions, isNotNull);
+    expect(items[FileFormat.mp4]!.cover, isNotNull, reason: 'a film with no cover gets a frame as its poster');
     expect(File(store.resolve(items[FileFormat.mp4]!.captions!)).existsSync(), isTrue);
     expect(store.items, isEmpty, reason: 'nothing joins before Add');
 

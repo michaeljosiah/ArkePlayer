@@ -11,12 +11,13 @@ import '../../../app/widgets/shelf.dart';
 import '../../settings/application/settings_controller.dart';
 import '../application/file_importer.dart';
 import '../application/pdfrx_peek.dart';
+import '../application/video_poster.dart';
 import '../domain/added_file.dart';
 
 final fileImporterProvider = FutureProvider<FileImporter>((ref) async {
   final store = await ref.watch(libraryStoreProvider.future);
   final storage = ref.watch(storageInfoProvider);
-  return FileImporter(store: store, freeBytes: storage.freeBytes, pdf: const PdfrxPeek());
+  return FileImporter(store: store, freeBytes: storage.freeBytes, pdf: const PdfrxPeek(), poster: const NativeVideoPoster());
 });
 
 /// Add a file (P8 rule 2): the system's picker straight away, several at once, then the sheet

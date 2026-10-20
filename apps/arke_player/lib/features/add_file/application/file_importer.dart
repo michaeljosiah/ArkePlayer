@@ -23,6 +23,13 @@ abstract interface class PdfPeek {
   Future<PdfFacts> peek(String path);
 }
 
+/// A film's picture for Library and Home (P8c): a frame of it, saved as a JPEG, when the file
+/// carries no cover of its own. Returns false when no frame could be taken; the film then shows
+/// its format on a plain tile.
+abstract interface class VideoPoster {
+  Future<bool> save(String video, String jpeg);
+}
+
 /// Brings picked files into the library, in the order the design binds (P7 rule 3):
 ///
 /// 1. Recognise the file from its first bytes and name (`probeFile`); refuse what is not an MVP
@@ -36,11 +43,12 @@ abstract interface class PdfPeek {
 /// deletes it. A crash between the two leaves a folder the index does not name, which the
 /// library clears on its next load.
 class FileImporter {
-  FileImporter({required this.store, required this.freeBytes, required this.pdf});
+  FileImporter({required this.store, required this.freeBytes, required this.pdf, this.poster});
 
   final LibraryStore store;
   final Future<int?> Function(String path) freeBytes;
   final PdfPeek pdf;
+  final VideoPoster? poster;
 
   /// Space kept free beyond the file itself, so a full phone is never the Player's doing.
   static const reserve = 64 * 1000 * 1000;
@@ -174,6 +182,12 @@ class FileImporter {
       if (coverBytes != null && coverBytes.isNotEmpty) {
         cover = 'cover.$coverExtension';
         await File('${folder.path}${Platform.pathSeparator}$cover').writeAsBytes(coverBytes, flush: true);
+      } else if (_videoFormats.contains(format) && poster != null) {
+        try {
+          if (await poster!.save(copied, '${folder.path}${Platform.pathSeparator}cover.jpg')) cover = 'cover.jpg';
+        } on Object {
+          // A film with no frame to take shows its format instead.
+        }
       }
 
       final relative = 'items/$id';
