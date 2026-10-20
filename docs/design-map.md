@@ -1,6 +1,6 @@
 # Design map
 
-Every frame of the Arke Player design master (ArkeStudio `design-system/Arke Player.dc.html`), the route that shows it, and the file that will draw it. A screen is built when its frames match at the sizes drawn: 390 × 844 for a phone, 844 × 390 turned, 984 × 1092 for a Fold7 open.
+Every frame of the Arke Player design master (`design/Arke Player.dc.html`), the route that shows it, and the file that will draw it. A screen is built when its frames match at the sizes drawn: 390 × 844 for a phone, 844 × 390 turned, 984 × 1092 for a Fold7 open.
 
 | Frame | Screen | Route | File |
 |---|---|---|---|

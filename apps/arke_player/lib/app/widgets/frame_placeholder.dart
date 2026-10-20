@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/tokens.dart';
 
 /// Stands in for a screen until it is built, naming the design master frames it must match
-/// (ArkeStudio `design-system/Arke Player.dc.html`). Delete it from a screen when the screen is
+/// (`design/Arke Player.dc.html`). Delete it from a screen when the screen is
 /// drawn for real; a build ships none.
 class FramePlaceholder extends StatelessWidget {
   const FramePlaceholder({required this.title, required this.frames, this.media = false, this.actions = const [], super.key});

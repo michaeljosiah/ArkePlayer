@@ -8,11 +8,12 @@ The MVP, [docs/mvp.md](docs/mvp.md): your own audio, books and films, with no ac
 
 ## The design comes first
 
-The approved design is the Arke Player design master in the **ArkeStudio** repository, `design-system/Arke Player.dc.html` (turns P1–P7). Every screen here implements frames there; [docs/design-map.md](docs/design-map.md) says which. Before building a screen:
+The design is in this repository: `design/Arke Player.dc.html` (turns P1–P8), written by `node design/build.mjs` from `design/frames.mjs`, `design/view.mjs` and `design/frames.css`, and gated by `node design/check.mjs` in CI. Every screen here implements frames there; [docs/design-map.md](docs/design-map.md) says which. Before building a screen:
 
 - Open the frames it names, and read its turn's rules.
 - Match the frames' sizes, order and words.
-- A screen that needs something the design does not draw gets a design turn first (P8, P9… in that file — never a Studio `t` number), not an improvised UI.
+- A screen that needs something the design does not draw gets a design turn first (P9, P10… — never a Studio `t` number), not an improvised UI. Add the turn to `design/frames.mjs` and `design/build.mjs`, rebuild, run `node design/check.mjs --record`, then shoot every frame and look at it before asking for approval.
+- Frames type through the tokens only (`var(--text-*)`, `var(--type-*)`); a raw `font-size` fails the check. Pictures go in `design/assets`, recompressed.
 
 Cite design as `P3c` or `P2 rule 6` in code and commits. Studio turns are `Studio 156`.
 

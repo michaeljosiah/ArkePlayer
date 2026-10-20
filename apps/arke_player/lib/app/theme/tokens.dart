@@ -1,7 +1,7 @@
 import 'package:flutter/painting.dart';
 
-/// The Arke design tokens, as the design master draws with them (ArkeStudio
-/// `design-system/_ds/.../tokens/*.css`). Change a value there first, then here.
+/// The Arke design tokens, as the design master draws with them (`design/tokens/*.css`, which mirror
+/// ArkeStudio's). Change a value there first, then here.
 ///
 /// The shelves — Home, Library, Downloads, You and the sheets over them — follow the phone's
 /// light or dark. Heroes, picture cards and every player stay on the media overlay colours

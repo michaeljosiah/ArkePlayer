@@ -2,7 +2,7 @@
 
 **On an Android phone or a Fold7, with no account and no network, a person adds their own audiobooks and music, books and films from the phone and plays each one — and picks up where they left off.**
 
-Set 20 October 2026. The full design is the Arke Player design master (ArkeStudio `design-system/Arke Player.dc.html`, P1–P7). The MVP is the part of it that needs no Arke account and no Arke package.
+Set 20 October 2026. The full design is the Arke Player design master (`design/Arke Player.dc.html`, P1–P7, with P8 for the MVP's states). The MVP is the part of it that needs no Arke account and no Arke package.
 
 ## In
 

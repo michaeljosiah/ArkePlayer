@@ -4,7 +4,7 @@ A phone and tablet app for what is made in [Arke Studio](https://github.com/mich
 
 **The current goal is the MVP** ([docs/mvp.md](docs/mvp.md)): your own audiobooks and music, books and films, with no account and no network, on Android first. Arke worlds and sign-in come after it.
 
-The app is designed, not built. The approved design is the Arke Player design master in the ArkeStudio repository: `design-system/Arke Player.dc.html`, turns P1–P7, merged in ArkeStudio PR #1998 on 20 October 2026. Cite a frame by its id (`P3c`) and a rule by turn and number (`P2 rule 6`). [docs/design-map.md](docs/design-map.md) maps every frame to the route and file that will draw it.
+The design is in this repository: [design/Arke Player.dc.html](design/Arke%20Player.dc.html), turns P1–P7 approved on 20 October 2026 (first merged in ArkeStudio PR #1998, moved here the same day), and P8 for the MVP. Open [design/review.html](design/review.html) for every frame without the dc runtime. Cite a frame by its id (`P3c`) and a rule by turn and number (`P2 rule 6`). [docs/design-map.md](docs/design-map.md) maps every frame to the route and file that will draw it.
 
 ## Layout
 
@@ -15,7 +15,8 @@ ArkePlayer/
     lib/app/                   router, theme tokens, the adaptive shell (tab bar under 600, rail over)
     lib/features/<area>/       domain · application · presentation, one folder per area of the design
   packages/arke_publication/   pure Dart, no Flutter: publication.json, verify-before-play, format probing
-  docs/                        architecture, the design map, decisions
+  design/                      the design master, its generator, frames, tokens and check
+  docs/                        architecture, the design map, the MVP goal, decisions
   .github/workflows/ci.yml     format, analyze, test
 ```
 

@@ -1,6 +1,6 @@
 # Architecture
 
-Arke Player plays **publications**: frozen editions an author makes in Arke Studio, each with its own manifest (SPEC-048 in the ArkeStudio specs). It never sees a world's source, and nothing in it edits, generates or spends.
+The design is in [design/](../design/Arke%20Player.dc.html). Arke Player plays **publications**: frozen editions an author makes in Arke Studio, each with its own manifest (SPEC-048 in the ArkeStudio specs). It never sees a world's source, and nothing in it edits, generates or spends.
 
 ## Where things come from
 
