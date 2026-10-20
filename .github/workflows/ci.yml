@@ -64,3 +64,15 @@ jobs:
           name: arke-player-apk
           path: apps/arke_player/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 14
+      # One APK per ABI as well: the universal one carries three engines and is 76 MiB, past what a
+      # phone session can be sent (30 MiB). The Fold7 and every current phone take arm64-v8a.
+      # Flutter numbers these 1000 × ABI + versionCode, so a split install won't take the universal
+      # APK over it without an uninstall.
+      - name: Build an APK per ABI
+        run: flutter build apk --release --split-per-abi
+        working-directory: apps/arke_player
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arke-player-apk-arm64
+          path: apps/arke_player/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          retention-days: 14
