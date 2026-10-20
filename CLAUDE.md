@@ -2,6 +2,10 @@
 
 Arke Player is the phone and tablet app for what Arke Studio makes. Flutter, a Dart pub workspace, Android and iOS. Read [README.md](README.md) for the layout and [docs/architecture.md](docs/architecture.md) before changing structure.
 
+## The current goal
+
+The MVP, [docs/mvp.md](docs/mvp.md): your own audio, books and films, with no account, no Arke worlds and native players (ADR 0004). Work in its milestone order, M0 to M5. Don't build sign-in, shares or package import until the MVP is done; where the design needs an account or a world, leave that part absent rather than disabled.
+
 ## The design comes first
 
 The approved design is the Arke Player design master in the **ArkeStudio** repository, `design-system/Arke Player.dc.html` (turns P1–P7). Every screen here implements frames there; [docs/design-map.md](docs/design-map.md) says which. Before building a screen:
