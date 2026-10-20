@@ -27,7 +27,9 @@ dependencies:
   video_player: ^2.11.1
   pdfrx: ^2.4.7
   flutter_epub_viewer: ^2.1.0
-  receive_sharing_intent: ^1.9.0
+  # Pinned: 1.9.0's own buildscript puts Android Gradle Plugin 9 and Kotlin 2.4 on the classpath,
+  # which the Flutter Gradle plugin cannot build with yet. 1.8.1 has the same API.
+  receive_sharing_intent: 1.8.1
   arke_library:
     path: ../../packages/arke_library
   arke_media:
