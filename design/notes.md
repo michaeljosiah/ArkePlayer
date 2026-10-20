@@ -93,7 +93,7 @@ and lists the formats as one data line — since nothing was merged yet.
 ## Worlds to install (P9)
 
 The owner, on 20 October 2026: let the Player show worlds that can be installed; one demo world
-exists. P9 draws it with no account, beside P8's states: a second press on first open
+exists. Approved as drawn the same day. P9 draws it with no account, beside P8's states: a second press on first open
 (`Install a world`), an `Available` page and a section at the end of Home, a world's page with
 `Install` and what is inside, the download and check in place of the press, refusals in one
 clause, and the installed world, whose one production is shown at the full width.
@@ -118,7 +118,7 @@ publications, which does not exist yet: its size (386 MB) and file count are sam
    `.arke`) and schema are owed to SPEC-048 before it is built.
 4. **The Studio's Share sheet** — who a world is shared with, and which productions — is a turn of
    its own in the Studio master.
-5. **The worlds to install ship with the app.** Drawn so (P9). Each is pinned by its package's
+5. **The worlds to install ship with the app.** Drawn so (P9), approved with it. Each is pinned by its package's
    address and SHA-256, as the Studio pins its Sample world, so the list shows offline and needs
    no Arke cloud; a catalogue served by the cloud can replace it.
 6. **The Undersong needs publishing as a world package** of its publications before the Player can

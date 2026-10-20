@@ -4,7 +4,7 @@ A phone and tablet app for what is made in [Arke Studio](https://github.com/mich
 
 **The current goal is the MVP** ([docs/mvp.md](docs/mvp.md)): your own audiobooks and music, books and films, with no account and no network, on Android first. Arke worlds and sign-in come after it.
 
-The design is in this repository: [design/Arke Player.dc.html](design/Arke%20Player.dc.html), turns P1–P7 approved on 20 October 2026 (first merged in ArkeStudio PR #1998, moved here the same day), P8 for the MVP, and P9, worlds to install, drawn for review. Open [design/review.html](design/review.html) for every frame without the dc runtime. Cite a frame by its id (`P3c`) and a rule by turn and number (`P2 rule 6`). [docs/design-map.md](docs/design-map.md) maps every frame to the route and file that will draw it.
+The design is in this repository: [design/Arke Player.dc.html](design/Arke%20Player.dc.html), turns P1–P7 approved on 20 October 2026 (first merged in ArkeStudio PR #1998, moved here the same day), P8 for the MVP, and P9, worlds to install, approved the same day. Open [design/review.html](design/review.html) for every frame without the dc runtime. Cite a frame by its id (`P3c`) and a rule by turn and number (`P2 rule 6`). [docs/design-map.md](docs/design-map.md) maps every frame to the route and file that will draw it.
 
 ## Layout
 

@@ -53,7 +53,7 @@ Every frame of the Arke Player design master (`design/Arke Player.dc.html`), the
 | P7c | A PDF | `/open/:fileId` | `features/players/` (native page viewer) |
 | P7d | An audiobook file | `/open/:fileId` | `features/players/` (hosted audiobook module) |
 
-## Worlds to install (P9, drawn for review)
+## Worlds to install (P9, approved, not built)
 
 World import was left out of the MVP; whether P9 joins it is the owner's call. It needs a published world package (SPEC-048) before any of it is built.
 
