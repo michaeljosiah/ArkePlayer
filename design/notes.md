@@ -65,6 +65,20 @@ browser and in the Player; the Player adds its close and the phone's media sessi
 | P7b | Library · Added: an added world, then Files |
 | P7c | A PDF in the page viewer |
 | P7d | An audiobook file (M4B): its cover, its chapter markers |
+| P8a | First open, before sign-in: Add a file only |
+| P8b | Home, nothing added |
+| P8c | Library, files only: kind chips, rows |
+| P8d | Home with files: Continue, Added |
+| P8e | Library on a Fold, files only, two columns |
+| P8f | You, before sign-in |
+| P9a | First open, with Install a world |
+| P9b | Available: a world card with its count and size |
+| P9c | A world before it is installed: Install · 386 MB, Inside, Space |
+| P9d | Installing: Downloading · 162 MB of 386 MB, Cancel |
+| P9e | Not installed: No connection |
+| P9f | The Undersong installed: one production at the full width |
+| P9g | Home, ending with Available |
+| P9h | A world to install, on a Fold |
 
 ## Added after the first review (P7)
 
@@ -75,6 +89,20 @@ player, video in the film player) and a new page viewer for PDF and CBZ. DRM-pro
 refused by name (`Protected file`); MOBI/AZW, DOCX and plain text are not opened. P1a and P2c
 were relabelled in place — `Add a package` became `Add a file`, and the sheet takes several files
 and lists the formats as one data line — since nothing was merged yet.
+
+## Worlds to install (P9)
+
+The owner, on 20 October 2026: let the Player show worlds that can be installed; one demo world
+exists. P9 draws it with no account, beside P8's states: a second press on first open
+(`Install a world`), an `Available` page and a section at the end of Home, a world's page with
+`Install` and what is inside, the download and check in place of the press, refusals in one
+clause, and the installed world, whose one production is shown at the full width.
+
+The demo is The Undersong as ArkeStudio release `undersong-2026-10-19-r3` describes it: The Ledger
+of Nights, 16 illustrated chapters, with completed narration for 6 (about 123 minutes); the video
+pilot is unfinished. That release is the Studio's Sample world, an editable world of 1.6 GB, so it
+is a world's source and the Player never opens one. The frames assume a world package of its
+publications, which does not exist yet: its size (386 MB) and file count are samples.
 
 ## Calls for the owner
 
@@ -90,6 +118,12 @@ and lists the formats as one data line — since nothing was merged yet.
    `.arke`) and schema are owed to SPEC-048 before it is built.
 4. **The Studio's Share sheet** — who a world is shared with, and which productions — is a turn of
    its own in the Studio master.
+5. **The worlds to install ship with the app.** Drawn so (P9). Each is pinned by its package's
+   address and SHA-256, as the Studio pins its Sample world, so the list shows offline and needs
+   no Arke cloud; a catalogue served by the cloud can replace it.
+6. **The Undersong needs publishing as a world package** of its publications before the Player can
+   install it. The package format is owed to SPEC-048.
+7. **Whether P9 joins the MVP.** The MVP left world import out; P9 needs no account.
 
 ## What this rests on
 

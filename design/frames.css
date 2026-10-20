@@ -283,3 +283,8 @@
 .ap .sq .t{margin-top:7px;font:var(--type-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ap .sq .m{font:var(--type-meta);color:var(--muted-foreground)}
 .ap .cols2{display:grid;grid-template-columns:1fr 1fr;column-gap:8px;padding:0 8px}
+
+/* P9 · worlds to install. Install's progress takes its place on the hero, in the hero's colours. */
+.ap .hero .mute{color:color-mix(in srgb,var(--media-overlay-fg) 72%,transparent)}
+.ap .hero .bar{background:color-mix(in srgb,var(--media-overlay-fg) 22%,transparent)}
+.ap .hero .bar>i{background:var(--media-overlay-fg)}

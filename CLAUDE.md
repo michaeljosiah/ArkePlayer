@@ -8,7 +8,7 @@ The MVP, [docs/mvp.md](docs/mvp.md): your own audio, books and films, with no ac
 
 ## The design comes first
 
-The design is in this repository: `design/Arke Player.dc.html` (turns P1–P8), written by `node design/build.mjs` from `design/frames.mjs`, `design/view.mjs` and `design/frames.css`, and gated by `node design/check.mjs` in CI. Every screen here implements frames there; [docs/design-map.md](docs/design-map.md) says which. Before building a screen:
+The design is in this repository: `design/Arke Player.dc.html` (turns P1–P9), written by `node design/build.mjs` from `design/frames.mjs`, `design/view.mjs` and `design/frames.css`, and gated by `node design/check.mjs` in CI. Every screen here implements frames there; [docs/design-map.md](docs/design-map.md) says which. Before building a screen:
 
 - Open the frames it names, and read its turn's rules.
 - Match the frames' sizes, order and words.

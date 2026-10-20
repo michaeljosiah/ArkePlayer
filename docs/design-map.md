@@ -53,6 +53,18 @@ Every frame of the Arke Player design master (`design/Arke Player.dc.html`), the
 | P7c | A PDF | `/open/:fileId` | `features/players/` (native page viewer) |
 | P7d | An audiobook file | `/open/:fileId` | `features/players/` (hosted audiobook module) |
 
+## Worlds to install (P9, drawn for review)
+
+World import was left out of the MVP; whether P9 joins it is the owner's call. It needs a published world package (SPEC-048) before any of it is built.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P9a | First open, with Install a world | `/welcome` | `features/onboarding/presentation/first_open_screen.dart` |
+| P9b | Available | `/available` | `features/available/presentation/available_screen.dart` |
+| P9c–P9e, P9h | A world before it is installed, installing, refused; on a Fold | `/available/:worldId` | `features/available/presentation/install_screen.dart` |
+| P9f | The Undersong, installed: one production at the full width | `/library/world/:worldId` | `features/world/presentation/world_screen.dart` |
+| P9g | Home, ending with Available | `/` | `features/home/presentation/home_screen.dart` |
+
 ## Rules already in code
 
 | Rule | Where | Test |

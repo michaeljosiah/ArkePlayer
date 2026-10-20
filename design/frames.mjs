@@ -279,8 +279,46 @@ ${sh('Added')}<div class="hrow">${[MINE.almanac, MINE.boards, MINE.reel, MINE.so
 </div>${tabs('You')}${hi()}`),
 ];
 
+// ---- P9 · worlds to install ---------------------------------------------------------------------
+// The demo is The Undersong as Arke publishes it: The Ledger of Nights, 16 illustrated chapters with
+// the narration of 6 (ArkeStudio release undersong-2026-10-19-r3). Its Player package does not exist
+// yet, so its size and file count are samples.
+const DEMO = { size: '386 MB', ledger: { img: 'banner-story.jpg', pos: '50% 40%', title: 'The Ledger of Nights', kind: 'Audiobook · Book · 2 h 3 m' } };
+const demoMeta = `1 production · ${DEMO.size}`;
+const installHero = (cta, { meta = demoMeta, top = back } = {}) => `<div class="hero" style="padding-top:218px"><img src="${A}${W.undersong.img}" alt="" style="height:290px;object-position:60% 50%"><div class="fade" style="top:90px;height:201px"></div><div class="top">${top}</div><div class="in"><h1>${W.undersong.name}</h1><div class="meta num">${meta}</div><div class="lg">${W.undersong.logline}</div>${cta}</div></div>`;
+const installPress = (style = 'margin-top:16px') => `<div style="${style}"><span class="btn pri wide">${ic('download', 18)}Install <em>· ${DEMO.size}</em></span></div>`;
+const installing = `<div style="margin-top:20px"><div class="bar"><i style="width:42%"></i></div><div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span class="grow mute num" style="font:var(--type-ui)">Downloading · 162 MB of ${DEMO.size}</span><span class="btn" style="height:40px">Cancel</span></div></div>`;
+const inside = `${sh('Inside')}<div class="ep"><div class="th"><img src="${A}${DEMO.ledger.img}" alt="" style="object-position:${DEMO.ledger.pos}"></div><div class="grow"><div class="t">${DEMO.ledger.title}</div><div class="m"><span class="num">${DEMO.ledger.kind}</span></div></div></div>
+<div style="height:14px"></div><div class="grp">${row('Space', `${DEMO.size} of 41 GB free`, '')}</div>`;
+
+const P9 = [
+  frame('P9a', 'First open, with a world to install', media(), `<img class="pic" src="${A}launch-harbour.jpg" alt="" style="height:66%;object-position:50% 40%"><div class="sbot" style="height:600px"></div>${sb(true)}
+<div style="position:absolute;left:0;right:0;top:400px;text-align:center"><div class="wm">Arke</div><div class="wm2">Player</div></div>
+<div style="position:absolute;left:20px;right:20px;bottom:54px;display:flex;flex-direction:column;gap:10px"><span class="btn pri wide">${ic('plus', 18, 2)}Add a file</span><span class="btn wide">${ic('download', 18)}Install a world</span></div>${hi()}`),
+
+  frame('P9b', 'Available', 'phone', `${sb()}<div class="hd"><span class="icb">${ic('left', 20, 2)}</span><h1>Available</h1></div><div class="body" style="padding-top:12px">${wc({ ...W.undersong, meta: demoMeta, pos: '60% 50%' })}</div>${hi()}`),
+
+  frame('P9c', 'A world, before it is installed', 'phone', `${sb(true)}<div class="body">${installHero(installPress())}${inside}</div>${tabs('Home')}${hi()}`),
+
+  frame('P9d', 'Installing', 'phone', `${sb(true)}<div class="body">${installHero(installing)}${inside}</div>${tabs('Home')}${hi()}`),
+
+  frame('P9e', 'Not installed', 'phone', `${sb(true)}<div class="body">${installHero(installPress())}${inside}</div>${tabs('Home')}<div class="veil"></div>${sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="mute">${ic('wifioff', 34, 1.8)}</span><div style="margin-top:4px;font:var(--type-h3)">No connection</div><div class="mute num" style="font:var(--type-ui)">The Undersong · ${DEMO.size}</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">Try again</span><span class="btn ghost wide">Close</span></div>`)}${hi()}`),
+
+  frame('P9f', 'The Undersong, installed', 'phone', `${sb(true)}<div class="body">${installHero('', { meta: `Installed · ${demoMeta}`, top: back + more })}
+${sh('Listen')}<div class="hrow">${tile({ ...DEMO.ledger, w: 358 })}</div></div>${tabs('Home')}${hi()}`),
+
+  frame('P9g', 'Home, with a world to install', 'phone', `${sb()}<div class="hd"><h1>Home</h1></div><div class="body">
+${sh('Continue')}<div class="hrow">${cc({ img: MINE.tide.img, pos: '50% 50%', kind: 'Audiobook', title: 'Tidewater Sessions', where: 'Chapter 4 · 16 min left', at: 62 })}${cc({ img: MINE.ferry.img, pos: MINE.ferry.pos, kind: 'Film', title: 'Night Ferry', where: '52 min left', at: 52 })}</div>
+${sh('Added')}<div class="hrow">${[MINE.almanac, MINE.boards, MINE.reel, MINE.songs].map(sq).join('')}</div>
+${sh('Available')}<div class="hrow">${wc({ ...W.undersong, meta: demoMeta, cls: 'mini', pos: '60% 50%' })}</div>
+</div>${tabs('Home')}${hi()}`),
+
+  frame('P9h', 'A world to install, on a Fold', 'fold', `${tabs('Home', true)}<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb(true)}<div class="body"><div class="hero" style="padding:300px 32px 28px"><img src="${A}${W.undersong.img}" alt="" style="height:400px;object-position:60% 45%"><div class="fade" style="top:200px;height:201px"></div><div class="top" style="left:20px;right:20px">${back}</div><div class="in" style="max-width:640px"><h1>${W.undersong.name}</h1><div class="meta num">${demoMeta}</div><div class="lg">${W.undersong.logline}</div>${installPress('margin-top:18px;width:320px')}</div></div>
+<div style="max-width:672px;padding:0 16px">${inside}</div></div>${hi()}</div>`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9) };
