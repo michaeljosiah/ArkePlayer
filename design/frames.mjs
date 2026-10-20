@@ -317,8 +317,25 @@ ${sh('Available')}<div class="hrow">${wc({ ...W.undersong, meta: demoMeta, cls: 
 <div style="max-width:672px;padding:0 16px">${inside}</div></div>${hi()}</div>`),
 ];
 
+// ---- P10 · a world already in Library -------------------------------------------------------------
+// SPEC-058 R-21: a package of a world the library holds. Another edition offers Replace; the same
+// edition is refused. The sample is the Studio's Export → Arke Player (Studio 233) of The Undersong,
+// made a day after the edition in Library.
+const undersongReady = (foot) => `${sb()}<div class="hd"><span class="icb">${ic('x', 18, 2)}</span><span class="grow"></span></div><div class="body">
+<div class="on-media" style="position:relative;margin:4px 16px 0;height:200px;border-radius:16px;overflow:hidden;background:var(--media-overlay-bg)"><img src="${A}world-undersong.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:60% 50%"><div class="shade"></div><div style="position:absolute;left:16px;bottom:14px"><div class="k">Package</div><div style="margin-top:3px;font:var(--weight-semibold) var(--text-2xl)/1.15 var(--font-sans);letter-spacing:var(--tracking-tighter)">The Undersong</div></div></div>
+<div class="mute num" style="padding:10px 16px 0;font:var(--type-ui)">made 21 Oct 2026 · 1 production · 228 MB</div>
+${sh('Inside')}<div class="ep"><div class="th"><img src="${A}banner-story.jpg" alt="" style="object-position:50% 40%"></div><div class="grow"><div class="t">The Ledger of Nights</div><div class="m"><span class="num">Audiobook · Book · 3 h 49 m</span></div></div></div>
+<div style="height:14px"></div><div class="grp">${row('In Library', '20 Oct 2026 · 182 MB', '')}${row('Space', '+46 MB of 41 GB free', '')}</div>
+</div>${foot}${hi()}`;
+
+const P10 = [
+  frame('P10a', 'Another edition: Replace', 'phone', undersongReady(`<div style="flex:none;display:flex;flex-direction:column;gap:8px;padding:12px 16px 34px"><span class="btn pri wide">Replace</span><span class="btn ghost wide">Cancel</span></div>`)),
+
+  frame('P10b', 'The same edition: Already in Library', 'phone', `${libraryBehind()}<div class="veil"></div>${sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="mute">${ic('library', 34, 1.8)}</span><div style="margin-top:4px;font:var(--type-h3)">Already in Library</div><div class="mute num" style="font:var(--type-ui)">The Undersong · 21 Oct 2026</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">Open</span><span class="btn ghost wide">Close</span></div>`)}${hi()}`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10) };

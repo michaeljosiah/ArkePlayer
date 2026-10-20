@@ -150,6 +150,18 @@ const TURNS = [
     ],
     next: `Try next: “Available with several worlds” · “a world installing, seen from Home” · “Details from ⋯”`,
   },
+  {
+    id: 'p10', status: 'Drawn for review', date: '21 October 2026', name: 'A world already in Library — another edition replaces it, the same one is refused',
+    lead: `SPEC-058 R-21. A world package added from a file (P2c–P2f), such as one made by the Studio’s Export → Arke Player (Studio <a class="dv-oid" href="../../ArkeStudio/design-system/Arke%20Studio.dc.html#t233">233</a>), may be of a world the library already holds.`,
+    rules: [
+      ['Another edition', `When the package is of a world in Library and its edition differs, Ready (${F('P2e')}) becomes Replace (${F('P10a')}): the package’s line as ever (<code>made 21 Oct 2026 · 1 production · 228 MB</code>), Inside, then <code>In Library</code> with the installed edition’s date and size, and <code>Space</code> as the difference (<code>+46 MB of 41 GB free</code>). The presses are <code>Replace</code> and <code>Cancel</code>. Newer or older, the two dates say which; nothing warns.`],
+      ['What an edition is', `Two packages are the same edition when their <code>edition</code> labels and every file’s SHA-256 agree. Anything else is another edition, so a package made again under the same label is still offered as Replace.`],
+      ['Replacing keeps the places', `The new edition is checked in full first (${F('P2d')}). The old files go only once the new are in place, so Cancel or a refusal leaves Library as it was. Places are kept by chapter: a narration’s place by its chapter id and time, a book’s by its chapter where that chapter still exists, else the production’s start. Continue keeps its card; the world’s card, page and size follow the new edition.`],
+      ['The same edition', `Refused in one clause (${F('P10b')}): <code>Already in Library</code>, with the world and its edition under it, then <code>Open</code> (the world’s page) and <code>Close</code>. The copy is deleted.`],
+      ['Words', `Labels only: Replace, Cancel, In Library, Space, Already in Library, Open, Close; dates and sizes as data.`],
+    ],
+    next: `Try next: “a newer edition on Available after an app update” · “an older edition” · “Replace while its audiobook plays”`,
+  },
 ];
 
 // ---- assemble ---------------------------------------------------------------------------------

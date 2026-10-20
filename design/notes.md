@@ -79,6 +79,8 @@ browser and in the Player; the Player adds its close and the phone's media sessi
 | P9f | The Undersong installed: one production at the full width |
 | P9g | Home, ending with Available |
 | P9h | A world to install, on a Fold |
+| P10a | A package of a world already in Library, another edition: In Library, Space, Replace |
+| P10b | The same edition: Already in Library, Open |
 
 ## Added after the first review (P7)
 
