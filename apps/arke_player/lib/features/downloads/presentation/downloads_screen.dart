@@ -63,7 +63,6 @@ class _SpaceBar extends StatelessWidget {
     final text = Theme.of(context).textTheme.labelSmall?.copyWith(color: surface.mutedForeground);
     final whole = total ?? (used + (free ?? 0));
     final other = whole - used - (free ?? 0);
-    int flex(int bytes) => whole <= 0 ? 0 : (bytes / whole * 1000).round().clamp(bytes > 0 ? 6 : 0, 1000);
     Widget legend(Color color, String label) => Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -80,28 +79,28 @@ class _SpaceBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(99),
-          child: SizedBox(
-            height: 10,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: flex(used),
-                  child: ColoredBox(color: surface.foreground),
+        // Widths are worked out from the bar's own width: a row of flexes inside a loose column
+        // collapsed to nothing, leaving only the legend.
+        LayoutBuilder(
+          builder: (context, box) {
+            double share(int bytes) => whole <= 0 || bytes <= 0 ? 0 : (box.maxWidth * bytes / whole).clamp(4, box.maxWidth);
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: Container(
+                height: 10,
+                width: box.maxWidth,
+                color: surface.secondary,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(width: share(used), color: surface.foreground),
+                    if (other > 0) Container(width: share(other), color: otherColor),
+                  ],
                 ),
-                if (other > 0)
-                  Expanded(
-                    flex: flex(other),
-                    child: ColoredBox(color: otherColor),
-                  ),
-                Expanded(
-                  flex: flex(free ?? 0),
-                  child: ColoredBox(color: surface.secondary),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 9),
         Wrap(

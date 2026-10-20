@@ -2,6 +2,7 @@
 // design's frames (P8). Not a gate — pixels differ by platform — so it runs only when asked:
 //
 //   SHOOT=1 flutter test test/shoot_test.dart        (from apps/arke_player; PNGs in build/shots)
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -73,7 +74,12 @@ void main() {
         addedAt: now.subtract(const Duration(days: 6)),
         file: 'items/tide/media.m4b',
         cover: cover('tide', 'launch-harbour.jpg'),
-        chapters: const [Chapter(title: 'One', start: Duration.zero), Chapter(title: 'Two', start: Duration(hours: 1)), Chapter(title: 'Three', start: Duration(hours: 2)), Chapter(title: 'Four', start: Duration(hours: 3))],
+        chapters: const [
+          Chapter(title: 'One', start: Duration.zero),
+          Chapter(title: 'Two', start: Duration(hours: 1)),
+          Chapter(title: 'Three', start: Duration(hours: 2)),
+          Chapter(title: 'Four', start: Duration(hours: 3)),
+        ],
         place: Place(position: const Duration(hours: 3, minutes: 44), progress: 0.62, updatedAt: now),
       ),
       LibraryItem(
@@ -132,12 +138,45 @@ void main() {
 
   tearDownAll(() => root.deleteSync(recursive: true));
 
+  /// Loads every cover into the image cache on the real clock, under the exact keys the widgets
+  /// ask for (`Image.file(cacheWidth:)`), so the screens find them decoded. Loading them from inside
+  /// the test's fake clock never completes.
+  Future<void> preload(WidgetTester tester) => tester.runAsync(() async {
+    final opening = Completer<void>();
+    const AssetImage('assets/images/first-open.jpg')
+        .resolve(ImageConfiguration.empty)
+        .addListener(
+          ImageStreamListener((_, _) => opening.isCompleted ? null : opening.complete(), onError: (_, _) => opening.isCompleted ? null : opening.complete()),
+        );
+    await opening.future;
+    for (final item in items) {
+      if (item.cover == null) continue;
+      final file = File(store.resolve(item.cover!));
+      for (final width in const [44.0, 52.0, 120.0, 300.0, 420.0]) {
+        final provider = ResizeImage.resizeIfNeeded((width * 3).round(), null, FileImage(file));
+        final loaded = Completer<void>();
+        provider
+            .resolve(ImageConfiguration.empty)
+            .addListener(
+              ImageStreamListener((_, _) => loaded.isCompleted ? null : loaded.complete(), onError: (_, _) => loaded.isCompleted ? null : loaded.complete()),
+            );
+        await loaded.future;
+      }
+      final full = Completer<void>();
+      FileImage(file)
+          .resolve(ImageConfiguration.empty)
+          .addListener(ImageStreamListener((_, _) => full.isCompleted ? null : full.complete(), onError: (_, _) => full.isCompleted ? null : full.complete()));
+      await full.future;
+    }
+  });
+
   Future<void> shoot(WidgetTester tester, String name, Size size, String location, {List<LibraryItem>? with_, Brightness brightness = Brightness.light}) async {
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2;
     tester.view.padding = const FakeViewPadding(top: 47 * 2, bottom: 34 * 2);
     addTearDown(tester.view.reset);
     final shown = with_ ?? items;
+    await preload(tester);
     final key = GlobalKey();
     await tester.pumpWidget(
       ProviderScope(
@@ -156,16 +195,7 @@ void main() {
         ),
       ),
     );
-    await tester.pump(const Duration(milliseconds: 100));
-    stderr.writeln('$name: pumped');
-    // Pictures decode off the fake clock.
-    await tester.runAsync(() async {
-      for (final element in find.byType(Image).evaluate()) {
-        await precacheImage((element.widget as Image).image, element);
-      }
-    });
-    stderr.writeln('$name: precached');
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
     final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final png = await tester.runAsync(() async {
       final image = await boundary.toImage(pixelRatio: 1);
@@ -179,7 +209,7 @@ void main() {
   const fold = Size(984, 1092);
   testWidgets('P8a first open', (t) => shoot(t, 'P8a-first-open', phone, Routes.welcome, with_: const []));
   testWidgets('P8b home, nothing added', (t) => shoot(t, 'P8b-home-empty', phone, Routes.home, with_: const []));
-  testWidgets('P8d home, with files', (t) => shoot(t, 'P8d-home', phone, Routes.home), timeout: const Timeout(Duration(seconds: 60)));
+  testWidgets('P8d home, with files', (t) => shoot(t, 'P8d-home', phone, Routes.home));
   testWidgets('P8c library', (t) => shoot(t, 'P8c-library', phone, Routes.library));
   testWidgets('P8e library on a fold', (t) => shoot(t, 'P8e-library-fold', fold, Routes.library));
   testWidgets('P8f you', (t) => shoot(t, 'P8f-you', phone, Routes.you));
