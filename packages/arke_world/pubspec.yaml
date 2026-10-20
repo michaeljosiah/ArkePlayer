@@ -1,0 +1,23 @@
+name: arke_world
+description: >-
+  Worlds a person installs, with no Flutter: the list of them that ships with the app, a world
+  package's manifest, and the download, check and install that put one in the library.
+publish_to: none
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  archive: ^4.5.2
+  arke_library:
+    path: ../arke_library
+  arke_media:
+    path: ../arke_media
+  arke_publication:
+    path: ../arke_publication
+  crypto: ^3.0.7
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.29.0

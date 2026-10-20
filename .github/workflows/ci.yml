@@ -34,6 +34,9 @@ jobs:
       - name: Test the media readers
         run: dart test
         working-directory: packages/arke_media
+      - name: Test worlds to install
+        run: dart test
+        working-directory: packages/arke_world
       - name: Test the app
         run: flutter test
         working-directory: apps/arke_player

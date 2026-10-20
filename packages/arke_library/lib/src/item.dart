@@ -82,6 +82,7 @@ class LibraryItem {
     this.chapters = const [],
     this.place,
     this.finished = false,
+    this.worldId,
   });
 
   final String id;
@@ -104,6 +105,11 @@ class LibraryItem {
   final Place? place;
   final bool finished;
 
+  /// The installed world this item's file came with, or null for a file added from the phone.
+  /// A world's items play and keep places as files do, but show under their world, never as
+  /// files of their own (P9 rule 6).
+  final String? worldId;
+
   LibraryKind get kind => LibraryKind.of(format);
 
   /// In progress: opened, not finished, and somewhere past the start.
@@ -124,6 +130,7 @@ class LibraryItem {
     chapters: chapters,
     place: place ?? this.place,
     finished: finished ?? this.finished,
+    worldId: worldId,
   );
 
   Map<String, Object?> toJson() => {
@@ -141,6 +148,7 @@ class LibraryItem {
     if (chapters.isNotEmpty) 'chapters': [for (final chapter in chapters) chapter.toJson()],
     if (place != null) 'place': place!.toJson(),
     if (finished) 'finished': true,
+    if (worldId != null) 'worldId': worldId,
   };
 
   static LibraryItem fromJson(Map<String, Object?> json) => LibraryItem(
@@ -158,5 +166,6 @@ class LibraryItem {
     chapters: [for (final chapter in (json['chapters'] as List<Object?>? ?? const [])) Chapter.fromJson((chapter! as Map).cast<String, Object?>())],
     place: json['place'] == null ? null : Place.fromJson((json['place']! as Map).cast<String, Object?>()),
     finished: json['finished'] == true,
+    worldId: json['worldId'] as String?,
   );
 }

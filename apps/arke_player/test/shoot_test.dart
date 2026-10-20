@@ -11,7 +11,9 @@ import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
+import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_publication/arke_publication.dart';
+import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +21,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _shoot = Platform.environment['SHOOT'] == '1';
+
+// P9: The Undersong as the catalogue offers it, and as it is once installed.
+final _undersong = CatalogueWorld(
+  id: 'undersong',
+  name: 'The Undersong',
+  logline: 'A drowned god still sings beneath the harbour.',
+  keyArt: 'assets/worlds/undersong/key-art.jpg',
+  productions: const [
+    CatalogueProduction(title: 'The Ledger of Nights', kind: 'Audiobook · Book · 2 h 03 m', picture: 'assets/worlds/undersong/ledger-of-nights.jpg'),
+  ],
+  package: CataloguePackage(url: Uri.parse('https://example.org/undersong.zip'), byteLength: 386000000, sha256: 'a' * 64),
+);
+
+/// An installer that reports one step and then waits, or refuses at once.
+class _FakeInstaller extends WorldInstaller {
+  _FakeInstaller({this.refusal}) : super(store: LibraryStore(Directory.systemTemp), freeBytes: (_) async => null);
+
+  final InstallRefusal? refusal;
+
+  @override
+  Future<LibraryWorld> install(CatalogueWorld world, {void Function(InstallStep step)? onStep, InstallCancel? cancel}) {
+    if (refusal != null) return Future.error(refusal!);
+    onStep?.call(const Downloading(162000000, 386000000));
+    return Completer<LibraryWorld>().future;
+  }
+}
 
 Future<void> _loadFonts() async {
   for (final (family, files) in [
@@ -51,6 +79,8 @@ void main() {
   late Directory root;
   late LibraryStore store;
   late List<LibraryItem> items;
+  late LibraryWorld installed;
+  late List<LibraryItem> worldItems;
 
   setUpAll(() async {
     await _loadFonts();
@@ -136,6 +166,62 @@ void main() {
     ];
   });
 
+  setUpAll(() {
+    String place(String relative, String picture) {
+      final file = File(store.resolve(relative))..parent.createSync(recursive: true);
+      File('../../design/assets/$picture').copySync(file.path);
+      return relative;
+    }
+
+    installed = LibraryWorld(
+      id: 'undersong',
+      edition: '2026-10-21',
+      name: 'The Undersong',
+      logline: 'A drowned god still sings beneath the harbour.',
+      keyArt: place('worlds/undersong/key-art.jpg', 'world-undersong.jpg'),
+      byteLength: 386000000,
+      installedAt: DateTime.utc(2026, 10, 21),
+      productions: [
+        LibraryProduction(
+          id: 'ledger-of-nights',
+          title: 'The Ledger of Nights',
+          picture: place('worlds/undersong/ledger-of-nights/picture.jpg', 'banner-story.jpg'),
+          book: 'undersong.ledger-of-nights.book',
+          narration: 'undersong.ledger-of-nights.narration',
+        ),
+      ],
+    );
+    worldItems = [
+      LibraryItem(
+        id: 'undersong.ledger-of-nights.narration',
+        format: FileFormat.m4b,
+        title: 'The Ledger of Nights',
+        byteLength: 120000000,
+        addedAt: DateTime.utc(2026, 10, 21),
+        file: 'worlds/undersong/ledger-of-nights/narration.m4b',
+        duration: const Duration(hours: 2, minutes: 3),
+        chapters: const [
+          Chapter(title: 'The Weigh House', start: Duration.zero),
+          Chapter(title: 'The Weir', start: Duration(minutes: 21)),
+          Chapter(title: 'The Tenth Key', start: Duration(minutes: 40)),
+          Chapter(title: 'Saltmouth Bells', start: Duration(minutes: 61)),
+          Chapter(title: 'A Choir Underwater', start: Duration(minutes: 82)),
+          Chapter(title: 'The Keeper’s Ledger', start: Duration(minutes: 102)),
+        ],
+        worldId: 'undersong',
+      ),
+      LibraryItem(
+        id: 'undersong.ledger-of-nights.book',
+        format: FileFormat.epub,
+        title: 'The Ledger of Nights',
+        byteLength: 400000,
+        addedAt: DateTime.utc(2026, 10, 21),
+        file: 'worlds/undersong/ledger-of-nights/book.epub',
+        worldId: 'undersong',
+      ),
+    ];
+  });
+
   tearDownAll(() => root.deleteSync(recursive: true));
 
   /// Loads every cover into the image cache on the real clock, under the exact keys the widgets
@@ -149,6 +235,21 @@ void main() {
           ImageStreamListener((_, _) => opening.isCompleted ? null : opening.complete(), onError: (_, _) => opening.isCompleted ? null : opening.complete()),
         );
     await opening.future;
+    // P9's pictures: the catalogue's bundled ones, and an installed world's files, drawn uncropped.
+    for (final provider in <ImageProvider>[
+      const AssetImage('assets/worlds/undersong/key-art.jpg'),
+      const AssetImage('assets/worlds/undersong/ledger-of-nights.jpg'),
+      FileImage(File(store.resolve('worlds/undersong/key-art.jpg'))),
+      FileImage(File(store.resolve('worlds/undersong/ledger-of-nights/picture.jpg'))),
+    ]) {
+      final loaded = Completer<void>();
+      provider
+          .resolve(ImageConfiguration.empty)
+          .addListener(
+            ImageStreamListener((_, _) => loaded.isCompleted ? null : loaded.complete(), onError: (_, _) => loaded.isCompleted ? null : loaded.complete()),
+          );
+      await loaded.future;
+    }
     for (final item in items) {
       if (item.cover == null) continue;
       final file = File(store.resolve(item.cover!));
@@ -170,7 +271,18 @@ void main() {
     }
   });
 
-  Future<void> shoot(WidgetTester tester, String name, Size size, String location, {List<LibraryItem>? with_, Brightness brightness = Brightness.light}) async {
+  Future<void> shoot(
+    WidgetTester tester,
+    String name,
+    Size size,
+    String location, {
+    List<LibraryItem>? with_,
+    Brightness brightness = Brightness.light,
+    List<CatalogueWorld> catalogue = const [],
+    List<LibraryWorld> worlds = const [],
+    WorldInstaller? installer,
+    Future<void> Function(WidgetTester tester)? act,
+  }) async {
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2;
     tester.view.padding = const FakeViewPadding(top: 47 * 2, bottom: 34 * 2);
@@ -184,6 +296,9 @@ void main() {
           libraryItemsProvider.overrideWith((ref) => Stream.value(shown)),
           libraryStoreProvider.overrideWith((ref) async => store),
           volumeProvider.overrideWith((ref) async => (free: 41000000000, total: 128000000000)),
+          catalogueProvider.overrideWith((ref) async => catalogue),
+          libraryWorldsProvider.overrideWith((ref) => Stream.value(worlds)),
+          if (installer != null) worldInstallerProvider.overrideWith((ref) async => installer),
         ],
         child: RepaintBoundary(
           key: key,
@@ -196,6 +311,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    if (act != null) {
+      await act(tester);
+      await tester.pumpAndSettle();
+    }
     final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final png = await tester.runAsync(() async {
       final image = await boundary.toImage(pixelRatio: 1);
@@ -216,4 +335,43 @@ void main() {
   testWidgets('P6a downloads', (t) => shoot(t, 'P6a-downloads', phone, Routes.downloads));
   testWidgets('P8d home, dark', (t) => shoot(t, 'P8d-home-dark', phone, Routes.home, brightness: Brightness.dark));
   testWidgets('P6e home on a fold', (t) => shoot(t, 'P6e-home-fold', fold, Routes.home));
+
+  Future<void> install(WidgetTester tester) => tester.tap(find.textContaining('Install').last);
+  testWidgets('P9a first open, with a world to install', (t) => shoot(t, 'P9a-first-open', phone, Routes.welcome, with_: const [], catalogue: [_undersong]));
+  testWidgets('P9b available', (t) => shoot(t, 'P9b-available', phone, Routes.welcomeAvailable, with_: const [], catalogue: [_undersong]));
+  testWidgets('P9c a world to install', (t) => shoot(t, 'P9c-world-to-install', phone, Routes.world('undersong'), catalogue: [_undersong]));
+  testWidgets(
+    'P9d installing',
+    (t) => shoot(t, 'P9d-installing', phone, Routes.world('undersong'), catalogue: [_undersong], installer: _FakeInstaller(), act: install),
+  );
+  testWidgets(
+    'P9e not installed',
+    (t) => shoot(
+      t,
+      'P9e-not-installed',
+      phone,
+      Routes.world('undersong'),
+      catalogue: [_undersong],
+      installer: _FakeInstaller(refusal: const NoConnection()),
+      act: install,
+    ),
+  );
+  testWidgets(
+    'P9f installed',
+    (t) => shoot(t, 'P9f-installed', phone, Routes.world('undersong'), with_: [...items, ...worldItems], catalogue: [_undersong], worlds: [installed]),
+  );
+  testWidgets('P9g home with available', (t) => shoot(t, 'P9g-home', phone, Routes.home, catalogue: [_undersong]));
+  testWidgets('P9h a world to install on a fold', (t) => shoot(t, 'P9h-world-fold', fold, Routes.world('undersong'), catalogue: [_undersong]));
+  testWidgets(
+    'P1e production',
+    (t) => shoot(
+      t,
+      'P9-production',
+      phone,
+      Routes.production(Routes.world('undersong'), 'ledger-of-nights'),
+      with_: [...items, ...worldItems],
+      worlds: [installed],
+    ),
+  );
+  testWidgets('P9c dark', (t) => shoot(t, 'P9c-world-to-install-dark', phone, Routes.world('undersong'), catalogue: [_undersong], brightness: Brightness.dark));
 }

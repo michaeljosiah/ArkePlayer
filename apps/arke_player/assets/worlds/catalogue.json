@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "worlds": [
+    {
+      "id": "undersong",
+      "name": "The Undersong",
+      "logline": "A drowned god still sings beneath the harbour.",
+      "keyArt": "assets/worlds/undersong/key-art.jpg",
+      "productions": [
+        { "title": "The Ledger of Nights", "kind": "Audiobook · Book", "picture": "assets/worlds/undersong/ledger-of-nights.jpg" }
+      ],
+      "package": null
+    }
+  ]
+}

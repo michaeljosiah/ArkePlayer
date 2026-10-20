@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/tokens.dart';
 import '../../add_file/presentation/add_flow.dart';
+import '../../worlds/application/worlds.dart';
 
 /// First open, before sign-in exists (P8a): the wordmark over the app's own picture and one press,
-/// Add a file. No tour, no sentence, no Sign in (P8 rules 1–2).
+/// Add a file — and, when a world can be installed, a second, `Install a world`, which opens
+/// Available (P9a). No tour, no sentence, no Sign in (P8 rules 1–2).
 class FirstOpenScreen extends ConsumerWidget {
   const FirstOpenScreen({super.key});
 
@@ -21,6 +23,9 @@ class FirstOpenScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const fg = ArkeColors.mediaOverlayForeground;
     final height = MediaQuery.sizeOf(context).height;
+    final canInstall = ref.watch(availableProvider).isNotEmpty;
+    // A button's textStyle replaces the theme's rather than merging, so it names the family.
+    const pressText = TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500);
     return Scaffold(
       backgroundColor: ArkeColors.mediaOverlayBackground,
       body: Stack(
@@ -44,7 +49,8 @@ class FirstOpenScreen extends ConsumerWidget {
             ),
           ),
           Align(
-            alignment: const Alignment(0, 0.12),
+            // The wordmark rises by a press's height when there are two (P9a).
+            alignment: Alignment(0, canInstall ? 0.04 : 0.12),
             child: Semantics(
               label: 'Arke Player',
               child: ExcludeSemantics(
@@ -88,17 +94,36 @@ class FirstOpenScreen extends ConsumerWidget {
             left: 20,
             right: 20,
             bottom: 20 + MediaQuery.paddingOf(context).bottom,
-            child: FilledButton.icon(
-              onPressed: () => _add(context, ref),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Add a file'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(ArkeSizes.widePress),
-                backgroundColor: fg,
-                foregroundColor: ArkeColors.mediaOverlayBackground,
-                // A button's textStyle replaces the theme's rather than merging, so it names the family.
-                textStyle: const TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => _add(context, ref),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add a file'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(ArkeSizes.widePress),
+                    backgroundColor: fg,
+                    foregroundColor: ArkeColors.mediaOverlayBackground,
+                    textStyle: pressText,
+                  ),
+                ),
+                if (canInstall) ...[
+                  const SizedBox(height: 10),
+                  FilledButton.icon(
+                    onPressed: () => context.push(Routes.welcomeAvailable),
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: const Text('Install a world'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(ArkeSizes.widePress),
+                      backgroundColor: fg.withValues(alpha: 0.16),
+                      foregroundColor: fg,
+                      textStyle: pressText,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

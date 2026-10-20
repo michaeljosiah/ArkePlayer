@@ -23,13 +23,14 @@ Around the players:
 - **You.** Playback (Captions, Text, Autoplay next), Storage and About (P6b, without the account).
 - **Places.** Every file keeps its place on this device: a time, a chapter, a page.
 - **Layout.** Light and dark; a tab bar on a phone, a rail on the unfolded Fold7 or a tablet (P6e, P6f).
+- **Worlds to install** (P9, added 20 October 2026). Worlds Arke publishes, starting with The Undersong, installed from Available with no account. The list ships with the app, and each package is pinned by its SHA-256. A world's book opens in the reader and its narration in the audio player, so it needs no new player ([ADR 0005](decisions/0005-world-packages.md)).
 
 ## Out, until after the MVP
 
 | | Designed in |
 |---|---|
 | Sign-in, shares, share links, a share that ended, the account in You | P2a, P2b, P2g, P6b (account) |
-| Arke worlds: packages, verification, a world's page, a production's page, the hosted Studio players (interactive, visual novel, Arke audiobooks), micro drama, audio drama | P1d–P1f, P2d–P2f, P3c, P3d, P4, P5d, ADR 0001 |
+| Arke packages added from a file, the hosted Studio players (interactive, visual novel, Arke audiobooks with their pictures), micro drama, audio drama | P2d–P2f, P3c, P3d, P4, P5d, ADR 0001 |
 | Paste a link; CBZ comics; casting; adult content | P2c, P7, P3, P6c |
 | An audiobook made of several MP3 files (each file is its own item for now) | P7 rule 2 |
 
@@ -52,6 +53,7 @@ Each one ends in a build installed on the Fold7 and checked against its frames.
 | M3 | **Read.** The EPUB reader and the PDF page viewer, each keeping its place. | Acceptance 5. | Built; device check owed. |
 | M4 | **Watch.** The film player upright and turned, captions from a sidecar SRT or VTT, its place. | Acceptance 6. | Built; device check owed. |
 | M5 | **Release candidate.** Fold and tablet layouts, light and dark, accessibility, large and low-space cases, You, and a signed release build on the chosen channel. | Acceptance 9 and 10, and every earlier item rechecked. | Fold rail and two columns, light and dark, and text at 200% are tested; low space is refused before copying; CI builds the release APK green. Owed: the upload-key-signed APK (needs local disk) and the device run. |
+| M6 | **Worlds to install.** P9: Available on first open and Home, a world's page with Install, the download and check, refusals, the installed world, its production page; Library and Downloads show worlds. | Acceptance 11. | Built and tested over a local server (`packages/arke_world`, `test/worlds_test.dart`). The Undersong's package is not published, so Available is absent in builds until it is pinned ([docs/world-package.md](world-package.md)). |
 
 Listen comes first: it carries the most risk (background play and the lock screen) and the most use.
 
@@ -90,9 +92,11 @@ Listen comes first: it carries the most risk (background play and the lock scree
 8. **Remove.** Remove deletes the copy and its place. Downloads shows Arke Player's space against what is free.
 9. **Layout and access.** A tab bar under 600 wide and a rail on the unfolded Fold7; light and dark. TalkBack names every press, and text at 200% clips no press.
 10. **Shipped.** CI is green, and a signed release build is installed from the chosen channel.
+11. **Worlds to install.** With The Undersong pinned, first open offers `Install a world`; Install checks the space, downloads, checks every file and shows the world with The Ledger of Nights under Listen, with Read beside Play. Airplane mode refuses with `No connection`, and Cancel leaves nothing. Remove returns it to Available.
 
 ## Decided
 
 1. **Android first** (owner, 20 October 2026). The release target is Android: the Fold7 and phones. iOS keeps compiling in CI, and TestFlight comes after the MVP.
 2. **A signed APK, installed by hand** (owner, 20 October 2026). The upload key lives outside the repository (`android/key.properties` and the keystore are gitignored). A Play Console track can follow.
 3. **P8 drawn** ([design/Arke Player.dc.html#p8](../design/Arke%20Player.dc.html)): first open without Sign in, nothing added, Home and Library with files only, and You without an account. The build proceeds on it, as the owner asked, and the owner reviews it alongside the build.
+4. **P9 joins the MVP** (owner, 20 October 2026): worlds to install, as approved, built now.

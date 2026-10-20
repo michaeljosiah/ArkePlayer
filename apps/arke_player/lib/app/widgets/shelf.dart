@@ -12,16 +12,20 @@ extension ArkeColorsOf on BuildContext {
 
 /// A shelf's large title, with what sits at its end (P1 rule 3; P8b–P8f).
 class ShelfHeader extends StatelessWidget {
-  const ShelfHeader({required this.title, this.trailing, super.key});
+  const ShelfHeader({required this.title, this.leading, this.trailing, super.key});
 
   final String title;
+
+  /// A back press before the title, on a page pushed over the shelves (P9b).
+  final Widget? leading;
   final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 6, 12, 6),
+    padding: EdgeInsets.fromLTRB(leading == null ? 16 : 8, 6, 12, 6),
     child: Row(
       children: [
+        if (leading != null) ...[leading!, const SizedBox(width: 8)],
         Expanded(
           child: Semantics(header: true, child: Text(title, style: Theme.of(context).textTheme.headlineLarge)),
         ),

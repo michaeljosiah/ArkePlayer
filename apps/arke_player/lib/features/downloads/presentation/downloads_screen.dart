@@ -1,14 +1,21 @@
 import 'package:arke_library/arke_library.dart';
+import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
+import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../add_file/presentation/add_flow.dart';
 import '../../library/presentation/item_menu.dart';
+import '../../worlds/application/worlds.dart';
+import '../../worlds/presentation/world_widgets.dart';
 
 /// What is on the phone (P6a, before an account): the space Arke Player takes against the rest and
-/// what is free, then everything added, largest first, each with ⋯ to remove it.
+/// what is free, then everything added: a world installing with its line (P9 rule 4), installed
+/// worlds, then files largest first, each with ⋯ to remove it.
 class DownloadsScreen extends ConsumerWidget {
   const DownloadsScreen({super.key});
 
@@ -17,8 +24,14 @@ class DownloadsScreen extends ConsumerWidget {
     final items = ref.watch(libraryItemsProvider).value ?? const [];
     final store = ref.watch(libraryStoreProvider).value;
     final volume = ref.watch(volumeProvider).value;
-    final used = bytesUsed(items);
-    final rows = [...items]..sort((a, b) => b.byteLength.compareTo(a.byteLength));
+    final worlds = ref.watch(libraryWorldsProvider).value ?? const [];
+    final installing = [
+      for (final world in ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[])
+        if (ref.watch(installProvider(world.id)) case final Installing state) (world: world, state: state),
+    ];
+    final used = bytesUsed(items, worlds);
+    final rows = items.where((item) => item.worldId == null).toList()..sort((a, b) => b.byteLength.compareTo(a.byteLength));
+    final empty = rows.isEmpty && worlds.isEmpty && installing.isEmpty;
 
     return SafeArea(
       bottom: false,
@@ -26,18 +39,43 @@ class DownloadsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const ShelfHeader(title: 'Downloads'),
-          if (items.isNotEmpty)
+          if (!empty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: _SpaceBar(used: used, free: volume?.free, total: volume?.total),
             ),
           Expanded(
-            child: items.isEmpty
+            child: empty
                 ? EmptyShelf(onAdd: () => addFiles(context, ref))
                 : ListView(
                     padding: const EdgeInsets.only(bottom: 24),
                     children: [
                       const SectionHead('Added'),
+                      for (final (:world, :state) in installing)
+                        _WorldRow(
+                          name: world.name,
+                          line: state.short,
+                          picture: bundledPicture(world.keyArt),
+                          progress: state.fraction,
+                          onOpen: () => context.push(Routes.world(world.id)),
+                          end: IconButton(
+                            onPressed: () => ref.read(installProvider(world.id).notifier).cancel(),
+                            tooltip: 'Cancel',
+                            icon: Icon(Icons.close_rounded, color: context.surface.mutedForeground),
+                          ),
+                        ),
+                      for (final world in worlds)
+                        _WorldRow(
+                          name: world.name,
+                          line: '${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
+                          picture: libraryPicture(store, world.keyArt),
+                          onOpen: () => context.go(Routes.libraryWorld(world.id)),
+                          end: IconButton(
+                            onPressed: () => showWorldMenu(context, ref, world),
+                            tooltip: 'More',
+                            icon: Icon(Icons.more_horiz, color: context.surface.mutedForeground),
+                          ),
+                        ),
                       for (final item in rows)
                         FileRow(item: item, cover: coverOf(store, item), onOpen: () => openItem(context, item), onMore: () => showItemMenu(context, ref, item)),
                     ],
@@ -113,6 +151,71 @@ class _SpaceBar extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// A world's row (P6a's Added): its key art at 52, its name, its size or its install as data.
+class _WorldRow extends StatelessWidget {
+  const _WorldRow({required this.name, required this.line, required this.picture, required this.onOpen, required this.end, this.progress});
+
+  final String name;
+  final String line;
+  final ImageProvider? picture;
+  final VoidCallback onOpen;
+  final Widget end;
+  final double? progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final surface = context.surface;
+    return InkWell(
+      onTap: onOpen,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 4, 8),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(ArkeRadius.md),
+              child: SizedBox(
+                width: 52,
+                height: 52,
+                child: picture == null ? ColoredBox(color: surface.secondary) : Image(image: picture!, fit: BoxFit.cover),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    line,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.labelSmall?.copyWith(color: surface.mutedForeground),
+                  ),
+                  if (progress != null) ...[
+                    const SizedBox(height: 7),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(ArkeRadius.pill),
+                      child: LinearProgressIndicator(value: progress, minHeight: 3, backgroundColor: surface.secondary, color: surface.foreground),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            end,
+          ],
+        ),
+      ),
     );
   }
 }

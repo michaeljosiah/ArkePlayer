@@ -11,3 +11,4 @@ workspace:
   - packages/arke_publication
   - packages/arke_library
   - packages/arke_media
+  - packages/arke_world

@@ -53,17 +53,17 @@ Every frame of the Arke Player design master (`design/Arke Player.dc.html`), the
 | P7c | A PDF | `/open/:fileId` | `features/players/` (native page viewer) |
 | P7d | An audiobook file | `/open/:fileId` | `features/players/` (hosted audiobook module) |
 
-## Worlds to install (P9, approved, not built)
+## Worlds to install (P9, built)
 
-World import was left out of the MVP; whether P9 joins it is the owner's call. It needs a published world package (SPEC-048) before any of it is built.
+P9 joined the MVP on 20 October 2026. The world package is [ADR 0005](decisions/0005-world-packages.md); the install, check and catalogue are `packages/arke_world`. Library and Downloads show installed worlds (P9 rule 6, P6a).
 
 | Frame | Screen | Route | File |
 |---|---|---|---|
 | P9a | First open, with Install a world | `/welcome` | `features/onboarding/presentation/first_open_screen.dart` |
-| P9b | Available | `/available` | `features/available/presentation/available_screen.dart` |
-| P9c–P9e, P9h | A world before it is installed, installing, refused; on a Fold | `/available/:worldId` | `features/available/presentation/install_screen.dart` |
-| P9f | The Undersong, installed: one production at the full width | `/library/world/:worldId` | `features/world/presentation/world_screen.dart` |
-| P9g | Home, ending with Available | `/` | `features/home/presentation/home_screen.dart` |
+| P9b | Available | `/welcome/available` | `features/worlds/presentation/available_screen.dart` |
+| P9c–P9f, P9h | A world before, while and after it installs; refused; on a Fold | `/world/:worldId`, `/library/world/:worldId`, `/welcome/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `world_widgets.dart`; `features/worlds/application/worlds.dart` |
+| P1e (for P9) | A production of an installed world: Play or Continue, Read, Chapters | `…/world/:worldId/:productionId` | `features/worlds/presentation/production_screen.dart` |
+| P9g | Home, ending with Worlds and Available | `/` | `features/home/presentation/home_screen.dart` |
 
 ## Rules already in code
 

@@ -4,7 +4,7 @@ Arke Player is the phone and tablet app for what Arke Studio makes. Flutter, a D
 
 ## The current goal
 
-The MVP, [docs/mvp.md](docs/mvp.md): your own audio, books and films, with no account, no Arke worlds and native players (ADR 0004). Work in its milestone order, M0 to M5. Don't build sign-in, shares or package import until the MVP is done; where the design needs an account or a world, leave that part absent rather than disabled.
+The MVP, [docs/mvp.md](docs/mvp.md): your own audio, books and films, with no account and native players (ADR 0004), plus the worlds Arke publishes, installed from Available (P9, ADR 0005, [docs/world-package.md](docs/world-package.md)). Work in its milestone order, M0 to M6. Don't build sign-in, shares or package import until the MVP is done; where the design needs an account or a world, leave that part absent rather than disabled.
 
 ## The design comes first
 
@@ -31,7 +31,7 @@ Flutter 3.41.3 / Dart 3.11.1. On this machine Flutter lives in another repositor
 flutter pub get                                     # the whole workspace, one lockfile
 dart format --output=none --set-exit-if-changed .   # 160 columns, set in analysis_options.yaml
 dart analyze --fatal-infos                          # strict casts, inference and raw types
-cd packages/arke_publication && dart test
+cd packages/arke_publication && dart test        # likewise arke_library, arke_media, arke_world
 cd apps/arke_player && flutter test
 ```
 

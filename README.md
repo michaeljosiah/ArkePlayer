@@ -15,6 +15,9 @@ ArkePlayer/
     lib/app/                   router, theme tokens, the adaptive shell (tab bar under 600, rail over)
     lib/features/<area>/       domain · application · presentation, one folder per area of the design
   packages/arke_publication/   pure Dart, no Flutter: publication.json, verify-before-play, format probing
+  packages/arke_library/       the library on the device: items, places, installed worlds
+  packages/arke_media/         tags, chapters and covers read from the files themselves
+  packages/arke_world/         worlds to install: the catalogue, world packages, download and check
   design/                      the design master, its generator, frames, tokens and check
   docs/                        architecture, the design map, the MVP goal, decisions
   .github/workflows/ci.yml     format, analyze, test
@@ -48,10 +51,11 @@ dart format --output=none --set-exit-if-changed .
 
 ## State
 
-- **Built (the MVP, M0–M4):** add your own audio, books and films (several at once, or through Share to / Open in), each read before it is added and refused in one clause if it can't be; Home, Library, Downloads and You as P8 draws them; the audio player with chapters, speed, sleep, the lock screen and the dock; the EPUB reader; the PDF page viewer; the film player with captions. Places are kept on the device. Packages: `arke_publication` (manifests, verification, format and DRM probe), `arke_library` (the library index), `arke_media` (tags, chapters, covers).
+- **Built (the MVP, M0–M4):** add your own audio, books and films (several at once, or through Share to / Open in), each read before it is added and refused in one clause if it can't be; Home, Library, Downloads and You as P8 draws them; the audio player with chapters, speed, sleep, the lock screen and the dock; the EPUB reader; the PDF page viewer; the film player with captions. Places are kept on the device. Worlds to install (P9): Available on first open and Home, Install with the download and check, the installed world and its production page. Packages: `arke_publication` (manifests, verification, format and DRM probe), `arke_library` (the library index), `arke_media` (tags, chapters, covers), `arke_world` (the catalogue, world packages, the installer and packer).
 - **Builds:** CI's `android` job builds the release APK on every push (`studio.arke.player` 0.1.0) and keeps it 14 days: `arke-player-apk-arm64` (28 MiB, for the Fold7 and current phones) and `arke-player-apk` (79 MB, with arm64, armv7 and x86_64). Both are signed with one throwaway CI test key held in the repository's secrets (certificate SHA-256 `C1:61:B1:45:…`), so each CI build installs over the last and keeps the library. It is not the upload key: the upload-key-signed APK is built locally (`flutter build apk --release` with `android/key.properties`), and won't install over a CI build without an uninstall.
 - **Icon:** the Studio's Arke icon, copied to `apps/arke_player/assets/icon/arke-512.png`. `apps/arke_player/tool/make_icon.py` (Pillow) makes every launcher, notification and iOS size from it; Android's is adaptive, the mark on the tile's black.
 - **Not yet checked on a device:** the players and the share intake are compiled and unit-tested; the shelves are rendered and compared with P8 (`test/shoot_test.dart`). A run on the Fold7 is owed.
-- **Not built:** Arke worlds and packages, sign-in and shares — after the MVP.
+- **Not published yet:** The Undersong's world package, so Available is absent in builds until it is pinned ([docs/world-package.md](docs/world-package.md)).
+- **Not built:** Arke packages added from a file, sign-in and shares — after the MVP.
 - **Waiting on others:** the Arke cloud (accounts, shares, streaming), which does not exist yet; `NoArkeCloud` answers as the Studio's seam does. The world package format is owed to SPEC-048 in the ArkeStudio specs.
 - **Undecided:** a licence. See [ADR 0001](docs/decisions/0001-host-the-studio-players.md) before choosing one.

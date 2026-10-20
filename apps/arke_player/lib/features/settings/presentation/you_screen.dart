@@ -7,6 +7,7 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../worlds/application/worlds.dart';
 import '../application/settings_controller.dart';
 import '../domain/device_settings.dart';
 
@@ -37,7 +38,13 @@ class YouScreen extends ConsumerWidget {
                 ),
                 const _GroupLabel('Storage'),
                 _Group(
-                  children: [_Row(label: 'On this phone', value: formatBytes(bytesUsed(items)), onTap: () => context.go(Routes.downloads))],
+                  children: [
+                    _Row(
+                      label: 'On this phone',
+                      value: formatBytes(bytesUsed(items, ref.watch(libraryWorldsProvider).value ?? const [])),
+                      onTap: () => context.go(Routes.downloads),
+                    ),
+                  ],
                 ),
                 const _GroupLabel('About'),
                 _Group(

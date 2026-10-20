@@ -34,6 +34,8 @@ dependencies:
     path: ../../packages/arke_library
   arke_media:
     path: ../../packages/arke_media
+  arke_world:
+    path: ../../packages/arke_world
   wakelock_plus: ^1.7.0
   fc_native_video_thumbnail: ^2.2.0
 
@@ -49,6 +51,10 @@ flutter:
   # First open's picture (P8a): the app's own, bundled, since no world exists yet.
   assets:
     - assets/images/first-open.jpg
+    # The worlds that ship with the app (P9 rule 1): the list, and each world's key art and
+    # production pictures, so Available shows offline.
+    - assets/worlds/catalogue.json
+    - assets/worlds/undersong/
 
   # The design's faces (OFL-1.1, licences beside the files): Geist Sans for everything, Jost for
   # the wordmark. Latin only, as the design master vendors them; other scripts fall back to the

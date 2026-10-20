@@ -29,6 +29,14 @@ packages/arke_publication   (pure Dart)
   verify.dart         checkAsset / verifyPublication — length first, then SHA-256, with progress
   probe.dart          probeFile, epubIsProtected, pdfIsProtected — formats and DRM
   asset_path.dart     isPortableAssetPath — the contract's path vocabulary
+packages/arke_library       (pure Dart) the library index: items, places, installed worlds, shelves
+packages/arke_media         (pure Dart) tags, chapters and covers from MP4/M4B, MP3 and EPUB
+packages/arke_world         (pure Dart) worlds to install (P9, ADR 0005)
+  manifest.dart       readWorldManifest — world.json, read strictly
+  catalogue.dart      readCatalogue, availableWorlds — the list that ships with the app
+  package.dart        readWorldPackage, extractAsset — the ZIP checked before use
+  install.dart        WorldInstaller — space, download, pin, check, one write to the library
+  pack.dart           packWorld, and `dart run arke_world:pack_world`
 ```
 
 Domain code does not import Flutter where it can avoid it. Rules that need no widget belong in a package and are tested with `dart test`.
