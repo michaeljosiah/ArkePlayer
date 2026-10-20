@@ -2,11 +2,29 @@
 
 Every frame of the Arke Player design master (`design/Arke Player.dc.html`), the route that shows it, and the file that will draw it. A screen is built when its frames match at the sizes drawn: 390 × 844 for a phone, 844 × 390 turned, 984 × 1092 for a Fold7 open.
 
+## The MVP (built)
+
 | Frame | Screen | Route | File |
 |---|---|---|---|
-| P1a | First open | `/welcome` | `features/onboarding/presentation/first_open_screen.dart` |
-| P1b | Home | `/` | `features/home/presentation/home_screen.dart` |
-| P1c | Library | `/library` | `features/library/presentation/library_screen.dart` |
+| P8a | First open, before sign-in | `/welcome` | `features/onboarding/presentation/first_open_screen.dart` |
+| P8b, P8d | Home: nothing added; Continue and Added | `/` | `features/home/presentation/home_screen.dart` |
+| P8c, P8e | Library, files only (two columns on a Fold) | `/library` | `features/library/presentation/library_screen.dart`, `item_menu.dart` |
+| P7a | Adding files | (the picker, then a sheet) | `features/add_file/presentation/add_flow.dart`, `application/file_importer.dart` |
+| P6a | Downloads, files only | `/downloads` | `features/downloads/presentation/downloads_screen.dart` |
+| P8f | You, before sign-in | `/you` | `features/settings/presentation/you_screen.dart` |
+| P7d, P5a–P5c | Audio player, chapters, speed and sleep | `/open/:itemId` | `features/players/presentation/audio_player_screen.dart` |
+| P1 rule 8 | The dock | (over the tabs) | `features/players/presentation/dock.dart` |
+| P5e | The reader (EPUB) | `/open/:itemId` | `features/players/presentation/reader_screen.dart` |
+| P7c | The page viewer (PDF) | `/open/:itemId` | `features/players/presentation/pdf_screen.dart` |
+| P3a, P3b, P3e | The film player | `/open/:itemId` | `features/players/presentation/film_screen.dart` |
+
+## After the MVP (designed, not built)
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P1a | First open, with Sign in | `/welcome` | `features/onboarding/` |
+| P1b | Home with shares and worlds | `/` | `features/home/` |
+| P1c | Library with worlds | `/library` | `features/library/` |
 | P1d | A world, with the dock | `/library/world/:worldId` | `features/world/presentation/world_screen.dart` |
 | P1e | A production: audiobook and book | `/library/world/:w/production/:p` | `features/production/presentation/production_screen.dart` |
 | P1f | A production: micro drama | `/library/world/:w/production/:p` | `features/production/presentation/production_screen.dart` |

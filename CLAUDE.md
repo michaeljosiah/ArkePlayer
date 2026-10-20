@@ -42,7 +42,7 @@ CI runs exactly these on ubuntu-latest. `dart format` uses the page width from `
 - **Pure rules go in packages, not the app.** `arke_publication` has no Flutter dependency: manifests, verification, format probing. Anything that can be tested without a widget belongs in a package.
 - **Feature-first app.** `lib/features/<area>/{domain,application,presentation}`, as in the owner's other Flutter app (`aonik/apps/payabo_mobile`). The app-wide parts are in `lib/app/`: router, theme, shell. Riverpod 3 for state, go_router for routes, and paths are built only in `lib/app/router/routes.dart`.
 - **Tokens, not literals.** Colours, type sizes, radii and the bands (600, 1100) come from `lib/app/theme/tokens.dart`, which mirrors the Studio's design tokens. Change the Studio's token first.
-- **`FramePlaceholder` is scaffolding.** Delete it from a screen when the screen is built. A release ships none.
+- **No placeholder screens.** The MVP's routes are only what is built (`lib/app/router/routes.dart`); a designed screen that is not built has no route.
 
 ## Things that must stay true
 

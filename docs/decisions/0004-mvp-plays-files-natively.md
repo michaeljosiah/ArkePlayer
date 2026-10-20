@@ -20,15 +20,18 @@ ADR 0001 still holds for Arke worlds after the MVP. Their interactive, visual no
 - Native audio (`just_audio` with `audio_service`) gives background play, the lock screen, the headset and the notification directly. That was the open risk in hosting a web module, and the MVP doesn't need to take it.
 - The look is the design's either way. The frames bind sizes, order and words, not an implementation.
 
-## Engines (to confirm in M0)
+## Engines
 
-| | Pick | Confirmed |
+Picked on 20 October 2026 and built into the app. **Compiled and unit-tested; not yet played on a device** — the local disk was full, so the Android build runs in CI (`android` job), and a device check on the Pixel 9 Pro Fold emulator and the owner's Fold7 is owed (docs/mvp.md, acceptance 4–6).
+
+| | Pick | Where |
 |---|---|---|
-| Audio | `just_audio` + `audio_service` | — |
-| Chapters, tags, covers | pure-Dart reader in `packages/` | — |
-| Video and captions | `video_player` | — |
-| EPUB | `flutter_epub_viewer` | — |
-| PDF | `pdfrx` | — |
-| Open in / Share to | `receive_sharing_intent` | — |
+| Audio, background, lock screen, headset | `just_audio` inside an `audio_service` handler; `audio_session` for focus | `features/players/application/audio_engine.dart`, `MainActivity` (an `AudioServiceActivity`) |
+| Chapters, tags, covers | `packages/arke_media`, pure Dart: MP4 atoms (Nero `chpl` and the QuickTime chapter track), ID3v2 (`CHAP`, `APIC`), EPUB package documents | `packages/arke_media` |
+| Video and captions | `video_player` with its own SRT and WebVTT parsers; `wakelock_plus` keeps the screen on while a film plays | `features/players/presentation/film_screen.dart` |
+| EPUB | `flutter_epub_viewer` (epub.js): paginated, CFI places, page-in-chapter | `features/players/presentation/reader_screen.dart` |
+| PDF | `pdfrx` (PDFium): the viewer, the outline, and the first page and page count at import; a password-protected PDF is refused | `features/players/presentation/pdf_screen.dart`, `features/add_file/application/pdfrx_peek.dart` |
+| Picking and Share to / Open in | `file_picker` 13 (several files, streamed — it may hand over `content://` with no path); `receive_sharing_intent` | `features/add_file/presentation/add_flow.dart`, `app/app.dart` |
+| Free space | a `StatFs` method channel in `MainActivity` | `app/services.dart` |
 
-Fill in **Confirmed** with the date and the Fold7 result, or replace the pick and say why.
+One deviation, recorded: the MVP's Captions setting is **On or Off** (with S, M, L), not a language. A sidecar SRT or VTT names no language, so there is nothing to choose between; P3 rule 5's per-language choice returns with publications' text tracks.
