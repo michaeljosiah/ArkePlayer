@@ -125,7 +125,7 @@ class PlayerLabelPress extends StatelessWidget {
       foregroundColor: _fg,
       backgroundColor: on ? _fg.withValues(alpha: 0.18) : Colors.transparent,
       shape: const StadiumBorder(),
-      textStyle: const TextStyle(fontSize: ArkeType.sizeSm, fontWeight: FontWeight.w500),
+      textStyle: const TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeSm, fontWeight: FontWeight.w500),
       padding: EdgeInsets.fromLTRB(icon == null ? 14 : 12, 0, 14, 0),
     ),
   );

@@ -96,7 +96,8 @@ class FirstOpenScreen extends ConsumerWidget {
                 minimumSize: const Size.fromHeight(ArkeSizes.widePress),
                 backgroundColor: fg,
                 foregroundColor: ArkeColors.mediaOverlayBackground,
-                textStyle: const TextStyle(fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
+                // A button's textStyle replaces the theme's rather than merging, so it names the family.
+                textStyle: const TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
               ),
             ),
           ),
