@@ -1,0 +1,52 @@
+# Working in this repo
+
+Arke Player is the phone and tablet app for what Arke Studio makes. Flutter, a Dart pub workspace, Android and iOS. Read [README.md](README.md) for the layout and [docs/architecture.md](docs/architecture.md) before changing structure.
+
+## The design comes first
+
+The approved design is the Arke Player design master in the **ArkeStudio** repository, `design-system/Arke Player.dc.html` (turns P1–P7). Every screen here implements frames there; [docs/design-map.md](docs/design-map.md) says which. Before building a screen:
+
+- Open the frames it names, and read its turn's rules.
+- Match the frames' sizes, order and words.
+- A screen that needs something the design does not draw gets a design turn first (P8, P9… in that file — never a Studio `t` number), not an improvised UI.
+
+Cite design as `P3c` or `P2 rule 6` in code and commits. Studio turns are `Studio 156`.
+
+The house rules carry over from the Studio:
+
+- **Labels over sentences.** No caption under a control, no sentence under a title.
+- **A refusal is one clause**: `Protected file`, `3 files do not match`.
+- Small lines are data only: a size, a count, a time. Never a promise about what will or will not happen.
+
+## Toolchain
+
+Flutter 3.41.3 / Dart 3.11.1. On this machine Flutter lives in another repository: `C:\Users\mjosi\source\repos\aonik\.tools\flutter\bin`. Use it, or install the same version. Run everything from the workspace root unless a command says otherwise:
+
+```
+flutter pub get                                     # the whole workspace, one lockfile
+dart format --output=none --set-exit-if-changed .   # 160 columns, set in analysis_options.yaml
+dart analyze --fatal-infos                          # strict casts, inference and raw types
+cd packages/arke_publication && dart test
+cd apps/arke_player && flutter test
+```
+
+CI runs exactly these on ubuntu-latest. `dart format` uses the page width from `analysis_options.yaml`. Don't pass `--line-length`.
+
+## Structure rules
+
+- **Pure rules go in packages, not the app.** `arke_publication` has no Flutter dependency: manifests, verification, format probing. Anything that can be tested without a widget belongs in a package.
+- **Feature-first app.** `lib/features/<area>/{domain,application,presentation}`, as in the owner's other Flutter app (`aonik/apps/payabo_mobile`). The app-wide parts are in `lib/app/`: router, theme, shell. Riverpod 3 for state, go_router for routes, and paths are built only in `lib/app/router/routes.dart`.
+- **Tokens, not literals.** Colours, type sizes, radii and the bands (600, 1100) come from `lib/app/theme/tokens.dart`, which mirrors the Studio's design tokens. Change the Studio's token first.
+- **`FramePlaceholder` is scaffolding.** Delete it from a screen when the screen is built. A release ships none.
+
+## Things that must stay true
+
+- **The Player never opens a world's source.** It plays publications: frozen editions with their own manifest. Nothing in it edits, generates or spends.
+- **Nothing in a package plays before every asset matches its manifest** (`verifyPublication`). A standard file is opened and read before it is added. A refusal deletes the copy, and nothing is added half-way.
+- **The players are the Studio's own modules wherever one exists**: interactive, visual novel, audiobook. They are hosted in a web view, so a package plays the same here as in a browser (ADR 0001). Don't write a second copy of one in Dart.
+- **Every setting is this device's.** Nothing is uploaded to an account, and an added file is never uploaded.
+- **Accounts are a seam.** `ArkeCloud` has one implementation today, `NoArkeCloud`. Don't scatter cloud calls through the screens.
+
+## Specs
+
+The ArkeStudio specs are a private sibling repository (`arke-studio-specs`). Cite them by id (`SPEC-048`), never by path. If a spec isn't present, say you can't read it rather than reconstructing it.

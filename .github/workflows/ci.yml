@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.3
+          channel: stable
+          cache: true
+      # One resolution for the whole workspace: the app and its pure-Dart packages.
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - name: Test the pure-Dart packages
+        run: dart test
+        working-directory: packages/arke_publication
+      - name: Test the app
+        run: flutter test
+        working-directory: apps/arke_player

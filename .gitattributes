@@ -1,0 +1,8 @@
+# LF everywhere, so the format check reads the same files on Windows and on CI.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.jar binary

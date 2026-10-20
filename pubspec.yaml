@@ -1,0 +1,11 @@
+name: arke_player_workspace
+description: The Arke Player workspace — the Flutter app and the pure-Dart packages it is built from.
+publish_to: none
+
+environment:
+  sdk: ^3.11.1
+
+# One `flutter pub get` at the root resolves every member against one lockfile.
+workspace:
+  - apps/arke_player
+  - packages/arke_publication
