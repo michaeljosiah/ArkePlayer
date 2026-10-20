@@ -1,6 +1,7 @@
-/// Every route, with the design frames it implements. Paths are built here and nowhere else.
+/// Every route of the MVP, with the design frames it implements. Paths are built here and nowhere
+/// else. Worlds, productions, shares and the Add sheet return after the MVP (docs/mvp.md, "Out").
 abstract final class Routes {
-  /// First open: the wordmark, Sign in with Arke ↗, Add a file (P1a).
+  /// First open, before sign-in exists: the wordmark and Add a file (P8a).
   static const welcome = '/welcome';
 
   // The four tabs (P1 rule 3).
@@ -9,21 +10,7 @@ abstract final class Routes {
   static const downloads = '/downloads';
   static const you = '/you';
 
-  /// A world's page, pushed inside Library (P1d, P6c).
-  static String world(String worldId) => '$library/world/$worldId';
-
-  /// A production's page (P1e, P1f).
-  static String production(String worldId, String productionId) => '${world(worldId)}/production/$productionId';
-
-  /// The Add sheet and what follows it: checking, ready, refused (P2c–P2f, P7a).
-  static const add = '/add';
-
-  /// A share link opened from outside the app (P2a, P2b).
-  static String share(String token) => '/share/$token';
-
-  /// A production in its player, over everything, tabs and dock included (P3–P5).
-  static String play(String productionId) => '/play/$productionId';
-
-  /// An added standard file in its player (P7c, P7d, P5e).
-  static String open(String fileId) => '/open/$fileId';
+  /// An added file in its player, over the tabs: the audio player (P7d, P5a–P5c), the reader
+  /// (P5e), the page viewer (P7c) or the film player (P3a, P3b, P3e).
+  static String open(String itemId) => '/open/$itemId';
 }

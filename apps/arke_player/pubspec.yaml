@@ -28,6 +28,11 @@ dependencies:
   pdfrx: ^2.4.7
   flutter_epub_viewer: ^2.1.0
   receive_sharing_intent: ^1.9.0
+  arke_library:
+    path: ../../packages/arke_library
+  arke_media:
+    path: ../../packages/arke_media
+  wakelock_plus: ^1.7.0
 
 dev_dependencies:
   flutter_test:
@@ -37,6 +42,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # First open's picture (P8a): the app's own, bundled, since no world exists yet.
+  assets:
+    - assets/images/first-open.jpg
 
   # The design's faces (OFL-1.1, licences beside the files): Geist Sans for everything, Jost for
   # the wordmark. Latin only, as the design master vendors them; other scripts fall back to the

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/players/presentation/dock.dart';
 import '../theme/tokens.dart';
 
 class _Tab {
@@ -42,13 +43,25 @@ class AdaptiveShell extends StatelessWidget {
               ],
             ),
             const VerticalDivider(width: 1),
-            Expanded(child: shell),
+            Expanded(
+              child: Column(
+                children: [
+                  Expanded(child: shell),
+                  const Dock(),
+                ],
+              ),
+            ),
           ],
         ),
       );
     }
     return Scaffold(
-      body: shell,
+      body: Column(
+        children: [
+          Expanded(child: shell),
+          const Dock(),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: shell.currentIndex,
         onDestinationSelected: _go,

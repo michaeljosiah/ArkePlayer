@@ -1,17 +1,73 @@
+import 'package:arke_library/arke_library.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/router/routes.dart';
-import '../../../app/widgets/frame_placeholder.dart';
+import '../../../app/services.dart';
+import '../../../app/theme/tokens.dart';
+import '../../../app/widgets/shelf.dart';
+import '../../add_file/presentation/add_flow.dart';
+import '../../library/presentation/item_menu.dart';
 
-/// Home is for going on: Continue, New, Worlds; offline, what is on the phone.
-class HomeScreen extends StatelessWidget {
+/// Home before an account (P8b, P8d): Continue, then Added; with nothing added, the state line
+/// and Add a file. No picture in the head: there is no account to show (P8 rule 1).
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => FramePlaceholder(
-    title: 'Home',
-    frames: const ['P1b', 'P6d'],
-    actions: [FilledButton(onPressed: () => context.push(Routes.play('saltlight')), child: const Text('Continue'))],
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(libraryItemsProvider).value ?? const [];
+    final store = ref.watch(libraryStoreProvider).value;
+    final going = continueShelf(items);
+    final added = addedShelf(items);
+    final cardWidth = MediaQuery.sizeOf(context).width >= WindowBands.fold ? 420.0 : 300.0;
+
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const ShelfHeader(title: 'Home'),
+          Expanded(
+            child: items.isEmpty
+                ? EmptyShelf(onAdd: () => addFiles(context, ref))
+                : ListView(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    children: [
+                      if (going.isNotEmpty) ...[
+                        const SectionHead('Continue'),
+                        SizedBox(
+                          height: cardWidth * 9 / 16,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: going.length,
+                            separatorBuilder: (context, index) => const SizedBox(width: 12),
+                            itemBuilder: (context, index) => ContinueCard(
+                              item: going[index],
+                              cover: coverOf(store, going[index]),
+                              width: cardWidth,
+                              onOpen: () => openItem(context, going[index]),
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SectionHead('Added'),
+                      SizedBox(
+                        height: 168,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: added.length,
+                          separatorBuilder: (context, index) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) =>
+                              AddedSquare(item: added[index], cover: coverOf(store, added[index]), onOpen: () => openItem(context, added[index])),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
 }

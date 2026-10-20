@@ -1,21 +1,38 @@
+import 'package:arke_library/arke_library.dart';
 import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
+import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
+import 'package:arke_publication/arke_publication.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Future<void> _pumpAt(WidgetTester tester, Size size, {String location = Routes.home}) async {
+Future<void> _pumpAt(WidgetTester tester, Size size, {String location = Routes.home, List<LibraryItem> items = const []}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
-    MaterialApp.router(
-      theme: arkeTheme(Brightness.light),
-      routerConfig: buildRouter(initialLocation: location),
+    ProviderScope(
+      overrides: [libraryItemsProvider.overrideWith((ref) => Stream.value(items))],
+      child: MaterialApp.router(
+        theme: arkeTheme(Brightness.light),
+        routerConfig: buildRouter(initialLocation: location),
+      ),
     ),
   );
   await tester.pumpAndSettle();
 }
+
+LibraryItem _item(String id, FileFormat format, {Place? place, DateTime? addedAt}) => LibraryItem(
+  id: id,
+  format: format,
+  title: 'Title $id',
+  byteLength: 1000000,
+  addedAt: addedAt ?? DateTime.utc(2026, 10, 20),
+  file: 'items/$id/media',
+  place: place,
+);
 
 void main() {
   testWidgets('a phone has the tabs as a bar (P1 rule 3)', (tester) async {
@@ -33,15 +50,54 @@ void main() {
     expect(find.byType(NavigationBar), findsNothing);
   });
 
-  testWidgets('a world opens inside Library and keeps the tabs', (tester) async {
-    await _pumpAt(tester, const Size(390, 844), location: Routes.world('the-undersong'));
-    expect(find.text('the-undersong'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+  testWidgets('nothing added: the state line and Add a file, no account anywhere (P8b, P8 rule 1)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844));
+    expect(find.text('Nothing added'), findsOneWidget);
+    expect(find.text('Add a file'), findsOneWidget);
+    expect(find.textContaining('Sign in'), findsNothing);
   });
 
-  testWidgets('a player covers the tabs', (tester) async {
-    await _pumpAt(tester, const Size(390, 844), location: Routes.play('saltlight'));
-    expect(find.text('saltlight'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+  testWidgets('first open is the wordmark and Add a file alone (P8a)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844), location: Routes.welcome);
+    expect(find.text('ARKE'), findsOneWidget);
+    expect(find.text('Add a file'), findsOneWidget);
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.textContaining('Sign in'), findsNothing);
+  });
+
+  testWidgets('Home with files: Continue, then Added (P8d)', (tester) async {
+    final items = [
+      _item(
+        'a',
+        FileFormat.m4b,
+        place: Place(progress: 0.4, position: const Duration(minutes: 3), updatedAt: DateTime.utc(2026, 10, 20, 9)),
+      ),
+      _item('b', FileFormat.epub),
+    ];
+    await _pumpAt(tester, const Size(390, 844), items: items);
+    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Added'), findsOneWidget);
+    expect(find.text('Nothing added'), findsNothing);
+  });
+
+  testWidgets('Library with one kind shows no chips (P8 rule 4)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3)]);
+    expect(find.text('Listen'), findsNothing);
+    expect(find.text('Title a'), findsOneWidget);
+  });
+
+  testWidgets('Library with two kinds shows their chips, and only theirs (P8 rule 4)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3), _item('b', FileFormat.pdf)]);
+    expect(find.text('Listen'), findsOneWidget);
+    expect(find.text('Read'), findsOneWidget);
+    expect(find.text('Watch'), findsNothing);
+  });
+
+  testWidgets('You before an account: Playback, Storage, About only (P8f)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844), location: Routes.you);
+    expect(find.text('Captions'), findsOneWidget);
+    expect(find.text('On this phone'), findsOneWidget);
+    expect(find.text('Version'), findsOneWidget);
+    expect(find.text('Sign out'), findsNothing);
   });
 }
