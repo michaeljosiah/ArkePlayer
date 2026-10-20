@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Future<void> _pumpAt(WidgetTester tester, Size size, {String location = Routes.home, List<LibraryItem> items = const []}) async {
+Future<void> _pumpAt(WidgetTester tester, Size size, {String location = Routes.home, List<LibraryItem> items = const [], double textScale = 1}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -18,6 +18,10 @@ Future<void> _pumpAt(WidgetTester tester, Size size, {String location = Routes.h
       child: MaterialApp.router(
         theme: arkeTheme(Brightness.light),
         routerConfig: buildRouter(initialLocation: location),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
       ),
     ),
   );
@@ -99,5 +103,34 @@ void main() {
     expect(find.text('On this phone'), findsOneWidget);
     expect(find.text('Version'), findsOneWidget);
     expect(find.text('Sign out'), findsNothing);
+  });
+
+  group('text at 200% clips no press (acceptance 9)', () {
+    final items = [
+      _item(
+        'a',
+        FileFormat.m4b,
+        place: Place(progress: 0.4, position: const Duration(minutes: 3), updatedAt: DateTime.utc(2026, 10, 20, 9)),
+      ),
+      _item('b', FileFormat.epub),
+      _item('c', FileFormat.mov),
+    ];
+    for (final (name, location) in [
+      ('Home', Routes.home),
+      ('Library', Routes.library),
+      ('Downloads', Routes.downloads),
+      ('You', Routes.you),
+      ('first open', Routes.welcome),
+    ]) {
+      testWidgets(name, (tester) async {
+        // An overflow is reported as an exception, so a clipped press fails the test.
+        await _pumpAt(tester, const Size(390, 844), location: location, items: items, textScale: 2);
+        expect(tester.takeException(), isNull);
+      });
+    }
+    testWidgets('Home with nothing added', (tester) async {
+      await _pumpAt(tester, const Size(390, 844), textScale: 2);
+      expect(find.text('Add a file'), findsOneWidget);
+    });
   });
 }

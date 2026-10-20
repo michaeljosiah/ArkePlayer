@@ -72,7 +72,7 @@ class _SpaceBar extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label, style: text),
+        Flexible(child: Text(label, style: text)),
       ],
     );
     final otherColor = surface.foreground.withValues(alpha: 0.24);

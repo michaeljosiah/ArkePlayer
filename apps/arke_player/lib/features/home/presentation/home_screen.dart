@@ -20,6 +20,9 @@ class HomeScreen extends ConsumerWidget {
     final going = continueShelf(items);
     final added = addedShelf(items);
     final cardWidth = MediaQuery.sizeOf(context).width >= WindowBands.fold ? 420.0 : 300.0;
+    // The Added row is as tall as a square and its two lines at the reader's text size (acceptance 9).
+    final scaler = MediaQuery.textScalerOf(context);
+    final addedHeight = 120 + 7 + scaler.scale(ArkeType.sizeSm) * 1.4 + scaler.scale(ArkeType.size2xs) * 1.4 + 6;
 
     return SafeArea(
       bottom: false,
@@ -53,7 +56,7 @@ class HomeScreen extends ConsumerWidget {
                       ],
                       const SectionHead('Added'),
                       SizedBox(
-                        height: 168,
+                        height: addedHeight,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
