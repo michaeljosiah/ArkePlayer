@@ -22,7 +22,9 @@ ADR 0001 still holds for Arke worlds after the MVP. Their interactive, visual no
 
 ## Engines
 
-Picked on 20 October 2026 and built into the app. **Compiled and unit-tested; not yet played on a device** — the local disk was full, so the Android build runs in CI (`android` job), and a device check on the Pixel 9 Pro Fold emulator and the owner's Fold7 is owed (docs/mvp.md, acceptance 4–6).
+Picked on 20 October 2026 and built into the app. **The release APK builds (CI `android` job, green from `f082fcb`); not yet played on a device** — the local disk was full, so neither a local Gradle build nor the Pixel 9 Pro Fold emulator could run; a device check on the owner's Fold7 is owed (docs/mvp.md, acceptance 4–6).
+
+Two build fixes the engines needed: `receive_sharing_intent` is pinned to 1.8.1 (1.9.0 puts AGP 9 and Kotlin 2.4 on the classpath), and `kotlin.jvm.target.validation.mode=warning` lets 1.8.1's Java 1.8 and Kotlin 17 halves build.
 
 | | Pick | Where |
 |---|---|---|

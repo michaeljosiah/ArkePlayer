@@ -51,7 +51,7 @@ Each one ends in a build installed on the Fold7 and checked against its frames.
 | M2 | **Listen.** The audio player with chapters, speed and sleep. Background play, the lock screen and the headset. Its place, and Continue on Home. | Acceptance 4 and 7. | Built; device check owed. |
 | M3 | **Read.** The EPUB reader and the PDF page viewer, each keeping its place. | Acceptance 5. | Built; device check owed. |
 | M4 | **Watch.** The film player upright and turned, captions from a sidecar SRT or VTT, its place. | Acceptance 6. | Built; device check owed. |
-| M5 | **Release candidate.** Fold and tablet layouts, light and dark, accessibility, large and low-space cases, You, and a signed release build on the chosen channel. | Acceptance 9 and 10, and every earlier item rechecked. | In progress. CI builds the APK on every push. |
+| M5 | **Release candidate.** Fold and tablet layouts, light and dark, accessibility, large and low-space cases, You, and a signed release build on the chosen channel. | Acceptance 9 and 10, and every earlier item rechecked. | Fold rail and two columns, light and dark, and text at 200% are tested; low space is refused before copying; CI builds the release APK green. Owed: the upload-key-signed APK (needs local disk) and the device run. |
 
 Listen comes first: it carries the most risk (background play and the lock screen) and the most use.
 

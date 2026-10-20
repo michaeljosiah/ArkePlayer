@@ -49,7 +49,8 @@ dart format --output=none --set-exit-if-changed .
 ## State
 
 - **Built (the MVP, M0–M4):** add your own audio, books and films (several at once, or through Share to / Open in), each read before it is added and refused in one clause if it can't be; Home, Library, Downloads and You as P8 draws them; the audio player with chapters, speed, sleep, the lock screen and the dock; the EPUB reader; the PDF page viewer; the film player with captions. Places are kept on the device. Packages: `arke_publication` (manifests, verification, format and DRM probe), `arke_library` (the library index), `arke_media` (tags, chapters, covers).
-- **Not yet checked on a device:** the players and the share intake are compiled and unit-tested, and the APK builds in CI (`android` job, downloadable); a run on the Fold7 is owed.
+- **Builds:** CI's `android` job builds the release APK on every push (`studio.arke.player` 0.1.0, 79 MB with arm64, armv7 and x86_64) and keeps it 14 days as the `arke-player-apk` artifact, signed with the debug key. The upload-key-signed APK is built locally (`flutter build apk --release` with `android/key.properties`).
+- **Not yet checked on a device:** the players and the share intake are compiled and unit-tested; the shelves are rendered and compared with P8 (`test/shoot_test.dart`). A run on the Fold7 is owed.
 - **Not built:** Arke worlds and packages, sign-in and shares — after the MVP.
 - **Waiting on others:** the Arke cloud (accounts, shares, streaming), which does not exist yet; `NoArkeCloud` answers as the Studio's seam does. The world package format is owed to SPEC-048 in the ArkeStudio specs.
 - **Undecided:** a licence. See [ADR 0001](docs/decisions/0001-host-the-studio-players.md) before choosing one.
