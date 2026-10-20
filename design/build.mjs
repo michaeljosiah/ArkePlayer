@@ -119,6 +119,21 @@ const TURNS = [
     ],
     next: `Try next: “a video with its SRT” · “Details from ⋯” · “a CBZ comic open”`,
   },
+  {
+    id: 'p8', status: 'Drawn for the MVP', name: 'Before an account, and a library of files only — first open, nothing added, Home and Library with files, You',
+    lead: `The MVP (ArkePlayer <code>docs/mvp.md</code>) plays the person’s own audio, books and films with no account and no Arke worlds. P1–P7 always drew an account and worlds beside files; these are the states without them. Drawn at the owner’s word to start M0, and built on without waiting, as the owner asked.`,
+    rules: [
+      ['Before an account exists', `No control that needs an account is drawn: not <code>Sign in with Arke</code> on first open (${F('P1a')}), not the picture in Home’s head (${F('P1b')}), not <code>Shared</code> in Library (${F('P1c')}), not the account in You (${F('P6b')}). Each is <b>absent, never disabled</b>. When sign-in arrives those frames return as drawn.`],
+      ['First open', `The wordmark over the app’s own picture — bundled with it, since no world exists yet — and one press, <code>Add a file</code>, full width under the thumb (${F('P8a')}). It opens Add (${F('P2c')}), which in the MVP holds <code>Choose files</code> alone.`],
+      ['Nothing added', `Home, Library and Downloads keep their titles and show one state line, <code>Nothing added</code>, over <code>Add a file</code> (${F('P8b')}). The tabs stay. No picture, no sentence.`],
+      ['Library with files only', `With no worlds and no shares there is no <code>All · Shared · Added</code>. The chips are what a person does — <code>All · Listen · Read · Watch</code>, as a world’s groups are — each shown only when a file of its kind exists, and no chips at all when only one kind does (${F('P8c')}). Rows as ${F('P7b')}: cover or first page at <code>52</code>, the title, the format with the author, pages or length, and the size; newest first; <code>+</code> in the head; ⋯ holds <code>Details</code> and <code>Remove</code>.`],
+      ['Home with files', `<code>Continue</code> as P1 rule 4, then <b>Added</b>: the newest files, at most <code>10</code>, as <code>120</code> squares with the title and the format; a press opens the file in its player (${F('P8d')}). <code>New</code> and <code>Worlds</code> return with shares and worlds. With files and nothing in progress, Added stands alone.`],
+      ['On a Fold', `The rail, and Library’s rows in two columns (${F('P8e')}).`],
+      ['You before an account', `<b>Playback</b>: <code>Captions</code>; <b>Storage</b>: <code>On this phone</code> with its size; <b>About</b>: <code>Version</code> and <code>Licences</code> (${F('P8f')}). <code>Text</code>, <code>Slow push</code>, <code>Autoplay next</code>, <code>Wi-Fi only</code> and <code>Adult content</code> return with the Arke audiobooks, micro dramas, shares and adult-marked productions they belong to.`],
+      ['Words', `Labels only: Add a file, Nothing added, All, Listen, Read, Watch, Added, Continue, Playback, Captions, Storage, On this phone, About, Version, Licences; sizes, lengths and pages as data.`],
+    ],
+    next: `Try next: “Details from ⋯” · “Library with one kind only” · “Downloads with files only”`,
+  },
 ];
 
 // ---- assemble ---------------------------------------------------------------------------------
@@ -134,7 +149,7 @@ const section = (t) => {
 const intro = `<section class="dv-turn" id="t0" style="padding:36px 44px 28px">
   <div style="max-width:760px;display:flex;flex-direction:column;gap:10px">
     <div style="font:650 20px/1.2 var(--font-sans);letter-spacing:-0.02em;color:var(--dv-ink)">Arke Player · design master</div>
-    <div style="font:500 13px/1.5 var(--font-sans);color:var(--dv-ink)"><a href="#p7">Latest: P7 · Files in standard formats</a> · ${DATE}</div>
+    <div style="font:500 13px/1.5 var(--font-sans);color:var(--dv-ink)"><a href="#${TURNS.at(-1).id}">Latest: ${TURNS.at(-1).id.toUpperCase()} · ${esc(TURNS.at(-1).name.split(' — ')[0])}</a> · ${DATE}</div>
     <div style="font:400 13px/1.65 var(--font-sans);color:var(--dv-ink-body)">A phone app for what is made in Arke: worlds shared through an Arke account, and Arke packages and standard files — EPUB, PDF, audio, video — added from the phone, watched, heard, read and played. It hosts the Studio’s players — the interactive player (<a href="${STUDIO}#t156">Studio 156</a>), the visual novel (<a href="${STUDIO}#t174">174</a>), the audiobook (<a href="${STUDIO}#t186">186</a>, <a href="${STUDIO}#t211">211</a>, <a href="${STUDIO}#t212">212</a>) and the show page (<a href="${STUDIO}#t199">199</a>) — and adds the shelves, sharing, packages and downloads around them. Turns are numbered P1, P2… and frames P1a… so they never share a number with the <a href="${STUDIO}">Studio master</a>. Frames are 390 × 844 for a phone, 844 × 390 turned, 984 × 1092 for a Fold7 open. The sample is The Undersong, shared by Helen Marsh with Jonah Pike. <a href="review.html">Review page</a> · <a href="notes.md">Notes</a></div>
     <div style="font:400 13px/1.65 var(--font-sans);color:var(--dv-ink-body)"><b style="color:var(--dv-ink)">Turns.</b> ${TURNS.map((t) => `<a href="#${t.id}">${t.id.toUpperCase()} · ${esc(t.name.split(' — ')[0])}</a>`).join(' · ')}</div>
     <div style="font:400 13px/1.65 var(--font-sans);color:var(--dv-ink-body)"><b style="color:var(--dv-ink)">Calls for the owner.</b> 1 · When a share ends, its downloads go too (drawn so, <a href="#p2g">P2g</a>). 2 · The Player runs the Studio’s web player modules inside a native shell, rather than players written again (drawn so, <a href="#p3">P3</a>). 3 · A world package — a ZIP of a world’s name, logline, key art and its publications — is the file people add; its extension and schema go to SPEC-048 (<a href="#p2">P2</a>). 4 · The Studio’s Share sheet, who and which productions, is its own turn in the Studio master.</div>

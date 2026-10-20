@@ -46,7 +46,7 @@ Each one ends in a build installed on the Fold7 and checked against its frames.
 
 | | Milestone | Done when |
 |---|---|---|
-| M0 | **Groundwork.** P8 drawn and approved. The library index and places, in drift/SQLite. Settings saved. Geist and Jost vendored. A short spike for each engine (below), its pick recorded in ADR 0004. | The app opens on P8's first open and lists nothing, and all four engines have played a file on the Fold7. |
+| M0 | **Groundwork.** P8 drawn and approved. The library index and places, in drift/SQLite. Settings saved. Geist and Jost vendored. A short spike for each engine (below), its pick recorded in ADR 0004. | The app opens on P8a and lists nothing (P8b), and each engine has played a file on the Pixel 9 Pro Fold emulator. The Fold7 itself is checked by the owner. |
 | M1 | **Add your files.** The Add sheet (Choose files), several at once, Open in and Share to; the space check, copy, probe and metadata; refusals; Library's files; Remove; Downloads' space. | Acceptance 1–3 and 8. |
 | M2 | **Listen.** The audio player with chapters, speed and sleep. Background play, the lock screen and the headset. Its place, and Continue on Home. | Acceptance 4 and 7. |
 | M3 | **Read.** The EPUB reader and the PDF page viewer, each keeping its place. | Acceptance 5. |
@@ -91,8 +91,8 @@ Listen comes first: it carries the most risk (background play and the lock scree
 9. **Layout and access.** A tab bar under 600 wide and a rail on the unfolded Fold7; light and dark. TalkBack names every press, and text at 200% clips no press.
 10. **Shipped.** CI is green, and a signed release build is installed from the chosen channel.
 
-## Calls for the owner
+## Decided
 
-1. **Android first.** The release target is Android: the Fold7 and phones. iOS keeps compiling in CI, and TestFlight comes after the MVP, because an iOS build needs a Mac.
-2. **The channel.** A Play Console internal testing track (needs a developer account and an upload key) or a signed APK installed by hand.
-3. **P8 before the empty states.** First open without Sign in, Home with nothing in it, and Library with files only are drawn and approved first, so the MVP never invents UI.
+1. **Android first** (owner, 20 October 2026). The release target is Android: the Fold7 and phones. iOS keeps compiling in CI, and TestFlight comes after the MVP.
+2. **A signed APK, installed by hand** (owner, 20 October 2026). The upload key lives outside the repository (`android/key.properties` and the keystore are gitignored). A Play Console track can follow.
+3. **P8 drawn** ([design/Arke Player.dc.html#p8](../design/Arke%20Player.dc.html)): first open without Sign in, nothing added, Home and Library with files only, and You without an account. The build proceeds on it, as the owner asked, and the owner reviews it alongside the build.

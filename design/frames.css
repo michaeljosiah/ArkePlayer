@@ -273,3 +273,13 @@
 .ap.pdf{background:var(--secondary)}
 .ap .pg{margin:0 16px 14px;background:var(--neutral-50);box-shadow:var(--shadow-md);border-radius:3px;overflow:hidden}
 .ap .pg>img{width:100%;display:block}
+
+/* P8 · before an account, and a library of files only. */
+.ap .empty{position:absolute;left:24px;right:24px;top:42%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.ap .empty .state{font:var(--type-h3);color:var(--muted-foreground)}
+.ap .sq{flex:none;width:120px}
+.ap .sq .im{position:relative;width:120px;height:120px;border-radius:12px;overflow:hidden;background:var(--secondary)}
+.ap .sq .im>img{width:100%;height:100%;object-fit:cover}
+.ap .sq .t{margin-top:7px;font:var(--type-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .sq .m{font:var(--type-meta);color:var(--muted-foreground)}
+.ap .cols2{display:grid;grid-template-columns:1fr 1fr;column-gap:8px;padding:0 8px}

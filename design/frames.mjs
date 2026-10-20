@@ -242,8 +242,45 @@ const P7 = [
 ${audioBar(`<span class="ib lab">1.0×</span><span class="ib lab">${ic('moon', 16)}Off</span>`).replace('width:44%"></i><b style="left:44%', 'width:62%"></i><b style="left:62%').replace('<span>13:58</span><span>31:40</span>', '<span>27:05</span><span>43:30</span>').replace('<div class="trow" style="margin-top:14px"><span class="ib lab">', '<div class="trow" style="margin-top:14px;justify-content:center;gap:24px"><span class="ib lab">')}${hi()}`),
 ];
 
+// ---- P8 · before an account, and a library of files only (the MVP) --------------------------------
+const MINE = {
+  tide: { img: 'launch-harbour.jpg', pos: '50% 50%', title: 'Tidewater Sessions', m: 'M4B · Amaal Reyes · 6 h 12 m · 288 MB', fmt: 'M4B · 6 h 12 m' },
+  songs: { img: 'banner-audio.jpg', pos: '30% 50%', title: 'Harbour Songs', m: 'MP3 · 3:42 · 8 MB', fmt: 'MP3 · 3:42' },
+  almanac: { img: 'char-maren.jpg', pos: '50% 20%', title: 'The Salt Almanac', m: 'EPUB · Ines Varga · 2.1 MB', fmt: 'EPUB · Ines Varga' },
+  boards: { img: 'scene4-board-sheet.jpg', pos: '0% 0%', title: 'Saltlight boards', m: 'PDF · 24 pages · 18 MB', fmt: 'PDF · 24 pages' },
+  ferry: { img: 'drowned-quarter.jpg', pos: '30% 50%', title: 'Night Ferry', m: 'MOV · 1 h 48 m · 2.4 GB', fmt: 'MOV · 1 h 48 m' },
+  reel: { img: 'banner-video.jpg', pos: '60% 50%', title: 'Lighthouse reel', m: 'MP4 · 12 min · 410 MB', fmt: 'MP4 · 12 min' },
+};
+const ALL_MINE = [MINE.tide, MINE.songs, MINE.almanac, MINE.boards, MINE.ferry, MINE.reel];
+const sq = ({ img, pos, title, fmt }) => `<div class="sq"><div class="im"><img src="${A}${img}" alt="" style="object-position:${pos}"></div><div class="t">${title}</div><div class="m">${fmt}</div></div>`;
+const kindChips = `<div class="chips"><span class="chip on">All</span><span class="chip">Listen</span><span class="chip">Read</span><span class="chip">Watch</span></div>`;
+const filesLibrary = (rail = false) => `${sb()}<div class="hd"${rail ? ' style="padding:6px 28px 6px 24px"' : ''}><h1>Library</h1><span class="icb">${ic('plus', 20, 2)}</span></div>${kindChips.replace('class="chips"', rail ? 'class="chips" style="padding:2px 24px 0"' : 'class="chips"')}<div class="body" style="padding-top:12px">${rail ? `<div class="cols2">${ALL_MINE.map((f) => frow(f, ic('more', 18))).join('')}</div>` : ALL_MINE.map((f) => frow(f, ic('more', 18))).join('')}</div>`;
+
+const P8 = [
+  frame('P8a', 'First open, before sign-in', media(), `<img class="pic" src="${A}launch-harbour.jpg" alt="" style="height:66%;object-position:50% 40%"><div class="sbot" style="height:600px"></div>${sb(true)}
+<div style="position:absolute;left:0;right:0;top:432px;text-align:center"><div class="wm">Arke</div><div class="wm2">Player</div></div>
+<div style="position:absolute;left:20px;right:20px;bottom:54px"><span class="btn pri wide">${ic('plus', 18, 2)}Add a file</span></div>${hi()}`),
+
+  frame('P8b', 'Home, nothing added', 'phone', `${sb()}<div class="hd"><h1>Home</h1></div><div class="body"><div class="empty"><div class="state">Nothing added</div><span class="btn pri">${ic('plus', 18, 2)}Add a file</span></div></div>${tabs('Home')}${hi()}`),
+
+  frame('P8c', 'Library, files only', 'phone', `${filesLibrary()}${tabs('Library')}${hi()}`),
+
+  frame('P8d', 'Home, with files', 'phone', `${sb()}<div class="hd"><h1>Home</h1></div><div class="body">
+${sh('Continue')}<div class="hrow">${cc({ img: MINE.tide.img, pos: '50% 50%', kind: 'Audiobook', title: 'Tidewater Sessions', where: 'Chapter 4 · 16 min left', at: 62 })}${cc({ img: MINE.ferry.img, pos: MINE.ferry.pos, kind: 'Film', title: 'Night Ferry', where: '52 min left', at: 52 })}</div>
+${sh('Added')}<div class="hrow">${[MINE.almanac, MINE.boards, MINE.reel, MINE.songs].map(sq).join('')}</div>
+</div>${tabs('Home')}${hi()}`),
+
+  frame('P8e', 'Library on a Fold, files only', 'fold', `${tabs('Library', true)}<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${filesLibrary(true)}${hi()}</div>`),
+
+  frame('P8f', 'You, before sign-in', 'phone', `${sb()}<div class="hd"><h1>You</h1></div><div class="body" style="padding-top:8px">
+<div class="gl" style="margin-top:6px">Playback</div><div class="grp">${row('Captions', 'English')}</div>
+<div class="gl">Storage</div><div class="grp">${row('On this phone', '3.2 GB')}</div>
+<div class="gl">About</div><div class="grp">${row('Version', '0.1.0', '')}${row('Licences')}</div>
+</div>${tabs('You')}${hi()}`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8) };
