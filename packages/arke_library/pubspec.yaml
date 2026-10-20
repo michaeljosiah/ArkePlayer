@@ -1,0 +1,17 @@
+name: arke_library
+description: >-
+  The person's library on this device, with no Flutter: what was added, what was read from each
+  file, the place reached in each, and the lists Home and Library show.
+publish_to: none
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  arke_publication:
+    path: ../arke_publication
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.29.0

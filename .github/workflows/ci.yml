@@ -28,6 +28,9 @@ jobs:
       - name: Test the pure-Dart packages
         run: dart test
         working-directory: packages/arke_publication
+      - name: Test the library
+        run: dart test
+        working-directory: packages/arke_library
       - name: Test the app
         run: flutter test
         working-directory: apps/arke_player
