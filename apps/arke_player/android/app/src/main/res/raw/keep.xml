@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- audio_service looks the notification icon up by the name main.dart gives it, which the release
+     build's resource shrinker cannot see, so it would strip the icon. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@drawable/ic_stat_arke" />

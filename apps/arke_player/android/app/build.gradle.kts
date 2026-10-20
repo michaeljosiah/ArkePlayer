@@ -9,8 +9,9 @@ plugins {
 }
 
 // The upload key for a signed APK lives outside the repository. `android/key.properties` (gitignored)
-// names it: storeFile, storePassword, keyAlias, keyPassword. Without it a release build falls back
-// to the debug key, so CI and a fresh clone still build (docs/mvp.md, Decided 2).
+// names it: storeFile, storePassword, keyAlias, keyPassword. CI writes one naming its own test key.
+// Without it a release build falls back to the debug key, so a fresh clone still builds
+// (docs/mvp.md, Decided 2).
 val keyProperties = Properties().apply {
     val file = rootProject.file("key.properties")
     if (file.exists()) FileInputStream(file).use { load(it) }

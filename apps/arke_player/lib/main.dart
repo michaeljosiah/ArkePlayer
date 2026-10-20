@@ -32,6 +32,8 @@ Future<void> main() async {
       androidNotificationChannelId: 'studio.arke.player.playback',
       androidNotificationChannelName: 'Playback',
       androidNotificationOngoing: true,
+      // The mark in white: the status bar draws only an icon's alpha, so the launcher icon was a blob.
+      androidNotificationIcon: 'drawable/ic_stat_arke',
       androidStopForegroundOnPause: true,
       fastForwardInterval: Duration(seconds: 30),
       rewindInterval: Duration(seconds: 15),

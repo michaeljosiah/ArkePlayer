@@ -39,8 +39,8 @@ jobs:
         working-directory: apps/arke_player
 
   # The Android build, so the native side (plugins, the media service, signing config) is proven on
-  # every push, and an installable APK is there to download. It is signed with the debug key here;
-  # the release key never leaves the owner's machine (docs/mvp.md, Decided 2).
+  # every push, and an installable APK is there to download. It is signed with a throwaway CI test
+  # key, not the upload key, which never leaves the owner's machine (docs/mvp.md, Decided 2).
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -67,6 +67,18 @@ jobs:
           free -h && df -h /
           mkdir -p ~/.gradle
           printf '%s\n' 'org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g' 'kotlin.daemon.jvmargs=-Xmx1g' >> ~/.gradle/gradle.properties
+      # Each runner makes its own debug key, so one CI APK would not install over another without an
+      # uninstall, which clears the library. One test key, kept in the repository's secrets, signs
+      # them all instead. Its certificate's SHA-256 starts C1:61:B1:45. Without the secrets (a fork's
+      # pull request), the build falls back to the debug key.
+      - name: Sign with the CI test key
+        env:
+          KEYSTORE: ${{ secrets.ARKE_CI_KEYSTORE_BASE64 }}
+          PASSWORD: ${{ secrets.ARKE_CI_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then echo "No CI test key: the debug key signs this build."; exit 0; fi
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/ci-test.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=arke-ci-test\nkeyPassword=%s\n' "$RUNNER_TEMP/ci-test.jks" "$PASSWORD" "$PASSWORD" > apps/arke_player/android/key.properties
       # One APK per ABI first: the universal one carries three engines and is 76 MiB, past what a
       # phone session can be sent (30 MiB). The Fold7 and every current phone take arm64-v8a.
       # Flutter numbers these 1000 × ABI + versionCode, so a split install won't take the universal
