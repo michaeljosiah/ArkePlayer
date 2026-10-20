@@ -98,11 +98,11 @@ exists. Approved as drawn the same day. P9 draws it with no account, beside P8's
 `Install` and what is inside, the download and check in place of the press, refusals in one
 clause, and the installed world, whose one production is shown at the full width.
 
-The demo is The Undersong as ArkeStudio release `undersong-2026-10-19-r3` describes it: The Ledger
-of Nights, 16 illustrated chapters, with completed narration for 6 (about 123 minutes); the video
-pilot is unfinished. That release is the Studio's Sample world, an editable world of 1.6 GB, so it
-is a world's source and the Player never opens one. The frames assume a world package of its
-publications, which does not exist yet: its size (386 MB) and file count are samples.
+The demo is The Undersong: The Ledger of Nights, 16 chapters with narration for 12 (3 h 49 m),
+from the Studio's own EPUB and M4B, packed as `the-undersong-player-2026-10-20.zip` (182 MB) and
+published on ArkeStudio release `undersong-2026-10-19-r3` beside the Studio's Sample world. That
+1.6 GB download is the editable world, a world's source, and the Player never opens one. The
+frames' size (386 MB) and file count are samples.
 
 ## Calls for the owner
 
@@ -121,8 +121,8 @@ publications, which does not exist yet: its size (386 MB) and file count are sam
 5. **The worlds to install ship with the app.** Drawn so (P9), approved with it. Each is pinned by its package's
    address and SHA-256, as the Studio pins its Sample world, so the list shows offline and needs
    no Arke cloud; a catalogue served by the cloud can replace it.
-6. **The Undersong needs publishing as a world package** of its publications before the Player can
-   install it. The package format is owed to SPEC-048.
+6. **The Undersong is published as a world package** (182 MB, ADR 0005). Its format is owed to
+   SPEC-048.
 7. **Whether P9 joins the MVP.** The MVP left world import out; P9 needs no account.
 
 ## What this rests on

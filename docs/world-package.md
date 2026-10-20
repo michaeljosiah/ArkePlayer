@@ -41,22 +41,47 @@ How a world gets onto Available (P9). The format is [ADR 0005](decisions/0005-wo
 
 ## The Undersong
 
-The Undersong is in the catalogue with `"package": null`, so Available, first open's `Install a world` and Home's section all stay absent until these steps are done.
+Published on 20 October 2026 as `the-undersong-player-2026-10-20.zip`: 182,182,066 bytes, SHA-256 `46ff9dbaf5fed13ca3f5c795ad4aed0ba7165ee84cc3bcfec6730e9451504a8b`. It sits on ArkeStudio release `undersong-2026-10-19-r3`, beside the Studio's Sample world, and is pinned in the catalogue. Packed from these files on that release, unchanged:
 
-Facts below come from ArkeStudio release `undersong-2026-10-19-r3` (listed with range requests, 20 October 2026) and SPEC-048 §2.11.
+| | File | What the Player reads |
+|---|---|---|
+| Book | `the-undersong-the-ledger-of-nights-2026-10-20.epub` | *The Ledger of Nights*, 16 chapters, a cover |
+| Narration | `the-undersong-chapters-01-12-partial-2026-10-20.m4b` | 3 h 49 m, 12 chapter markers, from *Neap* to *Practical transport* |
+| Key art and picture | the app's bundled `assets/worlds/undersong/` | the world's key art, the production's picture |
 
-1. **The book.** In Arke Studio (0.5.61 or later), open The Undersong. Publish *The Ledger of Nights* as a story edition: all 16 chapters, output EPUB only.
-   - The Studio's EPUB writer puts in the cover and the text, not the 244 chapter illustrations, so the book reads unillustrated.
-   - An illustrated book needs the Studio's EPUB writer to place illustrations inline. That is Studio work and an amendment to SPEC-048 §2.11.
-   - The release's own EPUB (110 KB) predates the illustration pass.
-2. **The narration.** Publish a second edition with chapters 1–6 only, output M4B only.
-   - An edition takes one chapter list for all its outputs. Publishing refuses chapters without takes and never generates narration, so all 16 chapters with an M4B would be blocked.
-   - The result is an AAC M4B at 192 kb/s with six chapter markers, about 2 h 3 m.
-   - The release holds the same six chapters as separate M4A files (17–24 MB each, about 120 MB). An interim M4B could be joined from them with ffmpeg, but Publish is the authority for the mix, the markers and the metadata.
-3. **The pictures.** Pick the world's key art and one 16:9 illustration for *The Ledger of Nights*. The release's 431 pictures (1.15 GB) are mostly the Studio's working PNGs and stay out.
-4. **Pack, publish, pin, ship,** as above.
-5. **SPEC-048.** Amend it to define the package of a world, or to adopt ADR 0005's.
+Neither file names an author, so none is shown.
 
-What the Player will not have, and why:
+**A new edition**, for example when chapters 13–16 are narrated:
+1. Publish again from the Studio.
+2. Pack with a new `edition` and a new file name.
+3. Upload it beside the old one.
+4. Pin it and ship a build.
+
+Never replace the published ZIP: a build pinned to it would refuse the new bytes as `1 file does not match`.
+
+Still owed:
+- **SPEC-048** should define the package of a world, or adopt ADR 0005's.
+- **An illustrated book.** The Studio's EPUB writer carries the cover and the text, not the chapter illustrations. Placing them inline is Studio work, and an amendment to SPEC-048 §2.11.
 - **The pictures of the moment and Slow push.** These come from Studio 186's illustrated audiobook player, and an M4B carries only a cover, which the native player shows (P7d). They need the hosted Studio audiobook module (ADR 0001), after the MVP.
 - **The video pilot.** It is unfinished and not in the package.
+
+The spec it was packed from:
+
+```json
+{
+  "id": "undersong",
+  "edition": "2026-10-20",
+  "name": "The Undersong",
+  "logline": "A drowned god still sings beneath the harbour.",
+  "keyArt": "files/key-art.jpg",
+  "productions": [
+    {
+      "id": "ledger-of-nights",
+      "title": "The Ledger of Nights",
+      "picture": "files/ledger-of-nights.jpg",
+      "book": "files/the-undersong-the-ledger-of-nights-2026-10-20.epub",
+      "narration": "files/the-undersong-chapters-01-12-partial-2026-10-20.m4b"
+    }
+  ]
+}
+```
