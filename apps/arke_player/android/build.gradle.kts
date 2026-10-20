@@ -20,18 +20,21 @@ subprojects {
 }
 
 // A plugin that compiles its Java for 1.8 while Kotlin compiles for 17 (receive_sharing_intent 1.8.1)
-// fails Kotlin's JVM-target check. Each plugin's Kotlin follows that plugin's own Java target, so
-// both halves of a module agree whatever the plugin declares.
-fun Project.alignKotlinWithJava() {
-    val android = extensions.findByName("android") as? com.android.build.gradle.BaseExtension ?: return
-    val javaTarget = android.compileOptions.targetCompatibility.toString()
+// fails Kotlin's JVM-target check. Every plugin module compiles both for 17, set rather than read:
+// AGP refuses to report a module's Java target before it is finalized. D8 turns Java 17 bytecode
+// into Android code whatever the device's version.
+fun Project.compileFor17() {
+    extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(javaTarget))
+        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 subprojects {
     // :app is evaluated early (evaluationDependsOn above), and afterEvaluate refuses a project that is.
-    if (state.executed) alignKotlinWithJava() else afterEvaluate { alignKotlinWithJava() }
+    if (state.executed) compileFor17() else afterEvaluate { compileFor17() }
 }
 
 tasks.register<Delete>("clean") {
