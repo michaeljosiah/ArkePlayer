@@ -37,3 +37,30 @@ jobs:
       - name: Test the app
         run: flutter test
         working-directory: apps/arke_player
+
+  # The Android build, so the native side (plugins, the media service, signing config) is proven on
+  # every push, and an installable APK is there to download. It is signed with the debug key here;
+  # the release key never leaves the owner's machine (docs/mvp.md, Decided 2).
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.3
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build the APK
+        run: flutter build apk --release
+        working-directory: apps/arke_player
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arke-player-apk
+          path: apps/arke_player/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14
