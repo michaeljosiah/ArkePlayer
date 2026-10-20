@@ -44,14 +44,14 @@ Around the players:
 
 Each one ends in a build installed on the Fold7 and checked against its frames.
 
-| | Milestone | Done when |
-|---|---|---|
-| M0 | **Groundwork.** P8 drawn and approved. The library index and places, in drift/SQLite. Settings saved. Geist and Jost vendored. A short spike for each engine (below), its pick recorded in ADR 0004. | The app opens on P8a and lists nothing (P8b), and each engine has played a file on the Pixel 9 Pro Fold emulator. The Fold7 itself is checked by the owner. |
-| M1 | **Add your files.** The Add sheet (Choose files), several at once, Open in and Share to; the space check, copy, probe and metadata; refusals; Library's files; Remove; Downloads' space. | Acceptance 1–3 and 8. |
-| M2 | **Listen.** The audio player with chapters, speed and sleep. Background play, the lock screen and the headset. Its place, and Continue on Home. | Acceptance 4 and 7. |
-| M3 | **Read.** The EPUB reader and the PDF page viewer, each keeping its place. | Acceptance 5. |
-| M4 | **Watch.** The film player upright and turned, captions from a sidecar SRT or VTT, its place. | Acceptance 6. |
-| M5 | **Release candidate.** Fold and tablet layouts, light and dark, accessibility, large and low-space cases, You, and a signed release build on the chosen channel. | Acceptance 9 and 10, and every earlier item rechecked. |
+| | Milestone | Done when | State (20 October 2026) |
+|---|---|---|---|
+| M0 | **Groundwork.** P8 drawn and approved. The library index and places, in drift/SQLite. Settings saved. Geist and Jost vendored. A short spike for each engine (below), its pick recorded in ADR 0004. | The app opens on P8a and lists nothing (P8b), and each engine has played a file on the Pixel 9 Pro Fold emulator. The Fold7 itself is checked by the owner. | P8 drawn (design/, `#p8`). The index is a JSON file written atomically (`arke_library`), the simplest store that works; SQLite waits until a query needs it. Settings, fonts, engines (ADR 0004) and signing in. |
+| M1 | **Add your files.** The Add sheet (Choose files), several at once, Open in and Share to; the space check, copy, probe and metadata; refusals; Library's files; Remove; Downloads' space. | Acceptance 1–3 and 8. | Built; the importer is tested over real ffmpeg-made files. |
+| M2 | **Listen.** The audio player with chapters, speed and sleep. Background play, the lock screen and the headset. Its place, and Continue on Home. | Acceptance 4 and 7. | Built; device check owed. |
+| M3 | **Read.** The EPUB reader and the PDF page viewer, each keeping its place. | Acceptance 5. | Built; device check owed. |
+| M4 | **Watch.** The film player upright and turned, captions from a sidecar SRT or VTT, its place. | Acceptance 6. | Built; device check owed. |
+| M5 | **Release candidate.** Fold and tablet layouts, light and dark, accessibility, large and low-space cases, You, and a signed release build on the chosen channel. | Acceptance 9 and 10, and every earlier item rechecked. | In progress. CI builds the APK on every push. |
 
 Listen comes first: it carries the most risk (background play and the lock screen) and the most use.
 

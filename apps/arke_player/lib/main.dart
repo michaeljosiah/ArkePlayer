@@ -14,7 +14,7 @@ import 'features/players/application/players.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  pdfrxFlutterInitialize();
+  await pdfrxFlutterInitialize();
   _registerFontLicences();
 
   // First open (P8a) until a file has been added; Home after.

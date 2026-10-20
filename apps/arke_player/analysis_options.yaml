@@ -19,6 +19,7 @@ linter:
     prefer_final_fields: true
     prefer_final_locals: true
     unnecessary_lambdas: true
+    unawaited_futures: true
     use_key_in_widget_constructors: true
 
 # The code is formatted at 160 columns; `dart format .` reproduces it and CI checks it.
