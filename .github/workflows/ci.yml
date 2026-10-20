@@ -56,12 +56,14 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      # A private repository's runner is the small one. The template's -Xmx8G for Gradle, which the
-      # Kotlin daemon inherits, overcommitted it: two of three builds on 20 October died with the
-      # runner ("received a shutdown signal"). User-home properties outrank the project's, so this
-      # changes CI only.
+      # A private repository's runner is the small one: 7.8 GiB and 11 GB of free disk. The
+      # template's -Xmx8G for Gradle, which the Kotlin daemon inherits, overcommitted it: two of
+      # three builds on 20 October died with the runner ("received a shutdown signal"). Capped, the
+      # two builds still end at 6.3 GiB used and the disk at 98%, so the .NET and Haskell toolchains
+      # nothing here uses go first. User-home properties outrank the project's, so this changes CI only.
       - name: Fit Gradle to the runner
         run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup
           free -h && df -h /
           mkdir -p ~/.gradle
           printf '%s\n' 'org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g' 'kotlin.daemon.jvmargs=-Xmx1g' >> ~/.gradle/gradle.properties
