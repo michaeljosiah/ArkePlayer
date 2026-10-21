@@ -65,10 +65,13 @@ class DeviceSettings {
   /// First open (P8a) has been passed; later opens land on Home.
   final bool seenFirstOpen;
 
-  // After the MVP (P8 rule 7): these return with the Arke audiobooks, micro dramas, shares and
-  // adult-marked productions they belong to. Kept here, with their designed defaults.
+  /// An illustrated narration's Text (off by default) and Slow push (on), kept on the device
+  /// (SPEC-058 R-23, R-24).
   final bool text;
   final bool slowPush;
+
+  // After the MVP (P8 rule 7): these return with the micro dramas, shares and adult-marked
+  // productions they belong to. Kept here, with their designed defaults.
   final bool autoplayNext;
   final bool wifiOnly;
   final bool adultContent;
@@ -81,6 +84,8 @@ class DeviceSettings {
     double? readerScale,
     ReaderPaper? readerPaper,
     bool? seenFirstOpen,
+    bool? text,
+    bool? slowPush,
   }) => DeviceSettings(
     captions: captions ?? this.captions,
     captionSize: captionSize ?? this.captionSize,
@@ -89,8 +94,8 @@ class DeviceSettings {
     readerScale: readerScale ?? this.readerScale,
     readerPaper: readerPaper ?? this.readerPaper,
     seenFirstOpen: seenFirstOpen ?? this.seenFirstOpen,
-    text: text,
-    slowPush: slowPush,
+    text: text ?? this.text,
+    slowPush: slowPush ?? this.slowPush,
     autoplayNext: autoplayNext,
     wifiOnly: wifiOnly,
     adultContent: adultContent,
@@ -107,6 +112,8 @@ class DeviceSettings {
     'readerScale': readerScale,
     'readerPaper': readerPaper.name,
     'seenFirstOpen': seenFirstOpen,
+    'text': text,
+    'slowPush': slowPush,
   };
 
   static DeviceSettings fromPrefs(Object? Function(String key) read) {
@@ -121,6 +128,8 @@ class DeviceSettings {
       readerScale: scale is double ? scale.clamp(0.7, 2.0) : 1.0,
       readerPaper: pick(ReaderPaper.values, read('readerPaper'), ReaderPaper.paper),
       seenFirstOpen: read('seenFirstOpen') == true,
+      text: read('text') == true,
+      slowPush: read('slowPush') != false,
     );
   }
 }

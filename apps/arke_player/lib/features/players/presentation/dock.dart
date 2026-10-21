@@ -28,13 +28,16 @@ class Dock extends ConsumerWidget {
         final item = engine.item;
         if (item == null) return const SizedBox.shrink();
         final store = ref.watch(libraryStoreProvider).value;
-        final cover = item.cover == null || store == null ? null : File(store.resolve(item.cover!));
+        final kept = item.cover == null || store == null ? null : File(store.resolve(item.cover!));
         final surface = context.surface;
         final text = Theme.of(context).textTheme;
         return StreamBuilder<Duration>(
           stream: engine.position,
           builder: (context, position) {
             final now = position.data ?? engine.now;
+            // An illustrated narration's dock shows the picture of the moment, as the lock screen does.
+            final art = engine.artwork.value;
+            final cover = art == null ? kept : File(art);
             final total = engine.length.inMilliseconds;
             final chapter = item.chapters.length > 1 ? 'Chapter ${engine.chapterAt(now) + 1} · ' : '';
             return Padding(

@@ -3,14 +3,22 @@ import 'dart:async';
 import 'package:arke_library/arke_library.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../settings/domain/device_settings.dart';
+import 'listening_plan.dart';
 
 /// Plays an audio file with the phone's media session around it: the lock screen, a headset's
 /// buttons and the notification drive it, and it keeps playing with the screen locked (docs/mvp.md
 /// acceptance 4; ADR 0004). Skip back and forward move by 15 and 30 seconds (Studio 186); previous
 /// and next move by the file's chapters.
+///
+/// An illustrated narration (SPEC-058 R-26) is a file a chapter. The engine plays them as one queue
+/// but speaks only the book's clock — the chapters back to back, as the item's chapters are — so
+/// seeking, skipping, sleep and the scrubber are the same for both. Its place is kept by chapter
+/// and offset, which a later edition of the world can still find, and the lock screen's artwork
+/// follows the picture of the moment (R-27).
 class AudioEngine extends BaseAudioHandler with SeekHandler {
   AudioEngine() {
     _player.playbackEventStream.listen((_) => _broadcast(), onError: (Object _) => _broadcast());
@@ -24,25 +32,41 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
   final _player = AudioPlayer();
 
   LibraryItem? _item;
+  ListeningPlan? _plan;
   void Function(Place place, {bool? finished})? _keep;
   SleepTimer _sleep = SleepTimer.off;
   Timer? _sleepTimer;
   int? _sleepChapter;
   DateTime _lastKept = DateTime.fromMillisecondsSinceEpoch(0);
 
+  /// The picture the lock screen and the dock show: the cover, or an illustrated narration's
+  /// picture of the moment.
+  final artwork = ValueNotifier<String?>(null);
+
   LibraryItem? get item => _item;
-  Stream<Duration> get position => _player.positionStream;
+  ListeningPlan? get plan => _plan;
+  Stream<Duration> get position => _player.positionStream.map(_book);
   Stream<bool> get playingStream => _player.playingStream;
   bool get playing => _player.playing;
-  Duration get now => _player.position;
-  Duration get length => _player.duration ?? _item?.duration ?? Duration.zero;
+  Duration get now => _book(_player.position);
+  Duration get length => _plan?.document.duration ?? _player.duration ?? _item?.duration ?? Duration.zero;
   double get speed => _player.speed;
   SleepTimer get sleep => _sleep;
 
-  /// Opens [item] at its kept place (else the start) and plays it.
+  /// The player's own position, on the book's clock.
+  Duration _book(Duration local) {
+    final plan = _plan;
+    if (plan == null) return local;
+    final index = (_player.currentIndex ?? 0).clamp(0, plan.starts.length - 1);
+    return plan.starts[index] + local;
+  }
+
+  /// Opens [item] at its kept place (else the start) and plays it. An illustrated narration comes
+  /// with its [plan]; a file with its [path].
   Future<void> open(
     LibraryItem item, {
-    required String path,
+    String? path,
+    ListeningPlan? plan,
     String? artPath,
     required double speed,
     required void Function(Place place, {bool? finished}) keep,
@@ -53,23 +77,33 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     }
     await _keepPlace();
     _item = item;
+    _plan = plan;
     _keep = keep;
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.speech());
-    mediaItem.add(
-      MediaItem(
-        id: item.id,
-        title: item.title,
-        artist: item.author,
-        album: item.author,
-        duration: item.duration,
-        artUri: artPath == null ? null : Uri.file(artPath),
-      ),
-    );
-    final start = item.finished ? Duration.zero : (item.place?.position ?? Duration.zero);
-    await _player.setFilePath(path, initialPosition: start);
+    final place = item.finished ? null : item.place;
+    if (plan != null) {
+      final (index, offset) = plan.locate(plan.timeOf(place?.locator, place?.position ?? Duration.zero));
+      final art = plan.shownAt(plan.starts[index] + offset)?.path ?? artPath;
+      _announce(item, art);
+      await _player.setAudioSources(
+        [for (final chapter in plan.chapters) AudioSource.file(plan.pathOf(chapter.audio))],
+        initialIndex: index,
+        initialPosition: offset,
+      );
+    } else {
+      _announce(item, artPath);
+      await _player.setFilePath(path!, initialPosition: place?.position ?? Duration.zero);
+    }
     await _player.setSpeed(speed);
     await play();
+  }
+
+  void _announce(LibraryItem item, String? art) {
+    artwork.value = art;
+    mediaItem.add(
+      MediaItem(id: item.id, title: item.title, artist: item.author, album: item.author, duration: length, artUri: art == null ? null : Uri.file(art)),
+    );
   }
 
   @override
@@ -88,35 +122,43 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     await _keepPlace();
     await _player.stop();
     _item = null;
+    _plan = null;
+    artwork.value = null;
     await super.stop();
   }
 
+  /// Seeks to [position] on the book's clock.
   @override
-  Future<void> seek(Duration position) => _player.seek(position);
+  Future<void> seek(Duration position) {
+    final plan = _plan;
+    if (plan == null) return _player.seek(position);
+    final (index, offset) = plan.locate(position);
+    return _player.seek(offset, index: index);
+  }
 
   @override
-  Future<void> rewind() => _player.seek(_clamp(_player.position - const Duration(seconds: 15)));
+  Future<void> rewind() => seek(_clamp(now - const Duration(seconds: 15)));
 
   @override
-  Future<void> fastForward() => _player.seek(_clamp(_player.position + const Duration(seconds: 30)));
+  Future<void> fastForward() => seek(_clamp(now + const Duration(seconds: 30)));
 
   /// Previous: the start of this chapter, or the one before when within its first three seconds.
   @override
   Future<void> skipToPrevious() async {
     final chapters = _item?.chapters ?? const [];
-    if (chapters.length < 2) return _player.seek(Duration.zero);
-    final index = chapterAt(_player.position);
+    if (chapters.length < 2) return seek(Duration.zero);
+    final at = now;
+    final index = chapterAt(at);
     final startOfThis = chapters[index].start;
-    final target = _player.position - startOfThis < const Duration(seconds: 3) && index > 0 ? chapters[index - 1].start : startOfThis;
-    await _player.seek(target);
+    await seek(at - startOfThis < const Duration(seconds: 3) && index > 0 ? chapters[index - 1].start : startOfThis);
   }
 
   @override
   Future<void> skipToNext() async {
     final chapters = _item?.chapters ?? const [];
-    final index = chapterAt(_player.position);
+    final index = chapterAt(now);
     if (chapters.length < 2 || index + 1 >= chapters.length) return;
-    await _player.seek(chapters[index + 1].start);
+    await seek(chapters[index + 1].start);
   }
 
   @override
@@ -128,7 +170,7 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     _sleepTimer?.cancel();
     _sleepChapter = null;
     if (sleep.after != null) _sleepTimer = Timer(sleep.after!, pause);
-    if (sleep == SleepTimer.endOfChapter) _sleepChapter = chapterAt(_player.position);
+    if (sleep == SleepTimer.endOfChapter) _sleepChapter = chapterAt(now);
   }
 
   /// The chapter playing at [position]: the last whose start has passed.
@@ -148,11 +190,21 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
 
   Duration _clamp(Duration position) => position < Duration.zero ? Duration.zero : (position > length ? length : position);
 
-  void _onPosition(Duration position) {
+  void _onPosition(Duration local) {
+    final position = _book(local);
     if (_sleepChapter != null && chapterAt(position) != _sleepChapter) {
       _sleepChapter = null;
       _sleep = SleepTimer.off;
       pause();
+    }
+    final plan = _plan;
+    if (plan != null) {
+      final art = plan.shownAt(position)?.path;
+      if (art != null && art != artwork.value) {
+        artwork.value = art;
+        final current = mediaItem.value;
+        if (current != null) mediaItem.add(current.copyWith(artUri: Uri.file(art)));
+      }
     }
     if (DateTime.now().difference(_lastKept) > const Duration(seconds: 5)) _keepPlace();
   }
@@ -163,11 +215,21 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     if (item == null || keep == null) return;
     _lastKept = DateTime.now();
     final total = length.inMilliseconds;
-    final position = finished ? length : _player.position;
-    keep(
-      Place(position: position, progress: total == 0 ? 0 : (position.inMilliseconds / total).clamp(0, 1), updatedAt: DateTime.now().toUtc()),
-      finished: finished,
-    );
+    final position = finished ? length : now;
+    final progress = total == 0 ? 0.0 : (position.inMilliseconds / total).clamp(0.0, 1.0);
+    final plan = _plan;
+    if (plan != null) {
+      final (index, offset) = plan.locate(position);
+      keep(
+        Place(locator: plan.chapters[index].id, position: offset, progress: progress, updatedAt: DateTime.now().toUtc()),
+        finished: finished,
+      );
+    } else {
+      keep(
+        Place(position: position, progress: progress, updatedAt: DateTime.now().toUtc()),
+        finished: finished,
+      );
+    }
   }
 
   void _broadcast() {
@@ -191,8 +253,8 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
           ProcessingState.completed => AudioProcessingState.completed,
         },
         playing: playing,
-        updatePosition: _player.position,
-        bufferedPosition: _player.bufferedPosition,
+        updatePosition: now,
+        bufferedPosition: _book(_player.bufferedPosition),
         speed: _player.speed,
       ),
     );

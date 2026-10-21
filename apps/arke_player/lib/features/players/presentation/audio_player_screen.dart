@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:arke_library/arke_library.dart';
+import 'package:arke_publication/arke_publication.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,8 +9,10 @@ import '../../../app/theme/tokens.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../settings/domain/device_settings.dart';
 import '../application/audio_engine.dart';
+import '../application/listening_plan.dart';
 import '../application/players.dart';
 import 'chrome.dart';
+import 'picture_of_the_moment.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
 
@@ -17,6 +20,9 @@ const _fg = ArkeColors.mediaOverlayForeground;
 /// its cover square and centred, the title and author under it, the chapter's scrubber, then
 /// previous chapter, back 15, play or pause, forward 30, next chapter; speed and sleep under
 /// those. It shows what the file carries and invents nothing: no Text, no Slow push (P7 rule 6).
+///
+/// A world's illustrated narration (SPEC-058 R-22 – R-27) is the same player as P5a draws it: the
+/// picture of the moment over the top 62%, Slow push under the title, Text above the transport.
 class AudioPlayerScreen extends ConsumerStatefulWidget {
   const AudioPlayerScreen({required this.item, required this.store, super.key});
 
@@ -29,6 +35,10 @@ class AudioPlayerScreen extends ConsumerStatefulWidget {
 
 class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
   late final AudioEngine _engine = ref.read(audioEngineProvider)!;
+  ListeningPlan? _plan;
+  bool _unreadable = false;
+
+  bool get _illustrated => widget.item.format == FileFormat.listening;
 
   @override
   void initState() {
@@ -36,18 +46,179 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
     final settings = ref.read(settingsProvider).value ?? const DeviceSettings();
     final keep = ref.read(placeKeeperProvider);
     final item = widget.item;
-    _engine.open(
-      item,
-      path: widget.store.resolve(item.file),
-      artPath: item.cover == null ? null : widget.store.resolve(item.cover!),
-      speed: settings.speed,
-      keep: (place, {finished}) => keep(item.id, place, finished: finished),
-    );
+    final art = item.cover == null ? null : widget.store.resolve(item.cover!);
+    void keepPlace(Place place, {bool? finished}) => keep(item.id, place, finished: finished);
+    // Back from the dock, the narration playing already has its plan.
+    final playing = _engine.item?.id == item.id ? _engine.plan : null;
+    if (_illustrated && playing != null) {
+      _plan = playing;
+      _engine.open(item, plan: playing, artPath: art, speed: settings.speed, keep: keepPlace);
+    } else if (_illustrated) {
+      loadListeningPlan(widget.store, item).then(
+        (plan) {
+          if (!mounted) return;
+          setState(() => _plan = plan);
+          _engine.open(item, plan: plan, artPath: art, speed: settings.speed, keep: keepPlace);
+        },
+        onError: (Object _) {
+          if (mounted) setState(() => _unreadable = true);
+        },
+      );
+    } else {
+      _engine.open(item, path: widget.store.resolve(item.file), artPath: art, speed: settings.speed, keep: keepPlace);
+    }
     if (settings.sleep != SleepTimer.off) _engine.setSleep(settings.sleep);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_illustrated) {
+      final plan = _plan;
+      if (plan != null) return _illustratedBody(context, plan);
+      return Scaffold(
+        backgroundColor: ArkeColors.mediaOverlayBackground,
+        appBar: AppBar(backgroundColor: Colors.transparent, foregroundColor: _fg),
+        body: Center(
+          child: _unreadable
+              ? Text(
+                  "Can't open this file",
+                  style: TextStyle(color: _fg.withValues(alpha: 0.8), fontSize: ArkeType.sizeBase),
+                )
+              : const CircularProgressIndicator(color: _fg),
+        ),
+      );
+    }
+    return _coverBody(context);
+  }
+
+  /// The picture of the moment over the top 62%, the chapter and Slow push over it, Text above the
+  /// transport (P5a).
+  Widget _illustratedBody(BuildContext context, ListeningPlan plan) {
+    final item = widget.item;
+    final size = MediaQuery.sizeOf(context);
+    // The top 62% on a phone; 16:9 across a Fold (R-22).
+    final frame = size.width >= WindowBands.fold ? (size.width * 9 / 16).clamp(0.0, size.height * 0.62) : size.height * 0.62;
+    final settings = ref.watch(settingsProvider).value ?? const DeviceSettings();
+    final push = settings.slowPushIn(reducedMotion: MediaQuery.disableAnimationsOf(context));
+    final controller = ref.read(settingsProvider.notifier);
+    const bg = ArkeColors.mediaOverlayBackground;
+    return Scaffold(
+      backgroundColor: bg,
+      body: StreamBuilder<Duration>(
+        stream: _engine.position,
+        builder: (context, snapshot) {
+          final position = snapshot.data ?? _engine.now;
+          final index = _engine.chapterAt(position);
+          final phrase = settings.text ? plan.phraseAt(position) : null;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                height: frame,
+                child: StreamBuilder<bool>(
+                  stream: _engine.playingStream,
+                  initialData: _engine.playing,
+                  builder: (context, playing) =>
+                      PictureOfTheMoment(shown: plan.shownAt(position), position: position, playing: playing.data ?? false, speed: _engine.speed, push: push),
+                ),
+              ),
+              // The two scrims the chrome rests on (Studio 186): one from the top, one from the foot.
+              const Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                height: 170,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xB30A0A0A), Color(0x000A0A0A)]),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: frame * 0.6,
+                bottom: 0,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: const [Color(0x000A0A0A), bg, bg],
+                      stops: [0, (frame * 0.4 / (size.height - frame * 0.6)).clamp(0.0, 1.0), 1],
+                    ),
+                  ),
+                ),
+              ),
+              SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PlayerTop(
+                      eyebrow: item.title,
+                      title: '${index + 1} · ${item.chapters[index].title}',
+                      actions: [PlayerPress(icon: Icons.format_list_bulleted, label: 'Chapters', onPressed: () => _chapters(context))],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: PlayerLabelPress(
+                          label: 'Slow push',
+                          icon: settings.slowPush ? Icons.toggle_on : Icons.toggle_off_outlined,
+                          on: settings.slowPush,
+                          onPressed: () => controller.change((s) => s.copyWith(slowPush: !s.slowPush)),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (phrase != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 640),
+                            child: Text(
+                              phrase.text,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.fade,
+                              style: const TextStyle(
+                                color: _fg,
+                                fontSize: ArkeType.sizeLg,
+                                fontWeight: FontWeight.w500,
+                                height: 1.35,
+                                shadows: [Shadow(color: Color(0x990A0A0A), blurRadius: 8)],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    _transport(
+                      context,
+                      position,
+                      chaptered: item.chapters.length > 1,
+                      extra: PlayerLabelPress(
+                        label: 'Text',
+                        icon: Icons.subject,
+                        on: settings.text,
+                        onPressed: () => controller.change((s) => s.copyWith(text: !s.text)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _coverBody(BuildContext context) {
     final item = widget.item;
     final chaptered = item.chapters.length > 1;
     final cover = item.cover == null ? null : File(widget.store.resolve(item.cover!));
@@ -61,7 +232,6 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
           stream: _engine.position,
           builder: (context, snapshot) {
             final position = snapshot.data ?? _engine.now;
-            final (start, end) = _engine.chapterBounds(position);
             final index = _engine.chapterAt(position);
             return Column(
               children: [
@@ -115,54 +285,57 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
                   ),
                 ),
                 const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 640),
-                    child: Column(
-                      children: [
-                        // The scrubber runs across the playing chapter (Studio 186).
-                        Scrubber(position: position - start, length: end - start, onSeek: (offset) => _engine.seek(start + offset)),
-                        const SizedBox(height: 14),
-                        StreamBuilder<bool>(
-                          stream: _engine.playingStream,
-                          initialData: _engine.playing,
-                          builder: (context, playing) => Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              PlayerPress(
-                                icon: Icons.skip_previous_rounded,
-                                label: chaptered ? 'Previous chapter' : 'Start',
-                                onPressed: _engine.skipToPrevious,
-                              ),
-                              PlayerPress(icon: Icons.replay, label: 'Back 15 seconds', onPressed: _engine.rewind, size: 26),
-                              PlayPause(playing: playing.data ?? false, onPressed: () => (playing.data ?? false) ? _engine.pause() : _engine.play()),
-                              PlayerPress(icon: Icons.forward_30, label: 'Forward 30 seconds', onPressed: _engine.fastForward, size: 26),
-                              PlayerPress(icon: Icons.skip_next_rounded, label: 'Next chapter', onPressed: chaptered ? _engine.skipToNext : null),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            PlayerLabelPress(label: '${_speedLabel(_engine.speed)}×', onPressed: () => _speedAndSleep(context)),
-                            const SizedBox(width: 12),
-                            PlayerLabelPress(
-                              label: _engine.sleep.label,
-                              icon: Icons.bedtime_outlined,
-                              on: _engine.sleep != SleepTimer.off,
-                              onPressed: () => _speedAndSleep(context),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _transport(context, position, chaptered: chaptered),
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+
+  /// The scrubber across the playing chapter, the transport, then speed and sleep (P5a, P7d).
+  Widget _transport(BuildContext context, Duration position, {required bool chaptered, Widget? extra}) {
+    final (start, end) = _engine.chapterBounds(position);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: Column(
+          children: [
+            // The scrubber runs across the playing chapter (Studio 186).
+            Scrubber(position: position - start, length: end - start, onSeek: (offset) => _engine.seek(start + offset)),
+            const SizedBox(height: 14),
+            StreamBuilder<bool>(
+              stream: _engine.playingStream,
+              initialData: _engine.playing,
+              builder: (context, playing) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PlayerPress(icon: Icons.skip_previous_rounded, label: chaptered ? 'Previous chapter' : 'Start', onPressed: _engine.skipToPrevious),
+                  PlayerPress(icon: Icons.replay, label: 'Back 15 seconds', onPressed: _engine.rewind, size: 26),
+                  PlayPause(playing: playing.data ?? false, onPressed: () => (playing.data ?? false) ? _engine.pause() : _engine.play()),
+                  PlayerPress(icon: Icons.forward_30, label: 'Forward 30 seconds', onPressed: _engine.fastForward, size: 26),
+                  PlayerPress(icon: Icons.skip_next_rounded, label: 'Next chapter', onPressed: chaptered ? _engine.skipToNext : null),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                PlayerLabelPress(label: '${_speedLabel(_engine.speed)}×', onPressed: () => _speedAndSleep(context)),
+                const SizedBox(width: 12),
+                PlayerLabelPress(
+                  label: _engine.sleep.label,
+                  icon: Icons.bedtime_outlined,
+                  on: _engine.sleep != SleepTimer.off,
+                  onPressed: () => _speedAndSleep(context),
+                ),
+                if (extra != null) ...[const SizedBox(width: 12), extra],
+              ],
+            ),
+          ],
         ),
       ),
     );
