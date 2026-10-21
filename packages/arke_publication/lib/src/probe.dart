@@ -13,7 +13,11 @@ enum FileFormat {
   mp4('MP4'),
   mov('MOV'),
   srt('SRT'),
-  vtt('VTT');
+  vtt('VTT'),
+
+  /// A world's narration as a listening document (SPEC-058 R-10): a file a chapter with its
+  /// pictures and phrases. It arrives only inside a world package, never added on its own.
+  listening('Audiobook');
 
   const FileFormat(this.label);
 

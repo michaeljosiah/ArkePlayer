@@ -45,7 +45,7 @@ MediaInfo readMediaInfo(String path, FileFormat format) {
       } finally {
         input.closeSync();
       }
-    case FileFormat.pdf || FileFormat.cbz || FileFormat.arkePackage || FileFormat.srt || FileFormat.vtt:
+    case FileFormat.pdf || FileFormat.cbz || FileFormat.arkePackage || FileFormat.srt || FileFormat.vtt || FileFormat.listening:
       return const MediaInfo();
   }
 }

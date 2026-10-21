@@ -50,7 +50,8 @@ PlayerKind playerForProduction(ProductionKind kind) => switch (kind) {
 PlayerKind? playerForFile(FileFormat format) => switch (format) {
   FileFormat.epub => PlayerKind.reader,
   FileFormat.pdf || FileFormat.cbz => PlayerKind.pageViewer,
-  FileFormat.m4b || FileFormat.m4a || FileFormat.mp3 => PlayerKind.audiobook,
+  // A world's narration with its pictures plays in the audiobook player too (SPEC-058 R-22).
+  FileFormat.m4b || FileFormat.m4a || FileFormat.mp3 || FileFormat.listening => PlayerKind.audiobook,
   FileFormat.mp4 || FileFormat.mov => PlayerKind.film,
   FileFormat.arkePackage || FileFormat.srt || FileFormat.vtt => null,
 };

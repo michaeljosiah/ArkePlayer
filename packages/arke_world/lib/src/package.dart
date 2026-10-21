@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:arke_publication/arke_publication.dart';
 
+import 'listening.dart';
 import 'manifest.dart';
 
 /// A world package refused before anything in it was used.
@@ -21,6 +22,7 @@ class WorldPackageRefused implements Exception {
 
 const _maxManifestBytes = 1024 * 1024;
 const _stored = 0;
+const _maxListeningBytes = 8 * 1024 * 1024;
 
 /// Reads a downloaded world package's directory and manifest before any file in it is used,
 /// refusing what SPEC-048 R-14 asks a reader to refuse: absolute paths, traversal, backslashes,
@@ -74,7 +76,33 @@ WorldManifest readWorldPackage(String zipPath) {
     if (extra.isNotEmpty) throw notAPackage('files the manifest does not name: ${extra.take(3).join(', ')}');
     final compressed = named.where((path) => methods.containsKey(path) && methods[path] != _stored);
     if (compressed.isNotEmpty) throw notAPackage('compressed assets: ${compressed.take(3).join(', ')}');
-    return manifest;
+
+    // Each listening document is read now, before anything is extracted, so every file it names is
+    // known and checked against the inventory (SPEC-058 R-13). Its own bytes are checked again,
+    // with every other file's, when they are extracted.
+    final listening = <String, ListeningDocument>{};
+    for (final production in manifest.productions) {
+      if (production.listening == null) continue;
+      final asset = manifest.assets[production.listening]!;
+      final entry = archive.find(asset.path);
+      if (entry == null || !entry.isFile || entry.size > _maxListeningBytes) throw notAPackage('listening document ${asset.path}');
+      final String json;
+      try {
+        json = utf8.decode(entry.readBytes() ?? const <int>[]);
+      } on FormatException {
+        throw notAPackage('${asset.path} is not UTF-8');
+      }
+      listening[production.id] = switch (readListening(json, manifest.assets)) {
+        ListeningOk(:final document) => document,
+        ListeningRefused(:final refusal, :final reason) => throw WorldPackageRefused(refusal, reason),
+      };
+    }
+    if (listening.isNotEmpty) {
+      final used = {...manifest.namedAssets, for (final document in listening.values) ...document.assetIds};
+      final unused = manifest.assets.keys.where((assetId) => !used.contains(assetId));
+      if (unused.isNotEmpty) throw notAPackage('unused assets ${unused.take(3).join(', ')}');
+    }
+    return manifest.withListening(listening);
   } finally {
     input.closeSync();
   }

@@ -11,7 +11,7 @@ enum LibraryKind {
   final String label;
 
   static LibraryKind of(FileFormat format) => switch (format) {
-    FileFormat.m4b || FileFormat.m4a || FileFormat.mp3 => LibraryKind.listen,
+    FileFormat.m4b || FileFormat.m4a || FileFormat.mp3 || FileFormat.listening => LibraryKind.listen,
     FileFormat.epub || FileFormat.pdf || FileFormat.cbz => LibraryKind.read,
     FileFormat.mp4 || FileFormat.mov => LibraryKind.watch,
     FileFormat.arkePackage || FileFormat.srt || FileFormat.vtt => throw ArgumentError('$format is not a library file'),

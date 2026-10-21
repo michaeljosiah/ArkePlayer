@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -19,6 +20,13 @@ sealed class InstallStep {
 class Downloading extends InstallStep {
   const Downloading(this.received, this.total);
   final int received;
+  final int total;
+}
+
+/// A package added from a file being copied into the Player's own storage (P2d).
+class Copying extends InstallStep {
+  const Copying(this.copied, this.total);
+  final int copied;
   final int total;
 }
 
@@ -143,9 +151,10 @@ class WorldInstaller {
   /// Space kept free beyond the world, as for an added file.
   static const reserve = 64 * 1000 * 1000;
 
-  /// Progress is reported at most this often while downloading.
+  /// Progress is reported at most this often while downloading or copying.
   static const _progressStep = 256 * 1024;
 
+  /// Installs a world from Available (P9): download, check, and add at once.
   Future<LibraryWorld> install(CatalogueWorld world, {void Function(InstallStep step)? onStep, InstallCancel? cancel}) async {
     final package = world.package;
     if (package == null) throw const NotAPackage();
@@ -153,51 +162,124 @@ class WorldInstaller {
       if (installed.id == world.id) return installed;
     }
     final control = cancel ?? InstallCancel();
-    final needed = package.byteLength * 2;
-    final free = await freeBytes(store.root.parent.path);
-    if (free != null && needed + reserve > free) throw NeedsSpace(needed, free);
-
+    final needed = await _checkSpace(package.byteLength);
     final staging = await store.stageWorld();
-    final separator = Platform.pathSeparator;
     try {
-      final zip = '${staging.path}${separator}package.zip';
+      final zip = '${staging.path}${Platform.pathSeparator}package.zip';
       await _download(package, zip, onStep, control);
       control._check();
-
-      final WorldManifest manifest;
-      try {
-        manifest = await Isolate.run(() => readWorldPackage(zip));
-      } on WorldPackageRefused catch (refused) {
-        throw refused.refusal == WorldRefusal.newerArke ? const NewerArke() : const NotAPackage();
-      }
-      if (manifest.id != world.id) throw const NotAPackage();
-
-      final content = Directory('${staging.path}${separator}world');
-      final total = manifest.assets.length;
-      var checked = 0;
-      var failed = 0;
-      onStep?.call(Checking(0, total));
-      for (final asset in manifest.assets.values) {
-        control._check();
-        final to = '${content.path}$separator${asset.path.replaceAll('/', separator)}';
-        if (await Isolate.run(() => extractAsset(zip, asset, to)) != AssetCheck.matches) failed++;
-        onStep?.call(Checking(++checked, total));
-      }
-      if (failed > 0) throw FilesDoNotMatch(failed);
-      await File(zip).delete();
-
-      final (installed, items) = await _describe(manifest, content);
-      control._check();
-      await store.addWorld(installed, items, content);
-      return installed;
+      final prepared = await _prepare(zip, staging, needed, onStep, control);
+      if (prepared.manifest.id != world.id) throw const NotAPackage();
+      return await commit(prepared);
     } on FileSystemException catch (error) {
-      // ENOSPC (28) or ERROR_DISK_FULL (112): the space ran out after it was checked.
-      final code = error.osError?.errorCode;
-      if (code == 28 || code == 112) throw NeedsSpace(needed, await freeBytes(store.root.parent.path) ?? 0);
-      rethrow;
+      throw await _full(error, needed);
     } finally {
       if (await staging.exists()) await staging.delete(recursive: true);
     }
+  }
+
+  /// Copies a world package a person added from a file (Player P2c) into staging and checks it in
+  /// full (P2d), stopping before it joins the library: the caller shows Ready (P2e), Replace
+  /// (P10a) or Already in Library (P10b), then [commit]s or [discard]s.
+  Future<PreparedWorld> prepareFile({
+    required int size,
+    required Stream<List<int>> Function() open,
+    void Function(InstallStep step)? onStep,
+    InstallCancel? cancel,
+  }) async {
+    final control = cancel ?? InstallCancel();
+    final needed = await _checkSpace(size);
+    final staging = await store.stageWorld();
+    try {
+      final zip = '${staging.path}${Platform.pathSeparator}package.zip';
+      final file = await File(zip).open(mode: FileMode.write);
+      try {
+        var copied = 0;
+        var reported = 0;
+        onStep?.call(Copying(0, size));
+        await for (final chunk in open()) {
+          control._check();
+          copied += chunk.length;
+          await file.writeFrom(chunk);
+          if (copied - reported >= _progressStep) {
+            reported = copied;
+            onStep?.call(Copying(copied, size));
+          }
+        }
+      } finally {
+        await file.close();
+      }
+      control._check();
+      return await _prepare(zip, staging, needed, onStep, control);
+    } on FileSystemException catch (error) {
+      if (await staging.exists()) await staging.delete(recursive: true);
+      throw await _full(error, needed);
+    } on Object {
+      if (await staging.exists()) await staging.delete(recursive: true);
+      rethrow;
+    }
+  }
+
+  /// Adds a checked world to the library in one write, replacing an installed edition of it and
+  /// keeping its places (P10 rule 3).
+  Future<LibraryWorld> commit(PreparedWorld prepared) async {
+    try {
+      await store.addWorld(prepared.world, prepared.items, prepared.content);
+      return prepared.world;
+    } finally {
+      if (await prepared.staging.exists()) await prepared.staging.delete(recursive: true);
+    }
+  }
+
+  /// Deletes a checked world that was not added: closing Ready, or Cancel.
+  Future<void> discard(PreparedWorld prepared) async {
+    if (await prepared.staging.exists()) await prepared.staging.delete(recursive: true);
+  }
+
+  Future<int> _checkSpace(int packageBytes) async {
+    // The package and what it unpacks to are both on the phone until the package is deleted.
+    final needed = packageBytes * 2;
+    final free = await freeBytes(store.root.parent.path);
+    if (free != null && needed + reserve > free) throw NeedsSpace(needed, free);
+    return needed;
+  }
+
+  /// ENOSPC (28) or ERROR_DISK_FULL (112): the space ran out after it was checked.
+  Future<Object> _full(FileSystemException error, int needed) async {
+    final code = error.osError?.errorCode;
+    if (code == 28 || code == 112) return NeedsSpace(needed, await freeBytes(store.root.parent.path) ?? 0);
+    return error;
+  }
+
+  Future<PreparedWorld> _prepare(String zip, Directory staging, int needed, void Function(InstallStep step)? onStep, InstallCancel control) async {
+    final separator = Platform.pathSeparator;
+    final WorldManifest manifest;
+    try {
+      manifest = await Isolate.run(() => readWorldPackage(zip));
+    } on WorldPackageRefused catch (refused) {
+      throw refused.refusal == WorldRefusal.newerArke ? const NewerArke() : const NotAPackage();
+    }
+
+    final content = Directory('${staging.path}${separator}world');
+    final total = manifest.assets.length;
+    var checked = 0;
+    var failed = 0;
+    onStep?.call(Checking(0, total));
+    for (final asset in manifest.assets.values) {
+      control._check();
+      final to = '${content.path}$separator${asset.path.replaceAll('/', separator)}';
+      if (await Isolate.run(() => extractAsset(zip, asset, to)) != AssetCheck.matches) failed++;
+      onStep?.call(Checking(++checked, total));
+    }
+    if (failed > 0) throw FilesDoNotMatch(failed);
+    await File(zip).delete();
+    // The manifest goes with the world, so a player can read a listening document against it.
+    await File('${content.path}$separator$worldManifestFile').writeAsString(jsonEncode(manifest.toJson()), flush: true);
+
+    final (world, items) = await _describe(manifest, content);
+    control._check();
+    final installed = store.worlds.where((existing) => existing.id == world.id).firstOrNull;
+    return PreparedWorld(manifest: manifest, world: world, items: items, content: content, staging: staging, installed: installed);
   }
 
   Future<void> _download(CataloguePackage package, String to, void Function(InstallStep step)? onStep, InstallCancel cancel) async {
@@ -250,7 +332,8 @@ class WorldInstaller {
   }
 
   /// Reads each production's book and narration as an added file is read (P7 rule 3), and names
-  /// them as library items under the world's folder.
+  /// them as library items under the world's folder. A listening document becomes one item whose
+  /// chapters are the document's, back to back.
   Future<(LibraryWorld, List<LibraryItem>)> _describe(WorldManifest manifest, Directory content) async {
     final separator = Platform.pathSeparator;
     final base = 'worlds/${manifest.id}';
@@ -265,6 +348,30 @@ class WorldInstaller {
       final picture = production.picture == null ? null : stored(manifest.assets[production.picture]!);
       String? bookId;
       String? narrationId;
+
+      final document = manifest.listening[production.id];
+      if (document != null) {
+        final id = '${manifest.id}.${production.id}.listening';
+        final starts = document.starts;
+        final cover = document.cover == null ? null : stored(manifest.assets[document.cover]!);
+        items.add(
+          LibraryItem(
+            id: id,
+            format: FileFormat.listening,
+            title: production.title,
+            author: production.author,
+            duration: document.duration,
+            byteLength: {production.listening!, ...document.assetIds}.fold(0, (sum, assetId) => sum + manifest.assets[assetId]!.byteLength),
+            addedAt: now,
+            file: stored(manifest.assets[production.listening]!),
+            cover: picture ?? cover ?? keyArt,
+            chapters: [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: starts[i])],
+            worldId: manifest.id,
+          ),
+        );
+        narrationId = id;
+      }
+
       for (final (role, assetId) in [('narration', production.narration), ('book', production.book)]) {
         if (assetId == null) continue;
         final asset = manifest.assets[assetId]!;
@@ -324,7 +431,33 @@ class WorldInstaller {
       byteLength: manifest.assets.values.fold(coverBytes, (sum, asset) => sum + asset.byteLength),
       installedAt: now,
       productions: List.unmodifiable(productions),
+      fingerprint: editionFingerprint(manifest),
     );
     return (world, items);
   }
+}
+
+/// Two packages are one edition when their edition labels and every file's SHA-256 agree (P10
+/// rule 2); this is that, as one digest.
+String editionFingerprint(WorldManifest manifest) {
+  final lines = [manifest.edition, ...(manifest.assets.values.map((asset) => '${asset.path} ${asset.sha256}').toList()..sort())];
+  return sha256.convert(utf8.encode(lines.join('\n'))).toString();
+}
+
+/// A world package checked in full and waiting in staging (P2e, P10): added by
+/// [WorldInstaller.commit], or deleted by [WorldInstaller.discard].
+class PreparedWorld {
+  const PreparedWorld({required this.manifest, required this.world, required this.items, required this.content, required this.staging, this.installed});
+
+  final WorldManifest manifest;
+  final LibraryWorld world;
+  final List<LibraryItem> items;
+  final Directory content;
+  final Directory staging;
+
+  /// The edition of this world already in Library, if any.
+  final LibraryWorld? installed;
+
+  /// The same edition is refused (P10b); another offers Replace (P10a).
+  bool get sameEdition => installed != null && installed!.fingerprint == world.fingerprint;
 }

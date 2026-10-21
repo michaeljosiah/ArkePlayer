@@ -98,12 +98,23 @@ class LibraryStore {
   /// Installs a world whose checked files are in [staged]: moves them to the world's folder, then
   /// names the world and its items in one write of the index. Items' paths are relative to the
   /// library's root, under `worlds/<id>/`.
+  ///
+  /// Replacing an installed edition (P10) keeps each item's place where the new edition has an
+  /// item of the same id, and drops the old edition's other items with their places.
   Future<void> addWorld(LibraryWorld world, List<LibraryItem> worldItems, Directory staged) => _serial(() async {
     final folder = worldDirectory(world.id);
     if (await folder.exists()) await folder.delete(recursive: true);
     await staged.rename(folder.path);
-    final ids = {for (final item in worldItems) item.id};
-    _cache = List.unmodifiable([...worldItems, ..._cache.where((existing) => !ids.contains(existing.id))]);
+    final before = {
+      for (final item in _cache)
+        if (item.worldId == world.id) item.id: item,
+    };
+    final carried = [
+      for (final item in worldItems)
+        if (before[item.id]?.place case final place?) item.copyWith(place: place, finished: before[item.id]!.finished) else item,
+    ];
+    final ids = {for (final item in carried) item.id};
+    _cache = List.unmodifiable([...carried, ..._cache.where((existing) => existing.worldId != world.id && !ids.contains(existing.id))]);
     _worldCache = List.unmodifiable([world, ..._worldCache.where((existing) => existing.id != world.id)]);
     await _write();
   });

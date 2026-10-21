@@ -48,10 +48,15 @@ class LibraryWorld {
     required this.productions,
     this.logline,
     this.keyArt,
+    this.fingerprint,
   });
 
   final String id;
   final String edition;
+
+  /// The edition label and every file's SHA-256 as one digest: two packages with the same are the
+  /// same edition (P10 rule 2). Absent for a world installed before it was kept.
+  final String? fingerprint;
   final String name;
   final String? logline;
 
@@ -72,6 +77,7 @@ class LibraryWorld {
     'byteLength': byteLength,
     'installedAt': installedAt.toUtc().toIso8601String(),
     'productions': [for (final production in productions) production.toJson()],
+    if (fingerprint != null) 'fingerprint': fingerprint,
   };
 
   static LibraryWorld fromJson(Map<String, Object?> json) => LibraryWorld(
@@ -83,5 +89,6 @@ class LibraryWorld {
     byteLength: json['byteLength']! as int,
     installedAt: DateTime.parse(json['installedAt']! as String),
     productions: [for (final production in json['productions']! as List<Object?>) LibraryProduction.fromJson((production! as Map).cast<String, Object?>())],
+    fingerprint: json['fingerprint'] as String?,
   );
 }

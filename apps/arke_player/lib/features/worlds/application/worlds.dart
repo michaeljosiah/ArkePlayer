@@ -44,12 +44,14 @@ class Installing extends InstallState {
   /// The whole install, 0 to 1: the download is most of it, the check the rest.
   double get fraction => switch (step) {
     Downloading(:final received, :final total) => total <= 0 ? 0 : 0.9 * received / total,
+    Copying(:final copied, :final total) => total <= 0 ? 0 : 0.9 * copied / total,
     Checking(:final checked, :final total) => total <= 0 ? 0.9 : 0.9 + 0.1 * checked / total,
   };
 
   /// The page's line (P9d): what is happening, as data.
   String get line => switch (step) {
     Downloading(:final received, :final total) => 'Downloading · ${formatBytes(received)} of ${formatBytes(total)}',
+    Copying(:final copied, :final total) => '${formatBytes(copied)} of ${formatBytes(total)}',
     Checking(:final checked, :final total) => 'Checking · $checked of $total files',
   };
 
