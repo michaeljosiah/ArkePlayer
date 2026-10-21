@@ -303,6 +303,8 @@ ListeningDocument _read(String text, Map<String, WorldAsset> assets) {
         final wordAt = time(w['at'], 'a word at');
         final wordEnd = time(w['end'], 'a word end');
         if (wordAt >= wordEnd || wordAt < at || wordEnd > end) _notAPackage('chapter $id: a word outside its phrase');
+        // Words follow one another too, or a highlight has no single way through them.
+        if (words.isNotEmpty && wordAt < words.last.end) _notAPackage('chapter $id: words out of order or overlapping');
         words.add(ListeningWord(at: wordAt, end: wordEnd, text: _text(w['text'], 'a word', max: 200)));
       }
       phrases.add(ListeningPhrase(at: at, end: end, text: _text(p['text'], 'a phrase', max: 2000), words: List.unmodifiable(words)));

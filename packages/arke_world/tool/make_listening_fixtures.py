@@ -82,6 +82,8 @@ case('overlap.json', 'notAPackage', lambda x: x['chapters'][0]['pictures'][1].up
 case('word-outside.json', 'notAPackage', lambda x: x['chapters'][0]['phrases'][0]['words'][1].update(end=6000))
 # Phrases follow one another: one that starts before the last has ended could never be shown.
 case('phrase-overlap.json', 'notAPackage', lambda x: x['chapters'][0]['phrases'][1].update(at=5000))
+# And so do a phrase's words, or a highlight has no single way through them.
+case('word-overlap.json', 'notAPackage', lambda x: x['chapters'][0]['phrases'][0]['words'][1].update(at=1400))
 case('duplicate-order.json', 'notAPackage', lambda x: x['chapters'][1].update(order=1))
 case('picture-after-end.json', 'notAPackage', lambda x: x['chapters'][1]['pictures'][0].update(at=30000))
 w('cases.json', {
