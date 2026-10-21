@@ -80,6 +80,8 @@ case('wrong-media.json', 'notAPackage', lambda x: x['chapters'][1].update(audio=
 case('out-of-order.json', 'notAPackage', lambda x: x['chapters'][0]['pictures'][2].update(at=10000))
 case('overlap.json', 'notAPackage', lambda x: x['chapters'][0]['pictures'][1].update(hold=25000))
 case('word-outside.json', 'notAPackage', lambda x: x['chapters'][0]['phrases'][0]['words'][1].update(end=6000))
+# Phrases follow one another: one that starts before the last has ended could never be shown.
+case('phrase-overlap.json', 'notAPackage', lambda x: x['chapters'][0]['phrases'][1].update(at=5000))
 case('duplicate-order.json', 'notAPackage', lambda x: x['chapters'][1].update(order=1))
 case('picture-after-end.json', 'notAPackage', lambda x: x['chapters'][1]['pictures'][0].update(at=30000))
 w('cases.json', {

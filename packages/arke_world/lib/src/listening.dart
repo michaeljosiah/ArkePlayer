@@ -292,6 +292,9 @@ ListeningDocument _read(String text, Map<String, WorldAsset> assets) {
       final at = time(p['at'], 'chapter $id phrase at');
       final end = time(p['end'], 'chapter $id phrase end');
       if (at >= end || end > duration) _notAPackage('chapter $id: a phrase out of its chapter');
+      // In time order and apart: Text shows the first phrase still being heard, so one starting
+      // before the last has ended could never be shown.
+      if (phrases.isNotEmpty && at < phrases.last.end) _notAPackage('chapter $id: phrases out of order or overlapping');
       final rawWords = p['words'] ?? const <Object?>[];
       if (rawWords is! List<Object?>) _notAPackage('chapter $id words');
       final words = <ListeningWord>[];
