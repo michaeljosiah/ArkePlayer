@@ -103,6 +103,14 @@ Future<void> _start(WidgetTester tester, _FakeInstaller installer) async {
 }
 
 void main() {
+  test('a ZIP named as a package on disk takes the package way in; an EPUB does not (SPEC-058 R-17)', () async {
+    final dir = await Directory.systemTemp.createTemp('arke_picked_');
+    addTearDown(() => dir.delete(recursive: true));
+    final zip = File('${dir.path}/the-undersong-illustrated-2026-10-21.zip')..writeAsBytesSync([0x50, 0x4B, 0x03, 0x04, ...List.filled(400, 0)]);
+    expect(await isWorldPackage(PickedFile.path(zip.path)), isTrue);
+    expect(await isWorldPackage(PickedFile.path('${Directory.current.path}/../../packages/arke_media/test/fixtures/book.epub')), isFalse);
+  });
+
   test('an edition reads as data: a dated label as made 21 Oct 2026, anything else as itself', () {
     expect(editionLine('2026-10-21'), 'made 21 Oct 2026');
     expect(editionLine('2026-10-20', made: false), '20 Oct 2026');
