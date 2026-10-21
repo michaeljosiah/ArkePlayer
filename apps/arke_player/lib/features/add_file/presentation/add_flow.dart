@@ -13,6 +13,7 @@ import '../application/file_importer.dart';
 import '../application/pdfrx_peek.dart';
 import '../application/video_poster.dart';
 import '../domain/added_file.dart';
+import 'package_flow.dart';
 
 final fileImporterProvider = FutureProvider<FileImporter>((ref) async {
   final store = await ref.watch(libraryStoreProvider.future);
@@ -31,21 +32,44 @@ Future<int> addFiles(BuildContext context, WidgetRef ref, {List<PickedFile>? fil
     picked = [for (final file in result) PickedFile(name: file.name, size: file.lengthSync() ?? await file.length() ?? 0, open: file.readAsByteStream)];
   }
   if (picked.isEmpty || !context.mounted) return 0;
-  final importer = await ref.read(fileImporterProvider.future);
-  if (!context.mounted) return 0;
-  final added = await showModalBottomSheet<int>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    isDismissible: false,
-    enableDrag: false,
-    builder: (context) => _AddSheet(importer: importer, files: picked!, resolve: importer.store.resolve),
-  );
+
+  // A world package takes its own way in (P2d–P2f, P10); the other files are read on the sheet.
+  final packages = <PickedFile>[];
+  final rest = <PickedFile>[];
+  for (final file in picked) {
+    (await isWorldPackage(file) ? packages : rest).add(file);
+  }
+  var added = 0;
+  var another = false;
+  for (final package in packages) {
+    if (!context.mounted) break;
+    final outcome = await addPackage(context, ref, package);
+    if (outcome == PackageOutcome.added) added++;
+    if (outcome == PackageOutcome.chooseAnother) another = true;
+  }
+
+  if (rest.isNotEmpty && context.mounted) {
+    final importer = await ref.read(fileImporterProvider.future);
+    if (context.mounted) {
+      added +=
+          await showModalBottomSheet<int>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            isDismissible: false,
+            enableDrag: false,
+            builder: (context) => _AddSheet(importer: importer, files: rest, resolve: importer.store.resolve),
+          ) ??
+          0;
+    }
+  }
   // The picker's own temporary copies are no longer needed once the library holds its own.
   if (files == null && Platform.isAndroid) await FilePicker.clearTemporaryFiles();
   // Once anything is in the library, later opens land on Home rather than first open (P8a).
-  if ((added ?? 0) > 0) await ref.read(settingsProvider.notifier).change((settings) => settings.copyWith(seenFirstOpen: true));
-  return added ?? 0;
+  if (added > 0) await ref.read(settingsProvider.notifier).change((settings) => settings.copyWith(seenFirstOpen: true));
+  // Choose another file (P2f) is the picker again.
+  if (another && context.mounted) return added + await addFiles(context, ref);
+  return added;
 }
 
 class _AddSheet extends StatefulWidget {
