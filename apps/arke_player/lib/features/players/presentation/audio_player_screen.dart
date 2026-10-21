@@ -9,6 +9,7 @@ import '../../../app/theme/tokens.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../settings/domain/device_settings.dart';
 import '../application/audio_engine.dart';
+import '../application/captions.dart';
 import '../application/listening_plan.dart';
 import '../application/players.dart';
 import 'chrome.dart';
@@ -37,6 +38,7 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
   late final AudioEngine _engine = ref.read(audioEngineProvider)!;
   ListeningPlan? _plan;
   bool _unreadable = false;
+  final _captions = Captions();
 
   bool get _illustrated => widget.item.format == FileFormat.listening;
 
@@ -109,7 +111,6 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
         builder: (context, snapshot) {
           final position = snapshot.data ?? _engine.now;
           final index = _engine.chapterAt(position);
-          final phrase = settings.text ? plan.phraseAt(position) : null;
           return Stack(
             fit: StackFit.expand,
             children: [
@@ -174,29 +175,7 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
                         ),
                       ),
                     ),
-                    const Spacer(),
-                    if (phrase != null)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 640),
-                            child: Text(
-                              phrase.text,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.fade,
-                              style: const TextStyle(
-                                color: _fg,
-                                fontSize: ArkeType.sizeLg,
-                                fontWeight: FontWeight.w500,
-                                height: 1.35,
-                                shadows: [Shadow(color: Color(0x990A0A0A), blurRadius: 8)],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    if (settings.text) Expanded(child: _text(plan, position)) else const Spacer(),
                     _transport(
                       context,
                       position,
@@ -217,6 +196,54 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
       ),
     );
   }
+
+  static const _textStyle = TextStyle(
+    color: _fg,
+    fontSize: ArkeType.sizeLg,
+    fontWeight: FontWeight.w500,
+    height: 1.35,
+    shadows: [Shadow(color: Color(0x990A0A0A), blurRadius: 8)],
+  );
+
+  /// Text (R-24): the cue being heard, centred above the transport in the lines there is room for
+  /// under Slow push — two at most, one where only one fits, none where none does.
+  Widget _text(ListeningPlan plan, Duration position) => LayoutBuilder(
+    builder: (context, box) {
+      final phrase = plan.phraseAt(position);
+      final scaler = MediaQuery.textScalerOf(context);
+      final line = scaler.scale(ArkeType.sizeLg) * 1.35;
+      final rows = ((box.maxHeight - 24 - 14) / line).floor().clamp(0, 2);
+      if (phrase == null || rows == 0) return const SizedBox.shrink();
+      final width = (box.maxWidth - 40).clamp(0.0, 640.0);
+      // Measured in the face the cue is drawn in: the theme's, not the bare style's default.
+      final style = DefaultTextStyle.of(context).style.merge(_textStyle);
+      bool fits(String text) {
+        final painter = TextPainter(
+          text: TextSpan(text: text, style: style),
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.center,
+          maxLines: rows,
+          textScaler: scaler,
+        )..layout(maxWidth: width);
+        final fits = !painter.didExceedMaxLines;
+        painter.dispose();
+        return fits;
+      }
+
+      final cue = _captions.at(phrase, plan.locate(position).$2, (width, rows, line), fits);
+      if (cue == null) return const SizedBox.shrink();
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: SizedBox(
+            width: width,
+            child: Text(cue.text, textAlign: TextAlign.center, maxLines: rows, style: style),
+          ),
+        ),
+      );
+    },
+  );
 
   Widget _coverBody(BuildContext context) {
     final item = widget.item;
