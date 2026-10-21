@@ -151,7 +151,7 @@ const TURNS = [
     next: `Try next: “Available with several worlds” · “a world installing, seen from Home” · “Details from ⋯”`,
   },
   {
-    id: 'p10', status: 'Drawn for review', date: '21 October 2026', name: 'A world already in Library — another edition replaces it, the same one is refused',
+    id: 'p10', date: '21 October 2026', name: 'A world already in Library — another edition replaces it, the same one is refused',
     lead: `SPEC-058 R-21. A world package added from a file (P2c–P2f), such as one made by the Studio’s Export → Arke Player (Studio <a class="dv-oid" href="../../ArkeStudio/design-system/Arke%20Studio.dc.html#t233">233</a>), may be of a world the library already holds.`,
     rules: [
       ['Another edition', `When the package is of a world in Library and its edition differs, Ready (${F('P2e')}) becomes Replace (${F('P10a')}): the package’s line as ever (<code>made 21 Oct 2026 · 1 production · 228 MB</code>), Inside, then <code>In Library</code> with the installed edition’s date and size, and <code>Space</code> as the difference (<code>+46 MB of 41 GB free</code>). The presses are <code>Replace</code> and <code>Cancel</code>. Newer or older, the two dates say which; nothing warns.`],

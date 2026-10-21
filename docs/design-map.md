@@ -65,7 +65,7 @@ P9 joined the MVP on 20 October 2026. The world package is [ADR 0005](decisions/
 | P1e (for P9) | A production of an installed world: Play or Continue, Read, Chapters | `…/world/:worldId/:productionId` | `features/worlds/presentation/production_screen.dart` |
 | P9g | Home, ending with Worlds and Available | `/` | `features/home/presentation/home_screen.dart` |
 
-## A world already in Library (P10, drawn for review)
+## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.
 
