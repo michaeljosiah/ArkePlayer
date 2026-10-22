@@ -1,21 +1,21 @@
 {
   "version": 2,
-  "serial": 1,
+  "serial": 2,
   "worlds": [
     {
-      "id": "undersong",
+      "id": "the-undersong",
       "name": "The Undersong",
       "logline": "A drowned god still sings beneath the harbour.",
       "keyArt": "assets/worlds/undersong/key-art.jpg",
       "productions": [
-        { "title": "The Ledger of Nights", "kind": "Audiobook · Book · 3 h 49 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg" }
+        { "title": "The Ledger of Nights", "kind": "Audiobook · Book · 5 h 33 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-19-r3/the-undersong-player-2026-10-20.zip",
-        "byteLength": 182182066,
-        "sha256": "46ff9dbaf5fed13ca3f5c795ad4aed0ba7165ee84cc3bcfec6730e9451504a8b",
-        "edition": "2026-10-20",
-        "fingerprint": "d20908ef11934ac88cff0cf65bb5a574a2eda16c1e0d608354bc2c4afce58fb9"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-player-2026-10-22.zip",
+        "byteLength": 413454398,
+        "sha256": "fb45df559fff41d25a20150bc7b936671b97b3e7b1a354d37f8ccb2a41ba3559",
+        "edition": "2026-10-22",
+        "fingerprint": "6d657eca3bf64fc6b813ead3ed82998b660cefadedb2f1dbd7eb8bc3f428e9d0"
       }
     }
   ]

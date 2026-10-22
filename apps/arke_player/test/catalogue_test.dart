@@ -24,8 +24,10 @@ void main() {
   });
 
   test('The Undersong is pinned to its published package', () {
-    final undersong = catalogue.singleWhere((world) => world.id == 'undersong');
-    expect(undersong.package!.sha256, '46ff9dbaf5fed13ca3f5c795ad4aed0ba7165ee84cc3bcfec6730e9451504a8b');
+    // The Studio's Export → Arke Player of the 23-chapter edition, named by the world's own slug.
+    final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
+    expect(undersong.package!.sha256, 'fb45df559fff41d25a20150bc7b936671b97b3e7b1a354d37f8ccb2a41ba3559');
+    expect(undersong.package!.edition, '2026-10-22');
     expect(undersong.productions.single.title, 'The Ledger of Nights');
   });
 }

@@ -43,7 +43,11 @@ How a world gets onto Available (P9). The format is [ADR 0005](decisions/0005-wo
 
 ## The Undersong
 
-Published on 20 October 2026 as `the-undersong-player-2026-10-20.zip`: 182,182,066 bytes, SHA-256 `46ff9dbaf5fed13ca3f5c795ad4aed0ba7165ee84cc3bcfec6730e9451504a8b`. It sits on ArkeStudio release `undersong-2026-10-19-r3`, beside the Studio's Sample world, and is pinned in the catalogue. Packed from these files on that release, unchanged:
+**Pinned now: the 22 October 2026 edition** (list serial 2), the Studio's Export → Arke Player of the 23-chapter world from story release `undersong-2026-10-22-r1` (*Perrin's awakening*): `the-undersong-player-2026-10-22.zip`, 413,454,398 bytes, SHA-256 `fb45df559fff41d25a20150bc7b936671b97b3e7b1a354d37f8ccb2a41ba3559`, fingerprint `6d657eca…e9d0`, on that release. Schema 2, world id `the-undersong` (the Studio's slug): the whole book, and all 23 chapters narrated with their 290 pictures and Text, 5 h 33 m. Made with `scripts/export-arke-player.mts` on a copy of the release's import, checked with the Player's own installer (every chapter's audio within 0 ms of its document), and published with the list on `arke-player-worlds`.
+
+The world's id moved from the hand-packed `undersong` to the Studio's `the-undersong` with this edition, so a phone that installed the 20 October package from Available sees this one as another world, not an update: remove the old one. Every edition from here on is the Studio's export, under the same id.
+
+**The first edition**, superseded: published on 20 October 2026 as `the-undersong-player-2026-10-20.zip`: 182,182,066 bytes, SHA-256 `46ff9dbaf5fed13ca3f5c795ad4aed0ba7165ee84cc3bcfec6730e9451504a8b`. It sits on ArkeStudio release `undersong-2026-10-19-r3`, beside the Studio's Sample world, and is pinned in the catalogue. Packed from these files on that release, unchanged:
 
 | | File | What the Player reads |
 |---|---|---|

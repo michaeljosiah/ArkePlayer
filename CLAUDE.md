@@ -52,6 +52,31 @@ CI runs exactly these on ubuntu-latest. `dart format` uses the page width from `
 - **Every setting is this device's.** Nothing is uploaded to an account, and an added file is never uploaded.
 - **Accounts are a seam.** `ArkeCloud` has one implementation today, `NoArkeCloud`. Don't scatter cloud calls through the screens.
 
+## Publishing a world (Available and Update)
+
+Arke's list of worlds is `apps/arke_player/assets/worlds/catalogue.json`, shipped in the app and
+also published on the public ArkeStudio release `arke-player-worlds`, which phones fetch at most
+once a day (SPEC-058 R-30 – R-36, P12). Of the two, a phone keeps the higher `serial`. Details are
+in [docs/world-package.md](docs/world-package.md); the Studio half — the export and its upload — is
+in ArkeStudio's CLAUDE.md. **Ask the owner before any public upload.**
+
+1. **The package** is the Studio's Export → Arke Player (ArkeStudio `scripts/export-arke-player.mts`
+   on a copy of the world), uploaded under a new file name to the world's public ArkeStudio
+   release. A published package is never replaced.
+2. **Pin it:** `dart run arke_world:pin_world <package.zip> <its https url>` (from
+   `packages/arke_world`). It reads the package as the Player does and prints `url`, `byteLength`,
+   `sha256`, `edition` and `fingerprint`. Paste that as the world's `package` in the list, keep its
+   `keyArt` and `picture` paths (bundled assets; a fetched list takes its pictures from the app),
+   and update the production's kind line (`Audiobook · Book · 5 h 33 m`).
+3. **Raise `serial`** by one. A list whose serial is not higher is ignored by every phone.
+4. **Gates, commit, push**, as for any change: the app's tests guard the shipped list.
+5. **Publish the list:** `gh release upload arke-player-worlds apps/arke_player/assets/worlds/catalogue.json --clobber --repo michaeljosiah/ArkeStudio`.
+   It is the one file replaced in place. Check that
+   `https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/catalogue.json`
+   is byte-identical to the commit. The release is never marked Latest.
+
+Installed phones show `Update` once they fetch the list; new installs and the next build ship it.
+
 ## Specs
 
 The ArkeStudio specs are a private sibling repository (`arke-studio-specs`). Cite them by id (`SPEC-048`), never by path. If a spec isn't present, say you can't read it rather than reconstructing it.
