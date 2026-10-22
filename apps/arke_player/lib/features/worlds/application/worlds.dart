@@ -37,6 +37,17 @@ final catalogueRefreshProvider = FutureProvider<void>((ref) async {
   if (after != before) ref.invalidate(catalogueProvider);
 });
 
+/// The installed world an address names: the world of that id, or the one Arke's list says replaced
+/// it (SPEC-058 R-30), so a page opened under a world's old id, or left open while it was updated
+/// to a new one, still finds it.
+final installedWorldProvider = Provider.family<LibraryWorld?, String>((ref, worldId) {
+  final worlds = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
+  final own = worlds.where((world) => world.id == worldId).firstOrNull;
+  if (own != null) return own;
+  final successor = ref.watch(catalogueProvider).value?.where((world) => world.replaces.contains(worldId)).firstOrNull;
+  return successor == null ? null : worlds.where((world) => world.id == successor.id).firstOrNull;
+});
+
 /// The newer edition Arke's list names for an installed world, if any (SPEC-058 R-30, R-32, P12
 /// rule 2): its own entry's, or the entry of a world that replaces its id. Its install runs under
 /// the listed id, so Downloads and every card follow the one install.

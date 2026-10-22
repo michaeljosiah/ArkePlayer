@@ -7,6 +7,7 @@ import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
+import 'package:arke_player/features/worlds/presentation/production_screen.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,13 @@ class _FakeInstaller extends WorldInstaller {
   }
 }
 
-Future<void> _pump(WidgetTester tester, {required String location, required List<CatalogueWorld> catalogue, WorldInstaller? installer}) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  required String location,
+  required List<CatalogueWorld> catalogue,
+  WorldInstaller? installer,
+  LibraryWorld? installed,
+}) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -65,7 +72,7 @@ Future<void> _pump(WidgetTester tester, {required String location, required List
     ProviderScope(
       overrides: [
         libraryItemsProvider.overrideWith((ref) => Stream.value(const <LibraryItem>[])),
-        libraryWorldsProvider.overrideWith((ref) => Stream.value([_installed])),
+        libraryWorldsProvider.overrideWith((ref) => Stream.value([installed ?? _installed])),
         catalogueProvider.overrideWith((ref) async => catalogue),
         volumeProvider.overrideWith((ref) async => (free: 41000000000, total: 128000000000)),
         if (installer != null) worldInstallerProvider.overrideWith((ref) async => installer),
@@ -114,6 +121,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Update · 413 MB', findRichText: true), findsOneWidget);
     expect(find.text('22 Oct 2026 · 413 MB'), findsOneWidget);
+  });
+
+  testWidgets('a page left open at a world’s old id moves to its new one, so its production opens (R-30)', (tester) async {
+    const renamed = CatalogueWorld(id: 'the-undersong', name: 'The Undersong', replaces: ['undersong'], productions: []);
+    final updated = LibraryWorld(
+      id: 'the-undersong',
+      edition: '2026-10-22',
+      name: 'The Undersong',
+      byteLength: 413000000,
+      installedAt: DateTime.utc(2026, 10, 22),
+      productions: const [LibraryProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', book: 'the-undersong.the-ledger-of-nights.book')],
+    );
+    await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [renamed], installed: updated);
+    final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
+    await tester.tap(find.text('The Ledger of Nights'));
+    await tester.pumpAndSettle();
+    // Under the old address this was the Removed page (as the owner saw it on 22 October).
+    expect(find.text('Removed'), findsNothing);
+    expect(find.byType(ProductionScreen), findsOneWidget);
+
+    // A production reached by its old address still opens.
+    router.go('${Routes.worldsWorld('undersong')}/the-ledger-of-nights');
+    await tester.pumpAndSettle();
+    expect(find.text('Removed'), findsNothing);
+    expect(find.text('The Ledger of Nights'), findsWidgets);
   });
 
   testWidgets('and not when the list names the edition installed', (tester) async {

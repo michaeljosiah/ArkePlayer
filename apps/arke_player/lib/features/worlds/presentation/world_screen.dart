@@ -30,10 +30,16 @@ class WorldScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final worlds = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
-    // A world updated under a new id (SPEC-058 R-30) answers at its old address too.
-    final successor = ref.watch(catalogueProvider).value?.where((world) => world.replaces.contains(worldId)).firstOrNull;
-    final installed = worlds.where((world) => world.id == worldId).firstOrNull ?? worlds.where((world) => world.id == successor?.id).firstOrNull;
+    final installed = ref.watch(installedWorldProvider(worldId));
+    // A world updated to a new id while its page was open (SPEC-058 R-30), or opened from an old
+    // link: the page moves to the world's own address. Under the old one, a production opened from
+    // here looked for a world that had gone and said Removed.
+    if (installed != null && installed.id != worldId && location.endsWith('/$worldId')) {
+      final moved = '${location.substring(0, location.length - worldId.length)}${installed.id}';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.replace(moved);
+      });
+    }
     // Opening a world's page asks Arke's address for its list, at most once a day (P12 rule 1).
     ref.watch(catalogueRefreshProvider);
     return Scaffold(

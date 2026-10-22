@@ -24,7 +24,8 @@ class ProductionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final world = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
+    // Through a world's old id too (SPEC-058 R-30): a link from before it was updated still opens it.
+    final world = ref.watch(installedWorldProvider(worldId));
     final production = world?.productions.where((production) => production.id == productionId).firstOrNull;
     final store = ref.watch(libraryStoreProvider).value;
     final items = {for (final item in ref.watch(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
