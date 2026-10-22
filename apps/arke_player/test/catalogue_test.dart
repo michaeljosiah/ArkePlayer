@@ -23,11 +23,14 @@ void main() {
     }
   });
 
-  test('The Undersong is pinned to its published package', () {
-    // The Studio's Export → Arke Player of the 23-chapter edition, named by the world's own slug.
+  test('The Undersong is pinned to its published package and its guide alone', () {
+    // The Studio's Export → Arke Player of the 23-chapter edition with its guide, named by the
+    // world's own slug, and the guide alone that lets it be explored before install (SPEC-059 R-10).
     final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
-    expect(undersong.package!.sha256, 'fb45df559fff41d25a20150bc7b936671b97b3e7b1a354d37f8ccb2a41ba3559');
-    expect(undersong.package!.edition, '2026-10-22');
+    expect(undersong.package!.sha256, 'cb4975f9e0edc147fdf77ef2b356479d6c5007b6a503f43f96b322c31d9e7acd');
+    expect(undersong.package!.edition, '2026-10-22-2');
+    expect(undersong.guide!.url.scheme, 'https');
+    expect(undersong.guide!.sha256, 'ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123');
     // The hand-packed editions were published as `undersong`: a phone holding one is offered Update.
     expect(undersong.replaces, ['undersong']);
     expect(undersong.productions.single.title, 'The Ledger of Nights');

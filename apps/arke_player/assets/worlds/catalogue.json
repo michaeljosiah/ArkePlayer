@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 3,
+  "serial": 4,
   "worlds": [
     {
       "id": "the-undersong",
@@ -12,11 +12,18 @@
         { "title": "The Ledger of Nights", "kind": "Audiobook · Book · 5 h 33 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-player-2026-10-22.zip",
-        "byteLength": 413454398,
-        "sha256": "fb45df559fff41d25a20150bc7b936671b97b3e7b1a354d37f8ccb2a41ba3559",
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-player-2026-10-22-2.zip",
+        "byteLength": 417011800,
+        "sha256": "cb4975f9e0edc147fdf77ef2b356479d6c5007b6a503f43f96b322c31d9e7acd",
+        "edition": "2026-10-22-2",
+        "fingerprint": "2bd8a614884d8bc41ae5d6368f2e06db78eb12fa0e765a3a1724f20267348abd"
+      },
+      "guide": {
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-guide-2026-10-22.zip",
+        "byteLength": 3625221,
+        "sha256": "ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123",
         "edition": "2026-10-22",
-        "fingerprint": "6d657eca3bf64fc6b813ead3ed82998b660cefadedb2f1dbd7eb8bc3f428e9d0"
+        "fingerprint": "46d71fc28ab0ae820b06288e78a632dc1deb76a914826286445551a704f484f0"
       }
     }
   ]
