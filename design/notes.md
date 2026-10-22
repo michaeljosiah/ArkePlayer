@@ -111,7 +111,7 @@ frames' size (386 MB) and file count are samples.
 The owner, on 22 October 2026: if an audiobook is updated in the Studio, does the Player see it and
 offer the download? Only from a file (P10). A world installed from Arke's list never shows a newer
 edition: the list ships with the app, names no edition, and leaves Available once a world is
-installed. P12 draws the answer for approval: Arke's list fetched as well as shipped, each entry
+installed. P12 draws the answer, approved as drawn the same day with calls 8 and 9: Arke's list fetched as well as shipped, each entry
 naming its edition; `Update` on the world's card and page; the download and check in place of the
 press, the installed edition playing until the new one is checked; and P10's Replace underneath,
 places kept by chapter. Updates are pressed, never automatic.
@@ -136,10 +136,10 @@ places kept by chapter. Updates are pressed, never automatic.
 6. **The Undersong is published as a world package** (182 MB, ADR 0005). Its format is owed to
    SPEC-048.
 7. **Whether P9 joins the MVP.** The MVP left world import out; P9 needs no account.
-8. **Arke's list of worlds is fetched as well as shipped** (P12, for approval): from one Arke
+8. **Arke's list of worlds is fetched as well as shipped** (P12, approved): from one Arke
    address over HTTPS, at most once a day, the list in the app as the floor, so a newer edition
    shows without an app update. Each entry stays pinned by length and SHA-256.
-9. **An update downloads only when pressed** (P12, for approval). A world is the person's, and a
+9. **An update downloads only when pressed** (P12, approved). A world is the person's, and a
    new edition can change what they are partway through; `Wi-Fi only` applies to it.
 
 ## What this rests on
