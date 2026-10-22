@@ -67,7 +67,9 @@ in ArkeStudio's CLAUDE.md. **Ask the owner before any public upload.**
    `packages/arke_world`). It reads the package as the Player does and prints `url`, `byteLength`,
    `sha256`, `edition` and `fingerprint`. Paste that as the world's `package` in the list, keep its
    `keyArt` and `picture` paths (bundled assets; a fetched list takes its pictures from the app),
-   and update the production's kind line (`Audiobook · Book · 5 h 33 m`).
+   and update the production's kind line (`Audiobook · Book · 5 h 33 m`). A world with a public
+   Guide also has a guide alone (the export script's `--guide-alone`, SPEC-059 R-10): upload and
+   pin it the same way and paste it as the world's `guide`, beside `package`.
 3. **Raise `serial`** by one. A list whose serial is not higher is ignored by every phone.
 4. **Gates, commit, push**, as for any change: the app's tests guard the shipped list.
 5. **Publish the list:** `gh release upload arke-player-worlds apps/arke_player/assets/worlds/catalogue.json --clobber --repo michaeljosiah/ArkeStudio`.
