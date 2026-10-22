@@ -162,6 +162,22 @@ const TURNS = [
     ],
     next: `Try next: “a newer edition on Available after an app update” · “an older edition” · “Replace while its audiobook plays”`,
   },
+  {
+    id: 'p11', date: '22 October 2026', status: 'Drawn, for approval', name: 'Worlds to explore — the Worlds tab, a world’s characters, places and lore, and what waits for a chapter',
+    lead: `Asked: a Worlds section where people explore worlds and their productions, and read about the characters and some of the lore, starting with the worlds Arke makes available. The guide is what a world’s author makes public in the Studio (Studio <a class="dv-oid" href="${STUDIO}#t234">234</a>).`,
+    rules: [
+      ['Worlds is a tab', `The tabs become five, <code>Home · Worlds · Library · Downloads · You</code>, Worlds second (P1 rule 3 amended); on a Fold, the rail (${F('P11i')}). Worlds (${F('P11a')}) lists <b>In Library</b>, then <b>Available</b>, as cards <code>358 × 190</code>, each meta line its productions, characters and, before install, size. It takes the place of ${F('P9b')}’s Available page: first open’s <code>Install a world</code> opens it, and Home keeps its <code>Available</code> section (${F('P9g')}).`],
+      ['Arke’s worlds, not yet a directory', `The worlds are the ones Arke makes available: a list that ships with the app, each package pinned by its SHA-256 (P9 rule 1), growing with each update as more worlds are made. A directory anyone publishes to needs the Arke cloud — accounts, hosting, moderation, takedown, rights and ratings — and is not drawn.`],
+      ['A world’s guide', `<b>Characters</b>, <b>Places</b> and <b>Lore</b>, as the author made them public. The guide is small and pinned in the list on its own, so a world can be explored before it is installed (${F('P11b')}): it is fetched when the page first opens and kept. Installing brings it in the package. Nothing in it is a world’s source (P1 rule 1): no sheets, notes, prompts or open questions.`],
+      ['A world’s page', `The hero; then the productions — <code>Install</code> and Inside before (${F('P11b')}), the groups after (${F('P11c')}); then Characters as cards <code>120</code> wide, <code>4:5</code>, name and role; Places as ${F('P1d')}’s <code>160</code> tiles; Lore as rows, the kind over the title. Each head carries its count. A section with nothing public is not drawn. A character with no portrait shows initials.`],
+      ['A character', `${F('P11d')}: the portrait as the hero, the name, <code>role · world</code>, and <code>Voice</code> with its length — a line from a production in their voice, chosen by the author. Then the sections made public, in the author’s order and words, under their own headings (<code>Essence</code>, <code>Appearance</code>), and <code>With</code>: the characters and places linked, each opening its page.`],
+      ['A place, a lore entry', `A place (${F('P11e')}): the picture, the name, <code>Place · world</code>, its public sections, and <code>Here</code>, the characters linked. Lore (${F('P11f')}): rows under the chips <code>All · Lore · Rules · Timeline</code>; an entry (${F('P11g')}) is its kind, its title in <code>text-3xl</code>, the author’s text, and <code>With</code>.`],
+      ['What waits for a chapter', `Each character, place, lore entry and section is public from the start or <b>after a chapter</b> of a production. Until this phone’s place in that production — read or heard — passes the chapter, it is drawn as <code>After Chapter 6</code> with the hidden mark and <code>Reveal</code>: a row in a list, a card with no portrait among the characters, a row in place of a section. Reveal asks once (${F('P11h')}): the chapter, the production and where you are, then <code>Reveal</code> or <code>Not now</code>. What is revealed or reached stays shown on this phone.`],
+      ['On a Fold', `The rail; characters <code>160</code> wide, places <code>280</code>; lore in two columns (${F('P11i')}).`],
+      ['Words', `Labels only: Worlds, In Library, Available, Characters, Places, Lore, Rules, Timeline, Voice, With, Here, Reveal, Not now, After Chapter N; counts, sizes and lengths as data. The sections’ headings and texts are the author’s.`],
+    ],
+    next: `Try next: “a world with no guide” · “a world’s guide offline, never fetched” · “a character in two productions”`,
+  },
 ];
 
 // ---- assemble ---------------------------------------------------------------------------------

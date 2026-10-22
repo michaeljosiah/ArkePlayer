@@ -334,8 +334,75 @@ const P10 = [
   frame('P10b', 'The same edition: Already in Library', 'phone', `${libraryBehind()}<div class="veil"></div>${sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="mute">${ic('library', 34, 1.8)}</span><div style="margin-top:4px;font:var(--type-h3)">Already in Library</div><div class="mute num" style="font:var(--type-ui)">The Undersong · 21 Oct 2026</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">Open</span><span class="btn ghost wide">Close</span></div>`)}${hi()}`),
 ];
 
+// ---- P11 · worlds to explore: characters, places, lore --------------------------------------------
+// The guide is what the author made public in the Studio (Studio 234): The Undersong's cast, places and
+// canon, from ArkeStudio's fixture world. Copper Saints and Meridian Dust stand for the worlds to come.
+const CAST = {
+  maren: { img: 'char-maren.jpg', pos: '50% 18%', name: 'Maren Kest', role: 'Tide-caller' },
+  bray: { img: 'char-bray.jpg', pos: '50% 20%', name: 'Bray Half-Hitch', role: 'Rigger' },
+  chorister: { img: 'char-chorister.jpg', pos: '50% 20%', name: 'The Chorister', role: 'Keeper of the drowned verse' },
+  perrin: { ini: 'PT', name: 'Perrin Tallow', role: 'Council actuary' },
+};
+const PLACES = {
+  vigil: { img: 'scene4-shot13.jpg', pos: '70% 20%', title: 'The Vigil', kind: 'Place' },
+  saltmarket: { img: 'launch-harbour.jpg', pos: '50% 62%', title: 'The Saltmarket', kind: 'Place' },
+  chapel: { img: 'drowned-quarter.jpg', pos: '40% 50%', title: 'The Drowned Chapel', kind: 'Place' },
+};
+const LORE = [['Lore', 'The Undersong'], ['Rule', 'Tide-calling'], ['Timeline', 'The drowning of the god'], ['Rule', 'The ledger is never wrong'], ['Lore', 'The Departure'], ['Rule', 'The Seven Anchors']];
+const pc = (c, w = 120) => `<div class="pc" style="width:${w}px"><div class="im">${c.img ? `<img src="${A}${c.img}" alt="" style="object-position:${c.pos}">` : `<span class="ini">${c.ini}</span>`}</div><div class="t">${c.name}</div><div class="m">${c.role}</div></div>`;
+const pcGated = (after, w = 120) => `<div class="pc gated" style="width:${w}px"><div class="im">${ic('eyeoff', 26, 1.7)}</div><div class="t mute">${after}</div><div class="m">Character</div></div>`;
+const lr = ([kind, title]) => `<div class="lr"><div class="grow"><div class="lk">${kind}</div><div class="t">${title}</div></div><span class="mute">${ic('right', 16)}</span></div>`;
+const gate = (after) => `<div class="lr"><span class="mute">${ic('eyeoff', 20, 1.8)}</span><div class="grow"><div class="t mute">${after}</div></div><span class="btn" style="height:36px;padding:0 15px">Reveal</span></div>`;
+const castRow = `${[CAST.maren, CAST.bray, CAST.perrin].map((c) => pc(c)).join('')}${pcGated('After Chapter 9')}`;
+const placesRow = [PLACES.vigil, PLACES.saltmarket, PLACES.chapel].map((p) => tile(p)).join('');
+const guide = (lore = 3) => `${sh('Characters', '<span class="ct num">5</span>')}<div class="hrow">${castRow}</div>
+${sh('Places', '<span class="ct num">6</span>')}<div class="hrow">${placesRow}</div>
+${lore ? `${sh('Lore', '<span class="ct num">8</span>')}${LORE.slice(0, lore).map(lr).join('')}${gate('After Chapter 6')}` : ''}`;
+const withChips = (items) => `<div class="chips" style="flex-wrap:wrap;gap:8px">${items.map(([label, img]) => `<span class="chip" style="padding-left:${img === undefined ? 15 : 14}px">${img ? `<img src="${A}${img}" alt="">` : img === null ? `<span class="dot">${ic('globe', 13, 1.8)}</span>` : ''}${label}</span>`).join('')}</div>`;
+const scrolledHead = (title) => `<div class="hd"><span class="icb">${ic('left', 20, 2)}</span><span class="grow" style="font:var(--type-h3);letter-spacing:var(--tracking-tight)">${title}</span><span class="icb">${ic('more', 20)}</span></div>`;
+const revealSheet = sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="mute">${ic('eyeoff', 34, 1.8)}</span><div style="margin-top:4px;font:var(--type-h3)">After Chapter 6</div><div class="mute num" style="font:var(--type-ui)">The Ledger of Nights · you are at Chapter 3</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">Reveal</span><span class="btn ghost wide">Not now</span></div>`);
+const characterPage = (overlay = '') => `${sb(true)}<div class="body"><div class="hero" style="padding-top:238px"><img src="${A}${CAST.maren.img}" alt="" style="height:318px;object-position:50% 16%"><div class="fade" style="top:108px;height:211px"></div><div class="top">${back}</div><div class="in"><h1>Maren Kest</h1><div class="meta">Tide-caller · The Undersong</div><div class="acts"><span class="btn" style="flex:1">${ic('volume', 18)}Voice <em class="num">· 0:08</em></span></div></div></div>
+<div class="prose"><div class="lk">Essence</div><p>Tide-caller. She hears the verse under the harbour and pulls the water where it needs to go. She has paid for it: her left ear is done, and she knows the right is next.</p><div class="lk">Appearance</div><p>Salt-crusted braids, pale grey eyes, oilskin coat with a bioluminescent thread at the collar.</p></div>
+<div style="height:10px"></div>${gate('After Chapter 6')}
+${sh('With')}${withChips([['Bray Half-Hitch', CAST.bray.img], ['The Vigil', PLACES.vigil.img]])}
+</div>${tabs('Worlds', false, true)}${overlay}${hi()}`;
+
+const P11 = [
+  frame('P11a', 'Worlds', 'phone', `${sb()}<div class="hd"><h1>Worlds</h1></div><div class="body">
+${sh('In Library')}${wc({ ...W.undersong, meta: 'In Library · 1 production · 5 characters', pos: '60% 50%' })}
+${sh('Available')}${wc({ ...W.copper, meta: '2 productions · 9 characters · 240 MB' })}${wc({ ...W.meridian, meta: '3 productions · 7 characters · 1.4 GB', pos: '40% 50%' })}
+</div>${tabs('Worlds', false, true)}${hi()}`),
+
+  frame('P11b', 'A world before it is installed, its guide open', 'phone', `${sb(true)}<div class="body">${installHero(installPress())}${guide(0)}</div>${tabs('Worlds', false, true)}${hi()}`),
+
+  // Scrolled past the hero and Listen (P9f), to the guide.
+  frame('P11c', 'The Undersong installed, scrolled to its guide', 'phone', `${sb()}${scrolledHead('The Undersong')}<div class="body" style="margin-top:-12px">${guide(3)}</div>${tabs('Worlds', false, true)}${hi()}`),
+
+  frame('P11d', 'A character', 'phone', characterPage()),
+
+  frame('P11e', 'A place', 'phone', `${sb(true)}<div class="body"><div class="hero" style="padding-top:238px"><img src="${A}${PLACES.vigil.img}" alt="" style="height:318px;object-position:70% 30%"><div class="fade" style="top:108px;height:211px"></div><div class="top">${back}</div><div class="in"><h1>The Vigil</h1><div class="meta">Place · The Undersong</div></div></div>
+<div class="prose"><div class="lk">Look</div><p>A watchtower of black stone at the harbour mouth, ringed by a rail worn smooth by two hundred years of gripping hands. Lamps burn green-white.</p><div class="lk">Sound</div><p>Bells under the water on the worst nights. The rail hums a fifth below the wind.</p></div>
+${sh('Here')}<div class="hrow">${[CAST.maren, CAST.bray].map((c) => pc(c, 96)).join('')}</div>
+</div>${tabs('Worlds', false, true)}${hi()}`),
+
+  frame('P11f', 'Lore', 'phone', `${sb()}<div class="hd"><span class="icb">${ic('left', 20, 2)}</span><h1>Lore</h1></div><div class="chips"><span class="chip on">All</span><span class="chip">Lore</span><span class="chip">Rules</span><span class="chip">Timeline</span></div><div class="body" style="padding-top:12px">${LORE.map(lr).join('')}${gate('After Chapter 6')}${gate('After Chapter 11')}</div>${tabs('Worlds', false, true)}${hi()}`),
+
+  frame('P11g', 'A lore entry', 'phone', `${sb()}<div class="hd"><span class="icb">${ic('left', 20, 2)}</span><span class="grow"></span></div><div class="body"><div style="padding:6px 16px 0"><div class="lk">Lore</div><h1 style="margin-top:6px;font:var(--weight-bold) var(--text-3xl)/1.15 var(--font-sans);letter-spacing:var(--tracking-tighter)">The Undersong</h1></div>
+<div class="prose" style="padding-top:14px"><p>Beneath the harbour lies a drowned god, and it is still singing. The song is slow — one verse a season — and the harbour’s luck rises and falls with the verse. Most people have never heard it. Everyone has felt it.</p></div>
+${sh('With')}${withChips([['Maren Kest', CAST.maren.img], ['The Chorister', CAST.chorister.img], ['The Vigil', PLACES.vigil.img]])}
+</div>${tabs('Worlds', false, true)}${hi()}`),
+
+  frame('P11h', 'Reveal, asked once', 'phone', characterPage(`<div class="veil"></div>${revealSheet}`)),
+
+  frame('P11i', 'A world’s guide on a Fold', 'fold', `${tabs('Worlds', true, true)}<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb()}<div class="hd" style="padding:6px 28px 6px 24px"><span class="icb">${ic('left', 20, 2)}</span><span class="grow" style="font:var(--type-h3);letter-spacing:var(--tracking-tight)">The Undersong</span><span class="icb">${ic('more', 20)}</span></div><div class="body" style="padding:0 8px">
+${sh('Characters', '<span class="ct num">5</span>')}<div class="hrow">${[CAST.maren, CAST.bray, CAST.chorister, CAST.perrin].map((c) => pc(c, 160)).join('')}${pcGated('After Chapter 9', 160)}</div>
+${sh('Places', '<span class="ct num">6</span>')}<div class="hrow">${[PLACES.vigil, PLACES.saltmarket, PLACES.chapel].map((p) => tile({ ...p, w: 280 })).join('')}</div>
+${sh('Lore', '<span class="ct num">8</span>')}<div class="cols2g"><div>${LORE.slice(0, 4).map(lr).join('')}</div><div>${LORE.slice(4).map(lr).join('')}${gate('After Chapter 6')}${gate('After Chapter 11')}</div></div>
+</div>${hi()}</div>`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11) };
