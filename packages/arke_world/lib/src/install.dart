@@ -178,10 +178,21 @@ class WorldInstaller {
     }
   }
 
+  /// A world's guide being fetched, so a page opened twice fetches it once.
+  final _fetching = <String, Future<LibraryGuide>>{};
+
   /// Fetches a world's guide alone (SPEC-059 R-10, R-18) as a world is installed: its pin's length
   /// and SHA-256, then every file checked, then kept under `guides/` for reading offline. A guide
-  /// already kept under the same pin is not fetched again.
-  Future<LibraryGuide> fetchGuide(CatalogueWorld world, {InstallCancel? cancel}) async {
+  /// already kept under the same pin is not fetched again, nor one already being fetched: a second
+  /// fetch would replace the folder the first was read from.
+  Future<LibraryGuide> fetchGuide(CatalogueWorld world, {InstallCancel? cancel}) =>
+      // A block, not an arrow: an arrow would hand whenComplete the removed fetch to wait on, which
+      // is the one completing.
+      _fetching[world.id] ??= _fetchGuide(world, cancel).whenComplete(() {
+        _fetching.remove(world.id);
+      });
+
+  Future<LibraryGuide> _fetchGuide(CatalogueWorld world, InstallCancel? cancel) async {
     final pin = world.guide;
     if (pin == null) throw const NotAPackage();
     for (final kept in store.guides) {

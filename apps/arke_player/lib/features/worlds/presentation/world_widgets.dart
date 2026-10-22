@@ -17,6 +17,9 @@ const _bg = ArkeColors.mediaOverlayBackground;
 /// `1 production`, `3 productions`.
 String productionCount(int count) => count == 1 ? '1 production' : '$count productions';
 
+/// `1 character`, `5 characters` (P11a).
+String characterCount(int count) => count == 1 ? '1 character' : '$count characters';
+
 /// A picture named relative to the library's root.
 ImageProvider? libraryPicture(LibraryStore? store, String? relative) => store == null || relative == null ? null : FileImage(File(store.resolve(relative)));
 
@@ -143,9 +146,21 @@ class GlassPress extends StatelessWidget {
 /// most two lines — the author's words or nothing — and what goes under them. On a Fold the
 /// picture is 400 high and the words keep to 640 at the left (P9h).
 class WorldHero extends StatelessWidget {
-  const WorldHero({required this.picture, required this.title, required this.meta, this.logline, this.onMore, this.child, super.key});
+  const WorldHero({
+    required this.picture,
+    required this.title,
+    required this.meta,
+    this.logline,
+    this.onMore,
+    this.child,
+    this.pictureAlignment = const Alignment(0.2, 0),
+    super.key,
+  });
 
   final ImageProvider? picture;
+
+  /// Where the picture is cropped to: a character's portrait keeps the face (P11d).
+  final Alignment pictureAlignment;
   final String title;
   final String meta;
   final String? logline;
@@ -168,7 +183,7 @@ class WorldHero extends StatelessWidget {
             right: 0,
             top: 0,
             height: pictureHeight,
-            child: picture == null ? const SizedBox() : Image(image: picture!, fit: BoxFit.cover, alignment: const Alignment(0.2, 0)),
+            child: picture == null ? const SizedBox() : Image(image: picture!, fit: BoxFit.cover, alignment: pictureAlignment),
           ),
           Positioned(
             left: 0,
@@ -272,12 +287,14 @@ class HeroPress extends StatelessWidget {
   }
 }
 
-/// A second press on a hero, in the overlay's quiet fill: Read beside Continue (P1e).
+/// A second press on a hero, in the overlay's quiet fill: Read beside Continue (P1e), a character's
+/// `Voice · 0:08` (P11d).
 class HeroSecondPress extends StatelessWidget {
-  const HeroSecondPress({required this.icon, required this.label, required this.onPressed, super.key});
+  const HeroSecondPress({required this.icon, required this.label, required this.onPressed, this.detail, super.key});
 
   final IconData icon;
   final String label;
+  final String? detail;
   final VoidCallback onPressed;
 
   @override
@@ -290,7 +307,20 @@ class HeroSecondPress extends StatelessWidget {
         child: FilledButton.icon(
           onPressed: onPressed,
           icon: Icon(icon, size: 18),
-          label: Text(label),
+          label: Text.rich(
+            TextSpan(
+              text: label,
+              children: [
+                if (detail != null)
+                  TextSpan(
+                    text: ' · $detail',
+                    style: TextStyle(fontWeight: FontWeight.w400, color: _fg.withValues(alpha: 0.6)),
+                  ),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(ArkeSizes.press),
             backgroundColor: _fg.withValues(alpha: 0.16),

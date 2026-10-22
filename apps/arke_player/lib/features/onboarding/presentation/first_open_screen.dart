@@ -8,8 +8,8 @@ import '../../add_file/presentation/add_flow.dart';
 import '../../worlds/application/worlds.dart';
 
 /// First open, before sign-in exists (P8a): the wordmark over the app's own picture and one press,
-/// Add a file — and, when a world can be installed, a second, `Install a world`, which opens
-/// Available (P9a). No tour, no sentence, no Sign in (P8 rules 1–2).
+/// Add a file — and, when a world can be installed, a second, `Install a world`, which opens the
+/// Worlds tab (P9a, P11 rule 1). No tour, no sentence, no Sign in (P8 rules 1–2).
 class FirstOpenScreen extends ConsumerWidget {
   const FirstOpenScreen({super.key});
 
@@ -112,7 +112,7 @@ class FirstOpenScreen extends ConsumerWidget {
                 if (canInstall) ...[
                   const SizedBox(height: 10),
                   FilledButton.icon(
-                    onPressed: () => context.push(Routes.welcomeAvailable),
+                    onPressed: () => context.go(Routes.worlds),
                     icon: const Icon(Icons.download_rounded, size: 18),
                     label: const Text('Install a world'),
                     style: FilledButton.styleFrom(

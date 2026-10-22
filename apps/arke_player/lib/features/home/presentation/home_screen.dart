@@ -11,8 +11,8 @@ import '../../../app/widgets/shelf.dart';
 import '../../add_file/presentation/add_flow.dart';
 import '../../library/presentation/item_menu.dart';
 import '../../worlds/application/worlds.dart';
-import '../../worlds/presentation/available_screen.dart';
 import '../../worlds/presentation/world_widgets.dart';
+import '../../worlds/presentation/worlds_screen.dart';
 
 /// Home before an account (P8b, P8d, P9g): Continue, then Added, then installed Worlds, then
 /// Available; with nothing added, the state line and Add a file, Available under them (P9 rule 2).

@@ -338,7 +338,6 @@ void main() {
 
   Future<void> install(WidgetTester tester) => tester.tap(find.textContaining('Install').last);
   testWidgets('P9a first open, with a world to install', (t) => shoot(t, 'P9a-first-open', phone, Routes.welcome, with_: const [], catalogue: [_undersong]));
-  testWidgets('P9b available', (t) => shoot(t, 'P9b-available', phone, Routes.welcomeAvailable, with_: const [], catalogue: [_undersong]));
   testWidgets('P9c a world to install', (t) => shoot(t, 'P9c-world-to-install', phone, Routes.world('undersong'), catalogue: [_undersong]));
   testWidgets(
     'P9d installing',

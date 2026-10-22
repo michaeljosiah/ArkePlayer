@@ -6,6 +6,7 @@ import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
+import 'package:arke_player/features/home/presentation/home_screen.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_publication/arke_publication.dart';
@@ -135,6 +136,8 @@ void main() {
       expect(find.text('Install a world'), findsOneWidget);
       await tester.tap(find.text('Install a world'));
       await tester.pumpAndSettle();
+      // Worlds, the tab that took P9b's place (P11 rule 1).
+      expect(find.text('Worlds'), findsWidgets);
       expect(find.text('Available'), findsOneWidget);
       expect(find.text('1 production · 386 MB'), findsOneWidget);
     });
@@ -158,7 +161,8 @@ void main() {
     });
     testWidgets('an installed world is under Worlds, and Available is gone', (tester) async {
       await _pump(tester, location: Routes.home, catalogue: [_undersong], worlds: [_installed], items: _worldItems);
-      expect(find.text('Worlds'), findsOneWidget);
+      // Home's section, not the tab of the same name.
+      expect(find.descendant(of: find.byType(HomeScreen), matching: find.text('Worlds')), findsOneWidget);
       expect(find.text('Available'), findsNothing);
       // A world's items are not files: no Added, no Nothing added.
       expect(find.text('Added'), findsNothing);
@@ -233,7 +237,7 @@ void main() {
   group('text at 200% clips no press (acceptance 9)', () {
     for (final (name, location, worlds, items) in [
       ('first open with two presses', Routes.welcome, const <LibraryWorld>[], const <LibraryItem>[]),
-      ('Available', Routes.welcomeAvailable, const <LibraryWorld>[], const <LibraryItem>[]),
+      ('Worlds', Routes.worlds, const <LibraryWorld>[], const <LibraryItem>[]),
       ('a world to install', Routes.world('undersong'), const <LibraryWorld>[], const <LibraryItem>[]),
       ('Home with Available', Routes.home, const <LibraryWorld>[], [_file]),
       ('the installed world', Routes.world('undersong'), [_installed], _worldItems),

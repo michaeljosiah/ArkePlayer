@@ -36,6 +36,7 @@ How a world gets onto Available (P9). The format is [ADR 0005](decisions/0005-wo
    This writes the ZIP (`world.json` plus the files, stored) and prints the catalogue entry, with the package's byte length and SHA-256. The packer reads its own manifest back and refuses to write one the Player would refuse.
 4. **Publish the ZIP over HTTPS, publicly.** The Player downloads with no login, and the ArkePlayer repository is private, so its release assets need one. Use a public release instead, as the Studio's Sample world does (`github.com/michaeljosiah/ArkeStudio/releases`). Never replace a published file. A changed package is a new file with a new name.
 5. **Pin it.** Paste the printed entry into `apps/arke_player/assets/worlds/catalogue.json` in place of the world's `"package": null`. Copy the key art and pictures to the `assets/worlds/<id>/` paths the entry names.
+   A world's guide alone (SPEC-059 R-10), the Studio's Export of a world with nothing to play, is pinned the same way beside it, as `"guide": { "url", "byteLength", "sha256" }`. Its world page fetches it the first time it opens and keeps it, so the world can be explored before it is installed; a package installed later that carries the guide supersedes it.
 6. **Ship a build.** The list ships with the app (P9 rule 1). A world appears on Available in the next build, and only once its package is pinned.
 7. **Check it on a phone:** install it from Available, play the narration, and Read the book.
 

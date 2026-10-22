@@ -60,10 +60,25 @@ P9 joined the MVP on 20 October 2026. The world package is [ADR 0005](decisions/
 | Frame | Screen | Route | File |
 |---|---|---|---|
 | P9a | First open, with Install a world | `/welcome` | `features/onboarding/presentation/first_open_screen.dart` |
-| P9b | Available | `/welcome/available` | `features/worlds/presentation/available_screen.dart` |
-| P9c–P9f, P9h | A world before, while and after it installs; refused; on a Fold | `/world/:worldId`, `/library/world/:worldId`, `/welcome/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `world_widgets.dart`; `features/worlds/application/worlds.dart` |
+| P9b | Available — replaced by the Worlds tab (P11a) | `/worlds` | `features/worlds/presentation/worlds_screen.dart` |
+| P9c–P9f, P9h | A world before, while and after it installs; refused; on a Fold | `/world/:worldId`, `/worlds/world/:worldId`, `/library/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `world_widgets.dart`; `features/worlds/application/worlds.dart` |
 | P1e (for P9) | A production of an installed world: Play or Continue, Read, Chapters | `…/world/:worldId/:productionId` | `features/worlds/presentation/production_screen.dart` |
 | P9g | Home, ending with Worlds and Available | `/` | `features/home/presentation/home_screen.dart` |
+
+## Worlds to explore (P11, built)
+
+SPEC-059 R-17 – R-23, ArkePlayer #2. The guide is a world package's guide document (schema 3), read
+by `arke_world`'s `guide.dart`; a guide alone is fetched against the catalogue's pin and kept under
+`guides/` (`WorldInstaller.fetchGuide`, `LibraryStore.addGuide`). What a reader has reached is
+`arke_world`'s `reach.dart`; what they revealed is kept in `library.json` with their places.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P11a | Worlds: In Library, then Available | `/worlds` | `features/worlds/presentation/worlds_screen.dart` |
+| P11b, P11c, P11i | A world's page, before and after install, then its guide; the head once scrolled; on a Fold | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `guide_widgets.dart` (`GuideSections`); `features/worlds/application/guides.dart` |
+| P11d, P11e, P11g | A character, a place, a lore entry | `…/world/:worldId/_guide/:entryId` | `features/worlds/presentation/guide_screens.dart` |
+| P11f | Lore, by kind | `…/world/:worldId/_guide` | `features/worlds/presentation/guide_screens.dart` (`LoreScreen`) |
+| P11h | Reveal, asked once | (a sheet over the page) | `features/worlds/presentation/guide_widgets.dart` (`askReveal`) |
 
 ## A world already in Library (P10, approved, not built)
 
@@ -78,6 +93,8 @@ SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not buil
 | Rule | Where | Test |
 |---|---|---|
 | P1 rule 3, P6 rule 5: tabs as a bar under 600, a rail over | `app/shell/adaptive_shell.dart` | `test/shell_test.dart` |
+| P11 rule 1: five tabs, Worlds second | `app/shell/adaptive_shell.dart` | `test/guide_test.dart` |
+| P11 rule 7, SPEC-059 R-20: a chapter is reached once its start is passed, heard or read; Reveal shows a production up to that chapter | `arke_world` `reach.dart`, `arke_library` `store.dart` | `guide_test.dart`, `store_test.dart`, `test/guide_test.dart` |
 | P1 rule 6: Watch · Play · Listen · Read, empty groups absent | `features/production/domain/production_kind.dart` | `test/domain_test.dart` |
 | P2 rule 6: every asset checked before play | `arke_publication` `verify.dart` | `verify_test.dart` |
 | P2 rule 8: unknown profiles refused | `arke_publication` `manifest.dart` | `manifest_test.dart` |
