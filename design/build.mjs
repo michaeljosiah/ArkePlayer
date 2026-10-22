@@ -163,8 +163,8 @@ const TURNS = [
     next: `Try next: “a newer edition on Available after an app update” · “an older edition” · “Replace while its audiobook plays”`,
   },
   {
-    id: 'p11', date: '22 October 2026', status: 'Drawn, for approval', name: 'Worlds to explore — the Worlds tab, a world’s characters, places and lore, and what waits for a chapter',
-    lead: `Asked: a Worlds section where people explore worlds and their productions, and read about the characters and some of the lore, starting with the worlds Arke makes available. The guide is what a world’s author makes public in the Studio (Studio <a class="dv-oid" href="${STUDIO}#t234">234</a>).`,
+    id: 'p11', date: '22 October 2026', name: 'Worlds to explore — the Worlds tab, a world’s characters, places and lore, and what waits for a chapter',
+    lead: `Asked: a Worlds section where people explore worlds and their productions, and read about the characters and some of the lore, starting with the worlds Arke makes available. Approved as drawn by the owner on 22 October 2026; to be specified in SPEC-059. The guide is what a world’s author makes public in the Studio (Studio <a class="dv-oid" href="${STUDIO}#t234">234</a>).`,
     rules: [
       ['Worlds is a tab', `The tabs become five, <code>Home · Worlds · Library · Downloads · You</code>, Worlds second (P1 rule 3 amended); on a Fold, the rail (${F('P11i')}). Worlds (${F('P11a')}) lists <b>In Library</b>, then <b>Available</b>, as cards <code>358 × 190</code>, each meta line its productions, characters and, before install, size. It takes the place of ${F('P9b')}’s Available page: first open’s <code>Install a world</code> opens it, and Home keeps its <code>Available</code> section (${F('P9g')}).`],
       ['Arke’s worlds, not yet a directory', `The worlds are the ones Arke makes available: a list that ships with the app, each package pinned by its SHA-256 (P9 rule 1), growing with each update as more worlds are made. A directory anyone publishes to needs the Arke cloud — accounts, hosting, moderation, takedown, rights and ratings — and is not drawn.`],
