@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:arke_publication/arke_publication.dart';
 
+import 'guide.dart';
 import 'listening.dart';
 
 /// The manifest at a world package's root.
@@ -11,8 +12,9 @@ const worldManifestFile = 'world.json';
 /// publication package but no package of a world, and owes one (Arke Player ADR 0005).
 const worldPackageFormat = 'arke-world-package';
 
-/// Schema 2 (SPEC-058 R-9) adds a production's `listening` document; schema 1 is still read.
-const worldSchemaVersion = 2;
+/// Schema 2 (SPEC-058 R-9) adds a production's `listening` document; schema 3 (SPEC-059 R-9, R-10)
+/// adds the world's `guide`, and a package with the guide alone. Schemas 1 and 2 are still read.
+const worldSchemaVersion = 3;
 
 /// A world package's media, by the role it plays: the book a reader opens, the narration the
 /// audio player plays, and the pictures shown around them.
@@ -76,8 +78,10 @@ class WorldManifest {
     required this.assets,
     this.logline,
     this.keyArt,
+    this.guide,
     this.schemaVersion = worldSchemaVersion,
     this.listening = const {},
+    this.guideDocument,
   });
 
   final String id;
@@ -85,9 +89,20 @@ class WorldManifest {
   final String name;
   final String? logline;
   final String? keyArt;
+
+  /// Empty in a guide alone (R-10).
   final List<WorldProduction> productions;
   final Map<String, WorldAsset> assets;
   final int schemaVersion;
+
+  /// The guide document's asset id.
+  final String? guide;
+
+  /// The guide, once the package reader has read it; null from `readWorldManifest` alone.
+  final Guide? guideDocument;
+
+  /// A package that carries a world's guide and nothing to play (R-10).
+  bool get isGuideAlone => productions.isEmpty;
 
   /// Each production's listening document, by production id, once the package reader has read
   /// them (`readWorldPackage`); empty from `readWorldManifest` alone.
@@ -96,19 +111,22 @@ class WorldManifest {
   /// The assets `world.json` itself names.
   Set<String> get namedAssets => {
     ?keyArt,
+    ?guide,
     for (final production in productions) ...[?production.picture, ?production.book, ?production.narration, ?production.listening],
   };
 
-  WorldManifest withListening(Map<String, ListeningDocument> documents) => WorldManifest(
+  WorldManifest withDocuments(Map<String, ListeningDocument> documents, Guide? guide) => WorldManifest(
     id: id,
     edition: edition,
     name: name,
     logline: logline,
     keyArt: keyArt,
+    guide: this.guide,
     productions: productions,
     assets: assets,
     schemaVersion: schemaVersion,
     listening: Map.unmodifiable(documents),
+    guideDocument: guide,
   );
 
   Map<String, Object?> toJson() => {
@@ -120,6 +138,7 @@ class WorldManifest {
     if (logline != null) 'logline': logline,
     if (keyArt != null) 'keyArt': keyArt,
     'productions': [for (final production in productions) production.toJson()],
+    if (guide != null) 'guide': guide,
     'assets': {for (final MapEntry(:key, :value) in assets.entries) key: value.toJson()},
   };
 }
@@ -147,6 +166,7 @@ class WorldManifestRefused extends WorldManifestRead {
 final _slug = RegExp(r'^[a-z0-9][a-z0-9-]{0,63}$');
 final _digest = RegExp(r'^[a-f0-9]{64}$');
 const _topKeys = {'format', 'schemaVersion', 'id', 'edition', 'name', 'logline', 'keyArt', 'productions', 'assets', 'requires', 'metadata', 'provenance'};
+const _topKeys3 = {..._topKeys, 'guide'};
 const _productionKeys = {'id', 'title', 'author', 'picture', 'book', 'narration', 'metadata'};
 const _productionKeys2 = {..._productionKeys, 'listening'};
 const _assetKeys = {'path', 'mediaType', 'byteLength', 'sha256'};
@@ -177,7 +197,7 @@ WorldManifestRead readWorldManifest(String text) {
   final requires = json['requires'] ?? const <Object?>[];
   if (requires is! List<Object?>) return notAPackage('requires is not a list');
   if (requires.isNotEmpty) return newer('requires ${requires.join(', ')}');
-  final unknown = json.keys.where((key) => !_topKeys.contains(key));
+  final unknown = json.keys.where((key) => !(version >= 3 ? _topKeys3 : _topKeys).contains(key));
   if (unknown.isNotEmpty) return newer('unknown keys ${unknown.join(', ')}');
 
   String? textOf(Object? value, int max) => value is String && value.trim().isNotEmpty && value.length <= max ? value : null;
@@ -220,9 +240,12 @@ WorldManifestRead readWorldManifest(String text) {
 
   final keyArt = json['keyArt'];
   if (keyArt != null && role(keyArt, pictureMediaTypes) == null) return notAPackage('keyArt');
+  final guide = json['guide'];
+  if (guide != null && role(guide, const {guideMediaType}) == null) return notAPackage('guide');
 
+  // A guide alone carries no production (R-10); anything else carries one at least.
   final rawProductions = json['productions'];
-  if (rawProductions is! List<Object?> || rawProductions.isEmpty || rawProductions.length > 64) return notAPackage('productions');
+  if (rawProductions is! List<Object?> || (rawProductions.isEmpty && guide == null) || rawProductions.length > 64) return notAPackage('productions');
   final productions = <WorldProduction>[];
   final productionIds = <String>{};
   for (final raw in rawProductions) {
@@ -253,9 +276,9 @@ WorldManifestRead readWorldManifest(String text) {
     );
   }
   // Every file is one the world uses: nothing unreferenced rides along (SPEC-048 R-13). The files a
-  // listening document names are known only once it is read, so with one the package reader makes
-  // this check instead.
-  if (productions.every((production) => production.listening == null)) {
+  // listening document or a guide names are known only once it is read, so with one the package
+  // reader makes this check instead.
+  if (guide == null && productions.every((production) => production.listening == null)) {
     final unused = assets.keys.where((assetId) => !used.contains(assetId));
     if (unused.isNotEmpty) return notAPackage('unused assets ${unused.join(', ')}');
   }
@@ -267,6 +290,7 @@ WorldManifestRead readWorldManifest(String text) {
       name: name,
       logline: logline as String?,
       keyArt: keyArt as String?,
+      guide: guide as String?,
       productions: List.unmodifiable(productions),
       assets: Map.unmodifiable(assets),
       schemaVersion: version,
