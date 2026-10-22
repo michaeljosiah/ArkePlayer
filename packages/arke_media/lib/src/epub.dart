@@ -47,6 +47,28 @@ MediaInfo readEpub(Archive archive) {
   return MediaInfo(title: cleanText(first('title')), author: cleanText(first('creator')), cover: cover);
 }
 
+/// An EPUB's spine: its documents in reading order, as paths in the archive (`OEBPS/text/one.xhtml`),
+/// so a place kept as a CFI — whose first step counts through the spine — finds the document it is
+/// in.
+List<String> readEpubSpine(Archive archive) {
+  final container = _text(archive, 'META-INF/container.xml');
+  if (container == null) throw const UnreadableFile('no META-INF/container.xml');
+  final rootfile = XmlDocument.parse(container).descendants.whereType<XmlElement>().where((element) => element.localName == 'rootfile').firstOrNull;
+  final opfPath = rootfile?.getAttribute('full-path');
+  final opfText = opfPath == null ? null : _text(archive, opfPath);
+  if (opfPath == null || opfText == null) throw const UnreadableFile('no package document');
+  final opf = XmlDocument.parse(opfText);
+  final base = opfPath.contains('/') ? opfPath.substring(0, opfPath.lastIndexOf('/') + 1) : '';
+  final hrefs = {
+    for (final item in opf.descendants.whereType<XmlElement>().where((element) => element.localName == 'item'))
+      ?item.getAttribute('id'): item.getAttribute('href'),
+  };
+  return [
+    for (final itemref in opf.descendants.whereType<XmlElement>().where((element) => element.localName == 'itemref'))
+      if (hrefs[itemref.getAttribute('idref')] case final href?) _normalise('$base${Uri.decodeComponent(href.split('#').first)}'),
+  ];
+}
+
 String? _text(Archive archive, String name) {
   final bytes = _bytes(archive, name);
   return bytes == null ? null : utf8.decode(bytes, allowMalformed: true);

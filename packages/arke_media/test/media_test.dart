@@ -44,6 +44,10 @@ void main() {
     expect(info.protectedFile, isFalse);
   });
 
+  test('an EPUB\'s spine, as paths in the archive', () {
+    expect(readEpubSpineAt(fixture('book.epub')), ['OEBPS/text/one.xhtml']);
+  });
+
   test('DRM is refused, font obfuscation is not', () {
     expect(readMediaInfo(fixture('protected.epub'), FileFormat.epub).protectedFile, isTrue);
     expect(readMediaInfo(fixture('fonts-only.epub'), FileFormat.epub).protectedFile, isFalse);

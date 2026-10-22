@@ -178,6 +178,41 @@ class WorldInstaller {
     }
   }
 
+  /// Fetches a world's guide alone (SPEC-059 R-10, R-18) as a world is installed: its pin's length
+  /// and SHA-256, then every file checked, then kept under `guides/` for reading offline. A guide
+  /// already kept under the same pin is not fetched again.
+  Future<LibraryGuide> fetchGuide(CatalogueWorld world, {InstallCancel? cancel}) async {
+    final pin = world.guide;
+    if (pin == null) throw const NotAPackage();
+    for (final kept in store.guides) {
+      if (kept.worldId == world.id && kept.sha256 == pin.sha256) return kept;
+    }
+    final control = cancel ?? InstallCancel();
+    final needed = await _checkSpace(pin.byteLength);
+    final staging = await store.stageGuide();
+    try {
+      final zip = '${staging.path}${Platform.pathSeparator}package.zip';
+      await _download(pin, zip, null, control);
+      control._check();
+      final prepared = await _prepare(zip, staging, needed, null, control);
+      final manifest = prepared.manifest;
+      if (manifest.id != world.id || !manifest.isGuideAlone || manifest.guide == null) throw const NotAPackage();
+      final guide = LibraryGuide(
+        worldId: world.id,
+        edition: manifest.edition,
+        sha256: pin.sha256,
+        guide: 'guides/${world.id}/${manifest.assets[manifest.guide]!.path}',
+        fetchedAt: DateTime.now().toUtc(),
+      );
+      await store.addGuide(guide, prepared.content);
+      return guide;
+    } on FileSystemException catch (error) {
+      throw await _full(error, needed);
+    } finally {
+      if (await staging.exists()) await staging.delete(recursive: true);
+    }
+  }
+
   /// Copies a world package a person added from a file (Player P2c) into staging and checks it in
   /// full (P2d), stopping before it joins the library: the caller shows Ready (P2e), Replace
   /// (P10a) or Already in Library (P10b), then [commit]s or [discard]s.
@@ -432,6 +467,7 @@ class WorldInstaller {
       installedAt: now,
       productions: List.unmodifiable(productions),
       fingerprint: editionFingerprint(manifest),
+      guide: manifest.guide == null ? null : stored(manifest.assets[manifest.guide]!),
     );
     return (world, items);
   }

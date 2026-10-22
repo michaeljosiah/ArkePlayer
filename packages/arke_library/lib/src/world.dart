@@ -49,6 +49,7 @@ class LibraryWorld {
     this.logline,
     this.keyArt,
     this.fingerprint,
+    this.guide,
   });
 
   final String id;
@@ -68,6 +69,10 @@ class LibraryWorld {
   final DateTime installedAt;
   final List<LibraryProduction> productions;
 
+  /// Its guide document, relative to the library's root, when its package carried one (SPEC-059
+  /// R-18).
+  final String? guide;
+
   Map<String, Object?> toJson() => {
     'id': id,
     'edition': edition,
@@ -78,6 +83,7 @@ class LibraryWorld {
     'installedAt': installedAt.toUtc().toIso8601String(),
     'productions': [for (final production in productions) production.toJson()],
     if (fingerprint != null) 'fingerprint': fingerprint,
+    if (guide != null) 'guide': guide,
   };
 
   static LibraryWorld fromJson(Map<String, Object?> json) => LibraryWorld(
@@ -90,5 +96,32 @@ class LibraryWorld {
     installedAt: DateTime.parse(json['installedAt']! as String),
     productions: [for (final production in json['productions']! as List<Object?>) LibraryProduction.fromJson((production! as Map).cast<String, Object?>())],
     fingerprint: json['fingerprint'] as String?,
+    guide: json['guide'] as String?,
+  );
+}
+
+/// A world's guide alone, fetched before the world is installed so it can be explored (SPEC-059
+/// R-10, R-18): its own folder under `guides/`, kept for reading offline (R-22).
+class LibraryGuide {
+  const LibraryGuide({required this.worldId, required this.edition, required this.sha256, required this.guide, required this.fetchedAt});
+
+  final String worldId;
+  final String edition;
+
+  /// The package's SHA-256, as the catalogue pinned it: a new pin is a new guide.
+  final String sha256;
+
+  /// The guide document, relative to the library's root.
+  final String guide;
+  final DateTime fetchedAt;
+
+  Map<String, Object?> toJson() => {'worldId': worldId, 'edition': edition, 'sha256': sha256, 'guide': guide, 'fetchedAt': fetchedAt.toUtc().toIso8601String()};
+
+  static LibraryGuide fromJson(Map<String, Object?> json) => LibraryGuide(
+    worldId: json['worldId']! as String,
+    edition: json['edition']! as String,
+    sha256: json['sha256']! as String,
+    guide: json['guide']! as String,
+    fetchedAt: DateTime.parse(json['fetchedAt']! as String),
   );
 }

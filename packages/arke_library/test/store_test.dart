@@ -52,6 +52,76 @@ void main() {
     expect(await store.itemDirectory(kept).exists(), isTrue);
   });
 
+  group('a world\'s guide (SPEC-059 R-10, R-18, R-20)', () {
+    LibraryWorld world({String? guide}) => LibraryWorld(
+      id: 'undersong',
+      edition: '2026-10-22',
+      name: 'The Undersong',
+      byteLength: 10,
+      installedAt: DateTime.utc(2026, 10, 22),
+      productions: const [],
+      guide: guide,
+    );
+    LibraryGuide alone() => LibraryGuide(
+      worldId: 'undersong',
+      edition: '2026-10-22',
+      sha256: 'a' * 64,
+      guide: 'guides/undersong/guide/guide.json',
+      fetchedAt: DateTime.utc(2026, 10, 22),
+    );
+    Future<Directory> staged(Future<Directory> Function() stage) async {
+      final folder = await stage();
+      final content = Directory('${folder.path}/world');
+      await File('${content.path}/guide/guide.json').create(recursive: true);
+      return content;
+    }
+
+    test('a guide fetched alone is kept, and survives a reload', () async {
+      final store = LibraryStore(root);
+      await store.addGuide(alone(), await staged(store.stageGuide));
+      final reloaded = LibraryStore(root);
+      await reloaded.load();
+      expect(reloaded.guides.single.guide, 'guides/undersong/guide/guide.json');
+      expect(await File(reloaded.resolve(reloaded.guides.single.guide)).exists(), isTrue);
+    });
+
+    test('installing a package that carries the guide supersedes the one fetched alone', () async {
+      final store = LibraryStore(root);
+      await store.addGuide(alone(), await staged(store.stageGuide));
+      await store.addWorld(world(guide: 'worlds/undersong/guide/guide.json'), const [], await staged(store.stageWorld));
+      expect(store.guides, isEmpty);
+      expect(await store.guideDirectory('undersong').exists(), isFalse);
+    });
+
+    test('a package with no guide leaves the one fetched alone', () async {
+      final store = LibraryStore(root);
+      await store.addGuide(alone(), await staged(store.stageGuide));
+      await store.addWorld(world(), const [], await staged(store.stageWorld));
+      expect(store.guides, hasLength(1));
+    });
+
+    test('what is revealed stays revealed, through the furthest chapter, until the world is removed', () async {
+      final store = LibraryStore(root);
+      await store.reveal('undersong', 'ledger', 6);
+      await store.reveal('undersong', 'ledger', 3);
+      final reloaded = LibraryStore(root);
+      await reloaded.load();
+      expect(reloaded.revealed, {
+        'undersong': {'ledger': 6},
+      });
+      await reloaded.addWorld(world(), const [], await staged(reloaded.stageWorld));
+      await reloaded.removeWorld('undersong');
+      expect(reloaded.revealed, isEmpty);
+    });
+
+    test('a guide fetch a crash interrupted is cleared on the next load', () async {
+      final store = LibraryStore(root);
+      final folder = await store.stageGuide();
+      await LibraryStore(root).load();
+      expect(await folder.exists(), isFalse);
+    });
+  });
+
   test('writes queue rather than interleave', () async {
     final store = LibraryStore(root);
     final ids = [for (var i = 0; i < 5; i++) await store.reserve()];

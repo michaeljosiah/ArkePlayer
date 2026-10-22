@@ -33,7 +33,7 @@ class CataloguePackage {
 /// A world a person can install (P9 rule 1). The list ships with the app, so it shows offline and
 /// needs no Arke cloud; a new world arrives with an update.
 class CatalogueWorld {
-  const CatalogueWorld({required this.id, required this.name, required this.productions, this.logline, this.keyArt, this.package});
+  const CatalogueWorld({required this.id, required this.name, required this.productions, this.logline, this.keyArt, this.package, this.guide});
 
   final String id;
   final String name;
@@ -45,6 +45,10 @@ class CatalogueWorld {
 
   /// Null until the world's package is published: such a world is not offered.
   final CataloguePackage? package;
+
+  /// The world's guide alone, pinned as its package is, so the world can be explored before it is
+  /// installed (SPEC-059 R-10, R-23). Null when the world has none.
+  final CataloguePackage? guide;
 }
 
 final _slug = RegExp(r'^[a-z0-9][a-z0-9-]{0,63}$');
@@ -68,15 +72,17 @@ List<CatalogueWorld> readCatalogue(String text) {
         else
           throw FormatException('catalogue world $id production'),
     ];
-    CataloguePackage? package;
-    if (raw['package'] case {'url': final String url, 'byteLength': final int byteLength, 'sha256': final String sha256}) {
-      final uri = Uri.parse(url);
-      // A world arrives over HTTPS only (P2 rule 5's Paste a link holds the same line).
-      if (uri.scheme != 'https' || byteLength <= 0 || !_digest.hasMatch(sha256)) throw FormatException('catalogue world $id package');
-      package = CataloguePackage(url: uri, byteLength: byteLength, sha256: sha256);
-    } else if (raw['package'] != null) {
-      throw FormatException('catalogue world $id package');
+    CataloguePackage? pinned(String key) {
+      if (raw[key] case {'url': final String url, 'byteLength': final int byteLength, 'sha256': final String sha256}) {
+        final uri = Uri.parse(url);
+        // A world arrives over HTTPS only (P2 rule 5's Paste a link holds the same line).
+        if (uri.scheme != 'https' || byteLength <= 0 || !_digest.hasMatch(sha256)) throw FormatException('catalogue world $id $key');
+        return CataloguePackage(url: uri, byteLength: byteLength, sha256: sha256);
+      }
+      if (raw[key] != null) throw FormatException('catalogue world $id $key');
+      return null;
     }
+
     worlds.add(
       CatalogueWorld(
         id: id,
@@ -84,7 +90,8 @@ List<CatalogueWorld> readCatalogue(String text) {
         logline: raw['logline'] as String?,
         keyArt: raw['keyArt'] as String?,
         productions: List.unmodifiable(productions),
-        package: package,
+        package: pinned('package'),
+        guide: pinned('guide'),
       ),
     );
   }

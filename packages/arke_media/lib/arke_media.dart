@@ -49,3 +49,19 @@ MediaInfo readMediaInfo(String path, FileFormat format) {
       return const MediaInfo();
   }
 }
+
+/// The EPUB at [path]'s documents in reading order, as paths in the archive.
+///
+/// Throws [UnreadableFile] when it is not a readable EPUB.
+List<String> readEpubSpineAt(String path) {
+  final input = InputFileStream(path);
+  try {
+    return readEpubSpine(ZipDecoder().decodeStream(input));
+  } on UnreadableFile {
+    rethrow;
+  } on Exception catch (error) {
+    throw UnreadableFile('not a readable EPUB: $error');
+  } finally {
+    input.closeSync();
+  }
+}

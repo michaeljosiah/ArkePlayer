@@ -7,7 +7,8 @@ import 'item.dart';
 import 'world.dart';
 
 /// The library on this device: one folder per item under `items/`, one per installed world under
-/// `worlds/`, and `library.json` naming them.
+/// `worlds/`, one per world's guide fetched on its own under `guides/`, and `library.json` naming
+/// them, with the places reached and what has been revealed.
 ///
 /// The index is rewritten whole on every change, through a temporary file and a rename, so a crash
 /// mid-write leaves the previous index rather than half of one. Writes are queued, never
@@ -22,12 +23,16 @@ class LibraryStore {
   File get _index => File('${root.path}${Platform.pathSeparator}library.json');
   Directory get _items => Directory('${root.path}${Platform.pathSeparator}items');
   Directory get _worlds => Directory('${root.path}${Platform.pathSeparator}worlds');
+  Directory get _guides => Directory('${root.path}${Platform.pathSeparator}guides');
 
   List<LibraryItem> _cache = const [];
   List<LibraryWorld> _worldCache = const [];
+  List<LibraryGuide> _guideCache = const [];
+  Map<String, Map<String, int>> _revealed = const {};
   Future<void> _queue = Future.value();
   final _changes = StreamController<List<LibraryItem>>.broadcast();
   final _worldChanges = StreamController<List<LibraryWorld>>.broadcast();
+  final _guideChanges = StreamController<void>.broadcast();
 
   /// Every change to the library's items, newest state first.
   Stream<List<LibraryItem>> get changes => _changes.stream;
@@ -37,11 +42,24 @@ class LibraryStore {
   Stream<List<LibraryWorld>> get worldChanges => _worldChanges.stream;
   List<LibraryWorld> get worlds => _worldCache;
 
+  /// Every change to the guides fetched on their own or to what has been revealed.
+  Stream<void> get guideChanges => _guideChanges.stream;
+
+  /// The guides fetched before their worlds were installed (SPEC-059 R-10).
+  List<LibraryGuide> get guides => _guideCache;
+
+  /// What a person chose to see before reaching it (SPEC-059 R-20, R-21): by world, then by
+  /// production, the chapter number revealed through. Kept here with the places, never sent.
+  Map<String, Map<String, int>> get revealed => _revealed;
+
   /// The folder an item's files live in.
   Directory itemDirectory(String id) => Directory('${_items.path}${Platform.pathSeparator}$id');
 
   /// The folder an installed world's files live in.
   Directory worldDirectory(String id) => Directory('${_worlds.path}${Platform.pathSeparator}$id');
+
+  /// The folder a world's guide, fetched on its own, lives in.
+  Directory guideDirectory(String worldId) => Directory('${_guides.path}${Platform.pathSeparator}$worldId');
 
   /// The absolute path of a file named relative to the library's root.
   String resolve(String relative) => '${root.path}${Platform.pathSeparator}${relative.replaceAll('/', Platform.pathSeparator)}';
@@ -53,11 +71,20 @@ class LibraryStore {
       _worldCache = List.unmodifiable([
         for (final world in (json['worlds'] as List<Object?>? ?? const [])) LibraryWorld.fromJson((world! as Map).cast<String, Object?>()),
       ]);
+      _guideCache = List.unmodifiable([
+        for (final guide in (json['guides'] as List<Object?>? ?? const [])) LibraryGuide.fromJson((guide! as Map).cast<String, Object?>()),
+      ]);
+      _revealed = Map.unmodifiable({
+        for (final MapEntry(:key, :value) in ((json['revealed'] as Map?)?.cast<String, Object?>() ?? const {}).entries)
+          key: Map<String, int>.unmodifiable((value! as Map).cast<String, int>()),
+      });
     }
     await _clearUnknown(_items, {for (final item in _cache) item.id});
     await _clearUnknown(_worlds, {for (final world in _worldCache) world.id});
+    await _clearUnknown(_guides, {for (final guide in _guideCache) guide.worldId});
     _changes.add(_cache);
     _worldChanges.add(_worldCache);
+    _guideChanges.add(null);
     return _cache;
   });
 
@@ -80,6 +107,14 @@ class LibraryStore {
   /// never a world's, so a crash leaves a folder [load] clears.
   Future<Directory> stageWorld() async {
     final folder = Directory('${_worlds.path}${Platform.pathSeparator}.installing-${_randomId()}');
+    await folder.create(recursive: true);
+    return folder;
+  }
+
+  /// A fresh folder beside the guides to download and check a guide in, cleared by [load] if a
+  /// crash leaves it.
+  Future<Directory> stageGuide() async {
+    final folder = Directory('${_guides.path}${Platform.pathSeparator}.fetching-${_randomId()}');
     await folder.create(recursive: true);
     return folder;
   }
@@ -116,6 +151,33 @@ class LibraryStore {
     final ids = {for (final item in carried) item.id};
     _cache = List.unmodifiable([...carried, ..._cache.where((existing) => existing.worldId != world.id && !ids.contains(existing.id))]);
     _worldCache = List.unmodifiable([world, ..._worldCache.where((existing) => existing.id != world.id)]);
+    // A package that carries the guide supersedes the guide fetched alone (SPEC-059 R-10).
+    final superseded = world.guide != null && _guideCache.any((guide) => guide.worldId == world.id);
+    if (superseded) _guideCache = List.unmodifiable(_guideCache.where((guide) => guide.worldId != world.id));
+    await _write();
+    if (superseded && await guideDirectory(world.id).exists()) await guideDirectory(world.id).delete(recursive: true);
+  });
+
+  /// Keeps a world's guide fetched on its own, whose checked files are in [staged], replacing an
+  /// earlier one.
+  Future<void> addGuide(LibraryGuide guide, Directory staged) => _serial(() async {
+    final folder = guideDirectory(guide.worldId);
+    if (await folder.exists()) await folder.delete(recursive: true);
+    await folder.parent.create(recursive: true);
+    await staged.rename(folder.path);
+    _guideCache = List.unmodifiable([guide, ..._guideCache.where((existing) => existing.worldId != guide.worldId)]);
+    await _write();
+  });
+
+  /// Reveals everything in a production of a world up to and including chapter [number]; what is
+  /// revealed stays revealed (SPEC-059 R-20).
+  Future<void> reveal(String worldId, String productionId, int number) => _serial(() async {
+    final world = _revealed[worldId] ?? const <String, int>{};
+    if ((world[productionId] ?? 0) >= number) return;
+    _revealed = Map.unmodifiable({
+      ..._revealed,
+      worldId: Map<String, int>.unmodifiable({...world, productionId: number}),
+    });
     await _write();
   });
 
@@ -127,10 +189,12 @@ class LibraryStore {
     if (await folder.exists()) await folder.delete(recursive: true);
   });
 
-  /// Removes an installed world, its items and their places, and deletes its files (P9 rule 6).
+  /// Removes an installed world, its items, their places and what was revealed, and deletes its
+  /// files (P9 rule 6).
   Future<void> removeWorld(String id) => _serial(() async {
     _cache = List.unmodifiable(_cache.where((item) => item.worldId != id));
     _worldCache = List.unmodifiable(_worldCache.where((world) => world.id != id));
+    _revealed = Map.unmodifiable({..._revealed}..remove(id));
     await _write();
     final folder = worldDirectory(id);
     if (await folder.exists()) await folder.delete(recursive: true);
@@ -157,12 +221,15 @@ class LibraryStore {
         'version': 1,
         'items': [for (final item in _cache) item.toJson()],
         if (_worldCache.isNotEmpty) 'worlds': [for (final world in _worldCache) world.toJson()],
+        if (_guideCache.isNotEmpty) 'guides': [for (final guide in _guideCache) guide.toJson()],
+        if (_revealed.isNotEmpty) 'revealed': _revealed,
       }),
       flush: true,
     );
     await temporary.rename(_index.path);
     _changes.add(_cache);
     _worldChanges.add(_worldCache);
+    _guideChanges.add(null);
   }
 
   Future<T> _serial<T>(Future<T> Function() task) {
@@ -174,5 +241,6 @@ class LibraryStore {
   Future<void> close() async {
     await _changes.close();
     await _worldChanges.close();
+    await _guideChanges.close();
   }
 }
