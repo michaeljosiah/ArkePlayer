@@ -37,6 +37,32 @@ final catalogueRefreshProvider = FutureProvider<void>((ref) async {
   if (after != before) ref.invalidate(catalogueProvider);
 });
 
+/// P13: explicit checks share one state across navigation and never overlap the startup check.
+enum CatalogueCheck { idle, checking, checked, failed }
+
+final catalogueCheckProvider = NotifierProvider<CatalogueCheckController, CatalogueCheck>(CatalogueCheckController.new);
+
+class CatalogueCheckController extends Notifier<CatalogueCheck> {
+  @override
+  CatalogueCheck build() => CatalogueCheck.idle;
+
+  Future<void> check() async {
+    if (state == CatalogueCheck.checking) return;
+    state = CatalogueCheck.checking;
+    try {
+      // Finish any automatic fetch before forcing one, so an older response cannot overwrite it.
+      await ref.read(catalogueRefreshProvider.future).catchError((Object _) {});
+      final hosted = await ref.read(hostedCatalogueProvider.future);
+      await hosted.refresh(force: true);
+      ref.invalidate(catalogueProvider);
+      await ref.read(catalogueProvider.future);
+      state = CatalogueCheck.checked;
+    } on Object {
+      state = CatalogueCheck.failed;
+    }
+  }
+}
+
 /// The installed world an address names: the world of that id, or the one Arke's list says replaced
 /// it (SPEC-058 R-30), so a page opened under a world's old id, or left open while it was updated
 /// to a new one, still finds it.

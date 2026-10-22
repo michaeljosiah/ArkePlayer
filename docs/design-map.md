@@ -94,6 +94,17 @@ then replaces as P10, after the world stops playing.
 | P12b, P12c, P12d, P12f | The world's page: Update, New edition and Space; updating in place; updated; refused | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`; `features/worlds/application/worlds.dart` (`InstallController`) |
 | P12e | Downloads: `Updating · n%` under Worlds | `/downloads` | `features/downloads/presentation/downloads_screen.dart` |
 
+## Check for updates now (P13)
+
+The owner requested manual checks on 22 October 2026. The existing Worlds header gains its
+shared round press; automatic checks remain daily. `CatalogueCheckController` waits for any
+startup check, forces a fresh hosted-catalogue fetch, then invalidates the shared catalogue.
+Failure keeps the list visible and permits an immediate retry. No world downloads automatically.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P13a–P13f | Manual check: idle, checking, checked and failed; phone, tablet and desktop | `/worlds` | `features/worlds/presentation/worlds_screen.dart`, `features/worlds/application/worlds.dart`; `arke_world` `hosted.dart` |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.

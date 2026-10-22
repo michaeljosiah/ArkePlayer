@@ -43,8 +43,8 @@ class HostedCatalogue {
   Future<Catalogue?> keptList() async => (await _read()).list;
 
   /// Fetches the list when the last ask was more than [every] ago, and keeps it when it reads and is
-  /// newer than the one kept. Returns the list kept afterwards. Never throws: offline, a refusal or a
-  /// broken list leaves what was kept.
+  /// newer than the one kept. Automatic checks keep their cached list on failure. A forced check
+  /// (P13) bypasses both the daily limit and HTTP caches, and reports failure to its caller.
   Future<Catalogue?> refresh({bool force = false}) async {
     final was = await _read();
     final now = _now();
@@ -52,9 +52,10 @@ class HostedCatalogue {
     String? text;
     Catalogue? fetched;
     try {
-      text = await _get();
+      text = await _get(force: force);
       fetched = parseCatalogue(text);
     } on Object {
+      if (force) rethrow;
       fetched = null;
     }
     final newer = fetched != null && fetched.serial > (was.list?.serial ?? -1);
@@ -62,10 +63,14 @@ class HostedCatalogue {
     return newer ? fetched : was.list;
   }
 
-  Future<String> _get() async {
+  Future<String> _get({required bool force}) async {
     final client = _httpClient()..connectionTimeout = _timeout;
     try {
-      final request = await client.getUrl(url).timeout(_timeout);
+      // A release URL can keep redirecting to the previous catalogue for minutes after publication.
+      // Only an explicit check uses a fresh URL; background checks retain their daily caching.
+      final address = force ? url.replace(queryParameters: {...url.queryParameters, '_arke_check': _now().microsecondsSinceEpoch.toString()}) : url;
+      final request = await client.getUrl(address).timeout(_timeout);
+      if (force) request.headers.set(HttpHeaders.cacheControlHeader, 'no-cache');
       final response = await request.close().timeout(_timeout);
       if (response.statusCode != HttpStatus.ok) throw HttpException('status ${response.statusCode}', uri: url);
       final bytes = <int>[];
