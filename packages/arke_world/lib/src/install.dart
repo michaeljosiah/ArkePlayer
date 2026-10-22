@@ -191,7 +191,22 @@ class WorldInstaller {
   }) async {
     final package = world.package;
     if (package == null) throw const NotAPackage();
-    if (!store.worlds.any((installed) => installed.id == world.id)) return install(world, onStep: onStep, cancel: cancel);
+    final replaced = [
+      for (final installed in store.worlds)
+        if (installed.id != world.id && world.replaces.contains(installed.id)) installed.id,
+    ];
+    if (!store.worlds.any((installed) => installed.id == world.id)) {
+      // Under an id this world replaces (SPEC-058 R-30): installed anew beside it, then the old one
+      // goes. Its places do not carry across ids; everything else is as a first install.
+      final added = await install(world, onStep: onStep, cancel: cancel);
+      if (replaced.isNotEmpty) {
+        await beforeSwap?.call();
+        for (final id in replaced) {
+          await store.removeWorld(id);
+        }
+      }
+      return added;
+    }
     final control = cancel ?? InstallCancel();
     final needed = await _checkSpace(package.byteLength);
     final staging = await store.stageWorld();

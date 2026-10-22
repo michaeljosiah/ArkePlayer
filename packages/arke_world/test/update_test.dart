@@ -11,11 +11,11 @@ import 'package:test/test.dart';
 // as shipped, and installed over the edition on the phone with its places kept.
 final _fixtures = '${Directory.current.path}/../arke_media/test/fixtures';
 
-Future<WorldSpec> _spec(Directory dir, String edition) async {
+Future<WorldSpec> _spec(Directory dir, String edition, {String id = 'undersong'}) async {
   final art = File('${dir.path}/key-art.jpg');
   await art.writeAsBytes([0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3, 4, 0xFF, 0xD9]);
   return WorldSpec(
-    id: 'undersong',
+    id: id,
     edition: edition,
     name: 'The Undersong',
     keyArt: art.path,
@@ -116,6 +116,39 @@ void main() {
       for (final world in shipped.worlds) {
         expect(world.package?.fingerprint, isNotNull, reason: '${world.id} names its edition');
       }
+    });
+  });
+
+  group('a world under a new id (R-30)', () {
+    final renamed = parseCatalogue(
+      jsonEncode({
+        'version': 2,
+        'serial': 3,
+        'worlds': [
+          {
+            'id': 'the-undersong',
+            'name': 'The Undersong',
+            'replaces': ['undersong'],
+            'productions': [
+              {'title': 'The Ledger of Nights', 'kind': 'Audiobook · Book · 5 h 33 m'},
+            ],
+            'package': {'url': 'https://example.org/w.zip', 'byteLength': 1, 'sha256': 'b' * 64, 'edition': '2026-10-22', 'fingerprint': 'c' * 64},
+          },
+        ],
+      }),
+    );
+
+    test('names the ids it replaces, never its own', () {
+      expect(renamed.worlds.single.replaces, ['undersong']);
+      expect(listedFor(renamed.worlds, 'undersong')?.id, 'the-undersong');
+      final self = jsonDecode(_list(serial: 1)) as Map<String, Object?>;
+      ((self['worlds']! as List<Object?>).single! as Map<String, Object?>)['replaces'] = ['undersong'];
+      expect(() => parseCatalogue(jsonEncode(self)), throwsFormatException);
+    });
+
+    test('keeps the shipped pictures of the world it replaces', () {
+      final shipped = parseCatalogue(_list(serial: 2, keyArt: 'assets/worlds/undersong/key-art.jpg'));
+      expect(newestCatalogue(shipped, renamed).worlds.single.keyArt, 'assets/worlds/undersong/key-art.jpg');
     });
   });
 
@@ -260,15 +293,16 @@ void main() {
       await dir.delete(recursive: true);
     });
 
-    Future<CatalogueWorld> published(String edition) async {
-      final made = Directory('${dir.path}/$edition')..createSync();
-      await packWorld(await _spec(made, edition), '${made.path}/world.zip');
+    Future<CatalogueWorld> published(String edition, {String id = 'undersong', List<String> replaces = const []}) async {
+      final made = Directory('${dir.path}/$id-$edition')..createSync();
+      await packWorld(await _spec(made, edition, id: id), '${made.path}/world.zip');
       final bytes = await File('${made.path}/world.zip').readAsBytes();
       server.body = bytes;
       return CatalogueWorld(
-        id: 'undersong',
+        id: id,
         name: 'The Undersong',
         productions: const [],
+        replaces: replaces,
         package: CataloguePackage(
           url: server.url('$edition.zip'),
           byteLength: bytes.length,
@@ -314,6 +348,21 @@ void main() {
       var swapped = false;
       await installer.update(same, beforeSwap: () async => swapped = true);
       expect(swapped, isFalse);
+    });
+
+    test('a world installed under an id the new one replaces is updated to it, the old one gone (R-30)', () async {
+      final installer = WorldInstaller(store: store, freeBytes: (_) async => null);
+      await installer.install(await published('2026-10-20'));
+      final renamed = await published('2026-10-22', id: 'the-undersong', replaces: ['undersong']);
+      expect(hasUpdate(renamed, store.worlds.single), isTrue);
+      expect(availableWorlds([renamed], store.worlds), isEmpty, reason: 'not a second world on Available');
+      var released = false;
+      final world = await installer.update(renamed, beforeSwap: () async => released = true);
+      expect(released, isTrue);
+      expect(world.id, 'the-undersong');
+      expect(store.worlds.map((installed) => installed.id), ['the-undersong']);
+      expect(store.items.every((item) => item.worldId == 'the-undersong'), isTrue);
+      expect(store.worldDirectory('undersong').existsSync(), isFalse);
     });
 
     test('a refusal leaves the installed edition (R-35)', () async {

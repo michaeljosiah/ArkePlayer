@@ -41,7 +41,16 @@ class CataloguePackage {
 /// needs no Arke cloud; it is also fetched from Arke's address (P12 rule 1), so a newer edition
 /// shows without an update.
 class CatalogueWorld {
-  const CatalogueWorld({required this.id, required this.name, required this.productions, this.logline, this.keyArt, this.package, this.guide});
+  const CatalogueWorld({
+    required this.id,
+    required this.name,
+    required this.productions,
+    this.logline,
+    this.keyArt,
+    this.package,
+    this.guide,
+    this.replaces = const [],
+  });
 
   final String id;
   final String name;
@@ -57,6 +66,13 @@ class CatalogueWorld {
   /// The world's guide alone, pinned as its package is, so the world can be explored before it is
   /// installed (SPEC-059 R-10, R-23). Null when the world has none.
   final CataloguePackage? guide;
+
+  /// The ids this world was once published under (SPEC-058 R-30): a world installed under one of
+  /// them is an older edition of this one, so it is offered `Update`, not a second world.
+  final List<String> replaces;
+
+  /// Whether a world installed under [id] is this one, under this id or one it replaces.
+  bool covers(String id) => id == this.id || replaces.contains(id);
 }
 
 /// A list of Arke's worlds (SPEC-058 R-30): its [serial] rises with every list published, so of two
@@ -112,6 +128,10 @@ Catalogue parseCatalogue(String text) {
       return null;
     }
 
+    final replaces = raw['replaces'] ?? const <Object?>[];
+    if (replaces is! List<Object?> || replaces.any((old) => old is! String || !_slug.hasMatch(old) || old == id)) {
+      throw FormatException('catalogue world $id replaces');
+    }
     worlds.add(
       CatalogueWorld(
         id: id,
@@ -121,6 +141,7 @@ Catalogue parseCatalogue(String text) {
         productions: List.unmodifiable(productions),
         package: pinned('package'),
         guide: pinned('guide'),
+        replaces: List.unmodifiable(replaces.cast<String>()),
       ),
     );
   }
@@ -138,6 +159,8 @@ List<CatalogueWorld> readCatalogue(String text) => parseCatalogue(text).worlds;
 Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
   if (kept == null || kept.serial <= shipped.serial) return shipped;
   final bundled = {for (final world in shipped.worlds) world.id: world};
+  // A world the app ships under an id the fetched one replaces keeps its pictures.
+  CatalogueWorld? shippedAs(CatalogueWorld world) => bundled[world.id] ?? world.replaces.map((id) => bundled[id]).nonNulls.firstOrNull;
   return Catalogue(
     serial: kept.serial,
     worlds: List.unmodifiable([
@@ -146,37 +169,44 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
           id: world.id,
           name: world.name,
           logline: world.logline,
-          keyArt: bundled[world.id]?.keyArt,
+          keyArt: shippedAs(world)?.keyArt,
           productions: List.unmodifiable([
             for (final production in world.productions)
               CatalogueProduction(
                 title: production.title,
                 kind: production.kind,
-                picture: bundled[world.id]?.productions.where((shippedProduction) => shippedProduction.title == production.title).firstOrNull?.picture,
+                picture: shippedAs(world)?.productions.where((shippedProduction) => shippedProduction.title == production.title).firstOrNull?.picture,
               ),
           ]),
           package: world.package,
           guide: world.guide,
+          replaces: world.replaces,
         ),
     ]),
   );
 }
 
-/// Available (P9 rule 2): every world whose package is published and that is not installed.
+/// Available (P9 rule 2): every world whose package is published and that is not installed, under
+/// its id or one it replaces.
 List<CatalogueWorld> availableWorlds(Iterable<CatalogueWorld> catalogue, Iterable<LibraryWorld> installed) {
-  final ids = {for (final world in installed) world.id};
   return [
     for (final world in catalogue)
-      if (world.package != null && !ids.contains(world.id)) world,
+      if (world.package != null && !installed.any((installedWorld) => world.covers(installedWorld.id))) world,
   ];
 }
+
+/// The list's entry for a world installed under [installedId]: its own, or the one replacing it.
+CatalogueWorld? listedFor(Iterable<CatalogueWorld> catalogue, String installedId) =>
+    catalogue.where((world) => world.id == installedId).firstOrNull ?? catalogue.where((world) => world.replaces.contains(installedId)).firstOrNull;
 
 /// Whether the list names a newer edition of an installed world (SPEC-058 R-32, P12 rule 2): its
 /// fingerprint is not the installed one's, or, for a world installed before fingerprints were kept,
 /// its label is not. A list entry that names no edition offers none.
 bool hasUpdate(CatalogueWorld listed, LibraryWorld installed) {
   final package = listed.package;
-  if (package == null || listed.id != installed.id) return false;
+  if (package == null || !listed.covers(installed.id)) return false;
+  // A world installed under an id this one replaces is always an older edition of it.
+  if (listed.id != installed.id) return true;
   if (package.fingerprint != null && installed.fingerprint != null) return package.fingerprint != installed.fingerprint;
   return package.edition != null && package.edition != installed.edition;
 }

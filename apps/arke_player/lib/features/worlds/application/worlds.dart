@@ -37,10 +37,12 @@ final catalogueRefreshProvider = FutureProvider<void>((ref) async {
   if (after != before) ref.invalidate(catalogueProvider);
 });
 
-/// The newer edition Arke's list names for an installed world, if any (SPEC-058 R-32, P12 rule 2).
+/// The newer edition Arke's list names for an installed world, if any (SPEC-058 R-30, R-32, P12
+/// rule 2): its own entry's, or the entry of a world that replaces its id. Its install runs under
+/// the listed id, so Downloads and every card follow the one install.
 final worldUpdateProvider = Provider.family<CatalogueWorld?, String>((ref, worldId) {
   final installed = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
-  final listed = ref.watch(catalogueProvider).value?.where((world) => world.id == worldId).firstOrNull;
+  final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], worldId);
   return installed != null && listed != null && hasUpdate(listed, installed) ? listed : null;
 });
 
@@ -115,7 +117,7 @@ class InstallController extends Notifier<InstallState> {
   Future<void> start(CatalogueWorld world) async {
     if (state is Installing) return;
     final cancel = _cancel = InstallCancel();
-    final updating = ref.read(libraryWorldsProvider).value?.any((installed) => installed.id == world.id) ?? false;
+    final updating = ref.read(libraryWorldsProvider).value?.any((installed) => world.covers(installed.id)) ?? false;
     state = Installing(Downloading(0, world.package?.byteLength ?? 0), updating: updating);
     try {
       final installer = await ref.read(worldInstallerProvider.future);
@@ -124,7 +126,7 @@ class InstallController extends Notifier<InstallState> {
       }
 
       if (updating) {
-        await installer.update(world, cancel: cancel, onStep: onStep, beforeSwap: () => _released(world.id));
+        await installer.update(world, cancel: cancel, onStep: onStep, beforeSwap: () => _released(world));
       } else {
         await installer.install(world, cancel: cancel, onStep: onStep);
       }
@@ -145,11 +147,16 @@ class InstallController extends Notifier<InstallState> {
 
   /// Waits while anything of the world plays, then lets go of it, so the new edition's files are the
   /// ones its next play opens; the place is kept as it stops (P12 rule 4).
-  Future<void> _released(String worldId) async {
+  Future<void> _released(CatalogueWorld world) async {
     final engine = ref.read(audioEngineProvider);
-    if (engine == null || engine.item?.worldId != worldId) return;
-    if (engine.playing) await engine.playingStream.firstWhere((playing) => !playing || engine.item?.worldId != worldId);
-    if (engine.item?.worldId == worldId) await engine.stop();
+    bool held() {
+      final id = engine?.item?.worldId;
+      return id != null && world.covers(id);
+    }
+
+    if (engine == null || !held()) return;
+    if (engine.playing) await engine.playingStream.firstWhere((playing) => !playing || !held());
+    if (held()) await engine.stop();
   }
 
   /// Cancel deletes what has come (P9 rule 4).

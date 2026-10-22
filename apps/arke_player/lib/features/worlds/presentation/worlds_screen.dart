@@ -40,7 +40,7 @@ class WorldsScreen extends ConsumerWidget {
                     for (final world in installed)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: switch (ref.watch(installProvider(world.id))) {
+                        child: switch (ref.watch(installProvider(ref.watch(worldUpdateProvider(world.id))?.id ?? world.id))) {
                           // A world updating shows it as an install does (P9 rule 4, P12 rule 4).
                           final Installing state => WorldCard(
                             name: world.name,

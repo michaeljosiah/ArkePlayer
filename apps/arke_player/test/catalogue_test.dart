@@ -28,6 +28,8 @@ void main() {
     final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
     expect(undersong.package!.sha256, 'fb45df559fff41d25a20150bc7b936671b97b3e7b1a354d37f8ccb2a41ba3559');
     expect(undersong.package!.edition, '2026-10-22');
+    // The hand-packed editions were published as `undersong`: a phone holding one is offered Update.
+    expect(undersong.replaces, ['undersong']);
     expect(undersong.productions.single.title, 'The Ledger of Nights');
   });
 }

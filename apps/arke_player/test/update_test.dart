@@ -93,6 +93,29 @@ void main() {
     expect(find.text('Update'), findsOneWidget);
   });
 
+  testWidgets('a world installed under an id the list’s world replaces is offered Update, not a second world (R-30)', (tester) async {
+    final renamed = CatalogueWorld(
+      id: 'the-undersong',
+      name: 'The Undersong',
+      replaces: const ['undersong'],
+      productions: const [CatalogueProduction(title: 'The Ledger of Nights', kind: 'Audiobook · Book · 5 h 33 m')],
+      package: CataloguePackage(
+        url: Uri.parse('https://example.org/u.zip'),
+        byteLength: 413000000,
+        sha256: 'a' * 64,
+        edition: '2026-10-22',
+        fingerprint: 'c' * 64,
+      ),
+    );
+    await _pump(tester, location: Routes.worlds, catalogue: [renamed]);
+    expect(find.text('Update'), findsOneWidget);
+    expect(find.text('Available'), findsNothing);
+    await tester.tap(find.text('The Undersong'));
+    await tester.pumpAndSettle();
+    expect(find.text('Update · 413 MB', findRichText: true), findsOneWidget);
+    expect(find.text('22 Oct 2026 · 413 MB'), findsOneWidget);
+  });
+
   testWidgets('and not when the list names the edition installed', (tester) async {
     await _pump(
       tester,

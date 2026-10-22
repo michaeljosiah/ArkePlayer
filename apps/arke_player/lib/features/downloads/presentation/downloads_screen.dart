@@ -32,7 +32,9 @@ class DownloadsScreen extends ConsumerWidget {
     // A world updating is listed under Worlds (P12e); one installing under Added, as before.
     final updating = running.where((run) => run.state.updating).toList();
     final installing = running.where((run) => !run.state.updating).toList();
-    final updatingIds = {for (final run in updating) run.world.id};
+    final updatingIds = {
+      for (final run in updating) ...[run.world.id, ...run.world.replaces],
+    };
     final used = bytesUsed(items, worlds);
     final rows = items.where((item) => item.worldId == null).toList()..sort((a, b) => b.byteLength.compareTo(a.byteLength));
     final empty = rows.isEmpty && worlds.isEmpty && installing.isEmpty;
@@ -60,7 +62,7 @@ class DownloadsScreen extends ConsumerWidget {
                           _WorldRow(
                             name: world.name,
                             line: state.short,
-                            picture: libraryPicture(store, worlds.where((installed) => installed.id == world.id).firstOrNull?.keyArt),
+                            picture: libraryPicture(store, worlds.where((installed) => world.covers(installed.id)).firstOrNull?.keyArt),
                             progress: state.fraction,
                             onOpen: () => context.push(Routes.world(world.id)),
                             end: IconButton(

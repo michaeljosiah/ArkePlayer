@@ -30,7 +30,10 @@ class WorldScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final installed = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
+    final worlds = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
+    // A world updated under a new id (SPEC-058 R-30) answers at its old address too.
+    final successor = ref.watch(catalogueProvider).value?.where((world) => world.replaces.contains(worldId)).firstOrNull;
+    final installed = worlds.where((world) => world.id == worldId).firstOrNull ?? worlds.where((world) => world.id == successor?.id).firstOrNull;
     // Opening a world's page asks Arke's address for its list, at most once a day (P12 rule 1).
     ref.watch(catalogueRefreshProvider);
     return Scaffold(
@@ -117,9 +120,10 @@ class _Installed extends ConsumerWidget {
     final groups = groupByTakenAs(world.productions, (production) => production.narration != null ? ProductionKind.audiobook : ProductionKind.book);
     final single = world.productions.length == 1;
     final update = ref.watch(worldUpdateProvider(world.id));
-    final listed = ref.watch(catalogueProvider).value?.where((entry) => entry.id == world.id).firstOrNull;
-    final state = ref.watch(installProvider(world.id));
-    ref.listen(installProvider(world.id), (previous, next) {
+    final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], world.id);
+    final installing = update?.id ?? world.id;
+    final state = ref.watch(installProvider(installing));
+    ref.listen(installProvider(installing), (previous, next) {
       if (next is InstallFailed && previous is! InstallFailed && update != null) showInstallRefusal(context, ref, update, next.refusal, updating: true);
     });
     final newer = update?.package;
@@ -155,12 +159,12 @@ class _Installed extends ConsumerWidget {
             logline: world.logline,
             onMore: () => showWorldMenu(context, ref, world),
             child: switch (state) {
-              Installing() => InstallProgress(state: state, onCancel: () => ref.read(installProvider(world.id).notifier).cancel()),
+              Installing() => InstallProgress(state: state, onCancel: () => ref.read(installProvider(installing).notifier).cancel()),
               _ when update != null && newer != null => HeroPress(
                 icon: Icons.download_rounded,
                 label: 'Update',
                 detail: formatBytes(newer.byteLength),
-                onPressed: () => ref.read(installProvider(world.id).notifier).start(update),
+                onPressed: () => ref.read(installProvider(installing).notifier).start(update),
               ),
               _ => null,
             },

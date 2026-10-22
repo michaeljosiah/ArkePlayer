@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "serial": 2,
+  "serial": 3,
   "worlds": [
     {
       "id": "the-undersong",
       "name": "The Undersong",
+      "replaces": ["undersong"],
       "logline": "A drowned god still sings beneath the harbour.",
       "keyArt": "assets/worlds/undersong/key-art.jpg",
       "productions": [
