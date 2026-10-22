@@ -21,6 +21,8 @@ class WorldsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final installed = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
     final available = ref.watch(availableProvider);
+    // Opening Worlds asks Arke's address for its list, at most once a day (P12 rule 1).
+    ref.watch(catalogueRefreshProvider);
     final store = ref.watch(libraryStoreProvider).value;
     return Scaffold(
       body: SafeArea(
@@ -38,16 +40,28 @@ class WorldsScreen extends ConsumerWidget {
                     for (final world in installed)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: WorldCard(
-                          name: world.name,
-                          meta: [
-                            'In Library',
-                            productionCount(world.productions.length),
-                            if (ref.watch(worldGuideProvider(world.id)).value?.guide.characters.length case final count? when count > 0) characterCount(count),
-                          ].join(' · '),
-                          picture: libraryPicture(store, world.keyArt),
-                          onOpen: () => context.push(Routes.worldsWorld(world.id)),
-                        ),
+                        child: switch (ref.watch(installProvider(world.id))) {
+                          // A world updating shows it as an install does (P9 rule 4, P12 rule 4).
+                          final Installing state => WorldCard(
+                            name: world.name,
+                            meta: state.short,
+                            progress: state.fraction,
+                            picture: libraryPicture(store, world.keyArt),
+                            onOpen: () => context.push(Routes.worldsWorld(world.id)),
+                          ),
+                          _ => WorldCard(
+                            name: world.name,
+                            meta: [
+                              'In Library',
+                              productionCount(world.productions.length),
+                              if (ref.watch(worldGuideProvider(world.id)).value?.guide.characters.length case final count? when count > 0)
+                                characterCount(count),
+                            ].join(' · '),
+                            tag: ref.watch(worldUpdateProvider(world.id)) != null ? 'Update' : null,
+                            picture: libraryPicture(store, world.keyArt),
+                            onOpen: () => context.push(Routes.worldsWorld(world.id)),
+                          ),
+                        },
                       ),
                   ],
                   if (available.isNotEmpty) ...[

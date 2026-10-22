@@ -1,14 +1,48 @@
+import 'dart:io';
+
 import 'package:arke_library/arke_library.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/services.dart';
+import '../../players/application/players.dart';
 import '../../settings/application/settings_controller.dart';
 
-/// The worlds that ship with the app (P9 rule 1). A world whose package is not published yet is
-/// in the list but never offered.
-final catalogueProvider = FutureProvider<List<CatalogueWorld>>((ref) async => readCatalogue(await rootBundle.loadString('assets/worlds/catalogue.json')));
+/// Arke's address for its list of worlds (SPEC-058 R-31, P12 rule 1): HTTPS, as a package is.
+final arkeWorldsList = Uri.parse('https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/catalogue.json');
+
+/// The list fetched from [arkeWorldsList], kept beside the library.
+final hostedCatalogueProvider = FutureProvider<HostedCatalogue>((ref) async {
+  final root = await ref.watch(libraryRootProvider.future);
+  return HostedCatalogue(url: arkeWorldsList, kept: File('${root.parent.path}${Platform.pathSeparator}catalogue.json'));
+});
+
+/// Arke's worlds (P9 rule 1, SPEC-058 R-31): of the list that ships with the app and the one last
+/// fetched, the newer. A world whose package is not published yet is in the list but never offered.
+final catalogueProvider = FutureProvider<List<CatalogueWorld>>((ref) async {
+  final shipped = parseCatalogue(await rootBundle.loadString('assets/worlds/catalogue.json'));
+  final hosted = await ref.watch(hostedCatalogueProvider.future);
+  return newestCatalogue(shipped, await hosted.keptList()).worlds;
+});
+
+/// Asks Arke's address for its list once a launch, when Worlds or a world's page opens; the hosted
+/// list itself asks at most once a day. A newer list replaces the one shown. Never under test, which
+/// must not reach the network.
+final catalogueRefreshProvider = FutureProvider<void>((ref) async {
+  if (Platform.environment.containsKey('FLUTTER_TEST')) return;
+  final hosted = await ref.read(hostedCatalogueProvider.future);
+  final before = (await hosted.keptList())?.serial;
+  final after = (await hosted.refresh())?.serial;
+  if (after != before) ref.invalidate(catalogueProvider);
+});
+
+/// The newer edition Arke's list names for an installed world, if any (SPEC-058 R-32, P12 rule 2).
+final worldUpdateProvider = Provider.family<CatalogueWorld?, String>((ref, worldId) {
+  final installed = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
+  final listed = ref.watch(catalogueProvider).value?.where((world) => world.id == worldId).firstOrNull;
+  return installed != null && listed != null && hasUpdate(listed, installed) ? listed : null;
+});
 
 /// Every installed world, kept current as worlds are installed and removed.
 final libraryWorldsProvider = StreamProvider<List<LibraryWorld>>((ref) async* {
@@ -38,8 +72,11 @@ class NotInstalling extends InstallState {
 }
 
 class Installing extends InstallState {
-  const Installing(this.step);
+  const Installing(this.step, {this.updating = false});
   final InstallStep step;
+
+  /// A newer edition coming in over an installed one (P12).
+  final bool updating;
 
   /// The whole install, 0 to 1: the download is most of it, the check the rest.
   double get fraction => switch (step) {
@@ -55,8 +92,8 @@ class Installing extends InstallState {
     Checking(:final checked, :final total) => 'Checking · $checked of $total files',
   };
 
-  /// Home's card and Downloads (P9 rule 4).
-  String get short => 'Installing · ${(fraction * 100).floor()}%';
+  /// Home's card and Downloads (P9 rule 4, P12e).
+  String get short => '${updating ? 'Updating' : 'Installing'} · ${(fraction * 100).floor()}%';
 }
 
 class InstallFailed extends InstallState {
@@ -64,8 +101,8 @@ class InstallFailed extends InstallState {
   final InstallRefusal refusal;
 }
 
-/// One world's install. It is not disposed with its page: leaving the page does not stop it, and
-/// Home and Downloads show it going on (P9 rule 4).
+/// One world's install, or its update (P12). It is not disposed with its page: leaving the page
+/// does not stop it, and Home and Downloads show it going on (P9 rule 4).
 class InstallController extends Notifier<InstallState> {
   InstallController(this.worldId);
 
@@ -78,16 +115,19 @@ class InstallController extends Notifier<InstallState> {
   Future<void> start(CatalogueWorld world) async {
     if (state is Installing) return;
     final cancel = _cancel = InstallCancel();
-    state = Installing(Downloading(0, world.package?.byteLength ?? 0));
+    final updating = ref.read(libraryWorldsProvider).value?.any((installed) => installed.id == world.id) ?? false;
+    state = Installing(Downloading(0, world.package?.byteLength ?? 0), updating: updating);
     try {
       final installer = await ref.read(worldInstallerProvider.future);
-      await installer.install(
-        world,
-        cancel: cancel,
-        onStep: (step) {
-          if (!cancel.isCancelled) state = Installing(step);
-        },
-      );
+      void onStep(InstallStep step) {
+        if (!cancel.isCancelled) state = Installing(step, updating: updating);
+      }
+
+      if (updating) {
+        await installer.update(world, cancel: cancel, onStep: onStep, beforeSwap: () => _released(world.id));
+      } else {
+        await installer.install(world, cancel: cancel, onStep: onStep);
+      }
       state = const NotInstalling();
       // Once a world is in, later opens land on Home rather than first open (P8a).
       await ref.read(settingsProvider.notifier).change((settings) => settings.copyWith(seenFirstOpen: true));
@@ -101,6 +141,15 @@ class InstallController extends Notifier<InstallState> {
     } finally {
       if (identical(_cancel, cancel)) _cancel = null;
     }
+  }
+
+  /// Waits while anything of the world plays, then lets go of it, so the new edition's files are the
+  /// ones its next play opens; the place is kept as it stops (P12 rule 4).
+  Future<void> _released(String worldId) async {
+    final engine = ref.read(audioEngineProvider);
+    if (engine == null || engine.item?.worldId != worldId) return;
+    if (engine.playing) await engine.playingStream.firstWhere((playing) => !playing || engine.item?.worldId != worldId);
+    if (engine.item?.worldId == worldId) await engine.stop();
   }
 
   /// Cancel deletes what has come (P9 rule 4).

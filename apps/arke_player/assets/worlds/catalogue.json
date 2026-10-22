@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "serial": 1,
   "worlds": [
     {
       "id": "undersong",
@@ -12,7 +13,9 @@
       "package": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-19-r3/the-undersong-player-2026-10-20.zip",
         "byteLength": 182182066,
-        "sha256": "46ff9dbaf5fed13ca3f5c795ad4aed0ba7165ee84cc3bcfec6730e9451504a8b"
+        "sha256": "46ff9dbaf5fed13ca3f5c795ad4aed0ba7165ee84cc3bcfec6730e9451504a8b",
+        "edition": "2026-10-20",
+        "fingerprint": "d20908ef11934ac88cff0cf65bb5a574a2eda16c1e0d608354bc2c4afce58fb9"
       }
     }
   ]

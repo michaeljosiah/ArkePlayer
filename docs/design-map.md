@@ -80,6 +80,20 @@ by `arke_world`'s `guide.dart`; a guide alone is fetched against the catalogue's
 | P11f | Lore, by kind | `…/world/:worldId/_guide` | `features/worlds/presentation/guide_screens.dart` (`LoreScreen`) |
 | P11h | Reveal, asked once | (a sheet over the page) | `features/worlds/presentation/guide_widgets.dart` (`askReveal`) |
 
+## A world's newer edition (P12, built)
+
+SPEC-058 R-30 – R-36, ArkePlayer #3. Arke's list is the shipped one or the one fetched from
+`arkeWorldsList` (`HostedCatalogue`, at most once a day), whichever has the higher serial
+(`newestCatalogue`); an installed world whose fingerprint is not its entry's has an update
+(`hasUpdate`, `worldUpdateProvider`). `WorldInstaller.update` downloads and checks as an install,
+then replaces as P10, after the world stops playing.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P12a | Worlds: `Update` on the installed world's card | `/worlds` | `features/worlds/presentation/worlds_screen.dart` |
+| P12b, P12c, P12d, P12f | The world's page: Update, New edition and Space; updating in place; updated; refused | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`; `features/worlds/application/worlds.dart` (`InstallController`) |
+| P12e | Downloads: `Updating · n%` under Worlds | `/downloads` | `features/downloads/presentation/downloads_screen.dart` |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.

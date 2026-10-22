@@ -5,6 +5,7 @@ library;
 
 export 'src/catalogue.dart';
 export 'src/guide.dart';
+export 'src/hosted.dart';
 export 'src/install.dart';
 export 'src/listening.dart';
 export 'src/manifest.dart';

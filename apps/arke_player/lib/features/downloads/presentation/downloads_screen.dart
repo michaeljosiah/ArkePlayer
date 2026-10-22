@@ -25,10 +25,14 @@ class DownloadsScreen extends ConsumerWidget {
     final store = ref.watch(libraryStoreProvider).value;
     final volume = ref.watch(volumeProvider).value;
     final worlds = ref.watch(libraryWorldsProvider).value ?? const [];
-    final installing = [
+    final running = [
       for (final world in ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[])
         if (ref.watch(installProvider(world.id)) case final Installing state) (world: world, state: state),
     ];
+    // A world updating is listed under Worlds (P12e); one installing under Added, as before.
+    final updating = running.where((run) => run.state.updating).toList();
+    final installing = running.where((run) => !run.state.updating).toList();
+    final updatingIds = {for (final run in updating) run.world.id};
     final used = bytesUsed(items, worlds);
     final rows = items.where((item) => item.worldId == null).toList()..sort((a, b) => b.byteLength.compareTo(a.byteLength));
     final empty = rows.isEmpty && worlds.isEmpty && installing.isEmpty;
@@ -50,7 +54,24 @@ class DownloadsScreen extends ConsumerWidget {
                 : ListView(
                     padding: const EdgeInsets.only(bottom: 24),
                     children: [
-                      const SectionHead('Added'),
+                      if (updating.isNotEmpty) ...[
+                        const SectionHead('Worlds'),
+                        for (final (:world, :state) in updating)
+                          _WorldRow(
+                            name: world.name,
+                            line: state.short,
+                            picture: libraryPicture(store, worlds.where((installed) => installed.id == world.id).firstOrNull?.keyArt),
+                            progress: state.fraction,
+                            onOpen: () => context.push(Routes.world(world.id)),
+                            end: IconButton(
+                              onPressed: () => ref.read(installProvider(world.id).notifier).cancel(),
+                              tooltip: 'Cancel',
+                              icon: Icon(Icons.close_rounded, color: context.surface.mutedForeground),
+                            ),
+                          ),
+                      ],
+                      if (installing.isNotEmpty || worlds.any((installed) => !updatingIds.contains(installed.id)) || rows.isNotEmpty)
+                        const SectionHead('Added'),
                       for (final (:world, :state) in installing)
                         _WorldRow(
                           name: world.name,
@@ -64,7 +85,7 @@ class DownloadsScreen extends ConsumerWidget {
                             icon: Icon(Icons.close_rounded, color: context.surface.mutedForeground),
                           ),
                         ),
-                      for (final world in worlds)
+                      for (final world in worlds.where((installed) => !updatingIds.contains(installed.id)))
                         _WorldRow(
                           name: world.name,
                           line: '${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',

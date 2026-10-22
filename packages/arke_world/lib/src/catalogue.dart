@@ -23,15 +23,23 @@ class CatalogueProduction {
 /// the Studio pins its Sample world: the package the app downloads is the one it was built to
 /// expect, or it is refused.
 class CataloguePackage {
-  const CataloguePackage({required this.url, required this.byteLength, required this.sha256});
+  const CataloguePackage({required this.url, required this.byteLength, required this.sha256, this.edition, this.fingerprint});
 
   final Uri url;
   final int byteLength;
   final String sha256;
+
+  /// The package's edition label (SPEC-058 R-30), as its `world.json` names it.
+  final String? edition;
+
+  /// The edition's fingerprint, as `editionFingerprint` makes it: what an installed world is
+  /// compared by to see an update (P12 rule 2, P10 rule 2).
+  final String? fingerprint;
 }
 
 /// A world a person can install (P9 rule 1). The list ships with the app, so it shows offline and
-/// needs no Arke cloud; a new world arrives with an update.
+/// needs no Arke cloud; it is also fetched from Arke's address (P12 rule 1), so a newer edition
+/// shows without an update.
 class CatalogueWorld {
   const CatalogueWorld({required this.id, required this.name, required this.productions, this.logline, this.keyArt, this.package, this.guide});
 
@@ -51,22 +59,38 @@ class CatalogueWorld {
   final CataloguePackage? guide;
 }
 
+/// A list of Arke's worlds (SPEC-058 R-30): its [serial] rises with every list published, so of two
+/// lists the one with the higher serial is the newer.
+class Catalogue {
+  const Catalogue({required this.serial, required this.worlds});
+  final int serial;
+  final List<CatalogueWorld> worlds;
+
+  static const empty = Catalogue(serial: 0, worlds: []);
+}
+
 final _slug = RegExp(r'^[a-z0-9][a-z0-9-]{0,63}$');
 final _digest = RegExp(r'^[a-f0-9]{64}$');
 
-/// Reads the catalogue the app ships (`assets/worlds/catalogue.json`). Throws [FormatException]
-/// when it is malformed: it is the app's own file, so a bad one is a build error, not a refusal.
-List<CatalogueWorld> readCatalogue(String text) {
+/// Reads a list of Arke's worlds: the one the app ships (`assets/worlds/catalogue.json`) or one
+/// fetched from Arke's address. Version 1 has no serial and no editions. Throws [FormatException]
+/// when it is malformed: the app's own list is a build error, a fetched one is ignored.
+Catalogue parseCatalogue(String text) {
   final json = jsonDecode(text);
-  if (json is! Map<String, Object?> || json['version'] != 1 || json['worlds'] is! List<Object?>) throw const FormatException('catalogue');
+  if (json is! Map<String, Object?> || json['worlds'] is! List<Object?>) throw const FormatException('catalogue');
+  final version = json['version'];
+  if (version != 1 && version != 2) throw const FormatException('catalogue version');
+  final serial = version == 1 ? 0 : json['serial'];
+  if (serial is! int || serial < 0) throw const FormatException('catalogue serial');
   final worlds = <CatalogueWorld>[];
+  final ids = <String>{};
   for (final raw in json['worlds']! as List<Object?>) {
     if (raw is! Map<String, Object?>) throw const FormatException('catalogue world');
     final id = raw['id'];
     final name = raw['name'];
-    if (id is! String || !_slug.hasMatch(id) || name is! String || name.isEmpty) throw FormatException('catalogue world $id');
+    if (id is! String || !_slug.hasMatch(id) || !ids.add(id) || name is! String || name.isEmpty) throw FormatException('catalogue world $id');
     final productions = [
-      for (final production in raw['productions']! as List<Object?>)
+      for (final production in raw['productions'] as List<Object?>? ?? const [])
         if (production case {'title': final String title, 'kind': final String kind})
           CatalogueProduction(title: title, kind: kind, picture: production['picture'] as String?)
         else
@@ -77,7 +101,12 @@ List<CatalogueWorld> readCatalogue(String text) {
         final uri = Uri.parse(url);
         // A world arrives over HTTPS only (P2 rule 5's Paste a link holds the same line).
         if (uri.scheme != 'https' || byteLength <= 0 || !_digest.hasMatch(sha256)) throw FormatException('catalogue world $id $key');
-        return CataloguePackage(url: uri, byteLength: byteLength, sha256: sha256);
+        final pin = raw[key]! as Map<String, Object?>;
+        final edition = pin['edition'];
+        final fingerprint = pin['fingerprint'];
+        if (edition != null && (edition is! String || edition.trim().isEmpty)) throw FormatException('catalogue world $id $key edition');
+        if (fingerprint != null && (fingerprint is! String || !_digest.hasMatch(fingerprint))) throw FormatException('catalogue world $id $key fingerprint');
+        return CataloguePackage(url: uri, byteLength: byteLength, sha256: sha256, edition: edition as String?, fingerprint: fingerprint as String?);
       }
       if (raw[key] != null) throw FormatException('catalogue world $id $key');
       return null;
@@ -95,7 +124,42 @@ List<CatalogueWorld> readCatalogue(String text) {
       ),
     );
   }
-  return List.unmodifiable(worlds);
+  return Catalogue(serial: serial, worlds: List.unmodifiable(worlds));
+}
+
+/// The worlds of the list the app ships, as [parseCatalogue] reads them.
+List<CatalogueWorld> readCatalogue(String text) => parseCatalogue(text).worlds;
+
+/// The list Worlds shows (SPEC-058 R-31): of the list the app ships and the list it fetched and
+/// kept, the one with the higher serial, so it never goes back to an older one. Pictures come from
+/// the app: a fetched list names bundle paths it cannot know are in this build, so a world's key
+/// art and its productions' pictures are the shipped list's, and a world the app does not ship has
+/// none.
+Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
+  if (kept == null || kept.serial <= shipped.serial) return shipped;
+  final bundled = {for (final world in shipped.worlds) world.id: world};
+  return Catalogue(
+    serial: kept.serial,
+    worlds: List.unmodifiable([
+      for (final world in kept.worlds)
+        CatalogueWorld(
+          id: world.id,
+          name: world.name,
+          logline: world.logline,
+          keyArt: bundled[world.id]?.keyArt,
+          productions: List.unmodifiable([
+            for (final production in world.productions)
+              CatalogueProduction(
+                title: production.title,
+                kind: production.kind,
+                picture: bundled[world.id]?.productions.where((shippedProduction) => shippedProduction.title == production.title).firstOrNull?.picture,
+              ),
+          ]),
+          package: world.package,
+          guide: world.guide,
+        ),
+    ]),
+  );
 }
 
 /// Available (P9 rule 2): every world whose package is published and that is not installed.
@@ -105,4 +169,14 @@ List<CatalogueWorld> availableWorlds(Iterable<CatalogueWorld> catalogue, Iterabl
     for (final world in catalogue)
       if (world.package != null && !ids.contains(world.id)) world,
   ];
+}
+
+/// Whether the list names a newer edition of an installed world (SPEC-058 R-32, P12 rule 2): its
+/// fingerprint is not the installed one's, or, for a world installed before fingerprints were kept,
+/// its label is not. A list entry that names no edition offers none.
+bool hasUpdate(CatalogueWorld listed, LibraryWorld installed) {
+  final package = listed.package;
+  if (package == null || listed.id != installed.id) return false;
+  if (package.fingerprint != null && installed.fingerprint != null) return package.fingerprint != installed.fingerprint;
+  return package.edition != null && package.edition != installed.edition;
 }

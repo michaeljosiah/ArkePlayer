@@ -17,7 +17,8 @@ import 'world_widgets.dart';
 /// Space (P9c); while it installs, the progress in the press's place (P9d); a refusal as a sheet
 /// (P9e). Installed, the same page becomes P1d's: its productions grouped by what a person does,
 /// one production at the full width (P9f). On a Fold the words keep to the left (P9h). Either
-/// way the world's guide follows its productions (P11b, P11c, P11i).
+/// way the world's guide follows its productions (P11b, P11c, P11i). A newer edition in Arke's list
+/// puts `Update` where Install was, with what it brings and the space it needs (P12b – P12f).
 ///
 /// [location] is this page's own path, which a production's page and the guide's pages are pushed
 /// under.
@@ -30,6 +31,8 @@ class WorldScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final installed = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
+    // Opening a world's page asks Arke's address for its list, at most once a day (P12 rule 1).
+    ref.watch(catalogueRefreshProvider);
     return Scaffold(
       body: installed != null ? _Installed(world: installed, location: location) : _ToInstall(worldId: worldId, location: location),
     );
@@ -113,6 +116,14 @@ class _Installed extends ConsumerWidget {
     final items = {for (final item in ref.watch(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
     final groups = groupByTakenAs(world.productions, (production) => production.narration != null ? ProductionKind.audiobook : ProductionKind.book);
     final single = world.productions.length == 1;
+    final update = ref.watch(worldUpdateProvider(world.id));
+    final listed = ref.watch(catalogueProvider).value?.where((entry) => entry.id == world.id).firstOrNull;
+    final state = ref.watch(installProvider(world.id));
+    ref.listen(installProvider(world.id), (previous, next) {
+      if (next is InstallFailed && previous is! InstallFailed && update != null) showInstallRefusal(context, ref, update, next.refusal, updating: true);
+    });
+    final newer = update?.package;
+    final free = ref.watch(volumeProvider).value?.free;
 
     Widget tile(LibraryProduction production, double width) {
       final narration = items[production.narration];
@@ -135,10 +146,39 @@ class _Installed extends ConsumerWidget {
           WorldHero(
             picture: libraryPicture(store, world.keyArt),
             title: world.name,
-            meta: 'Installed · ${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
+            // A world from Arke's list says which edition is on the phone (P12b, P12d).
+            meta: [
+              'Installed',
+              if (listed?.package?.edition != null) editionLabel(world.edition) else productionCount(world.productions.length),
+              formatBytes(world.byteLength),
+            ].join(' · '),
             logline: world.logline,
             onMore: () => showWorldMenu(context, ref, world),
+            child: switch (state) {
+              Installing() => InstallProgress(state: state, onCancel: () => ref.read(installProvider(world.id).notifier).cancel()),
+              _ when update != null && newer != null => HeroPress(
+                icon: Icons.download_rounded,
+                label: 'Update',
+                detail: formatBytes(newer.byteLength),
+                onPressed: () => ref.read(installProvider(world.id).notifier).start(update),
+              ),
+              _ => null,
+            },
           ),
+          if (newer != null) ...[
+            const SizedBox(height: 16),
+            GroupRows(
+              rows: [
+                (label: 'New edition', value: [if (newer.edition != null) editionLabel(newer.edition!), formatBytes(newer.byteLength)].join(' · ')),
+                if (free != null)
+                  (
+                    label: 'Space',
+                    value:
+                        '${newer.byteLength >= world.byteLength ? '+' : '−'}${formatBytes((newer.byteLength - world.byteLength).abs())} of ${formatBytes(free)} free',
+                  ),
+              ],
+            ),
+          ],
           for (final MapEntry(key: takenAs, value: productions) in groups.entries) ...[
             SectionHead(takenAs.label),
             if (single)

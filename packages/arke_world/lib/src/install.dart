@@ -178,6 +178,40 @@ class WorldInstaller {
     }
   }
 
+  /// Brings an installed world to the edition its list entry names (SPEC-058 R-33, Player P12): the
+  /// download and check of an install, then the Replace of a package added from a file (P10 rule 3),
+  /// places kept by chapter. The installed edition stays and plays until the new one is checked in
+  /// full; [beforeSwap] is awaited before it gives way, so a caller can wait for its world to stop
+  /// playing. A package that turns out to be the installed edition changes nothing.
+  Future<LibraryWorld> update(
+    CatalogueWorld world, {
+    void Function(InstallStep step)? onStep,
+    InstallCancel? cancel,
+    Future<void> Function()? beforeSwap,
+  }) async {
+    final package = world.package;
+    if (package == null) throw const NotAPackage();
+    if (!store.worlds.any((installed) => installed.id == world.id)) return install(world, onStep: onStep, cancel: cancel);
+    final control = cancel ?? InstallCancel();
+    final needed = await _checkSpace(package.byteLength);
+    final staging = await store.stageWorld();
+    try {
+      final zip = '${staging.path}${Platform.pathSeparator}package.zip';
+      await _download(package, zip, onStep, control);
+      control._check();
+      final prepared = await _prepare(zip, staging, needed, onStep, control);
+      if (prepared.manifest.id != world.id) throw const NotAPackage();
+      if (prepared.sameEdition) return prepared.installed!;
+      await beforeSwap?.call();
+      control._check();
+      return await commit(prepared);
+    } on FileSystemException catch (error) {
+      throw await _full(error, needed);
+    } finally {
+      if (await staging.exists()) await staging.delete(recursive: true);
+    }
+  }
+
   /// A world's guide being fetched, so a page opened twice fetches it once.
   final _fetching = <String, Future<LibraryGuide>>{};
 

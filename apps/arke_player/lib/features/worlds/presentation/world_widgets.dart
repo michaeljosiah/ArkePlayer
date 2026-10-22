@@ -17,6 +17,16 @@ const _bg = ArkeColors.mediaOverlayBackground;
 /// `1 production`, `3 productions`.
 String productionCount(int count) => count == 1 ? '1 production' : '$count productions';
 
+/// An edition as the page says it (P12): `20 Oct 2026` for the Studio's dated labels, else the
+/// label as it is.
+String editionLabel(String edition) {
+  final dated = RegExp(r'^(\d{4})-(\d{2})-(\d{2})(?:-\d+)?$').firstMatch(edition);
+  final month = dated == null ? 0 : int.parse(dated[2]!);
+  if (dated == null || month < 1 || month > 12) return edition;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return '${int.parse(dated[3]!)} ${months[month - 1]} ${dated[1]}';
+}
+
 /// `1 character`, `5 characters` (P11a).
 String characterCount(int count) => count == 1 ? '1 character' : '$count characters';
 
@@ -27,9 +37,10 @@ ImageProvider? libraryPicture(LibraryStore? store, String? relative) => store ==
 ImageProvider? bundledPicture(String? asset) => asset == null ? null : AssetImage(asset);
 
 /// A world as a card: 358 × 190 on Available and in Library (P9b, P7b), 240 × 135 on Home (P9g).
-/// While it installs, its meta line is `Installing · 42%` over a line of progress (P9 rule 4).
+/// While it installs, its meta line is `Installing · 42%` over a line of progress (P9 rule 4); a
+/// world with a newer edition carries `Update` (P12a).
 class WorldCard extends StatelessWidget {
-  const WorldCard({required this.name, required this.meta, required this.picture, required this.onOpen, this.mini = false, this.progress, super.key});
+  const WorldCard({required this.name, required this.meta, required this.picture, required this.onOpen, this.mini = false, this.progress, this.tag, super.key});
 
   final String name;
   final String meta;
@@ -37,6 +48,9 @@ class WorldCard extends StatelessWidget {
   final VoidCallback onOpen;
   final bool mini;
   final double? progress;
+
+  /// One word in a pill at the card's top left.
+  final String? tag;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +65,21 @@ class WorldCard extends StatelessWidget {
           children: [
             if (picture != null) Image(image: picture!, fit: BoxFit.cover) else const ColoredBox(color: ArkeColors.neutral800),
             const _Shade(),
+            if (tag != null)
+              Positioned(
+                left: 12,
+                top: 12,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: _fg.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    child: Text(
+                      tag!,
+                      style: text.labelMedium?.copyWith(color: _fg, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
               left: mini ? 12 : 14,
               right: mini ? 12 : 14,
@@ -88,7 +117,7 @@ class WorldCard extends StatelessWidget {
     );
     return Semantics(
       button: true,
-      label: '$name, $meta',
+      label: [name, ?tag, meta].join(', '),
       child: ExcludeSemantics(
         child: GestureDetector(onTap: onOpen, child: card),
       ),
@@ -431,20 +460,45 @@ class InsideRow extends StatelessWidget {
 }
 
 /// One setting-like row of data in a group: `Space · 386 MB of 41 GB free` (P9c).
+/// Rows in one group, a line between each (P12b's New edition and Space).
+class GroupRows extends StatelessWidget {
+  const GroupRows({required this.rows, super.key});
+
+  final List<({String label, String value})> rows;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16),
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(color: context.surface.secondary, borderRadius: BorderRadius.circular(ArkeRadius.xl)),
+    child: Column(
+      children: [
+        for (final (i, row) in rows.indexed) ...[
+          if (i > 0) Divider(height: 1, thickness: 1, color: context.surface.border),
+          GroupRow(label: row.label, value: row.value, grouped: true),
+        ],
+      ],
+    ),
+  );
+}
+
 class GroupRow extends StatelessWidget {
-  const GroupRow({required this.label, required this.value, super.key});
+  const GroupRow({required this.label, required this.value, this.grouped = false, super.key});
 
   final String label;
   final String value;
+
+  /// Inside [GroupRows], which draws the group around it.
+  final bool grouped;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: grouped ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       constraints: const BoxConstraints(minHeight: 50),
-      decoration: BoxDecoration(color: context.surface.secondary, borderRadius: BorderRadius.circular(ArkeRadius.xl)),
+      decoration: grouped ? null : BoxDecoration(color: context.surface.secondary, borderRadius: BorderRadius.circular(ArkeRadius.xl)),
       child: Row(
         children: [
           Text(label, style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase)),
@@ -512,7 +566,7 @@ class ProductionTile extends StatelessWidget {
 }
 
 /// A refusal (P9e, as P2f): the clause, the world and its size, then Try again and Close.
-Future<void> showInstallRefusal(BuildContext context, WidgetRef ref, CatalogueWorld world, InstallRefusal refusal) async {
+Future<void> showInstallRefusal(BuildContext context, WidgetRef ref, CatalogueWorld world, InstallRefusal refusal, {bool updating = false}) async {
   final again = await showArkeSheet<bool>(
     context,
     title: null,
@@ -534,7 +588,14 @@ Future<void> showInstallRefusal(BuildContext context, WidgetRef ref, CatalogueWo
             Text(refusal.clause, textAlign: TextAlign.center, style: text.titleMedium),
             const SizedBox(height: 4),
             Text(
-              [world.name, if (world.package != null) formatBytes(world.package!.byteLength)].join(' · '),
+              // An update names the edition it would have brought (P12f); an install its size.
+              [
+                world.name,
+                if (updating && world.package?.edition != null)
+                  editionLabel(world.package!.edition!)
+                else if (world.package != null)
+                  formatBytes(world.package!.byteLength),
+              ].join(' · '),
               textAlign: TextAlign.center,
               style: text.bodyMedium?.copyWith(color: context.surface.mutedForeground),
             ),
