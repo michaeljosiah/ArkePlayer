@@ -401,8 +401,42 @@ ${sh('Lore', '<span class="ct num">8</span>')}<div class="cols2g"><div>${LORE.sl
 </div>${hi()}</div>`),
 ];
 
+// ---- P12 · a world's newer edition ---------------------------------------------------------------
+// Asked: when the Studio makes a new edition of a world's package, the Player sees it and offers the
+// download. The sample: The Undersong installed at its 20 October edition (182 MB), Arke's list
+// naming the 22 October edition (228 MB), made by the Studio's Export → Arke Player (Studio 233).
+const NEW = { date: '22 Oct 2026', size: '228 MB', more: '+46 MB of 41 GB free' };
+const OLD = { date: '20 Oct 2026', size: '182 MB' };
+const ledgerTile = (extra = {}) => `<div class="hrow">${tile({ ...DEMO.ledger, kind: 'Audiobook · Book · 3 h 49 m', w: 358, ...extra })}</div>`;
+const updatePress = `<div style="margin-top:16px"><span class="btn pri wide">${ic('download', 18)}Update <em>· ${NEW.size}</em></span></div>`;
+const updating = `<div style="margin-top:20px"><div class="bar"><i style="width:53%"></i></div><div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span class="grow mute num" style="font:var(--type-ui)">Downloading · 120 MB of ${NEW.size}</span><span class="btn" style="height:40px">Cancel</span></div></div>`;
+const edition = (more = NEW.more) => `<div style="height:16px"></div><div class="grp">${row('New edition', `${NEW.date} · ${NEW.size}`, '')}${row('Space', more, '')}</div>`;
+const installedPage = (cta, meta, after = '', tileExtra = {}) => `${sb(true)}<div class="body">${installHero(cta, { meta, top: back + more })}${after}
+${sh('Listen')}${ledgerTile(tileExtra)}</div>${tabs('Worlds', false, true)}${hi()}`;
+
+const P12 = [
+  frame('P12a', 'Worlds, with an update', 'phone', `${sb()}<div class="hd"><h1>Worlds</h1></div><div class="body">
+${sh('In Library')}${wc({ ...W.undersong, meta: 'In Library · 1 production · 5 characters', pos: '60% 50%', tag: '<span class="tag glass">Update</span>' })}
+${sh('Available')}${wc({ ...W.copper, meta: '2 productions · 9 characters · 240 MB' })}
+</div>${tabs('Worlds', false, true)}${hi()}`),
+
+  frame('P12b', 'A world with a newer edition', 'phone', installedPage(updatePress, `Installed · ${OLD.date} · ${OLD.size}`, edition())),
+
+  frame('P12c', 'Updating', 'phone', installedPage(updating, `Installed · ${OLD.date} · ${OLD.size}`, edition())),
+
+  frame('P12d', 'Updated, the place kept', 'phone', installedPage('', `Installed · ${NEW.date} · ${NEW.size}`, '', { kind: 'Audiobook · Book · 8 h 2 m', at: 31 })),
+
+  frame('P12e', 'Downloads, while a world updates', 'phone', `${sb()}<div class="hd"><h1>Downloads</h1></div><div class="body">
+<div style="padding:8px 16px 0"><div class="sbar"><i class="me" style="width:7%"></i><i class="other" style="width:58%"></i></div><div class="leg"><span><i></i>Arke Player 3.2 GB</span><span><i class="other"></i>Other 29 GB</span><span><i class="free"></i>41 GB free</span></div></div>
+${sh('Worlds')}${dlRow(W.undersong.img, '60% 50%', 'The Undersong', `<span class="num">Updating · 53%</span>`, ic('pausec', 22), 53)}
+${sh('Added')}${dlRow(W.meridian.img, '40% 50%', 'Meridian Dust', '<span class="num">3 productions · 1.4 GB</span>', ic('more', 18))}${dlRow('char-maren.jpg', '50% 20%', 'The Salt Almanac', '<span class="num">EPUB · 2.1 MB</span>', ic('more', 18))}
+</div>${tabs('Downloads', false, true)}${hi()}`),
+
+  frame('P12f', 'Not updated', 'phone', `${installedPage(updatePress, `Installed · ${OLD.date} · ${OLD.size}`, edition('+46 MB of 20 MB free')).replace(`${tabs('Worlds', false, true)}${hi()}`, '')}${tabs('Worlds', false, true)}<div class="veil"></div>${sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="mute">${ic('alert', 34, 1.8)}</span><div style="margin-top:4px;font:var(--type-h3)">Needs 46 MB · 20 MB free</div><div class="mute num" style="font:var(--type-ui)">The Undersong · ${NEW.date}</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">Try again</span><span class="btn ghost wide">Close</span></div>`)}${hi()}`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12) };
