@@ -30,6 +30,7 @@ class _Server {
   List<int> body = const [];
   int? status;
   int hits = 0;
+  Uri? lastUri;
 
   Uri url(String path) => Uri.parse('http://127.0.0.1:${_server.port}/$path');
 
@@ -37,6 +38,7 @@ class _Server {
     final server = _Server._(await HttpServer.bind(InternetAddress.loopbackIPv4, 0));
     server._server.listen((request) async {
       server.hits++;
+      server.lastUri = request.uri;
       final response = request.response;
       if (server.status != null) {
         response.statusCode = server.status!;
@@ -255,6 +257,36 @@ void main() {
       // Kept across a restart, offline.
       server.status = 503;
       expect((await hosted().keptList())?.serial, 3);
+    });
+
+    test('manual check bypasses the daily limit and a cached redirect', () async {
+      server.body = utf8.encode(_list(serial: 3));
+      final cache = hosted();
+      await cache.refresh();
+      server.body = utf8.encode(_list(serial: 4));
+      expect((await cache.refresh())?.serial, 3);
+      expect((await cache.refresh(force: true))?.serial, 4);
+      expect(server.hits, 2);
+      expect(server.lastUri!.queryParameters['_arke_check'], isNotEmpty);
+      expect((await hosted().keptList())?.serial, 4);
+      server.body = utf8.encode(_list(serial: 2));
+      expect((await cache.refresh(force: true))?.serial, 4, reason: 'never downgrades the cache');
+    });
+
+    test('failed manual check keeps cache and permits immediate retry', () async {
+      final cache = hosted();
+      server.body = utf8.encode(_list(serial: 3));
+      await cache.refresh();
+      final before = await cache.kept.readAsString();
+      server.status = 503;
+      await expectLater(cache.refresh(force: true), throwsA(isA<HttpException>()));
+      expect(await cache.kept.readAsString(), before);
+      server.status = null;
+      server.body = utf8.encode('{broken');
+      await expectLater(cache.refresh(force: true), throwsA(isA<FormatException>()));
+      expect(await cache.kept.readAsString(), before);
+      server.body = utf8.encode(_list(serial: 4));
+      expect((await cache.refresh(force: true))?.serial, 4);
     });
 
     test('keeps what it had when the fetch fails, the list breaks, or the list is older', () async {

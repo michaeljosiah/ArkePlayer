@@ -21,6 +21,13 @@ class WorldsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final installed = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
     final available = ref.watch(availableProvider);
+    final check = ref.watch(catalogueCheckProvider);
+    final status = switch (check) {
+      CatalogueCheck.idle => null,
+      CatalogueCheck.checking => 'Checking for updates',
+      CatalogueCheck.checked => 'Checked',
+      CatalogueCheck.failed => 'Couldn’t check for updates',
+    };
     // Opening Worlds asks Arke's address for its list, at most once a day (P12 rule 1).
     ref.watch(catalogueRefreshProvider);
     final store = ref.watch(libraryStoreProvider).value;
@@ -30,7 +37,23 @@ class WorldsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ShelfHeader(title: 'Worlds'),
+            ShelfHeader(
+              title: 'Worlds',
+              trailing: RoundPress(
+                icon: Icons.refresh,
+                label: 'Check for updates',
+                busy: check == CatalogueCheck.checking,
+                onPressed: () => ref.read(catalogueCheckProvider.notifier).check(),
+              ),
+            ),
+            if (status != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(status, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.surface.mutedForeground)),
+                ),
+              ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 24),

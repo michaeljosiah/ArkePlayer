@@ -193,6 +193,19 @@ const TURNS = [
     ],
     next: `Try next: “an update while its audiobook plays” · “a world gone from Arke’s list” · “Update from Home’s Continue”`,
   },
+  {
+    id: 'p13', date: '22 October 2026', status: 'Implemented from owner request', name: 'Check for world updates now',
+    lead: `Requested by the owner: check for world updates immediately, without the daily wait or restarting. This extends the Worlds header of ${F('P11a')} and keeps the update behavior of ${F('P12')}.`,
+    rules: [
+      ['One press in Worlds', `A round refresh press at the right of the Worlds header, using the existing shelf control, with a minimum <code>44 × 44</code> target and tooltip/accessibility label <code>Check for updates</code> (${F('P13a')}). The same header is used on phone, tablet and desktop (${F('P13e')}, ${F('P13f')}); keyboard activation works. No new menu or screen.`],
+      ['Immediate, once', `Pressing checks the hosted catalogue even inside the daily interval. An automatic check already in progress finishes first; repeated presses never start overlapping requests. Automatic checks retain P12’s daily interval. Manual checks do not download a world.`],
+      ['While checking', `The icon becomes a spinner and the press is disabled. A short live status under the header says <code>Checking for updates</code> (${F('P13b')}). Existing worlds, scrolling and playback remain available.`],
+      ['The result', `On success the status says <code>Checked</code>, and every screen uses the newest catalogue immediately. Existing update tags and Update presses indicate which worlds have a newer edition (${F('P13c')}). Checked means the list was fetched, not that installed worlds were replaced. An older remote list never replaces the newer local or shipped list.`],
+      ['Retry', `Offline, a timeout, a malformed list or a save failure says <code>Couldn’t check for updates</code> (${F('P13d')}). Keep the current list and re-enable the same press for immediate retry; never show Checked for a failed request.`],
+      ['Reading and access', `Use existing theme and type tokens. Status wraps at large text sizes and is announced as a live region; controls remain reachable at 200% text, in light and dark themes. No captions under cards, layout redesign or automatic world downloads.`],
+    ],
+    next: `The daily background check and explicit manual check share the same catalogue cache.`,
+  },
 ];
 
 // ---- assemble ---------------------------------------------------------------------------------

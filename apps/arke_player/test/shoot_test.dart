@@ -34,6 +34,20 @@ final _undersong = CatalogueWorld(
   package: CataloguePackage(url: Uri.parse('https://example.org/undersong.zip'), byteLength: 386000000, sha256: 'a' * 64),
 );
 
+CatalogueWorld _p13World(bool update) => CatalogueWorld(
+  id: _undersong.id,
+  name: _undersong.name,
+  logline: _undersong.logline,
+  keyArt: _undersong.keyArt,
+  productions: _undersong.productions,
+  package: CataloguePackage(
+    url: _undersong.package!.url,
+    byteLength: _undersong.package!.byteLength,
+    sha256: _undersong.package!.sha256,
+    edition: update ? '2026-10-22' : '2026-10-21',
+  ),
+);
+
 /// An installer that reports one step and then waits, or refuses at once.
 class _FakeInstaller extends WorldInstaller {
   _FakeInstaller({this.refusal}) : super(store: LibraryStore(Directory.systemTemp), freeBytes: (_) async => null);
@@ -46,6 +60,13 @@ class _FakeInstaller extends WorldInstaller {
     onStep?.call(const Downloading(162000000, 386000000));
     return Completer<LibraryWorld>().future;
   }
+}
+
+class _FixedCatalogueCheck extends CatalogueCheckController {
+  _FixedCatalogueCheck(this.value);
+  final CatalogueCheck value;
+  @override
+  CatalogueCheck build() => value;
 }
 
 Future<void> _loadFonts() async {
@@ -281,6 +302,7 @@ void main() {
     List<CatalogueWorld> catalogue = const [],
     List<LibraryWorld> worlds = const [],
     WorldInstaller? installer,
+    CatalogueCheck? check,
     Future<void> Function(WidgetTester tester)? act,
   }) async {
     tester.view.physicalSize = size * 2;
@@ -299,6 +321,7 @@ void main() {
           catalogueProvider.overrideWith((ref) async => catalogue),
           libraryWorldsProvider.overrideWith((ref) => Stream.value(worlds)),
           if (installer != null) worldInstallerProvider.overrideWith((ref) async => installer),
+          if (check != null) catalogueCheckProvider.overrideWith(() => _FixedCatalogueCheck(check)),
         ],
         child: RepaintBoundary(
           key: key,
@@ -310,7 +333,12 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    if (check == CatalogueCheck.checking) {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    } else {
+      await tester.pumpAndSettle();
+    }
     if (act != null) {
       await act(tester);
       await tester.pumpAndSettle();
@@ -326,6 +354,37 @@ void main() {
 
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
+  for (final (name, size) in [('phone', phone), ('tablet', fold), ('desktop', const Size(1440, 900))]) {
+    for (final check in CatalogueCheck.values) {
+      testWidgets(
+        'P13 $name ${check.name}',
+        (t) => shoot(
+          t,
+          'P13-$name-${check.name}',
+          size,
+          Routes.worlds,
+          with_: worldItems,
+          catalogue: [_p13World(check == CatalogueCheck.checked)],
+          worlds: [installed],
+          check: check,
+        ),
+      );
+    }
+    testWidgets(
+      'P13 $name dark',
+      (t) => shoot(
+        t,
+        'P13-$name-dark',
+        size,
+        Routes.worlds,
+        with_: worldItems,
+        catalogue: [_p13World(true)],
+        worlds: [installed],
+        check: CatalogueCheck.checked,
+        brightness: Brightness.dark,
+      ),
+    );
+  }
   testWidgets('P8a first open', (t) => shoot(t, 'P8a-first-open', phone, Routes.welcome, with_: const []));
   testWidgets('P8b home, nothing added', (t) => shoot(t, 'P8b-home-empty', phone, Routes.home, with_: const []));
   testWidgets('P8d home, with files', (t) => shoot(t, 'P8d-home', phone, Routes.home));

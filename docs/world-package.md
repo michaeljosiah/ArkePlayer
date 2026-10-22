@@ -93,3 +93,11 @@ The spec it was packed from:
   ]
 }
 ```
+
+## Check immediately (P13)
+
+In **Worlds**, press the round **Check for updates** control in the header. It fetches a fresh
+catalogue even inside the 24-hour automatic interval, updates the visible list without a restart,
+and leaves world downloads to the existing **Update** press. While checking, the control is
+disabled and the current worlds remain visible. **Checked** confirms a successful catalogue
+check; **Couldn’t check for updates** keeps the current list and permits an immediate retry.

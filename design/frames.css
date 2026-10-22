@@ -9,6 +9,7 @@
 .ap h1,.ap h2,.ap h3,.ap p{margin:0}
 .ap.phone{width:390px;height:844px;display:flex;flex-direction:column}
 .ap.turned{width:844px;height:390px}
+.ap.desktop{width:1440px;height:900px;display:flex}
 .ap.fold{width:984px;height:1092px;display:flex}
 .ap.media{background:var(--media-overlay-bg);color:var(--media-overlay-fg)}
 .ap .mute{color:var(--muted-foreground)}

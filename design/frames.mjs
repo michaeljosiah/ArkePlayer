@@ -435,8 +435,24 @@ ${sh('Added')}${dlRow(W.meridian.img, '40% 50%', 'Meridian Dust', '<span class="
   frame('P12f', 'Not updated', 'phone', `${installedPage(updatePress, `Installed · ${OLD.date} · ${OLD.size}`, edition('+46 MB of 20 MB free')).replace(`${tabs('Worlds', false, true)}${hi()}`, '')}${tabs('Worlds', false, true)}<div class="veil"></div>${sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="mute">${ic('alert', 34, 1.8)}</span><div style="margin-top:4px;font:var(--type-h3)">Needs 46 MB · 20 MB free</div><div class="mute num" style="font:var(--type-ui)">The Undersong · ${NEW.date}</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">Try again</span><span class="btn ghost wide">Close</span></div>`)}${hi()}`),
 ];
 
+// P13 extends the existing Worlds header; the cards and navigation stay as P11/P12.
+const refreshWorlds = (state = '', wide = false) => {
+  const head = `<div class="hd"><h1 class="grow">Worlds</h1><span class="icb" title="Check for updates" style="background:var(--secondary);width:44px;height:44px">${state === 'Checking for updates' ? '<span style="width:22px;height:22px;border:2px solid var(--muted-foreground);border-right-color:transparent;border-radius:50%"></span>' : ic('replay', 22)}</span></div>`;
+  const result = state ? `<div class="mute" style="padding:0 16px 6px;font:var(--type-ui)">${state}</div>` : '';
+  const body = `<div class="body">${sh('In Library')}${wc({ ...W.undersong, meta: 'In Library · 1 production · 5 characters', pos: '60% 50%', ...(state === 'Checked' ? { tag: '<span class="tag glass">Update</span>' } : {}) })}${sh('Available')}${wc({ ...W.copper, meta: '2 productions · 9 characters · 240 MB' })}</div>`;
+  return wide ? `${tabs('Worlds', true, true)}<div class="grow" style="display:flex;flex-direction:column;min-width:0">${sb()}${head}${result}${body}</div>` : `${sb()}${head}${result}${body}${tabs('Worlds', false, true)}${hi()}`;
+};
+const P13 = [
+  frame('P13a', 'Check for updates', 'phone', refreshWorlds()),
+  frame('P13b', 'Checking, the current worlds stay', 'phone', refreshWorlds('Checking for updates')),
+  frame('P13c', 'Checked, a newer edition available', 'phone', refreshWorlds('Checked')),
+  frame('P13d', 'Check failed, retry from the same press', 'phone', refreshWorlds('Couldn’t check for updates')),
+  frame('P13e', 'Check for updates on a tablet', 'fold', refreshWorlds('Checked', true)),
+  frame('P13f', 'Check for updates on desktop', 'desktop', refreshWorlds('Checked', true)),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
-const size = (f) => f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
+const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13) };

@@ -37,18 +37,26 @@ class ShelfHeader extends StatelessWidget {
 
 /// A round 40 press on a shelf, e.g. Library's `+`.
 class RoundPress extends StatelessWidget {
-  const RoundPress({required this.icon, required this.label, required this.onPressed, super.key});
+  const RoundPress({required this.icon, required this.label, required this.onPressed, this.busy = false, super.key});
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) => IconButton.filledTonal(
-    onPressed: onPressed,
+    onPressed: busy ? null : onPressed,
     tooltip: label,
-    style: IconButton.styleFrom(minimumSize: const Size(44, 44), backgroundColor: context.surface.secondary, foregroundColor: context.surface.foreground),
-    icon: Icon(icon, size: 22),
+    style: IconButton.styleFrom(
+      minimumSize: const Size(44, 44),
+      backgroundColor: context.surface.secondary,
+      disabledBackgroundColor: context.surface.secondary,
+      foregroundColor: context.surface.foreground,
+    ),
+    icon: busy
+        ? SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: context.surface.mutedForeground))
+        : Icon(icon, size: 22),
   );
 }
 
