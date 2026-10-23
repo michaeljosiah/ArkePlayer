@@ -55,4 +55,14 @@ void main() {
     expect(quiet.guide!.sha256, 'bba813092c1180e74c7cea42cb0c8fd1b98afe3b01790c536cfc732e9189fcc0');
     expect(quiet.productions.single.title, 'The Red Quiet');
   });
+
+  test('Embers of the Fallen is pinned to its published package and its guide alone', () {
+    // The Studio's Export → Arke Player of the whole book, Chapters 1–5 narrated and Chapter 1's
+    // pictures made Tall, and the guide alone beside it (SPEC-059 R-10).
+    final embers = catalogue.singleWhere((world) => world.id == 'embers-of-the-fallen');
+    expect(embers.package!.sha256, '5f9ecf12cec4ab375244419891674930f2ef2501c6fb1d8ad06f6820caec2a72');
+    expect(embers.package!.edition, '2026-10-23-2');
+    expect(embers.guide!.sha256, '9d99ecacc5350fadaab941f34992e77c3c9c385eb764b07d295cf450710c931a');
+    expect(embers.productions.single.title, 'Threshold — Book One');
+  });
 }

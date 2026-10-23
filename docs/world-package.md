@@ -106,6 +106,12 @@ The guide shows six characters, three places, three factions and four lore entri
 
 The guide shows all seven characters and both places. Each character's Appearance is public from the start, and each Essence waits for the chapter that tells it: Lark's after Chapter 12, Bode's after Chapter 6, Ines's, Venn's and Kit's after Chapter 15, and the Mistress's and the Young's after Chapter 16. The Mistress herself appears after Chapter 5, the Young after Chapter 4 and the Ossuary Ship after Chapter 9. No lore: the world's canon threads are open, not settled. The logline is new for this edition. The world's own logline still says the old one, and the copy was given the new one before export, so a later edition needs it changed in the world first.
 
+## Embers of the Fallen
+
+**Pinned now: the 23 October 2026 edition** (list serial 12), the Studio's Export → Arke Player of a copy of the owner's world, with the book: `embers-of-the-fallen-player-2026-10-23-2.zip`, 126,871,964 bytes, SHA-256 `5f9ecf12cec4ab375244419891674930f2ef2501c6fb1d8ad06f6820caec2a72`, on ArkeStudio release `embers-of-the-fallen-2026-10-23-r1`. Schema 3, world id `embers-of-the-fallen`: all 19 chapters of *Threshold — Book One* as the book, Chapters 1–5 narrated in one ElevenLabs v4 voice (1 h 55 m), Chapter 1's 16 pictures each with its Tall (P14), Chapter 2's 12 pictures, the key art, and the guide. As with Legend of Dumah, a Player without P14 refuses the package, since it carries Talls. Chapter 1 was read again for this edition, grouped by beats as Chapters 2–5 already were. The copy's first export, `-2026-10-23`, was never published: it carried Chapters 2–5 only. Its guide alone, `embers-of-the-fallen-guide-2026-10-23-2.zip` (648,495 bytes, SHA-256 `9d99ecacc5350fadaab941f34992e77c3c9c385eb764b07d295cf450710c931a`), is on the same release.
+
+The guide shows eight characters, no places and no lore. Jace's and Reina's Appearance and Essence are public from the start, as are Jono's and Tala's Appearance. Zeb's Appearance waits for *The Observation Post*, Mag's Essence for *What the Count Missed*, Mercer's Appearance and Relationships for *The Brood*, and Aurora appears after the Epilogue. The logline is new for this edition, written to the world's Echoes lore rather than the old dimensional-Tears premise; as with The Red Quiet, only the copy carries it, so a later edition needs it set in the world first.
+
 ## Check immediately (P13)
 
 In **Worlds**, press the round **Check for updates** control in the header. It fetches a fresh
