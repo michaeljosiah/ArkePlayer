@@ -116,6 +116,18 @@ naming its edition; `Update` on the world's card and page; the download and chec
 press, the installed edition playing until the new one is checked; and P10's Replace underneath,
 places kept by chapter. Updates are pressed, never automatic.
 
+## A picture made for the screen (P14)
+
+The owner, on 23 October 2026: on a phone the listen screen letterboxes a wide picture into the top
+62% (P5a), and the picture should fill the screen. The owner chose pictures made in more than one
+shape over cropping one: the Studio makes a moment's picture Wide (16:9) and Tall (9:16), the Tall
+from the Wide (Studio 235), and the package carries both. P14 draws the phone in portrait with a
+Tall picture over the whole screen, Text off and on; everything else shows the Wide picture as
+before, and a package without Tall pictures plays as today. The Tall sample in the frames is
+real: The Undersong's p004, Maren at the ledger, made at 9:16 with its 16:9 picture as the
+reference (`assets/maren-ledger-tall.jpg`). Approved as drawn by the owner on 23 October 2026, with
+Studio 235; SPEC-058 is amended for the package next.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -141,6 +153,9 @@ places kept by chapter. Updates are pressed, never automatic.
    shows without an app update. Each entry stays pinned by length and SHA-256.
 9. **An update downloads only when pressed** (P12, approved). A world is the person's, and a
    new edition can change what they are partway through; `Wi-Fi only` applies to it.
+10. **A moment's picture comes Wide and Tall** (P14, approved). The Tall is made in the Studio
+   from the Wide; a phone in portrait shows it over the whole screen, a tablet, a Fold and a phone
+   turned show the Wide. No setting in the Player: the shape follows the screen.
 
 ## What this rests on
 

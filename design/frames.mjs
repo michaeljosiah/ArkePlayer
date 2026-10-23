@@ -451,8 +451,24 @@ const P13 = [
   frame('P13f', 'Check for updates on desktop', 'desktop', refreshWorlds('Checked', true)),
 ];
 
+// ---- P14 · a picture made for the screen ------------------------------------------------------------
+// The owner, 23 October 2026: the listen screen letterboxes a wide picture into a phone's top 62%. A
+// moment's picture now comes Wide and Tall, the Tall made in the Studio from the Wide, and a phone in
+// portrait shows the Tall one over the whole screen. P5a's chrome, scrims and words, unchanged. The
+// sample is The Undersong's p004, Maren at the ledger, made Tall from its Wide picture; its focus is at
+// the right edge, so a phone trims the door on the left and keeps the lamp whole.
+const tallBook = book().replace(`<img class="pic" src="${A}scene4-shot15.jpg" alt="" style="height:62%;object-position:50% 45%">`, `<img class="pic" src="${A}maren-ledger-tall.jpg" alt="" style="object-position:100% 50%">`);
+const textOff = bookRow2.replace('<span class="ib lab on">', '<span class="ib lab">');
+
+const P14 = [
+  frame('P14a', 'An audiobook, a Tall picture', media(), `${tallBook}${audioBar(textOff)}${hi()}`),
+
+  // With Text on, the foot scrim is solid to 240 px and fades by 600, so the words read on any picture.
+  frame('P14b', 'An audiobook, a Tall picture, Text on', media(), `${tallBook.replace('<div class="sbot" style="height:520px"></div>', '<div class="sbot" style="height:600px;background:linear-gradient(to top,color-mix(in srgb,var(--media-overlay-bg) 92%,transparent) 40%,transparent)"></div>')}<div class="words" style="bottom:286px">Odile did not answer. She held the lamp lower.</div>${audioBar(bookRow2)}${hi()}`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14) };
