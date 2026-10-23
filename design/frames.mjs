@@ -454,9 +454,10 @@ const P13 = [
 // ---- P14 · a picture made for the screen ------------------------------------------------------------
 // The owner, 23 October 2026: the listen screen letterboxes a wide picture into a phone's top 62%. A
 // moment's picture now comes Wide and Tall, the Tall made in the Studio from the Wide, and a phone in
-// portrait shows the Tall one over the whole screen. P5a's chrome, scrims and words, unchanged; the
-// Tall sample is a stand-in crop of the world's key art until the Studio makes one.
-const tallBook = book().replace(`<img class="pic" src="${A}scene4-shot15.jpg" alt="" style="height:62%;object-position:50% 45%">`, `<img class="pic" src="${A}world-undersong-tall.jpg" alt="" style="object-position:50% 50%">`);
+// portrait shows the Tall one over the whole screen. P5a's chrome, scrims and words, unchanged. The
+// sample is The Undersong's p004, Maren at the ledger, made Tall from its Wide picture; its focus is at
+// the right edge, so a phone trims the door on the left and keeps the lamp whole.
+const tallBook = book().replace(`<img class="pic" src="${A}scene4-shot15.jpg" alt="" style="height:62%;object-position:50% 45%">`, `<img class="pic" src="${A}maren-ledger-tall.jpg" alt="" style="object-position:100% 50%">`);
 const textOff = bookRow2.replace('<span class="ib lab on">', '<span class="ib lab">');
 
 const P14 = [

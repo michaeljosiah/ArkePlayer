@@ -123,9 +123,9 @@ The owner, on 23 October 2026: on a phone the listen screen letterboxes a wide p
 shape over cropping one: the Studio makes a moment's picture Wide (16:9) and Tall (9:16), the Tall
 from the Wide (Studio 235), and the package carries both. P14 draws the phone in portrait with a
 Tall picture over the whole screen, Text off and on; everything else shows the Wide picture as
-before, and a package without Tall pictures plays as today. The Tall sample in the frames is a
-9:16 crop of the world's key art, a stand-in until the Studio makes one. SPEC-058 is amended for
-the package after approval.
+before, and a package without Tall pictures plays as today. The Tall sample in the frames is
+real: The Undersong's p004, Maren at the ledger, made at 9:16 with its 16:9 picture as the
+reference (`assets/maren-ledger-tall.jpg`). SPEC-058 is amended for the package after approval.
 
 ## Calls for the owner
 
