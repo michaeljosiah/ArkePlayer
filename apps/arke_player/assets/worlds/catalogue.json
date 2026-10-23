@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 6,
+  "serial": 7,
   "worlds": [
     {
       "id": "the-undersong",
@@ -35,18 +35,18 @@
         { "title": "Whispers from the Void", "kind": "Audiobook · 29 m", "picture": "assets/worlds/legend-of-dumah/whispers-from-the-void.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-player-2026-10-22.zip",
-        "byteLength": 35030250,
-        "sha256": "15988086445f6eb181f11111c11f5e7a0f627ab251bfc1584128a1bdc5be41c7",
-        "edition": "2026-10-22",
-        "fingerprint": "6ef976d2e0f935b577461f7b208e8c0ea7990091927a70f50e1d2cf1ce2e9585"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-player-2026-10-23.zip",
+        "byteLength": 35606920,
+        "sha256": "969dfa0f4b65bb81339e65a8e1f29b7bf948d60b81df9da65d48c6ba8265c25e",
+        "edition": "2026-10-23",
+        "fingerprint": "5a268bbca16af10483a96de146e22b5369b09b1915e6645661741ddfd018609f"
       },
       "guide": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-guide-2026-10-22.zip",
-        "byteLength": 910063,
-        "sha256": "101bd41ae78f6336aa73fb0ac6c77dceb292067ab038c7641656f4bdcc41ef84",
-        "edition": "2026-10-22",
-        "fingerprint": "bad250c25240b6e33ab3bed1b2ab0eee63137003053695b38c4c5c9fe7cbad46"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-guide-2026-10-23.zip",
+        "byteLength": 1486733,
+        "sha256": "b8fd89e57fdfc2df1307e4f84a6019eac5218013f21cfb8a2206de34448befe4",
+        "edition": "2026-10-23",
+        "fingerprint": "8e33ace0ff4357e3cad6493749305f07ca52d91f3805d5b9aa92f48c216fa8eb"
       }
     }
   ]
