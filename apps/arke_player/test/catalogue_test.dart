@@ -60,8 +60,8 @@ void main() {
     // The Studio's Export → Arke Player of the whole book, Chapters 1–5 narrated and Chapter 1's
     // pictures made Tall, and the guide alone beside it (SPEC-059 R-10).
     final embers = catalogue.singleWhere((world) => world.id == 'embers-of-the-fallen');
-    expect(embers.package!.sha256, '5f9ecf12cec4ab375244419891674930f2ef2501c6fb1d8ad06f6820caec2a72');
-    expect(embers.package!.edition, '2026-10-23-2');
+    expect(embers.package!.sha256, '466e33ca699ec47df2b56ae5f8d2f3f80609bf06056a39094d421bb85feb4087');
+    expect(embers.package!.edition, '2026-10-23-4');
     expect(embers.guide!.sha256, '9d99ecacc5350fadaab941f34992e77c3c9c385eb764b07d295cf450710c931a');
     expect(embers.productions.single.title, 'Threshold — Book One');
   });

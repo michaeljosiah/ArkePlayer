@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 12,
+  "serial": 13,
   "worlds": [
     {
       "id": "the-undersong",
@@ -78,14 +78,14 @@
       "logline": "When a covert military-scientific team investigating impossible spatial anomalies in the Swiss Alps retrieves a living organism from beyond known reality, they trigger a biological nightmare that threatens to break containment. As they race to stop it, they discover another armed expedition in the valley—one that knows far more about the ancient machinery beneath the mountain than it will reveal.",
       "keyArt": "assets/worlds/embers-of-the-fallen/key-art.jpg",
       "productions": [
-        { "title": "Threshold — Book One", "kind": "Audiobook · Book · 1 h 55 m", "picture": "assets/worlds/embers-of-the-fallen/key-art.jpg" }
+        { "title": "Threshold — Book One", "kind": "Audiobook · Book · 1 h 54 m", "picture": "assets/worlds/embers-of-the-fallen/key-art.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-player-2026-10-23-2.zip",
-        "byteLength": 126871964,
-        "sha256": "5f9ecf12cec4ab375244419891674930f2ef2501c6fb1d8ad06f6820caec2a72",
-        "edition": "2026-10-23-2",
-        "fingerprint": "211ae97e593b8a16225853c10f8e6d6b0f2ad96411d13e56fb891a45567c1c83"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-player-2026-10-23-4.zip",
+        "byteLength": 126323097,
+        "sha256": "466e33ca699ec47df2b56ae5f8d2f3f80609bf06056a39094d421bb85feb4087",
+        "edition": "2026-10-23-4",
+        "fingerprint": "e123d8d83ce245157b2d5e47bfb9ad07e7926ec7a51263b055796ca956367f36"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-guide-2026-10-23-2.zip",
