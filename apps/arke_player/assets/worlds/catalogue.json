@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 9,
+  "serial": 10,
   "worlds": [
     {
       "id": "the-undersong",
@@ -47,6 +47,29 @@
         "sha256": "b8fd89e57fdfc2df1307e4f84a6019eac5218013f21cfb8a2206de34448befe4",
         "edition": "2026-10-23",
         "fingerprint": "8e33ace0ff4357e3cad6493749305f07ca52d91f3805d5b9aa92f48c216fa8eb"
+      }
+    },
+    {
+      "id": "the-red-quiet",
+      "name": "The Red Quiet",
+      "logline": "A colony crash-lands on a moon its survey called dead. The moon is not empty, and the Mistress was here first.",
+      "keyArt": "assets/worlds/the-red-quiet/key-art.jpg",
+      "productions": [
+        { "title": "The Red Quiet", "kind": "Audiobook · Book · 15 m", "picture": "assets/worlds/the-red-quiet/key-art.jpg" }
+      ],
+      "package": {
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-player-2026-10-23-2.zip",
+        "byteLength": 22583065,
+        "sha256": "c490b30cb868a6fd4cd085f26c74f76b52ef90e0607ca9ffc49fdcdb095e9753",
+        "edition": "2026-10-23-2",
+        "fingerprint": "6d3528d910f9fd1b37f2d31bca2dc3cdec1af23c864399ca12340da8e7db6273"
+      },
+      "guide": {
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-guide-2026-10-23.zip",
+        "byteLength": 1131799,
+        "sha256": "bba813092c1180e74c7cea42cb0c8fd1b98afe3b01790c536cfc732e9189fcc0",
+        "edition": "2026-10-23",
+        "fingerprint": "dcbc3059105a75e13603450be41347ad8b17feac106b8b6e4eb42219bac8562d"
       }
     }
   ]

@@ -59,6 +59,7 @@ flutter:
     - assets/worlds/catalogue.json
     - assets/worlds/undersong/
     - assets/worlds/legend-of-dumah/
+    - assets/worlds/the-red-quiet/
 
   # The design's faces (OFL-1.1, licences beside the files): Geist Sans for everything, Jost for
   # the wordmark. Latin only, as the design master vendors them; other scripts fall back to the

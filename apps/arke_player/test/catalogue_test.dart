@@ -45,4 +45,14 @@ void main() {
     expect(dumah.guide!.sha256, 'b8fd89e57fdfc2df1307e4f84a6019eac5218013f21cfb8a2206de34448befe4');
     expect(dumah.productions.single.title, 'Whispers from the Void');
   });
+
+  test('The Red Quiet is pinned to its published package and its guide alone', () {
+    // The Studio's Export → Arke Player of the whole novel as a book, Chapter 1 narrated with Tall
+    // pictures, and the guide alone beside it (SPEC-059 R-10).
+    final quiet = catalogue.singleWhere((world) => world.id == 'the-red-quiet');
+    expect(quiet.package!.sha256, 'c490b30cb868a6fd4cd085f26c74f76b52ef90e0607ca9ffc49fdcdb095e9753');
+    expect(quiet.package!.edition, '2026-10-23-2');
+    expect(quiet.guide!.sha256, 'bba813092c1180e74c7cea42cb0c8fd1b98afe3b01790c536cfc732e9189fcc0');
+    expect(quiet.productions.single.title, 'The Red Quiet');
+  });
 }

@@ -100,6 +100,12 @@ The spec it was packed from:
 
 The guide shows six characters, three places, three factions and four lore entries. Each shows only an `In the story` section written for readers on the copy, and links that give nothing away. The world's own sheets and canon carry the whole book's secrets, so a later edition should be made the same way: from a copy whose reader text and links are checked against the chapters it narrates. Lucien's portrait keeps his face hidden, because Book One never describes him. The factions have no pictures yet.
 
+## The Red Quiet
+
+**Pinned now: the 23 October 2026 edition** (list serial 10), the Studio's Export → Arke Player of a copy of the owner's world, with the book: `the-red-quiet-player-2026-10-23-2.zip`, 22,583,065 bytes, SHA-256 `c490b30cb868a6fd4cd085f26c74f76b52ef90e0607ca9ffc49fdcdb095e9753`, on ArkeStudio release `the-red-quiet-2026-10-23-r1`. Schema 3, world id `the-red-quiet`: all 17 chapters as the book, Chapter 1 (*Landfall*) narrated by Ines Marr's designed Gemini voice (15 m 29 s), its 9 pictures each with its Tall (P14), the key art, and the guide. Part Two is narrated by the Mistress's own voice (a chapter narrator, ArkeStudio PR #2168) once it is read. As with Legend of Dumah, a Player without P14 refuses the package, since it carries Talls. The copy's first export, `-2026-10-23`, was never published: it carried the old logline and no guide. Its guide alone, `the-red-quiet-guide-2026-10-23.zip` (1,131,799 bytes, SHA-256 `bba813092c1180e74c7cea42cb0c8fd1b98afe3b01790c536cfc732e9189fcc0`), is on the same release.
+
+The guide shows all seven characters and both places. Each character's Appearance is public from the start, and each Essence waits for the chapter that tells it: Lark's after Chapter 12, Bode's after Chapter 6, Ines's, Venn's and Kit's after Chapter 15, and the Mistress's and the Young's after Chapter 16. The Mistress herself appears after Chapter 5, the Young after Chapter 4 and the Ossuary Ship after Chapter 9. No lore: the world's canon threads are open, not settled. The logline is new for this edition. The world's own logline still says the old one, and the copy was given the new one before export, so a later edition needs it changed in the world first.
+
 ## Check immediately (P13)
 
 In **Worlds**, press the round **Check for updates** control in the header. It fetches a fresh
