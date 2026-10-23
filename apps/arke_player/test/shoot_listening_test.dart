@@ -118,7 +118,9 @@ void main() {
       File('$_media/chapters.m4b').copySync('${source.path}/$name');
     }
     // Two chapters of six seconds: the opening, a wide picture at 1 s with its focus, a tall one at
-    // 3 s; then the rail book on the wide one again.
+    // 3 s; then the rail book on the wide one again, made Tall as well (P14), with a phrase for Text.
+    // The Tall picture is P14's own when the design has it, else Maren's portrait.
+    final tall = File('$_design/maren-ledger-tall.jpg').existsSync() ? '$_design/maren-ledger-tall.jpg' : '$_design/char-maren.jpg';
     final spec = WorldSpec(
       id: 'undersong',
       edition: '2026-10-21',
@@ -156,7 +158,15 @@ void main() {
                 'title': 'The rail book',
                 'audio': '${source.path}/ch2.m4a',
                 'pictures': [
-                  {'at': 0, 'picture': '$_design/drowned-quarter.jpg'},
+                  {
+                    'at': 0,
+                    'picture': '$_design/drowned-quarter.jpg',
+                    'tall': tall,
+                    'focus': {'x': 1, 'y': 0.5},
+                  },
+                ],
+                'phrases': [
+                  {'at': 500, 'end': 5000, 'text': 'Odile did not answer. She held the lamp lower.'},
                 ],
               },
             ],
@@ -182,7 +192,9 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.runAsync(() async {
       for (final path in {
-        for (final chapter in plan.chapters) ...[for (final picture in chapter.pictures) plan.pathOf(picture.picture)],
+        for (final chapter in plan.chapters) ...[
+          for (final picture in chapter.pictures) ...[plan.pathOf(picture.picture), if (picture.tall != null) plan.pathOf(picture.tall!)],
+        ],
       }..add(plan.pathOf(plan.document.cover!))) {
         final loaded = Completer<void>();
         FileImage(File(path))
@@ -229,4 +241,9 @@ void main() {
   testWidgets('P5a a tall picture', (t) => shoot(t, 'P5a-listening-tall', phone, const Duration(milliseconds: 4000)));
   testWidgets('P5a the opening', (t) => shoot(t, 'P5a-listening-opening', phone, const Duration(milliseconds: 400)));
   testWidgets('P6f on a fold', (t) => shoot(t, 'P6f-listening-fold', fold, const Duration(milliseconds: 2000), text: true));
+  // The rail book's picture comes Tall as well: the whole screen on a phone, the Wide one on a fold.
+  Duration railBook() => plan.starts[1] + const Duration(milliseconds: 1500);
+  testWidgets('P14a a Tall picture', (t) => shoot(t, 'P14a-listening-tall', phone, railBook()));
+  testWidgets('P14b a Tall picture, Text on', (t) => shoot(t, 'P14b-listening-tall-text', phone, railBook(), text: true));
+  testWidgets('P14 the same moment on a fold', (t) => shoot(t, 'P14-listening-fold-wide', fold, railBook(), text: true));
 }

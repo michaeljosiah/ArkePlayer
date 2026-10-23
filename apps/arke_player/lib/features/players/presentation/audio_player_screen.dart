@@ -94,12 +94,13 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
   }
 
   /// The picture of the moment over the top 62%, the chapter and Slow push over it, Text above the
-  /// transport (P5a).
+  /// transport (P5a). A phone in portrait on a moment with a Tall picture shows that one over the
+  /// whole screen instead, the chrome and words on P14's foot scrim (SPEC-058 R-39).
   Widget _illustratedBody(BuildContext context, ListeningPlan plan) {
     final item = widget.item;
     final size = MediaQuery.sizeOf(context);
-    // The top 62% on a phone; 16:9 across a Fold (R-22).
-    final frame = size.width >= WindowBands.fold ? (size.width * 9 / 16).clamp(0.0, size.height * 0.62) : size.height * 0.62;
+    // Narrower than a Fold and taller than wide: a tablet, a Fold and a phone turned show Wide.
+    final portraitPhone = size.width < WindowBands.fold && size.height > size.width;
     final settings = ref.watch(settingsProvider).value ?? const DeviceSettings();
     final push = settings.slowPushIn(reducedMotion: MediaQuery.disableAnimationsOf(context));
     final controller = ref.read(settingsProvider.notifier);
@@ -111,6 +112,15 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
         builder: (context, snapshot) {
           final position = snapshot.data ?? _engine.now;
           final index = _engine.chapterAt(position);
+          final shown = plan.shownAt(position);
+          final tall = portraitPhone && shown?.tallPath != null;
+          // The top 62% on a phone; 16:9 across a Fold (R-22); the whole screen for a Tall picture
+          // (R-39), decided per moment, so turning the phone swaps the shape mid-hold.
+          final frame = tall
+              ? size.height
+              : size.width >= WindowBands.fold
+              ? (size.width * 9 / 16).clamp(0.0, size.height * 0.62)
+              : size.height * 0.62;
           return Stack(
             fit: StackFit.expand,
             children: [
@@ -122,8 +132,14 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
                 child: StreamBuilder<bool>(
                   stream: _engine.playingStream,
                   initialData: _engine.playing,
-                  builder: (context, playing) =>
-                      PictureOfTheMoment(shown: plan.shownAt(position), position: position, playing: playing.data ?? false, speed: _engine.speed, push: push),
+                  builder: (context, playing) => PictureOfTheMoment(
+                    shown: tall ? shown!.tall : shown,
+                    position: position,
+                    playing: playing.data ?? false,
+                    speed: _engine.speed,
+                    push: push,
+                    fill: tall,
+                  ),
                 ),
               ),
               // The two scrims the chrome rests on (Studio 186): one from the top, one from the foot.
@@ -138,22 +154,45 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                left: 0,
-                right: 0,
-                top: frame * 0.6,
-                bottom: 0,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: const [Color(0x000A0A0A), bg, bg],
-                      stops: [0, (frame * 0.4 / (size.height - frame * 0.6)).clamp(0.0, 1.0), 1],
+              if (tall)
+                // P14's foot scrim over a picture that runs to the bottom: 520 high, 90% from its
+                // lowest 12%; with Text on 600 high and 92% to 40% of it, so the words read on any
+                // picture (P14b).
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: (settings.text ? 600.0 : 520.0).clamp(0.0, size.height),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: settings.text
+                            ? const [Color(0xEB0A0A0A), Color(0xEB0A0A0A), Color(0x000A0A0A)]
+                            : const [Color(0xE60A0A0A), Color(0xE60A0A0A), Color(0x000A0A0A)],
+                        stops: settings.text ? const [0, 0.4, 1] : const [0, 0.12, 1],
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: frame * 0.6,
+                  bottom: 0,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: const [Color(0x000A0A0A), bg, bg],
+                        stops: [0, (frame * 0.4 / (size.height - frame * 0.6)).clamp(0.0, 1.0), 1],
+                      ),
                     ),
                   ),
                 ),
-              ),
               SafeArea(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

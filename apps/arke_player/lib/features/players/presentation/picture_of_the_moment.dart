@@ -10,14 +10,26 @@ import '../application/listening_plan.dart';
 /// second at its time, letterboxed in its place, and with Slow push moves 6% closer over its hold
 /// about its focus, starting again at each crossfade (SPEC-047 R-75, R-136). Only the push crops it.
 /// A picture with motion plays its loop, muted, over its still once the loop is ready.
+///
+/// With [fill], a Tall picture on a phone in portrait (P14, SPEC-058 R-39): it covers its place
+/// instead, and a phone narrower than 9:16 trims a sliver at each side about the focus.
 class PictureOfTheMoment extends StatelessWidget {
-  const PictureOfTheMoment({required this.shown, required this.position, required this.playing, required this.speed, required this.push, super.key});
+  const PictureOfTheMoment({
+    required this.shown,
+    required this.position,
+    required this.playing,
+    required this.speed,
+    required this.push,
+    this.fill = false,
+    super.key,
+  });
 
   final ShownPicture? shown;
   final Duration position;
   final bool playing;
   final double speed;
   final bool push;
+  final bool fill;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +39,15 @@ class PictureOfTheMoment extends StatelessWidget {
       layoutBuilder: (current, previous) => Stack(fit: StackFit.expand, children: [...previous, ?current]),
       child: shown == null
           ? const ColoredBox(key: ValueKey('none'), color: ArkeColors.mediaOverlayBackground)
-          : _Pushed(key: ValueKey('${shown.path}@${shown.start.inMilliseconds}'), shown: shown, position: position, playing: playing, speed: speed, push: push),
+          : _Pushed(
+              key: ValueKey('${shown.path}@${shown.start.inMilliseconds}'),
+              shown: shown,
+              position: position,
+              playing: playing,
+              speed: speed,
+              push: push,
+              fill: fill,
+            ),
     );
   }
 }
@@ -35,13 +55,14 @@ class PictureOfTheMoment extends StatelessWidget {
 /// One picture across its hold. The push is an animation re-anchored to the playing position at
 /// each update, so it pauses with the audio and keeps to the speed rather than the wall clock.
 class _Pushed extends StatefulWidget {
-  const _Pushed({required this.shown, required this.position, required this.playing, required this.speed, required this.push, super.key});
+  const _Pushed({required this.shown, required this.position, required this.playing, required this.speed, required this.push, required this.fill, super.key});
 
   final ShownPicture shown;
   final Duration position;
   final bool playing;
   final double speed;
   final bool push;
+  final bool fill;
 
   @override
   State<_Pushed> createState() => _PushedState();
@@ -89,10 +110,13 @@ class _PushedState extends State<_Pushed> with SingleTickerProviderStateMixin {
     final alignment = focus == null ? Alignment.center : Alignment(focus.x * 2 - 1, focus.y * 2 - 1);
     // The picture at its own size, pushed about its focus and clipped to itself, then letterboxed
     // whole: the push is measured on the picture, so the focus holds still and the window never
-    // leaves it (R-23).
+    // leaves it (R-23). Filling, it covers its place instead, kept about the same focus (R-39).
     final still = Image.file(File(widget.shown.path), gaplessPlayback: true);
     final motion = widget.shown.motionPath;
     return FittedBox(
+      fit: widget.fill ? BoxFit.cover : BoxFit.contain,
+      alignment: widget.fill ? alignment : Alignment.center,
+      clipBehavior: widget.fill ? Clip.hardEdge : Clip.none,
       child: ClipRect(
         child: AnimatedBuilder(
           animation: _progress,
