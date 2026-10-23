@@ -40,9 +40,9 @@ void main() {
     // The Studio's Export → Arke Player of the Prologue and Chapters 1 and 2, narrated with Tall pictures, without the book,
     // and the guide alone beside it (SPEC-059 R-10).
     final dumah = catalogue.singleWhere((world) => world.id == 'legend-of-dumah');
-    expect(dumah.package!.sha256, 'a914d0452131dd29a9f23d712866bbc4508d46c0782d391b582b25d9249137a8');
-    expect(dumah.package!.edition, '2026-10-23-3');
-    expect(dumah.guide!.sha256, 'b8fd89e57fdfc2df1307e4f84a6019eac5218013f21cfb8a2206de34448befe4');
+    expect(dumah.package!.sha256, 'ec20646c486f1ef47b21119bfcc09692874d14256560085b77b52a8213a9c731');
+    expect(dumah.package!.edition, '2026-10-23-4');
+    expect(dumah.guide!.sha256, '99eb0e765e01eaf7421a0c690159480557c234c93cd47139ad901c2754315239');
     expect(dumah.productions.single.title, 'Whispers from the Void');
   });
 
