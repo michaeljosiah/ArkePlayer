@@ -35,4 +35,14 @@ void main() {
     expect(undersong.replaces, ['undersong']);
     expect(undersong.productions.single.title, 'The Ledger of Nights');
   });
+
+  test('Legend of Dumah is pinned to its published package and its guide alone', () {
+    // The Studio's Export → Arke Player of the Prologue and Chapter 1, narrated, without the book,
+    // and the guide alone beside it (SPEC-059 R-10).
+    final dumah = catalogue.singleWhere((world) => world.id == 'legend-of-dumah');
+    expect(dumah.package!.sha256, '15988086445f6eb181f11111c11f5e7a0f627ab251bfc1584128a1bdc5be41c7');
+    expect(dumah.package!.edition, '2026-10-22');
+    expect(dumah.guide!.sha256, '101bd41ae78f6336aa73fb0ac6c77dceb292067ab038c7641656f4bdcc41ef84');
+    expect(dumah.productions.single.title, 'Whispers from the Void');
+  });
 }

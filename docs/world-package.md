@@ -94,6 +94,12 @@ The spec it was packed from:
 }
 ```
 
+## Legend of Dumah
+
+**Pinned now: the 22 October 2026 edition** (list serial 6), the Studio's Export → Arke Player of a copy of the owner's world, without the book: `legend-of-dumah-player-2026-10-22.zip`, 35,030,250 bytes, SHA-256 `15988086445f6eb181f11111c11f5e7a0f627ab251bfc1584128a1bdc5be41c7`, on ArkeStudio release `legend-of-dumah-2026-10-22-r1`. Schema 3, world id `legend-of-dumah`: the Prologue and Chapter 1 of *Whispers from the Void* narrated in one designed Gemini voice (28 m 47 s), Chapter 1's 17 pictures, the key art, and the guide. Its guide alone, `legend-of-dumah-guide-2026-10-22.zip` (910,063 bytes, SHA-256 `101bd41ae78f6336aa73fb0ac6c77dceb292067ab038c7641656f4bdcc41ef84`), is on the same release.
+
+The guide shows six characters, three places, three factions and four lore entries. Each shows only an `In the story` section written for readers on the copy, and links that give nothing away. The world's own sheets and canon carry the whole book's secrets, so a later edition should be made the same way: from a copy whose reader text and links are checked against the chapters it narrates. Places have no pictures yet, and Zeth and Lucien no portraits.
+
 ## Check immediately (P13)
 
 In **Worlds**, press the round **Check for updates** control in the header. It fetches a fresh
