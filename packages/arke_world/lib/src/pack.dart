@@ -46,7 +46,7 @@ class WorldSpec {
     Object? resolved(Object? value, String key) => switch (value) {
       Map<String, Object?>() => {for (final MapEntry(key: k, value: v) in value.entries) k: resolved(v, k)},
       List<Object?>() => [for (final v in value) resolved(v, key)],
-      String() when const {'audio', 'picture', 'opening', 'cover', 'video'}.contains(key) => path(value),
+      String() when const {'audio', 'picture', 'tall', 'opening', 'cover', 'video'}.contains(key) => path(value),
       _ => value,
     };
     return WorldSpec(
@@ -237,6 +237,8 @@ Future<(Map<String, Object?>, Duration)> _listening(
             'at': p['at'],
             if (p['hold'] != null) 'hold': p['hold'],
             'picture': await picture(p['picture']! as String),
+            // The same moment at 9:16 (SPEC-058 R-37).
+            if (p['tall'] != null) 'tall': await picture(p['tall']! as String),
             if (p['focus'] != null) 'focus': p['focus'],
             if (p['motion'] case final Map<String, Object?> motion)
               'motion': {

@@ -88,6 +88,8 @@ void main() {
               final chapter = document.chapters.singleWhere((c) => c.id == probe['chapter']);
               final time = Duration(milliseconds: probe['ms']! as int);
               expect(chapter.pictureAt(time)?.picture, probe['picture'], reason: '${chapter.id} @ ${probe['ms']}: picture');
+              // The Tall picture showing then, where the case says (SPEC-058 R-37).
+              if (probe.containsKey('tall')) expect(chapter.pictureAt(time)?.tall, probe['tall'], reason: '${chapter.id} @ ${probe['ms']}: tall');
               final phrase = chapter.phraseAt(time);
               expect(phrase == null ? null : chapter.phrases.indexOf(phrase), probe['phrase'], reason: '${chapter.id} @ ${probe['ms']}: phrase');
             }

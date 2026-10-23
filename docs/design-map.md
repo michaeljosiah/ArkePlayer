@@ -105,6 +105,16 @@ Failure keeps the list visible and permits an immediate retry. No world download
 |---|---|---|---|
 | P13a–P13f | Manual check: idle, checking, checked and failed; phone, tablet and desktop | `/worlds` | `features/worlds/presentation/worlds_screen.dart`, `features/worlds/application/worlds.dart`; `arke_world` `hosted.dart` |
 
+## A picture made for the screen (P14, built)
+
+Approved on 23 October 2026 with Studio 235 (SPEC-058 R-37 – R-40, ArkePlayer #8). A listening picture
+may name `tall`, the same moment at 9:16. A phone in portrait shows it over the whole screen, cover
+fit about the focus, on P14's foot scrim. Everything else shows the Wide picture as P5a and P6f do.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P14a, P14b | Audiobook on a phone, a Tall picture, Text off and on | `/open/:itemId` | `features/players/presentation/audio_player_screen.dart`, `picture_of_the_moment.dart`; `features/players/application/listening_plan.dart`; `arke_world` `listening.dart` |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.

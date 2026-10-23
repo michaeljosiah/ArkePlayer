@@ -52,12 +52,18 @@ class ListeningMotion {
 /// A picture of the moment: from [at] for [hold], else until the next picture or the chapter's end
 /// (R-14).
 class ListeningPicture {
-  const ListeningPicture({required this.at, required this.picture, this.hold, this.focus, this.motion});
+  const ListeningPicture({required this.at, required this.picture, this.hold, this.tall, this.focus, this.motion});
   final Duration at;
   final Duration? hold;
 
-  /// An asset id.
+  /// An asset id: the moment's picture, Wide, or Tall when a production makes only Tall.
   final String picture;
+
+  /// An asset id: the same moment made at 9:16, which a phone in portrait shows over the whole
+  /// screen (SPEC-058 R-37, R-39; Player P14).
+  final String? tall;
+
+  /// Applies to whichever of [picture] and [tall] is shown.
   final ListeningFocus? focus;
   final ListeningMotion? motion;
 }
@@ -141,7 +147,7 @@ class ListeningDocument {
     for (final chapter in chapters) ...[
       chapter.audio,
       ?chapter.opening,
-      for (final picture in chapter.pictures) ...[picture.picture, ?picture.motion?.video],
+      for (final picture in chapter.pictures) ...[picture.picture, ?picture.tall, ?picture.motion?.video],
     ],
   };
 }
@@ -253,7 +259,7 @@ ListeningDocument _read(String text, Map<String, WorldAsset> assets) {
     if (rawPictures is! List<Object?> || rawPictures.length > _maxPictures) _notAPackage('chapter $id pictures');
     final pictures = <ListeningPicture>[];
     for (final rawPicture in rawPictures) {
-      final p = _object(rawPicture, 'a picture of chapter $id', {'at', 'hold', 'picture', 'focus', 'motion'});
+      final p = _object(rawPicture, 'a picture of chapter $id', {'at', 'hold', 'picture', 'tall', 'focus', 'motion'});
       final at = time(p['at'], 'chapter $id picture at');
       final hold = p['hold'] == null ? null : time(p['hold'], 'chapter $id picture hold');
       if (at >= duration) _notAPackage('chapter $id: a picture after its end');
@@ -281,7 +287,16 @@ ListeningDocument _read(String text, Map<String, WorldAsset> assets) {
         };
         motion = ListeningMotion(video: asset(m['video'], motionMediaTypes, 'a motion'), behavior: behavior);
       }
-      pictures.add(ListeningPicture(at: at, hold: hold, picture: asset(p['picture'], pictureMediaTypes, 'a picture'), focus: focus, motion: motion));
+      pictures.add(
+        ListeningPicture(
+          at: at,
+          hold: hold,
+          picture: asset(p['picture'], pictureMediaTypes, 'a picture'),
+          tall: p['tall'] == null ? null : asset(p['tall'], pictureMediaTypes, 'a tall picture'),
+          focus: focus,
+          motion: motion,
+        ),
+      );
     }
 
     final rawPhrases = c['phrases'] ?? const <Object?>[];

@@ -6,11 +6,24 @@ import 'package:arke_world/arke_world.dart';
 /// What shows at a moment of an illustrated narration: a picture with the span it shows for, on
 /// the book's clock, so Slow push can move across it (SPEC-058 R-22, R-23).
 class ShownPicture {
-  const ShownPicture({required this.path, required this.start, required this.end, this.focus, this.motionPath, this.motionRepeats = true, this.pushes = true});
+  const ShownPicture({
+    required this.path,
+    required this.start,
+    required this.end,
+    this.tallPath,
+    this.focus,
+    this.motionPath,
+    this.motionRepeats = true,
+    this.pushes = true,
+  });
 
   final String path;
   final Duration start;
   final Duration end;
+
+  /// The same moment made at 9:16, which a phone in portrait shows over the whole screen
+  /// (SPEC-058 R-37, R-39; Player P14). Null for a picture made Wide alone, an opening and the cover.
+  final String? tallPath;
   final ListeningFocus? focus;
   final String? motionPath;
   final bool motionRepeats;
@@ -18,6 +31,11 @@ class ShownPicture {
   /// Slow push moves stills only: a loop keeps its own movement, and the cover stays still
   /// (SPEC-047 R-75).
   final bool pushes;
+
+  /// The Tall picture in this one's place, over the same span, so turning the phone keeps the
+  /// place in the hold (P14 rule 4). A loop is made from the Wide picture and would not cover the
+  /// Tall one, so the Tall picture shows as a still and Slow push moves it.
+  ShownPicture get tall => ShownPicture(path: tallPath ?? path, start: start, end: end, tallPath: tallPath, focus: focus, pushes: tallPath != null || pushes);
 
   /// How far through its span [time] is, 0 to 1.
   double progressAt(Duration time) {
@@ -62,6 +80,7 @@ class ListeningPlan {
         path: pathOf(picture.picture),
         start: start + picture.at,
         end: start + end,
+        tallPath: picture.tall == null ? null : pathOf(picture.tall!),
         focus: picture.focus,
         motionPath: picture.motion == null ? null : pathOf(picture.motion!.video),
         motionRepeats: picture.motion?.behavior != MotionBehavior.hold,
