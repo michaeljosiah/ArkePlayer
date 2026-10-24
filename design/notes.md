@@ -178,8 +178,7 @@ Approved by the owner on 24 October 2026, with calls 14 and 15: "We need to supp
 seems to be an industry norm. But we can always mix and match." In the same message they asked to
 see the pill, so P16h – P16j draw it. On a phone, the page runs under the pill to the foot. A
 playing chapter's dock floats above the pill. On a Fold, the pill takes the rail's place, which
-gives the page the full width. Call 16 stays open until the owner chooses, and the bar and rail
-stand until then.
+gives the page the full width. Seeing it, the owner chose the pill: "Pill is a better design."
 
 ## Calls for the owner
 
@@ -223,9 +222,8 @@ stand until then.
    production without one shows the Wide whole over its blur. The Studio half needs a turn of its own.
 15. **Discover's feature and band are named in Arke's list** (P16, approved), one line each. With
    neither named, the feature is the newest release and the band the newest world.
-16. **The tabs as a pill** (P16h – P16j, drawn for the owner's choice). Netflix floats its tabs as
-   a pill over the page on both a phone and a tablet. The pill would replace P1's bar and P6e's
-   rail; until it is chosen, they stand.
+16. **The tabs as a pill** (P16h – P16j, chosen by the owner). Netflix floats its tabs as a pill
+   over the page on both a phone and a tablet. The pill replaces P1's bar and P6e's rail.
 
 ## What this rests on
 
