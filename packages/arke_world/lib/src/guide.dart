@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'manifest.dart';
+import 'music.dart';
 
 /// A world's guide (SPEC-059 R-11): what its author made public of the world's characters, places
 /// and settled lore, each from the start or after a chapter. Data only, and only what a reader is
@@ -8,8 +9,9 @@ import 'manifest.dart';
 const guideMediaType = 'application/vnd.arke.guide+json';
 const guideFormat = 'arke-guide';
 
-/// Version 2 (SPEC-059 R-28) adds `teasers`; version 1, a guide with none, is still read.
-const guideVersion = 2;
+/// Version 2 (SPEC-059 R-28) adds `teasers`; version 3 (R-37) a character's or place's `theme` and
+/// a `song` teaser. Versions 1 and 2 are still read.
+const guideVersion = 3;
 
 /// Media by role in a guide (R-13).
 const guideVoiceMediaTypes = {'audio/mp4'};
@@ -76,6 +78,17 @@ class GuideVoice {
   final String chapter;
 }
 
+/// A character's or place's theme (SPEC-059 R-35, R-37): a track of the world's music, by its
+/// production and track ids, with the title and length a guide alone shows before the music is
+/// installed. No audio rides with it: it plays from its music production (SPEC-058 R-77).
+class GuideTheme {
+  const GuideTheme({required this.production, required this.track, required this.title, required this.duration});
+  final String production;
+  final String track;
+  final String title;
+  final Duration duration;
+}
+
 /// An entry of the guide: a character, a place or a piece of lore. [links] name other entries.
 sealed class GuideEntry {
   const GuideEntry({required this.id, required this.links, this.after});
@@ -94,6 +107,7 @@ class GuideCharacter extends GuideEntry {
     this.role,
     this.portrait,
     this.voice,
+    this.theme,
   });
   final String name;
   final String? role;
@@ -102,17 +116,23 @@ class GuideCharacter extends GuideEntry {
   final String? portrait;
   final List<GuideSection> sections;
   final GuideVoice? voice;
+
+  /// Version 3 (R-35): the track that is this character's theme, which follows the character's gate.
+  final GuideTheme? theme;
 }
 
 /// A place, or a faction, which follows the places (SPEC-059 R-1).
 class GuidePlace extends GuideEntry {
-  const GuidePlace({required super.id, required this.name, required this.sections, super.links = const [], super.after, this.role, this.picture});
+  const GuidePlace({required super.id, required this.name, required this.sections, super.links = const [], super.after, this.role, this.picture, this.theme});
   final String name;
   final String? role;
 
   /// An asset id.
   final String? picture;
   final List<GuideSection> sections;
+
+  /// Version 3 (R-35): the track that is this place's theme.
+  final GuideTheme? theme;
 }
 
 /// A settled canon entry: its statement, with no sections.
@@ -156,6 +176,22 @@ class ClipTeaser extends PictureTeaser {
   final Duration duration;
 }
 
+/// A song (SPEC-059 R-36, R-37, version 3): a track's excerpt of at most 30 seconds with its music
+/// production's square cover. It names its track, not a chapter: music has none.
+class SongTeaser extends GuideTeaser {
+  const SongTeaser({required this.title, required this.picture, required this.audio, required this.duration, required this.production, required this.track});
+  final String title;
+
+  /// Asset ids: the cover and the excerpt.
+  final String picture;
+  final String audio;
+  final Duration duration;
+
+  /// The music production and the track the excerpt is from.
+  final String production;
+  final String track;
+}
+
 class Guide {
   const Guide({required this.productions, required this.characters, required this.places, required this.lore, this.teasers = const []});
   final List<GuideProduction> productions;
@@ -183,6 +219,9 @@ class Guide {
       if (teaser case PictureTeaser(:final picture)) ...[
         picture,
         if (teaser case ClipTeaser(:final audio, :final motion)) ...[audio, ?motion],
+      ] else if (teaser case SongTeaser(:final picture, :final audio)) ...[
+        picture,
+        audio,
       ],
   };
 }
@@ -306,6 +345,21 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
     return id;
   }
 
+  // A theme (R-35, R-37) names the world's music, which need not be in this package, so its ids are
+  // not checked against the guide; a version 2 guide naming one is newer, refused by its keys.
+  GuideTheme? theme(Object? value, String what) {
+    if (value == null) return null;
+    final t = _object(value, '$what theme', {'production', 'track', 'title', 'duration'});
+    final duration = t['duration'];
+    if (duration is! int || duration < 1 || Duration(milliseconds: duration) > maxMusicTrack) _notAPackage('$what theme duration');
+    return GuideTheme(
+      production: _id(t['production'], '$what theme'),
+      track: _id(t['track'], '$what theme'),
+      title: _text(t['title'], '$what theme title'),
+      duration: Duration(milliseconds: duration),
+    );
+  }
+
   List<GuideSection> sections(Object? value, String what) => List.unmodifiable([
     for (final raw in _list(value, '$what sections', _maxSections))
       () {
@@ -324,7 +378,7 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
 
   final characters = <GuideCharacter>[];
   for (final raw in _list(json['characters'], 'characters', _maxEntries)) {
-    final c = _object(raw, 'a character', {'id', 'name', 'role', 'portrait', 'after', 'sections', 'voice', 'links'});
+    final c = _object(raw, 'a character', {'id', 'name', 'role', 'portrait', 'after', 'sections', 'voice', 'links', if (version >= 3) 'theme'});
     final id = _id(c['id'], 'character id');
     final where = 'entry $id';
     GuideVoice? voice;
@@ -354,13 +408,14 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
         sections: sections(c['sections'], where),
         voice: voice,
         links: links(c['links'], where),
+        theme: theme(c['theme'], where),
       ),
     );
   }
 
   final places = <GuidePlace>[];
   for (final raw in _list(json['places'], 'places', _maxEntries)) {
-    final p = _object(raw, 'a place', {'id', 'name', 'role', 'picture', 'after', 'sections', 'links'});
+    final p = _object(raw, 'a place', {'id', 'name', 'role', 'picture', 'after', 'sections', 'links', if (version >= 3) 'theme'});
     final id = _id(p['id'], 'place id');
     final where = 'entry $id';
     final role = p['role'];
@@ -373,6 +428,7 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
         after: after(p['after'], where),
         sections: sections(p['sections'], where),
         links: links(p['links'], where),
+        theme: theme(p['theme'], where),
       ),
     );
   }
@@ -458,6 +514,22 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
             audio: asset(t['audio'], guideVoiceMediaTypes, '$what audio') ?? _notAPackage('$what audio'),
             duration: Duration(milliseconds: duration),
             motion: asset(t['motion'], guideMotionMediaTypes, '$what motion'),
+          ),
+        );
+      // A song came with version 3 (R-36); in an older guide it is a kind the guide does not have.
+      case 'song' when version >= 3:
+        final t = _object(raw, what, {'kind', 'title', 'picture', 'audio', 'duration', 'production', 'track'});
+        final picture = asset(t['picture'], pictureMediaTypes, '$what picture') ?? _notAPackage('$what picture');
+        final duration = t['duration'];
+        if (duration is! int || duration < 1 || Duration(milliseconds: duration) > maxTeaserClip) _notAPackage('$what duration');
+        teasers.add(
+          SongTeaser(
+            title: _text(t['title'], '$what title'),
+            picture: picture,
+            audio: asset(t['audio'], guideVoiceMediaTypes, '$what audio') ?? _notAPackage('$what audio'),
+            duration: Duration(milliseconds: duration),
+            production: _id(t['production'], '$what production'),
+            track: _id(t['track'], '$what track'),
           ),
         );
       default:

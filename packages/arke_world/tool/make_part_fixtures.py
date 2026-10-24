@@ -55,7 +55,9 @@ case('part-daily.json', 'ok', lambda x: x['part'].update(number=2, schedule={'da
 case('part-book-alone.json', 'ok', lambda x: (x['productions'][0].pop('listening'), x['assets'].pop('listening')))
 case('part-missing.json', 'notAPackage', lambda x: x.pop('part'))
 case('part-in-schema-3.json', 'newerArke', lambda x: x.update(schemaVersion=3))
-case('schema-5.json', 'newerArke', lambda x: x.update(schemaVersion=5))
+# Schema 5 is a production published alone (R-68), so a part says 5 only by mistake; 6 is still newer.
+case('part-in-schema-5.json', 'notAPackage', lambda x: x.update(schemaVersion=5))
+case('schema-6.json', 'newerArke', lambda x: x.update(schemaVersion=6))
 # A part carries no guide: a guide reaches phones alone, or in the next edition.
 case('part-with-guide.json', 'notAPackage', lambda x: (x.update(guide='guide'), x['assets'].update(guide=a('guide/guide.json', 'application/vnd.arke.guide+json'))))
 case('part-two-productions.json', 'notAPackage', lambda x: (x['productions'].append({'id': 'saltmouth-tales', 'title': 'Saltmouth Tales', 'book': 'book-2'}), x['assets'].update({'book-2': a('saltmouth-tales/book.epub', 'application/epub+zip')})))

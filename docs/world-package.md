@@ -117,6 +117,31 @@ was pinned. `test/catalogue_test.dart` holds every bundled picture to a pin from
 (576,958 bytes), its first, uploaded, downloaded back and matched, pinned and bundled as
 `assets/worlds/undersong/cover-tall.jpg`.
 
+## A production published alone (SPEC-058 R-68 – R-71)
+
+A world's music (SPEC-060) is published as a production package: a world package of schema 5
+holding one production. It is marked `"alone": true` and carries no guide, key art or part. A music
+production names its `music` document (format `arke-music`) in place of a book or a narration, and
+its square cover as its `picture`. The document holds the tracks in order, each with its AAC audio,
+its length, its words with their sections, and where in the world it is heard.
+
+1. **Upload it** under its own name to the world's public story release, as a package is. Never
+   replace one.
+2. **Pin it as a production**, never as an edition: `pin_world` refuses the one as the other.
+
+   ```
+   dart run arke_world:pin_world <production.zip> <https url> --production
+   ```
+
+   It prints the production's id, its `package` pin (address, length, SHA-256, edition and
+   fingerprint) and, for music, its `music` kind.
+3. **Set them on the listed production:** `package` and `music` beside its `title` and `kind`. The
+   list stays `version: 2`, and a Player from before rev 11 ignores both.
+4. **Raise `serial` and publish the list**, as for an edition.
+
+The formats are read; installing a production package beside its world's edition, and the Music
+group, are P17's build. Until then the installer refuses a production package on its own.
+
 ## The Undersong
 
 **Tall cover, list serial 25:** the story's 2:3 poster, made upright on the Studio's Bench with Codex Image from Maren Kest's, Bray Half-Hitch's, Perrin Tallow's and the Chorister's main photos: the four faces over the fogged harbour and its bell tower, *THE UNDERSONG* under *THE LEDGER OF NIGHTS* at the foot with the drowned god's face beneath (world artifact `a-bold-cinematic-streaming-series-key-art-poste-take-2.png` in the owner's world, saved as JPEG). It comes with the list, so the package is unchanged and its production picture stays the sea-wall cover below; a Player from before list pictures shows it from its next build.

@@ -9,6 +9,7 @@ export 'src/hosted.dart';
 export 'src/install.dart';
 export 'src/listening.dart';
 export 'src/manifest.dart';
+export 'src/music.dart';
 export 'src/pack.dart';
 export 'src/package.dart';
 export 'src/pictures.dart';

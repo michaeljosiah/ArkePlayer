@@ -63,8 +63,17 @@ void main() {
             EntryTeaser() => 'place',
             ClipTeaser() => 'clip',
             PictureTeaser() => 'picture',
+            SongTeaser() => 'song',
           };
           expect(guide.teasers.map(kindOf), kinds);
+        }
+        // A theme names its track (revision 9, R-35); the music it plays from is the world's.
+        for (final probe in (raw['themes'] as List<Object?>? ?? const []).cast<Map<String, Object?>>()) {
+          final theme = switch (guide.entry(probe['entry']! as String)) {
+            GuideCharacter(:final theme) || GuidePlace(:final theme) => theme,
+            _ => null,
+          };
+          expect(theme?.track, probe['track'], reason: probe['entry'] as String);
         }
         for (final probe in (raw['after'] as List<Object?>? ?? const []).cast<Map<String, Object?>>()) {
           expect(

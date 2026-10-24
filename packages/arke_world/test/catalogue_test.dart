@@ -79,4 +79,45 @@ void main() {
       expect(newestCatalogue(shipped, parseCatalogue(_list(serial: 2))).feature?.world, 'na-love-or-juju');
     });
   });
+
+  // SPEC-058 rev 11, R-71: a production published alone carries its own pin, and music its kind.
+  group('a production’s own package and its music kind', () {
+    final pin = {'url': 'https://example.org/album.zip', 'byteLength': 66000000, 'sha256': 'b' * 64, 'edition': '2026-10-24', 'fingerprint': 'c' * 64};
+    String withAlbum({required int serial, Object? package, Object? music}) {
+      final list = jsonDecode(_list(serial: serial)) as Map<String, Object?>;
+      ((list['worlds']! as List<Object?>).single! as Map<String, Object?>)['productions'] = [
+        {'id': 'songs-of-the-drowned-quarter', 'title': 'Songs of the Drowned Quarter', 'kind': 'Album · 9 tracks', 'package': ?package, 'music': ?music},
+      ];
+      return jsonEncode(list);
+    }
+
+    test('reads the pin and the kind; a production without them has neither', () {
+      final album = parseCatalogue(withAlbum(serial: 1, package: pin, music: 'album')).worlds.single.productions.single;
+      expect((album.package?.url.host, album.package?.edition, album.package?.fingerprint), ('example.org', '2026-10-24', 'c' * 64));
+      expect(album.music, MusicKind.album);
+      final plain = parseCatalogue(_list(serial: 1)).worlds.single.productions.single;
+      expect((plain.package, plain.music), (null, null));
+    });
+
+    test('a pin without its edition or fingerprint, over HTTP, or a kind that is not a word, is not a list', () {
+      expect(() => parseCatalogue(withAlbum(serial: 1, package: {...pin}..remove('fingerprint'))), throwsFormatException);
+      expect(() => parseCatalogue(withAlbum(serial: 1, package: {...pin}..remove('edition'))), throwsFormatException);
+      expect(() => parseCatalogue(withAlbum(serial: 1, package: {...pin, 'url': 'http://example.org/album.zip'})), throwsFormatException);
+      expect(() => parseCatalogue(withAlbum(serial: 1, package: pin, music: 3)), throwsFormatException);
+    });
+
+    test('a kind this Player does not know is read as no music kind; the rest of the list still reads', () {
+      final list = parseCatalogue(withAlbum(serial: 1, package: pin, music: 'ep'));
+      final production = list.worlds.single.productions.single;
+      expect(production.music, isNull);
+      expect(production.package?.fingerprint, 'c' * 64);
+      expect(list.worlds.single.package?.url.host, 'example.org');
+    });
+
+    test('they are the newer list’s, as a pin is an address', () {
+      final shipped = parseCatalogue(withAlbum(serial: 2));
+      final production = newestCatalogue(shipped, parseCatalogue(withAlbum(serial: 3, package: pin, music: 'album'))).worlds.single.productions.single;
+      expect((production.package?.sha256, production.music), ('b' * 64, MusicKind.album));
+    });
+  });
 }
