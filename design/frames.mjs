@@ -625,8 +625,81 @@ ${sh('New chapters')}<div class="hrow">${newChapters()}</div>
 ${sh('Stories')}<div class="hrow">${storyPosters(260)}</div></div><div class="ffoot"></div>${pill('Discover', true)}${hi()}</div>`),
 ];
 
+// ---- P17 · Music ------------------------------------------------------------------------------
+// The owner, 24 October 2026: if music is supported as a production, or just an artifact, how is it
+// shown within a world? Drawn on the recommendations approved that day: music is a production
+// (Album, Single, Soundtrack), its own group with square tiles, played by the audio player with a
+// track list, tied to where it is heard and whose theme it is, and a Song teaser. Studio 238 draws
+// the author's half. The tracks, lengths and lyrics are samples; the covers are pictures already here.
+const ALBUM = { img: 'launch-harbour.jpg', pos: '50% 62%', title: 'Songs of the Drowned Quarter' };
+const SINGLE = { img: 'scene4-shot14b.jpg', pos: '50% 50%', title: 'Saltmouth Bells' };
+const SCORE = { img: 'scene4-shot12.jpg', pos: '50% 40%', title: 'The Bell Watch — Soundtrack' };
+const TRACKS = [
+  ['The Drowned Verse', '4:12', 'Theme · The Chorister'],
+  ['Slack Water', '3:05', ''],
+  ['Saltmouth Bells', '3:42', 'Heard in · The Ledger of Nights, Chapter 8'],
+  ['Tide-caller', '3:58', 'Theme · Maren Kest'],
+  ['The Vigil', '4:40', ''],
+  ['Lantern Road', '3:20', ''],
+  ['Ledger Hymn', '2:55', ''],
+  ['Low Water', '3:33', ''],
+  ['Undersong', '5:01', ''],
+];
+/** A square tile: a music production, 1:1 as album art is everywhere (P17 rule 3). */
+const square = ({ img, pos = 'center', title, kind, w = 160 }) => `<div class="mt" style="width:${w}px"><div class="im"><img src="${A}${img}" alt="" style="object-position:${pos}"></div><div class="t">${title}</div><div class="m">${kind}</div></div>`;
+const musicRow = (w = 160, onWorld = false) => `${square({ ...ALBUM, kind: onWorld ? 'Album · 9 tracks' : 'Album · The Undersong', w })}${square({ ...SINGLE, kind: onWorld ? 'Single · 3:42' : 'Single · The Undersong', w })}${square({ ...SCORE, kind: onWorld ? 'Soundtrack · 14 tracks' : 'Soundtrack · The Bell Watch', w })}`;
+/** A track: its number, or bars while it plays; its title and one line, the theme or where it is heard; its length. */
+const trk = ([title, length, sub], index, now = -1) => `<div class="trk${index === now ? ' now' : ''}"><span class="no">${index === now ? ic('bars', 16, 2) : index + 1}</span><div class="grow"><div class="t">${title}</div>${sub ? `<div class="m">${sub}</div>` : ''}</div><span class="d num">${length}</span><span class="x">${ic('more', 18)}</span></div>`;
+const songTeaser = (w = 112) => `<div class="po" style="width:${w}px"><div class="im fb"><img class="bl" src="${A}${ALBUM.img}" alt=""><img class="wd sq1" src="${A}${ALBUM.img}" alt="" style="object-position:${ALBUM.pos}"><span class="mid"><span class="ib glass">${ic('music', 16)}</span></span></div><div class="t">The Drowned Verse</div><div class="m">Song · 0:24</div></div>`;
+// A song's dock skips to the next track where a chapter's goes back 15 seconds.
+const floatDock = (where = 'Songs of the Drowned Quarter', at = 43) => dock({ img: ALBUM.img, title: 'The Drowned Verse', where, at }).replace('class="dock"', 'class="dock float"').replace(seek(15), ic('next', 20));
+const albumHead = `<img class="bg" src="${A}${ALBUM.img}" alt=""><div class="top">${back}${more}</div><img class="cv" src="${A}${ALBUM.img}" alt="" style="object-position:${ALBUM.pos}">`;
+const albumActs = `<div class="acts"><span class="btn pri" style="flex:1">${ic('play', 16)}Play all</span><span class="btn" style="flex:1">${ic('shuffle', 18)}Shuffle</span></div>`;
+// The audio player with the cover where the moment's picture would be, over its own blur.
+const nowPlaying = (inner) => `<img class="np" src="${A}${ALBUM.img}" alt=""><div class="dim" style="background:color-mix(in srgb,var(--media-overlay-bg) 30%,transparent)"></div>${sb(true)}
+<div class="ptop">${close}<div class="ttl"><div class="eb">${ALBUM.title}</div><div class="sc num">1 of 9</div></div><span class="ib">${ic('more', 20)}</span></div>${inner}`;
+const musicBar = (lyricsOn = false) => `<div style="position:absolute;z-index:4;left:20px;right:20px;bottom:40px"><div class="scrub"><i style="width:43%"></i><b style="left:43%"></b></div><div class="times"><span>1:48</span><span>4:12</span></div>
+<div class="trow" style="margin-top:14px"><span class="ib">${ic('shuffle', 20)}</span><span class="ib">${ic('prev', 22)}</span><span class="play">${ic('pause', 24)}</span><span class="ib">${ic('next', 22)}</span><span class="ib">${ic('repeat', 20)}</span></div>
+<div class="trow" style="margin-top:14px;justify-content:center;gap:10px"><span class="ib lab${lyricsOn ? ' on' : ''}">${ic('text', 16)}Lyrics</span><span class="ib lab">${ic('list', 16)}Tracks</span><span class="ib lab">${ic('book', 16)}Chapter 9</span></div></div>`;
+const LYRICS = ['Down where the bells forget their ringing,', 'the harbour keeps a slower song.', 'Count the stones the tide is bringing,', 'count them right and count them long.', 'Slack water, salt and lantern —', 'the ledger is never wrong.'];
+
+const P17 = [
+  frame('P17a', 'A world with music', 'phone', `${sb()}${scrolledHead('The Undersong')}<div class="body" style="margin-top:-12px">
+${sh('Listen', '<span class="ct num">2</span>')}<div class="hrow">${poster({ tall: TALL.ledger, pos: '50% 30%', title: STORY.ledger.title, kind: 'Audiobook · Book · 23 chapters' })}${poster({ img: PR.undertow.img, title: PR.undertow.title, kind: 'Audio drama · 8 episodes' })}</div>
+${sh('Music', '<span class="ct num">3</span>')}<div class="hrow">${musicRow(160, true)}</div>
+${sh('Watch', '<span class="ct num">2</span>')}<div class="hrow">${tile({ ...PR.bell, kind: 'Micro drama · 45 episodes', w: TW })}${tile({ ...PR.saltlight, kind: 'Film · 1 h 32 m', w: TW })}</div>
+</div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
+
+  frame('P17b', 'Discover: a row of music, and a song as a teaser', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body"><div style="margin-top:-176px">
+${sh('Stories')}<div class="hrow">${storyPosters()}</div>
+${sh('Music')}<div class="hrow">${musicRow()}</div>
+${sh('Teasers')}<div class="hrow">${songTeaser()}${teaserPosters()}</div>
+</div></div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
+
+  frame('P17c', 'An album, a track playing', 'phone', `${sb(true)}<div class="body"><div class="alb">${albumHead}<h1>${ALBUM.title}</h1><div class="meta num">Album · The Undersong · 9 tracks · 34 min</div>${albumActs}</div>
+${TRACKS.map((track, index) => trk(track, index, 0)).join('')}</div><div class="ffoot"></div>${floatDock()}${pill('Discover')}${hi()}`),
+
+  frame('P17d', 'A song playing', media(), nowPlaying(`<div class="npc"><img src="${A}${ALBUM.img}" alt="" style="object-position:${ALBUM.pos}"></div><div class="npt"><div class="t">The Drowned Verse</div><div class="m">Theme · The Chorister</div></div>${musicBar()}${hi()}`)),
+
+  frame('P17e', 'Its lyrics, as written', media(), nowPlaying(`<div class="lyr">${LYRICS.map((line) => `<p>${line}</p>`).join('')}</div><div class="npt" style="top:auto;bottom:208px"><div class="t" style="font-size:var(--text-lg)">The Drowned Verse</div><div class="m">Theme · The Chorister</div></div>${musicBar(true)}${hi()}`)),
+
+  frame('P17f', 'A character’s theme', 'phone', `${sb(true)}<div class="body"><div class="hero" style="padding-top:238px"><img src="${A}${CAST.chorister.img}" alt="" style="height:318px;object-position:50% 20%"><div class="fade" style="top:108px;height:211px"></div><div class="top">${back}</div><div class="in"><h1>The Chorister</h1><div class="meta">Keeper of the drowned verse · The Undersong</div><div class="acts"><span class="btn" style="flex:1">${ic('volume', 18)}Voice <em class="num">· 0:08</em></span></div></div></div>
+${sh('Theme')}<div class="trk"><img src="${A}${ALBUM.img}" alt="" style="object-position:${ALBUM.pos}"><div class="grow"><div class="t">The Drowned Verse</div><div class="m num">${ALBUM.title} · 4:12</div></div><span class="pb">${ic('play', 16)}</span></div>
+<div class="prose"><div class="lk">Essence</div><p>The voice the harbour keeps. Nobody has seen the Chorister’s face: the verse comes up through the water at slack tide, and every tide-caller learns it by ear.</p></div>
+</div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
+
+  frame('P17g', 'A story’s music', 'phone', `${sb()}${scrolledHead(STORY.ledger.title)}<div class="body" style="margin-top:-12px">
+${sh('Chapters', '<span class="ct num">23</span>')}${chr('Chapter 7', '32 min', heard)}${chr('Chapter 8', `38 min <span class="note">${ic('music', 13)}</span>`, heard)}${chr('Chapter 9', `44 min <span class="note">${ic('music', 13)}</span>`, '<span class="ring"></span>')}${chr('Chapter 10', '36 min', '')}
+${sh('Music', '<span class="ct num">2</span>')}<div class="trk"><img src="${A}${ALBUM.img}" alt="" style="object-position:${ALBUM.pos}"><div class="grow"><div class="t">The Drowned Verse</div><div class="m">Chapter 9 · ${ALBUM.title}</div></div><span class="pb">${ic('play', 16)}</span></div><div class="trk"><img src="${A}${SINGLE.img}" alt="" style="object-position:${SINGLE.pos}"><div class="grow"><div class="t">Saltmouth Bells</div><div class="m">Chapter 8 · Single</div></div><span class="pb">${ic('play', 16)}</span></div>
+</div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
+
+  frame('P17h', 'An album on a Fold', 'fold', `<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb(true)}<div class="body"><div class="alb fold">${albumHead}<div><h1 style="margin-top:0">${ALBUM.title}</h1><div class="meta num">Album · The Undersong · 9 tracks · 34 min</div><div style="max-width:360px">${albumActs}</div></div></div>
+<div class="trks" style="padding:12px 8px 0">${TRACKS.map((track, index) => trk(track, index)).join('')}</div>
+${sh('More from The Undersong')}<div class="hrow">${square({ ...SINGLE, kind: 'Single · 3:42', w: 200 })}${square({ ...SCORE, kind: 'Soundtrack · 14 tracks', w: 200 })}</div></div><div class="ffoot"></div>${pill('Discover', true)}${hi()}</div>`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17) };

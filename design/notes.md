@@ -182,6 +182,25 @@ gives the page the full width. Seeing it, the owner chose the pill: "Pill is a b
 Built the same day in ArkePlayer PR #14. Not built: a Tall cover in the package — the list's,
 bundled with the app, is the one there is until the Studio's Publish makes one.
 
+## Music (P17)
+
+The owner, on 24 October 2026, asked how music would be shown within a world if it were
+supported as a production, or just an artifact. They said "Yes" to the recommendations, and P17
+draws them:
+
+- Music is a production: Album, Single or Soundtrack. A song is never a loose take, because only a
+  production has a cover, a size and a place in Arke's list.
+- It has its own group after Listen, and a Discover row, under the `Listen` chip.
+- Its tiles are square, as album art is everywhere, so its rows keep P16's one shape per row.
+- It plays in the audio player, with the cover in place of the moment's picture.
+- A track says where it is heard and whose theme it is, and a song can be a teaser.
+
+Studio 238 draws the author's half.
+
+The samples are The Undersong's: Songs of the Drowned Quarter (an album of 9 tracks), Saltmouth Bells
+(a single), and The Bell Watch — Soundtrack. Their covers are nearly square pictures already in this
+master. The track names, lengths and lyrics are samples, written for this turn.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -226,6 +245,13 @@ bundled with the app, is the one there is until the Studio's Publish makes one.
    neither named, the feature is the newest release and the band the newest world.
 16. **The tabs as a pill** (P16h – P16j, chosen by the owner). Netflix floats its tabs as a pill
    over the page on both a phone and a tablet. The pill replaces P1's bar and P6e's rail.
+17. **Music is a production** (P17, asked and approved 24 October 2026): Album, Single or
+   Soundtrack, with its own group in a world, never a loose take.
+18. **A music cover is square** (P17, approved), 1:1 at 1024 × 1024, the fourth picture shape.
+19. **Lyrics are shown as written** (P17e, drawn so). They are not timed to the song; timing waits
+   for the Studio to keep where each line is sung.
+20. **A song keeps no place** (P17, drawn so). It starts from its beginning and never joins
+   Continue, because a song is heard again rather than finished.
 
 ## What this rests on
 
