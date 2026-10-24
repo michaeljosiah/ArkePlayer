@@ -26,6 +26,9 @@ assets = {
     't-bells-audio': a('guide/teasers/saltmouth-bells.m4a', 'audio/mp4'),
     't-bells-loop': a('guide/teasers/saltmouth-bells.mp4', 'video/mp4'),
     't-weir': a('guide/teasers/the-weir.jpg', 'image/jpeg'),
+    # A song teaser's own files (revision 9): its music production's square cover and its excerpt.
+    't-verse-cover': a('guide/teasers/songs-of-the-drowned-quarter.jpg', 'image/jpeg'),
+    't-verse-excerpt': a('guide/teasers/the-drowned-verse.m4a', 'audio/mp4'),
 }
 LEDGER = 'the-ledger-of-nights'
 SIX = {'production': LEDGER, 'chapter': 'independent-record'}
@@ -90,7 +93,7 @@ def case(name, expect, mutate):
 
 
 case('metadata.json', 'ok', lambda x: (x.update(metadata={'studio': '0.5.62'}), x['characters'][0].update(metadata={'sheet': 'kept'})))
-case('newer-version.json', 'newerArke', lambda x: x.update(version=3))
+case('newer-version.json', 'newerArke', lambda x: x.update(version=4))
 case('requires.json', 'newerArke', lambda x: x.update(requires=['guide-v2']))
 case('unknown-key.json', 'newerArke', lambda x: x['characters'][0].update(age=31))
 case('repeat-id.json', 'notAPackage', lambda x: x['characters'][1].update(id='maren-kest'))
@@ -146,6 +149,40 @@ teaser_case('teaser-unknown-key.json', 'newerArke', lambda x: x['teasers'][3].up
 teaser_case('teaser-picture-only.json', 'ok', lambda x: x.update(characters=[], places=[], lore=[], teasers=[x['teasers'][3]]))
 # Two moments may share a still, and a package ships that file once: a picture or clip is never a repeat by its picture.
 teaser_case('teaser-same-picture.json', 'ok', lambda x: x['teasers'].append({'kind': 'picture', 'title': 'The weir again', 'picture': 't-weir', **ONE}))
+
+# A theme and a song (SPEC-059 revision 9, R-35 – R-37): version 3 of the guide document adds a
+# character's or place's theme, named with its title and length and no audio, and a song teaser, a
+# track's excerpt of at most 30 seconds with its music production's square cover. Both name the
+# world's music, which need not be in the package that carries the guide.
+ALBUM = 'songs-of-the-drowned-quarter'
+VERSE = {'production': ALBUM, 'track': 'the-drowned-verse', 'title': 'The Drowned Verse', 'duration': 238000}
+SONG = {'kind': 'song', 'title': 'The Drowned Verse', 'picture': 't-verse-cover', 'audio': 't-verse-excerpt', 'duration': 24000,
+        'production': ALBUM, 'track': 'the-drowned-verse'}
+themes = copy.deepcopy(teasers)
+themes['version'] = 3
+themes['characters'][2]['theme'] = VERSE
+themes['places'][0]['theme'] = {**VERSE, 'track': 'the-vigil', 'title': 'The Vigil', 'duration': 280000}
+themes['teasers'].append(SONG)
+w('themes.json', themes)
+cases.append({'file': 'themes.json', 'expect': 'ok', 'counts': {'characters': 3, 'places': 1, 'lore': 2},
+              'teasers': ['character', 'clip', 'place', 'picture', 'song'],
+              'themes': [{'entry': 'the-chorister', 'track': 'the-drowned-verse'}, {'entry': 'the-vigil', 'track': 'the-vigil'}]})
+
+
+def theme_case(name, expect, mutate):
+    doc = copy.deepcopy(themes)
+    mutate(doc)
+    w(name, doc)
+    cases.append({'file': name, 'expect': expect})
+
+
+theme_case('themes-version-2.json', 'newerArke', lambda x: (x.update(version=2), x['teasers'].pop()))
+theme_case('song-in-version-2.json', 'notAPackage', lambda x: (x.update(version=2), x['characters'][2].pop('theme'), x['places'][0].pop('theme')))
+theme_case('song-long.json', 'notAPackage', lambda x: x['teasers'][4].update(duration=30001))
+theme_case('song-wrong-media.json', 'notAPackage', lambda x: x['teasers'][4].update(audio='t-verse-cover'))
+theme_case('song-unknown-key.json', 'newerArke', lambda x: x['teasers'][4].update(chapter='neap'))
+theme_case('theme-unknown-key.json', 'newerArke', lambda x: x['characters'][2]['theme'].update(at=14000))
+theme_case('theme-too-long.json', 'notAPackage', lambda x: x['characters'][2]['theme'].update(duration=15 * 60000 + 1))
 def world(version=3, productions=None, **extra):
     doc = {
         'format': 'arke-world-package', 'schemaVersion': version, 'id': 'undersong', 'edition': '2026-10-22', 'name': 'The Undersong',

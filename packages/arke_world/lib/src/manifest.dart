@@ -4,6 +4,7 @@ import 'package:arke_publication/arke_publication.dart';
 
 import 'guide.dart';
 import 'listening.dart';
+import 'music.dart';
 
 /// The manifest at a world package's root.
 const worldManifestFile = 'world.json';
@@ -14,8 +15,9 @@ const worldPackageFormat = 'arke-world-package';
 
 /// Schema 2 (SPEC-058 R-9) adds a production's `listening` document; schema 3 (SPEC-059 R-9, R-10)
 /// adds the world's `guide`, and a package with the guide alone; schema 4 (SPEC-058 R-46) is a part,
-/// the chapters released since an edition. Schemas 1 to 3 are still read.
-const worldSchemaVersion = 4;
+/// the chapters released since an edition; schema 5 (R-68 – R-70) is a production package, one
+/// production published alone beside the edition, which may be music. Schemas 1 to 4 are still read.
+const worldSchemaVersion = 5;
 
 /// A world package's media, by the role it plays: the book a reader opens, the narration the
 /// audio player plays, and the pictures shown around them.
@@ -95,9 +97,11 @@ class WorldPart {
 
 /// A production a world package carries: a book, its narration, or both (P9 rule 7). Each names
 /// an asset by its id. The narration is one audio file (`narration`) or, from schema 2, a listening
-/// document (`listening`) with a file a chapter and its pictures and phrases; never both.
+/// document (`listening`) with a file a chapter and its pictures and phrases; never both. From
+/// schema 5 a production may be music instead (SPEC-058 R-69): its music document, and its square
+/// cover as [picture].
 class WorldProduction {
-  const WorldProduction({required this.id, required this.title, this.author, this.picture, this.book, this.narration, this.listening});
+  const WorldProduction({required this.id, required this.title, this.author, this.picture, this.book, this.narration, this.listening, this.music});
 
   final String id;
   final String title;
@@ -107,6 +111,9 @@ class WorldProduction {
   final String? narration;
   final String? listening;
 
+  /// The music document's asset id: an album, a single or a soundtrack.
+  final String? music;
+
   Map<String, Object?> toJson() => {
     'id': id,
     'title': title,
@@ -115,6 +122,7 @@ class WorldProduction {
     if (book != null) 'book': book,
     if (narration != null) 'narration': narration,
     if (listening != null) 'listening': listening,
+    if (music != null) 'music': music,
   };
 }
 
@@ -133,8 +141,10 @@ class WorldManifest {
     this.guide,
     this.schemaVersion = worldSchemaVersion,
     this.listening = const {},
+    this.music = const {},
     this.guideDocument,
     this.part,
+    this.alone = false,
   });
 
   final String id;
@@ -160,18 +170,26 @@ class WorldManifest {
   /// Set when this package is a part, the chapters released after an edition (SPEC-058 R-46).
   final WorldPart? part;
 
+  /// True when this package is a production published alone, schema 5 (SPEC-058 R-68): it lands
+  /// beside its world's edition, never in its place.
+  final bool alone;
+
   /// Each production's listening document, by production id, once the package reader has read
   /// them (`readWorldPackage`); empty from `readWorldManifest` alone.
   final Map<String, ListeningDocument> listening;
+
+  /// Each music production's document, by production id, once the package reader has read them;
+  /// empty from `readWorldManifest` alone.
+  final Map<String, MusicDocument> music;
 
   /// The assets `world.json` itself names.
   Set<String> get namedAssets => {
     ?keyArt,
     ?guide,
-    for (final production in productions) ...[?production.picture, ?production.book, ?production.narration, ?production.listening],
+    for (final production in productions) ...[?production.picture, ?production.book, ?production.narration, ?production.listening, ?production.music],
   };
 
-  WorldManifest withDocuments(Map<String, ListeningDocument> documents, Guide? guide) => WorldManifest(
+  WorldManifest withDocuments(Map<String, ListeningDocument> documents, Guide? guide, {Map<String, MusicDocument> music = const {}}) => WorldManifest(
     id: id,
     edition: edition,
     name: name,
@@ -182,8 +200,10 @@ class WorldManifest {
     assets: assets,
     schemaVersion: schemaVersion,
     listening: Map.unmodifiable(documents),
+    music: Map.unmodifiable(music),
     guideDocument: guide,
     part: part,
+    alone: alone,
   );
 
   Map<String, Object?> toJson() => {
@@ -197,6 +217,7 @@ class WorldManifest {
     'productions': [for (final production in productions) production.toJson()],
     if (guide != null) 'guide': guide,
     if (part != null) 'part': part!.toJson(),
+    if (alone) 'alone': true,
     'assets': {for (final MapEntry(:key, :value) in assets.entries) key: value.toJson()},
   };
 }
@@ -226,10 +247,12 @@ final _digest = RegExp(r'^[a-f0-9]{64}$');
 const _topKeys = {'format', 'schemaVersion', 'id', 'edition', 'name', 'logline', 'keyArt', 'productions', 'assets', 'requires', 'metadata', 'provenance'};
 const _topKeys3 = {..._topKeys, 'guide'};
 const _topKeys4 = {..._topKeys3, 'part'};
+const _topKeys5 = {..._topKeys4, 'alone'};
 const _partKeys = {'follows', 'fingerprint', 'number', 'schedule'};
 const _scheduleKeys = {'day', 'next'};
 const _productionKeys = {'id', 'title', 'author', 'picture', 'book', 'narration', 'metadata'};
 const _productionKeys2 = {..._productionKeys, 'listening'};
+const _productionKeys5 = {..._productionKeys2, 'music'};
 const _assetKeys = {'path', 'mediaType', 'byteLength', 'sha256'};
 const _maxAssets = 4096;
 const _maxAssetBytes = 64 * 1024 * 1024 * 1024;
@@ -258,7 +281,7 @@ WorldManifestRead readWorldManifest(String text) {
   final requires = json['requires'] ?? const <Object?>[];
   if (requires is! List<Object?>) return notAPackage('requires is not a list');
   if (requires.isNotEmpty) return newer('requires ${requires.join(', ')}');
-  final unknown = json.keys.where((key) => !(version >= 4 ? _topKeys4 : (version >= 3 ? _topKeys3 : _topKeys)).contains(key));
+  final unknown = json.keys.where((key) => !(version >= 5 ? _topKeys5 : (version >= 4 ? _topKeys4 : (version >= 3 ? _topKeys3 : _topKeys))).contains(key));
   if (unknown.isNotEmpty) return newer('unknown keys ${unknown.join(', ')}');
 
   String? textOf(Object? value, int max) => value is String && value.trim().isNotEmpty && value.length <= max ? value : null;
@@ -304,10 +327,20 @@ WorldManifestRead readWorldManifest(String text) {
   final guide = json['guide'];
   if (guide != null && role(guide, const {guideMediaType}) == null) return notAPackage('guide');
 
+  // Schema 5 is a production published alone (R-68), and is nothing else: one production, beside the
+  // world's edition, which carries the world's guide and key art; a part is still made at 4.
+  final alone = json['alone'];
+  if (version >= 5) {
+    if (alone != true) return notAPackage('a schema 5 package is a production published alone');
+    if (json['part'] != null) return notAPackage('a production package is not a part');
+    if (guide != null) return notAPackage('a production package carries a guide');
+    if (keyArt != null) return notAPackage('a production package carries key art');
+  }
+
   // Schema 4 is a part, and a part is nothing else: one production's new chapters and no guide (a
   // guide reaches a phone alone, or in the next edition).
   WorldPart? part;
-  if (version >= 4) {
+  if (version == 4) {
     final raw = json['part'];
     if (raw is! Map<String, Object?>) return notAPackage('schema 4 without a part');
     final extra = raw.keys.where((key) => !_partKeys.contains(key));
@@ -341,7 +374,7 @@ WorldManifestRead readWorldManifest(String text) {
   final productionIds = <String>{};
   for (final raw in rawProductions) {
     if (raw is! Map<String, Object?>) return notAPackage('production');
-    final extra = raw.keys.where((key) => !(version >= 2 ? _productionKeys2 : _productionKeys).contains(key));
+    final extra = raw.keys.where((key) => !(version >= 5 ? _productionKeys5 : (version >= 2 ? _productionKeys2 : _productionKeys)).contains(key));
     if (extra.isNotEmpty) return newer('production keys ${extra.join(', ')}');
     final productionId = raw['id'];
     final title = textOf(raw['title'], 200);
@@ -354,25 +387,41 @@ WorldManifestRead readWorldManifest(String text) {
     final book = raw['book'] == null ? null : role(raw['book'], bookMediaTypes.keys.toSet());
     final narration = raw['narration'] == null ? null : role(raw['narration'], narrationMediaTypes.keys.toSet());
     final listening = raw['listening'] == null ? null : role(raw['listening'], const {listeningMediaType});
+    final music = raw['music'] == null ? null : role(raw['music'], const {musicMediaType});
     if ((raw['picture'] != null && picture == null) ||
         (raw['book'] != null && book == null) ||
         (raw['narration'] != null && narration == null) ||
-        (raw['listening'] != null && listening == null)) {
+        (raw['listening'] != null && listening == null) ||
+        (raw['music'] != null && music == null)) {
       return notAPackage('production $productionId names an asset it cannot use');
     }
     if (narration != null && listening != null) return notAPackage('production $productionId names a narration and a listening document');
-    if (book == null && narration == null && listening == null) return notAPackage('production $productionId has nothing to play');
+    // Music is heard on its own terms (R-69): its document in place of a book and a narration.
+    if (music != null && (book != null || narration != null || listening != null)) {
+      return notAPackage('production $productionId names music beside a book or a narration');
+    }
+    if (book == null && narration == null && listening == null && music == null) return notAPackage('production $productionId has nothing to play');
     // A single narration file cannot be added to: a part's chapters come as a listening document.
     if (part != null && narration != null) return notAPackage('part production $productionId names a narration');
     productions.add(
-      WorldProduction(id: productionId, title: title, author: author as String?, picture: picture, book: book, narration: narration, listening: listening),
+      WorldProduction(
+        id: productionId,
+        title: title,
+        author: author as String?,
+        picture: picture,
+        book: book,
+        narration: narration,
+        listening: listening,
+        music: music,
+      ),
     );
   }
   if (part != null && productions.length != 1) return notAPackage('a part carries one production');
+  if (version >= 5 && productions.length != 1) return notAPackage('a production package holds one production');
   // Every file is one the world uses: nothing unreferenced rides along (SPEC-048 R-13). The files a
-  // listening document or a guide names are known only once it is read, so with one the package
-  // reader makes this check instead.
-  if (guide == null && productions.every((production) => production.listening == null)) {
+  // listening document, a music document or a guide names are known only once it is read, so with
+  // one the package reader makes this check instead.
+  if (guide == null && productions.every((production) => production.listening == null && production.music == null)) {
     final unused = assets.keys.where((assetId) => !used.contains(assetId));
     if (unused.isNotEmpty) return notAPackage('unused assets ${unused.join(', ')}');
   }
@@ -389,6 +438,7 @@ WorldManifestRead readWorldManifest(String text) {
       assets: Map.unmodifiable(assets),
       schemaVersion: version,
       part: part,
+      alone: version >= 5,
     ),
   );
 }

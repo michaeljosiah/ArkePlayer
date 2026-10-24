@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:arke_library/arke_library.dart';
 
 import 'manifest.dart';
+import 'music.dart';
 
 /// What a production is, as the design writes it (P1 rule 6): `Audiobook · Book · 2 h 3 m` for a
 /// book with its narration, `Audiobook · 6 h 12 m` for narration alone, `Book` for a book alone.
@@ -33,7 +34,18 @@ class PicturePin {
 /// A production a catalogue world holds, as its page shows it before the world is installed
 /// (P9c's Inside): a title, its kind line and a picture bundled with the app.
 class CatalogueProduction {
-  const CatalogueProduction({required this.title, required this.kind, this.picture, this.tall, this.picturePin, this.tallPin, this.id, this.schedule});
+  const CatalogueProduction({
+    required this.title,
+    required this.kind,
+    this.picture,
+    this.tall,
+    this.picturePin,
+    this.tallPin,
+    this.id,
+    this.schedule,
+    this.package,
+    this.music,
+  });
 
   final String title;
   final String kind;
@@ -55,6 +67,14 @@ class CatalogueProduction {
 
   /// When its author says new chapters come (SPEC-058 R-48, R-53), as `pin_world` copied it.
   final WorldSchedule? schedule;
+
+  /// Its own production package, published alone beside the world's edition (SPEC-058 R-71), pinned
+  /// as an edition is, with its edition label and fingerprint; null when it is in the edition.
+  final CataloguePackage? package;
+
+  /// What kind of music it is (R-71), so its tile is square and it sits under Music; null when it is
+  /// not music.
+  final MusicKind? music;
 }
 
 /// Where a world's package is and the bytes it must have. The digest is pinned by the build, as
@@ -202,6 +222,33 @@ PicturePin? _picturePin(Map<String, Object?> pins, String key, String what) {
   throw FormatException('$what pins $key');
 }
 
+/// A listed production's own package (SPEC-058 R-71): pinned as an edition is, by its address, length
+/// and SHA-256, and its edition label and fingerprint, which a phone compares to see that production's
+/// update. Both are required: a production package is never offered without them.
+CataloguePackage? _productionPackage(Object? value, String what) {
+  if (value == null) return null;
+  if (value case {
+    'url': final String url,
+    'byteLength': final int byteLength,
+    'sha256': final String sha256,
+    'edition': final String edition,
+    'fingerprint': final String fingerprint,
+  }) {
+    final uri = Uri.tryParse(url);
+    if (uri != null && uri.scheme == 'https' && byteLength > 0 && _digest.hasMatch(sha256) && edition.trim().isNotEmpty && _digest.hasMatch(fingerprint)) {
+      return CataloguePackage(url: uri, byteLength: byteLength, sha256: sha256, edition: edition, fingerprint: fingerprint);
+    }
+  }
+  throw FormatException('$what package');
+}
+
+/// A listed production's music kind (R-71), one of the three a music document names.
+MusicKind? _musicKind(Object? value, String what) => switch (value) {
+  null => null,
+  final String kind when MusicKind.values.any((known) => known.name == kind) => MusicKind.values.byName(kind),
+  _ => throw FormatException('$what music'),
+};
+
 /// Reads a list of Arke's worlds: the one the app ships (`assets/worlds/catalogue.json`) or one
 /// fetched from Arke's address. Version 1 has no serial and no editions. Throws [FormatException]
 /// when it is malformed: the app's own list is a build error, a fetched one is ignored.
@@ -239,6 +286,8 @@ Catalogue parseCatalogue(String text) {
               _ => throw FormatException('catalogue world $id production id'),
             },
             schedule: production['schedule'] == null ? null : WorldSchedule.read(production['schedule']),
+            package: _productionPackage(production['package'], 'catalogue world $id production'),
+            music: _musicKind(production['music'], 'catalogue world $id production'),
           )
         else
           throw FormatException('catalogue world $id production'),
@@ -356,8 +405,8 @@ List<CatalogueWorld> readCatalogue(String text) => parseCatalogue(text).worlds;
 /// from the app: a fetched list names paths it cannot know are in this build, so a world's key art
 /// and its productions' pictures and Tall covers are the shipped list's. Their pins are the newer
 /// list's (SPEC-058 rev 10): a pin is an address, not a path, so a fetched list can bring a picture
-/// this build never shipped, for a world it does not ship too. Discover's feature and band are the
-/// newer list's.
+/// this build never shipped, for a world it does not ship too. Discover's feature and band, and a
+/// production's own package and music kind (rev 11), are the newer list's.
 Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
   if (kept == null || kept.serial <= shipped.serial) return shipped;
   final bundled = {for (final world in shipped.worlds) world.id: world};
@@ -388,6 +437,8 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
                 tallPin: production.tallPin,
                 id: production.id,
                 schedule: production.schedule,
+                package: production.package,
+                music: production.music,
               ),
           ]),
           package: world.package,

@@ -91,7 +91,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         : [
             for (final world in catalogue)
               if (ref.watch(worldGuideProvider(installedAs(world)?.id ?? world.id)).value case final guide?)
-                for (final teaser in guide.guide.teasers) (world, guide, teaser),
+                // A song teaser (SPEC-059 R-36) waits for the Player's music (P17): until it can be
+                // played, a guide that names one shows the rest.
+                for (final teaser in guide.guide.teasers)
+                  if (teaser is! SongTeaser) (world, guide, teaser),
           ];
     // The feature and the band are drawn under All only (P16 rules 2 and 6).
     final feature = kind == null ? discoverFeature(catalogue, picks?.feature, everyFresh) : null;
@@ -139,6 +142,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           width: smallWidth,
           onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
         ),
+        // Left out of the row above until the Player plays music (P17).
+        SongTeaser() => const SizedBox.shrink(),
       };
     }
 

@@ -451,8 +451,9 @@ class WorldInstaller {
   Future<PreparedWorld> _prepare(String zip, Directory staging, int needed, void Function(InstallStep step)? onStep, InstallCancel control) async {
     final content = Directory('${staging.path}${Platform.pathSeparator}world');
     final manifest = await _check(zip, content, onStep, control);
-    // A part is never a world of its own: it is added to its edition (R-46).
-    if (manifest.part != null) throw const NotAPackage();
+    // A part is never a world of its own: it is added to its edition (R-46). Nor is a production
+    // published alone (R-68): it lands beside its world's edition, never in its place.
+    if (manifest.part != null || manifest.alone) throw const NotAPackage();
     final (world, items) = await _describe(manifest, content);
     control._check();
     final installed = store.worlds.where((existing) => existing.id == world.id).firstOrNull;

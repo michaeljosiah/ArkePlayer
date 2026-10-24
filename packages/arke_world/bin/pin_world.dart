@@ -12,12 +12,18 @@ import 'package:crypto/crypto.dart';
 /// A part (SPEC-058 R-46, R-49) is pinned with the fingerprint of the edition it must follow, the
 /// one in its world's list entry: a part made after another edition is refused. It prints the part's
 /// pin for the entry's `parts`, and its production's id and schedule for the listed production.
+///
+/// A production published alone (R-68, R-71), such as an album, is pinned with `--production`: it
+/// prints the production's id, its `package` pin and, for music, its `music` kind, to set on the
+/// listed production. An edition is never pinned as a production, nor a production as an edition.
 ///   `dart run arke_world:pin_world <package.zip> <https url>`
 ///   `dart run arke_world:pin_world <part.zip> <https url> --follows <edition fingerprint>`
+///   `dart run arke_world:pin_world <production.zip> <https url> --production`
 Future<void> main(List<String> args) async {
   final follows = args.length == 4 && args[2] == '--follows' ? args[3] : null;
-  if (args.length != 2 && follows == null) {
-    stderr.writeln('usage: dart run arke_world:pin_world <package.zip> <https url> [--follows <edition fingerprint>]');
+  final alone = args.length == 3 && args[2] == '--production';
+  if (args.length != 2 && follows == null && !alone) {
+    stderr.writeln('usage: dart run arke_world:pin_world <package.zip> <https url> [--follows <edition fingerprint> | --production]');
     exit(64);
   }
   final zip = File(args[0]);
@@ -41,6 +47,23 @@ Future<void> main(List<String> args) async {
     'edition': manifest.edition,
     'fingerprint': editionFingerprint(manifest),
   };
+  if (alone != manifest.alone) {
+    stderr.writeln(
+      manifest.alone
+          ? 'a production published alone is pinned with --production, on its listed production'
+          : 'not a production package: --production is for one',
+    );
+    exit(manifest.alone ? 64 : 65);
+  }
+  if (alone) {
+    final production = manifest.productions.single;
+    stdout.writeln(
+      const JsonEncoder.withIndent('  ').convert({
+        'production': {'id': production.id, 'package': pin, if (manifest.music[production.id] case final music?) 'music': music.kind.name},
+      }),
+    );
+    return;
+  }
   final part = manifest.part;
   if (part == null) {
     if (follows != null) {
