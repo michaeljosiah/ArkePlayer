@@ -13,14 +13,14 @@ class _Tab {
 
 const _tabs = [
   _Tab('Home', Icons.home_outlined, Icons.home),
-  _Tab('Worlds', Icons.language_outlined, Icons.language),
+  _Tab('Discover', Icons.explore_outlined, Icons.explore),
   _Tab('Library', Icons.video_library_outlined, Icons.video_library),
   _Tab('Downloads', Icons.download_outlined, Icons.download),
   _Tab('You', Icons.account_circle_outlined, Icons.account_circle),
 ];
 
 /// The five tabs: a bar above the home indicator on a phone, an 88-wide rail from 600 wide
-/// (Arke Player P1 rule 3, P6 rule 5, P11 rule 1). A page pushed from a tab keeps them.
+/// (Arke Player P1 rule 3, P6 rule 5, P11 rule 1, P15 rule 1). A page pushed from a tab keeps them.
 class AdaptiveShell extends StatelessWidget {
   const AdaptiveShell({required this.shell, super.key});
 

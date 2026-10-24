@@ -83,6 +83,20 @@ class KindChips extends StatelessWidget {
   final ValueChanged<LibraryKind?> onSelect;
 
   @override
+  Widget build(BuildContext context) =>
+      LabelChips<LibraryKind>(options: [for (final kind in kinds) (kind, kind.label)], selected: selected, onSelect: onSelect);
+}
+
+/// `All` and then each option, one of them on (P8 rule 4, P15 rule 2): the chips over a shelf.
+class LabelChips<T> extends StatelessWidget {
+  const LabelChips({required this.options, required this.selected, required this.onSelect, this.padding = const EdgeInsets.fromLTRB(16, 2, 16, 0), super.key});
+
+  final List<(T, String)> options;
+  final T? selected;
+  final ValueChanged<T?> onSelect;
+  final EdgeInsets padding;
+
+  @override
   Widget build(BuildContext context) {
     Widget chip(String label, bool on, VoidCallback onTap) {
       final surface = context.surface;
@@ -108,9 +122,31 @@ class KindChips extends StatelessWidget {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
+      padding: padding,
       child: Row(
-        children: [chip('All', selected == null, () => onSelect(null)), for (final kind in kinds) chip(kind.label, selected == kind, () => onSelect(kind))],
+        children: [chip('All', selected == null, () => onSelect(null)), for (final (value, label) in options) chip(label, selected == value, () => onSelect(value))],
+      ),
+    );
+  }
+}
+
+/// `New` (SPEC-058 R-52, P15 rule 7), the one filled tag: on a picture in the overlay's ink, in a
+/// list in the page's.
+class NewTag extends StatelessWidget {
+  const NewTag({this.onMedia = false, super.key});
+
+  final bool onMedia;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = context.surface;
+    final background = onMedia ? ArkeColors.mediaOverlayForeground : surface.foreground;
+    final foreground = onMedia ? ArkeColors.mediaOverlayBackground : surface.background;
+    return DecoratedBox(
+      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Text('New', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: foreground, fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -232,12 +268,16 @@ class FileRow extends StatelessWidget {
 /// A Continue card (P1 rule 4, P8d): the picture, the kind, the title, where you are, a line of
 /// progress, and the round press that resumes.
 class ContinueCard extends StatelessWidget {
-  const ContinueCard({required this.item, required this.cover, required this.onOpen, this.width = 300, super.key});
+  const ContinueCard({required this.item, required this.cover, required this.onOpen, this.width = 300, this.fresh = false, super.key});
 
   final LibraryItem item;
   final File? cover;
   final VoidCallback onOpen;
   final double width;
+
+  /// Where it waits is a chapter that came after the one before it finished (P15g): `New` leads
+  /// the line.
+  final bool fresh;
 
   static String kindWord(LibraryItem item) => switch (item.kind) {
     LibraryKind.listen => item.chapters.length > 1 ? 'Audiobook' : 'Audio',
@@ -252,7 +292,7 @@ class ContinueCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label: '${item.title}, ${whereLine(item)}',
+      label: [item.title, if (fresh) 'New', whereLine(item)].join(', '),
       child: GestureDetector(
         onTap: onOpen,
         child: ClipRRect(
@@ -302,7 +342,19 @@ class ContinueCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: text.titleMedium?.copyWith(color: fg),
                       ),
-                      Text(whereLine(item), style: text.bodyMedium?.copyWith(color: fg.withValues(alpha: 0.8))),
+                      Row(
+                        children: [
+                          if (fresh) ...[const NewTag(onMedia: true), const SizedBox(width: 6)],
+                          Flexible(
+                            child: Text(
+                              whereLine(item),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.bodyMedium?.copyWith(color: fg.withValues(alpha: 0.8)),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

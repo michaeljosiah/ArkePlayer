@@ -10,11 +10,18 @@ LibraryItem _item(FileFormat format, String title) =>
     LibraryItem(id: title, format: format, title: title, byteLength: 1000, addedAt: DateTime.utc(2026, 10, 20), file: 'items/$title/media');
 
 void main() {
-  group('a world groups its productions by what a person does (P1 rule 6)', () {
-    test('in Watch, Play, Listen, Read order, with empty groups absent', () {
+  group('a world groups its productions by what a person does (P1 rule 6, P15 rule 3)', () {
+    test('in Listen, Watch, Play, Read order, with empty groups absent', () {
       final groups = groupByTakenAs([ProductionKind.audiobook, ProductionKind.film, ProductionKind.visualNovel, ProductionKind.microDrama], (kind) => kind);
-      expect(groups.keys, [TakenAs.watch, TakenAs.play, TakenAs.listen]);
+      expect(groups.keys, [TakenAs.listen, TakenAs.watch, TakenAs.play]);
       expect(groups[TakenAs.watch], [ProductionKind.film, ProductionKind.microDrama]);
+    });
+
+    test('a list’s kind line names its kind first; one this build does not know is a book’s', () {
+      expect(ProductionKind.ofLine('Audiobook · Book · 8 h 2 m'), ProductionKind.audiobook);
+      expect(ProductionKind.ofLine('Micro drama · 45 episodes'), ProductionKind.microDrama);
+      expect(ProductionKind.ofLine('Interactive movie · 14 scenes'), ProductionKind.interactiveMovie);
+      expect(ProductionKind.ofLine('Hologram'), ProductionKind.book);
     });
   });
 

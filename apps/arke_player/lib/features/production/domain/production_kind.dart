@@ -1,9 +1,10 @@
 /// What a person does with a production. A world's page groups its productions under these, in
-/// this order, and leaves out a group with nothing in it (Arke Player P1 rule 6).
+/// this order, and leaves out a group with nothing in it (Arke Player P15 rule 3, which puts Listen
+/// first, as Discover's chips do).
 enum TakenAs {
+  listen('Listen'),
   watch('Watch'),
   play('Play'),
-  listen('Listen'),
   read('Read');
 
   const TakenAs(this.label);
@@ -13,6 +14,7 @@ enum TakenAs {
 /// The kinds of production Arke publishes, and how each is taken in.
 enum ProductionKind {
   film('Film', TakenAs.watch),
+  series('Series', TakenAs.watch),
   microDrama('Micro drama', TakenAs.watch),
   interactiveMovie('Interactive movie', TakenAs.play),
   visualNovel('Visual novel', TakenAs.play),
@@ -26,6 +28,13 @@ enum ProductionKind {
   const ProductionKind(this.label, this.takenAs);
   final String label;
   final TakenAs takenAs;
+
+  /// The kind a list's kind line names first, `Audiobook · Book · 8 h 2 m` → [audiobook]; a line
+  /// naming no kind this build knows is a book's.
+  static ProductionKind ofLine(String line) {
+    final first = line.split(' · ').first.trim().toLowerCase();
+    return ProductionKind.values.where((kind) => kind.label.toLowerCase() == first).firstOrNull ?? ProductionKind.book;
+  }
 }
 
 /// Groups productions for a world's page: [TakenAs] order, empty groups absent, each group in

@@ -493,8 +493,9 @@ Future<void> askReveal(BuildContext context, WidgetRef ref, String worldId, Worl
   if (revealed == true) await reveal(ref, worldId, after);
 }
 
-/// A world's guide on its page (P11b, P11c, P11i), after its productions: Characters as cards,
-/// Places as tiles, Lore as rows, each head with its count. A section with nothing public is not
+/// A world's guide on its page (P11b, P11c, P11i), after its productions: Characters and Places in
+/// the one tile of every row (P15 rule 10, replacing P11 rule 2's 120-wide cards and 160-wide
+/// tiles), Lore as rows, each head with its count. A section with nothing public is not
 /// drawn; a guide never fetched draws nothing (R-22). [location] is the world page's own path.
 class GuideSections extends ConsumerWidget {
   const GuideSections({required this.worldId, required this.location, super.key});
@@ -512,6 +513,7 @@ class GuideSections extends ConsumerWidget {
     if (guide == null) return const SizedBox.shrink();
     final reach = ref.watch(guideReachProvider(worldId)).value ?? GuideReach.none;
     final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
+    final width = rowTileWidth(context);
     void open(GuideEntry entry) => context.push(Routes.guideEntry(location, entry.id));
     void ask(GuideAfter after) => askReveal(context, ref, worldId, guide, reach, after);
 
@@ -537,15 +539,17 @@ class GuideSections extends ConsumerWidget {
             children: [
               for (final character in characters)
                 if (reach.shows(character.after))
-                  CharacterCard(
-                    name: character.name,
-                    role: character.role,
+                  ProductionTile(
+                    title: character.name,
+                    kind: character.role ?? 'Character',
                     picture: guidePicture(guide, character),
-                    width: wide ? 160 : 120,
+                    initials: initials(character.name),
+                    pictureAlignment: const Alignment(0, -0.6),
+                    width: width,
                     onOpen: () => open(character),
                   )
                 else
-                  GatedCard(after: character.after!, what: 'Character', width: wide ? 160 : 120, onReveal: () => ask(character.after!)),
+                  GatedCard(after: character.after!, what: 'Character', width: width, aspectRatio: 16 / 9, onReveal: () => ask(character.after!)),
             ],
           ),
         ],
@@ -555,15 +559,9 @@ class GuideSections extends ConsumerWidget {
             children: [
               for (final place in places)
                 if (reach.shows(place.after))
-                  ProductionTile(
-                    title: place.name,
-                    kind: placeKind(place),
-                    picture: guidePicture(guide, place),
-                    width: wide ? 280 : 160,
-                    onOpen: () => open(place),
-                  )
+                  ProductionTile(title: place.name, kind: placeKind(place), picture: guidePicture(guide, place), width: width, onOpen: () => open(place))
                 else
-                  GatedCard(after: place.after!, what: placeKind(place), width: wide ? 280 : 160, aspectRatio: 16 / 9, onReveal: () => ask(place.after!)),
+                  GatedCard(after: place.after!, what: placeKind(place), width: width, aspectRatio: 16 / 9, onReveal: () => ask(place.after!)),
             ],
           ),
         ],

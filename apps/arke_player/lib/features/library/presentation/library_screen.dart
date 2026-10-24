@@ -8,13 +8,22 @@ import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../add_file/presentation/add_flow.dart';
+import '../../production/domain/production_kind.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/world_widgets.dart';
 import 'item_menu.dart';
 
-/// Library (P8c; on a Fold, two columns, P8e): `All · Listen · Read · Watch` when two or more kinds
-/// of file are present, the rows newest first, `+` in the head. Installed worlds come first under
-/// All, as cards, with the files under `Files` after them (P7b, P9 rule 6); the chips filter files.
+/// How a file is taken, as Discover's chips name it (P15 rule 1).
+TakenAs takenAsOf(LibraryKind kind) => switch (kind) {
+  LibraryKind.listen => TakenAs.listen,
+  LibraryKind.read => TakenAs.read,
+  LibraryKind.watch => TakenAs.watch,
+};
+
+/// What is on the phone (P8c, P15h; on a Fold, two columns, P8e): installed worlds first as cards,
+/// each with `New` or `Update` (P15 rule 1), under `Worlds`, then the files added under `Added`,
+/// newest first, `+` in the head. Discover's chips, `All · Listen · Watch · Play · Read`, show when
+/// two or more of them are present and filter both.
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
@@ -23,18 +32,26 @@ class LibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
-  LibraryKind? _kind;
+  TakenAs? _kind;
 
   @override
   Widget build(BuildContext context) {
     final items = ref.watch(libraryItemsProvider).value ?? const [];
     final store = ref.watch(libraryStoreProvider).value;
-    final kinds = kindsPresent(items);
-    final kind = kinds.contains(_kind) ? _kind : null;
-    final rows = libraryRows(items, kind: kind);
-    final worlds = ref.watch(libraryWorldsProvider).value ?? const [];
-    final showWorlds = kind == null && worlds.isNotEmpty;
-    final empty = worlds.isEmpty && libraryRows(items).isEmpty;
+    final allWorlds = ref.watch(libraryWorldsProvider).value ?? const [];
+    Set<TakenAs> takenIn(LibraryWorld world) => {
+      for (final production in world.productions) production.narration != null ? TakenAs.listen : TakenAs.read,
+    };
+    final present = {for (final kind in kindsPresent(items)) takenAsOf(kind), for (final world in allWorlds) ...takenIn(world)};
+    final kinds = [
+      for (final taken in TakenAs.values)
+        if (present.contains(taken)) taken,
+    ];
+    final kind = kinds.length > 1 && kinds.contains(_kind) ? _kind : null;
+    final rows = libraryRows(items).where((item) => kind == null || takenAsOf(item.kind) == kind).toList();
+    final worlds = allWorlds.where((world) => kind == null || takenIn(world).contains(kind)).toList();
+    final showWorlds = worlds.isNotEmpty;
+    final empty = allWorlds.isEmpty && libraryRows(items).isEmpty;
     final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
 
     Widget row(LibraryItem item) =>
@@ -49,14 +66,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             title: 'Library',
             trailing: RoundPress(icon: Icons.add, label: 'Add a file', onPressed: () => addFiles(context, ref)),
           ),
-          if (kinds.length > 1) KindChips(kinds: kinds, selected: kind, onSelect: (value) => setState(() => _kind = value)),
+          if (kinds.length > 1)
+            LabelChips<TakenAs>(options: [for (final taken in TakenAs.values) (taken, taken.label)], selected: kind, onSelect: (value) => setState(() => _kind = value)),
           Expanded(
             child: empty
                 ? EmptyShelf(onAdd: () => addFiles(context, ref))
                 : CustomScrollView(
                     slivers: [
-                      const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                      if (showWorlds)
+                      if (showWorlds) ...[
+                        const SliverToBoxAdapter(child: SectionHead('Worlds')),
                         SliverList.list(
                           children: [
                             for (final world in worlds)
@@ -66,12 +84,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                   name: world.name,
                                   meta: 'Installed · ${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
                                   picture: libraryPicture(store, world.keyArt),
+                                  fresh: worldHasNew(world, items),
+                                  tag: ref.watch(worldUpdateProvider(world.id)) != null ? 'Update' : null,
                                   onOpen: () => context.push(Routes.libraryWorld(world.id)),
                                 ),
                               ),
                           ],
                         ),
-                      if (showWorlds && rows.isNotEmpty) const SliverToBoxAdapter(child: SectionHead('Files')),
+                      ] else
+                        const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                      if (showWorlds && rows.isNotEmpty) const SliverToBoxAdapter(child: SectionHead('Added')),
                       if (wide)
                         SliverPadding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),

@@ -36,7 +36,7 @@ enum PlayerKind {
 
 /// The player a production opens in.
 PlayerKind playerForProduction(ProductionKind kind) => switch (kind) {
-  ProductionKind.film => PlayerKind.film,
+  ProductionKind.film || ProductionKind.series => PlayerKind.film,
   ProductionKind.microDrama => PlayerKind.microDrama,
   ProductionKind.interactiveMovie => PlayerKind.interactive,
   ProductionKind.visualNovel => PlayerKind.visualNovel,

@@ -87,7 +87,7 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
       final art = plan.shownAt(plan.starts[index] + offset)?.path ?? artPath;
       _announce(item, art);
       await _player.setAudioSources(
-        [for (final chapter in plan.chapters) AudioSource.file(plan.pathOf(chapter.audio))],
+        [for (final (i, chapter) in plan.chapters.indexed) AudioSource.file(plan.pathIn(i, chapter.audio))],
         initialIndex: index,
         initialPosition: offset,
       );

@@ -11,7 +11,8 @@ import '../../worlds/application/worlds.dart';
 import '../application/settings_controller.dart';
 import '../domain/device_settings.dart';
 
-/// You, before an account (P8f): Playback (Captions), Storage, About. Every setting is this
+/// You, before an account (P8f): Playback (Captions), Storage with Wi-Fi only (P6b: a world's new
+/// chapters wait for Wi-Fi, SPEC-058 R-51), About. Every setting is this
 /// device's (P6 rule 3); nothing here needs or names an account (P8 rule 1).
 class YouScreen extends ConsumerWidget {
   const YouScreen({super.key});
@@ -39,6 +40,11 @@ class YouScreen extends ConsumerWidget {
                 const _GroupLabel('Storage'),
                 _Group(
                   children: [
+                    _SwitchRow(
+                      label: 'Wi-Fi only',
+                      value: settings.wifiOnly,
+                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(wifiOnly: on)),
+                    ),
                     _Row(
                       label: 'On this phone',
                       value: formatBytes(bytesUsed(items, ref.watch(libraryWorldsProvider).value ?? const [])),
@@ -132,6 +138,33 @@ class _Group extends StatelessWidget {
           children[i],
         ],
       ],
+    ),
+  );
+}
+
+/// A label and its switch (P6b).
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({required this.label, required this.value, required this.onChanged});
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => MergeSemantics(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 50),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 4, 8, 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase)),
+            ),
+            Switch(value: value, onChanged: onChanged),
+          ],
+        ),
+      ),
     ),
   );
 }

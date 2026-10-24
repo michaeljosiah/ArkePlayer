@@ -8,10 +8,10 @@ import '../../features/library/presentation/library_screen.dart';
 import '../../features/onboarding/presentation/first_open_screen.dart';
 import '../../features/players/presentation/open_item_screen.dart';
 import '../../features/settings/presentation/you_screen.dart';
+import '../../features/worlds/presentation/discover_screen.dart';
 import '../../features/worlds/presentation/guide_screens.dart';
 import '../../features/worlds/presentation/production_screen.dart';
 import '../../features/worlds/presentation/world_screen.dart';
-import '../../features/worlds/presentation/worlds_screen.dart';
 import '../shell/adaptive_shell.dart';
 import 'routes.dart';
 
@@ -34,7 +34,7 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: Routes.worlds, builder: (context, state) => const WorldsScreen(), routes: [_worldRoute()]),
+              GoRoute(path: Routes.discover, builder: (context, state) => const DiscoverScreen(), routes: [_worldRoute()]),
             ],
           ),
           StatefulShellBranch(

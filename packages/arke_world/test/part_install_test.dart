@@ -189,6 +189,19 @@ void main() {
     expect(store.worlds.single.parts, hasLength(1));
   });
 
+  test('a part fetched ahead is added from where it waits, with nothing downloaded again', () async {
+    final (pin, _) = await edition('2026-10-22');
+    await installer.install(listed(pin));
+    final low = await part(pin.fingerprint!, 1, [('low-water', 'Low water', 3)]);
+    final waiting = File('${dir.path}/inbox/low.zip');
+    await installer.fetchPart(low, waiting);
+    expect(waiting.existsSync(), isTrue);
+    final hits = server.hits;
+    await installer.installPart(listed(pin, [low]), low, from: waiting);
+    expect(server.hits, hits);
+    expect(store.worlds.single.parts.single.chapters, ['low-water']);
+  });
+
   test('a finished narration moves to the new chapter, which is New until it plays (R-52, P15g)', () async {
     final (pin, _) = await edition('2026-10-22');
     await installer.install(listed(pin));

@@ -38,6 +38,9 @@ dependencies:
     path: ../../packages/arke_world
   wakelock_plus: ^1.7.0
   fc_native_video_thumbnail: ^2.2.0
+  workmanager: ^0.10.10
+  flutter_local_notifications: ^22.3.2
+  connectivity_plus: ^7.3.1
 
 dev_dependencies:
   flutter_test:

@@ -130,23 +130,22 @@ List<int> _package({List<int>? book}) {
 }
 
 void main() {
-  final world = Routes.worldsWorld('undersong');
+  final world = Routes.discoverWorld('undersong');
 
-  group('Worlds (P11a)', () {
+  group('Discover (P11a, as P15 rule 1 amends it)', () {
     testWidgets('is the second of five tabs', (tester) async {
-      await _pump(tester, location: Routes.worlds, guide: _guide);
+      await _pump(tester, location: Routes.discover, guide: _guide);
       final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect([for (final destination in bar.destinations) (destination as NavigationDestination).label], ['Home', 'Worlds', 'Library', 'Downloads', 'You']);
+      expect([for (final destination in bar.destinations) (destination as NavigationDestination).label], ['Home', 'Discover', 'Library', 'Downloads', 'You']);
       expect(bar.selectedIndex, 1);
     });
-    testWidgets('In Library counts the productions and the characters', (tester) async {
-      await _pump(tester, location: Routes.worlds, guide: _guide);
-      expect(find.text('In Library'), findsOneWidget);
+    testWidgets('an installed world stays, In Library counting the productions and the characters', (tester) async {
+      await _pump(tester, location: Routes.discover, guide: _guide);
       expect(find.text('In Library · 1 production · 3 characters'), findsOneWidget);
       expect(find.text('Available'), findsNothing);
     });
     testWidgets('Available adds the size, and the characters once the guide is here', (tester) async {
-      await _pump(tester, location: Routes.worlds, installed: false, guide: _guide);
+      await _pump(tester, location: Routes.discover, installed: false, guide: _guide);
       expect(find.text('1 production · 3 characters · 386 MB'), findsOneWidget);
     });
   });
@@ -301,7 +300,7 @@ void main() {
 
   group('text at 200% clips nothing', () {
     for (final (name, location) in [
-      ('Worlds', Routes.worlds),
+      ('Worlds', Routes.discover),
       ('the world\'s guide', world),
       ('a character', Routes.guideEntry(world, 'maren-kest')),
       ('a place', Routes.guideEntry(world, 'the-vigil')),

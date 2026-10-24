@@ -182,8 +182,15 @@ class WorldInstaller {
 
   /// Adds a part to an installed world (SPEC-058 R-51): its pin's length and SHA-256, every file
   /// checked, then the part beside what is there in one write, so nothing being played changes and
-  /// nothing is ever half-added. A part already installed changes nothing.
-  Future<LibraryWorld> installPart(CatalogueWorld world, CataloguePart pin, {void Function(InstallStep step)? onStep, InstallCancel? cancel}) async {
+  /// nothing is ever half-added. A part already installed changes nothing. [from] is the part
+  /// already fetched by [fetchPart], so nothing is downloaded again.
+  Future<LibraryWorld> installPart(
+    CatalogueWorld world,
+    CataloguePart pin, {
+    void Function(InstallStep step)? onStep,
+    InstallCancel? cancel,
+    File? from,
+  }) async {
     final installed = store.worlds.where((existing) => existing.id == world.id).firstOrNull;
     if (installed == null) throw const NotAPackage();
     if (installed.parts.any((part) => part.fingerprint == pin.fingerprint)) return installed;
@@ -192,7 +199,12 @@ class WorldInstaller {
     final staging = await store.stageWorld();
     try {
       final zip = '${staging.path}${Platform.pathSeparator}part.zip';
-      await _download(pin, zip, onStep, control);
+      if (from != null && await from.exists() && await from.length() == pin.byteLength) {
+        await from.copy(zip);
+        if ((await sha256.bind(File(zip).openRead()).first).toString() != pin.sha256) throw const FilesDoNotMatch(1);
+      } else {
+        await _download(pin, zip, onStep, control);
+      }
       control._check();
       final content = Directory('${staging.path}${Platform.pathSeparator}world');
       final manifest = await _check(zip, content, onStep, control);
@@ -213,6 +225,21 @@ class WorldInstaller {
       throw await _full(error, needed);
     } finally {
       if (await staging.exists()) await staging.delete(recursive: true);
+    }
+  }
+
+  /// Fetches a part to [to] with its pin's length and SHA-256 checked, and adds nothing: the daily
+  /// check in the background fetches while the app may be writing the library, so the part waits
+  /// there until the app adds it ([installPart] with `from`).
+  Future<void> fetchPart(CataloguePart pin, File to, {InstallCancel? cancel}) async {
+    await _checkSpace(pin.byteLength);
+    await to.parent.create(recursive: true);
+    final partial = File('${to.path}.part');
+    try {
+      await _download(pin, partial.path, null, cancel ?? InstallCancel());
+      await partial.rename(to.path);
+    } finally {
+      if (await partial.exists()) await partial.delete();
     }
   }
 

@@ -9,6 +9,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../parts/application/notices.dart';
+import '../../settings/application/settings_controller.dart';
+import '../../settings/domain/device_settings.dart';
+import '../application/guides.dart';
 import '../application/worlds.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
@@ -30,17 +34,53 @@ String editionLabel(String edition) {
 /// `1 character`, `5 characters` (P11a).
 String characterCount(int count) => count == 1 ? '1 character' : '$count characters';
 
+/// The one tile of every row in Discover, Home and a world's page (P15 rule 10): 16:9, as wide as
+/// a world's card in a row, 240 on a phone and 300 on a Fold. The owner, 24 October 2026: rows of
+/// different sizes and shapes look unkempt.
+double rowTileWidth(BuildContext context) => MediaQuery.sizeOf(context).width >= WindowBands.fold ? 300 : 240;
+
+/// A row of tiles that scrolls across, 12 apart.
+class TileRow extends StatelessWidget {
+  const TileRow({required this.children, super.key});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (i, child) in children.indexed) ...[if (i > 0) const SizedBox(width: 12), child],
+      ],
+    ),
+  );
+}
+
 /// A picture named relative to the library's root.
 ImageProvider? libraryPicture(LibraryStore? store, String? relative) => store == null || relative == null ? null : FileImage(File(store.resolve(relative)));
 
 /// A picture bundled with the app, for a world not installed yet.
 ImageProvider? bundledPicture(String? asset) => asset == null ? null : AssetImage(asset);
 
-/// A world as a card: 358 × 190 on Available and in Library (P9b, P7b), 240 × 135 on Home (P9g).
-/// While it installs, its meta line is `Installing · 42%` over a line of progress (P9 rule 4); a
-/// world with a newer edition carries `Update` (P12a).
+/// A world as a card: 358 × 190 in Discover's Worlds and in Library (P15b, P15h), and in a row
+/// the width of the row's tile (P9g, P15g, P15l). While it installs, its meta line is
+/// `Installing · 42%` over a line of progress (P9 rule 4); a world with a newer edition carries
+/// `Update` (P12a), one with a chapter not yet opened `New` (P15h).
 class WorldCard extends StatelessWidget {
-  const WorldCard({required this.name, required this.meta, required this.picture, required this.onOpen, this.mini = false, this.progress, this.tag, super.key});
+  const WorldCard({
+    required this.name,
+    required this.meta,
+    required this.picture,
+    required this.onOpen,
+    this.mini = false,
+    this.progress,
+    this.tag,
+    this.fresh = false,
+    this.width,
+    super.key,
+  });
 
   final String name;
   final String meta;
@@ -52,32 +92,45 @@ class WorldCard extends StatelessWidget {
   /// One word in a pill at the card's top left.
   final String? tag;
 
+  /// `New`, filled, before the tag.
+  final bool fresh;
+
+  /// A card in a row: 240 unless given, 16:9.
+  final double? width;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final card = ClipRRect(
       borderRadius: BorderRadius.circular(mini ? ArkeRadius.xl : 16),
       child: SizedBox(
-        width: mini ? 240 : double.infinity,
-        height: mini ? 135 : 190,
+        width: mini ? (width ?? 240) : double.infinity,
+        height: mini ? (width ?? 240) * 9 / 16 : 190,
         child: Stack(
           fit: StackFit.expand,
           children: [
             if (picture != null) Image(image: picture!, fit: BoxFit.cover) else const ColoredBox(color: ArkeColors.neutral800),
             const _Shade(),
-            if (tag != null)
+            if (tag != null || fresh)
               Positioned(
                 left: 12,
                 top: 12,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(color: _fg.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                    child: Text(
-                      tag!,
-                      style: text.labelMedium?.copyWith(color: _fg, fontWeight: FontWeight.w600),
-                    ),
-                  ),
+                child: Row(
+                  children: [
+                    if (fresh) const NewTag(onMedia: true),
+                    if (fresh && tag != null) const SizedBox(width: 6),
+                    if (tag != null)
+                      DecoratedBox(
+                        decoration: BoxDecoration(color: _fg.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                          child: Text(
+                            tag!,
+                            style: text.labelMedium?.copyWith(color: _fg, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             Positioned(
@@ -117,7 +170,7 @@ class WorldCard extends StatelessWidget {
     );
     return Semantics(
       button: true,
-      label: [name, ?tag, meta].join(', '),
+      label: [name, if (fresh) 'New', ?tag, meta].join(', '),
       child: ExcludeSemantics(
         child: GestureDetector(onTap: onOpen, child: card),
       ),
@@ -516,23 +569,44 @@ class GroupRow extends StatelessWidget {
   }
 }
 
-/// A production of an installed world (P1d, P9f): 16:9 with its title and kind; 160 wide, or the
-/// full width when the world has only the one (P9 rule 6).
+/// The one tile (P1d, P9f, P15 rule 10): 16:9 with its title and kind under it, the width of the
+/// row's tile, or the full width when a world has only the one production (P9 rule 6). `New` at its
+/// top left (P15a); a glyph at its middle, a clip's play (P15a's teasers).
 class ProductionTile extends StatelessWidget {
-  const ProductionTile({required this.title, required this.kind, required this.picture, required this.width, required this.onOpen, super.key});
+  const ProductionTile({
+    required this.title,
+    required this.kind,
+    required this.picture,
+    required this.width,
+    required this.onOpen,
+    this.fresh = false,
+    this.glyph,
+    this.initials,
+    this.pictureAlignment = Alignment.center,
+    super.key,
+  });
 
   final String title;
   final String kind;
   final ImageProvider? picture;
   final double width;
-  final VoidCallback onOpen;
+
+  /// Null where nothing opens yet: a production before its world is installed (P15c).
+  final VoidCallback? onOpen;
+  final bool fresh;
+  final IconData? glyph;
+
+  /// For a character with no portrait (P15 rule 10).
+  final String? initials;
+  final Alignment pictureAlignment;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final surface = context.surface;
     return Semantics(
-      button: true,
-      label: '$title, $kind',
+      button: onOpen != null,
+      label: [title, if (fresh) 'New', kind].join(', '),
       child: ExcludeSemantics(
         child: GestureDetector(
           onTap: onOpen,
@@ -545,7 +619,34 @@ class ProductionTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(ArkeRadius.lg),
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
-                    child: picture == null ? ColoredBox(color: context.surface.secondary) : Image(image: picture!, fit: BoxFit.cover),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (picture != null)
+                          Image(image: picture!, fit: BoxFit.cover, alignment: pictureAlignment)
+                        else
+                          ColoredBox(
+                            color: surface.secondary,
+                            child: initials == null
+                                ? null
+                                : Center(child: Text(initials!, style: text.titleLarge?.copyWith(color: surface.mutedForeground))),
+                          ),
+                        if (fresh) const Positioned(left: 6, top: 6, child: NewTag(onMedia: true)),
+                        if (glyph != null)
+                          Center(
+                            child: Container(
+                              width: ArkeSizes.press,
+                              height: ArkeSizes.press,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _bg.withValues(alpha: 0.42),
+                                border: Border.all(color: _fg.withValues(alpha: 0.16)),
+                              ),
+                              child: Icon(glyph, color: _fg, size: 20),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -621,17 +722,91 @@ Future<void> showInstallRefusal(BuildContext context, WidgetRef ref, CatalogueWo
   if (again == true) await controller.start(world);
 }
 
-/// ⋯ on an installed world (P9 rule 6): Details and Remove.
+/// A world to install as a card, showing its install while one runs (P9 rule 4). Its characters
+/// count once its guide is on the phone (P11a).
+class AvailableCard extends ConsumerWidget {
+  const AvailableCard({required this.world, required this.onOpen, this.mini = false, this.width, super.key});
+
+  final CatalogueWorld world;
+  final VoidCallback onOpen;
+  final bool mini;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(installProvider(world.id));
+    final package = world.package;
+    final card = WorldCard(
+      name: world.name,
+      meta: state is Installing
+          ? state.short
+          : [
+              productionCount(world.productions.length),
+              if (ref.watch(worldGuideProvider(world.id)).value?.guide.characters.length case final count? when count > 0) characterCount(count),
+              if (package != null) formatBytes(package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength)),
+            ].join(' · '),
+      picture: bundledPicture(world.keyArt),
+      progress: state is Installing ? state.fraction : null,
+      mini: mini,
+      width: width,
+      onOpen: onOpen,
+    );
+    return mini ? card : Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: card);
+  }
+}
+
+/// Turns a world's Notify on or off (P15j): the first time it is turned on, the phone asks its
+/// permission; refused, it stays off.
+Future<void> setNotify(WidgetRef ref, String worldId, bool on) async {
+  final settings = ref.read(settingsProvider.notifier);
+  if (on && !await ref.read(noticesProvider).ask().catchError((Object _) => false)) return;
+  await settings.change((current) => current.copyWith(notify: on ? {...current.notify, worldId} : ({...current.notify}..remove(worldId))));
+}
+
+/// ⋯ on an installed world (P9 rule 6, P15j): Notify of its new chapters, its edition and space,
+/// then Details and Remove.
 Future<void> showWorldMenu(BuildContext context, WidgetRef ref, LibraryWorld world) async {
   final choice = await showArkeSheet<String>(
     context,
     title: world.name,
-    builder: (context) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ListTile(leading: const Icon(Icons.info_outline), title: const Text('Details'), onTap: () => Navigator.of(context).pop('details')),
-        ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Remove'), onTap: () => Navigator.of(context).pop('remove')),
-      ],
+    builder: (context) => Consumer(
+      builder: (context, ref, _) {
+        final text = Theme.of(context).textTheme;
+        final notify = (ref.watch(settingsProvider).value ?? const DeviceSettings()).notify.contains(world.id);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+              child: Text('Notify', style: text.labelSmall?.copyWith(color: context.surface.mutedForeground, fontWeight: FontWeight.w500)),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.fromLTRB(14, 2, 8, 2),
+              decoration: BoxDecoration(color: context.surface.secondary, borderRadius: BorderRadius.circular(ArkeRadius.xl)),
+              child: MergeSemantics(
+                child: Row(
+                  children: [
+                    Expanded(child: Text('New chapters', style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase))),
+                    Switch(value: notify, onChanged: (on) => setNotify(ref, world.id, on)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            GroupRows(
+              rows: [
+                (label: 'Edition', value: editionLabel(world.edition)),
+                (label: 'Space', value: formatBytes(world.byteLength)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ListTile(leading: const Icon(Icons.info_outline), title: const Text('Details'), onTap: () => Navigator.of(context).pop('details')),
+            ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Remove'), onTap: () => Navigator.of(context).pop('remove')),
+          ],
+        );
+      },
     ),
   );
   if (!context.mounted || choice == null) return;

@@ -45,13 +45,23 @@ class ShownPicture {
 }
 
 /// An installed world's listening document with its files resolved (SPEC-058 R-10). Every time
-/// here is on the book's clock: the chapters back to back, as the library item's chapters are.
+/// here is on the book's clock: the chapters back to back, as the library item's chapters are. A
+/// world released a chapter at a time plays its edition's chapters, then each part's, as one
+/// document (R-50); each chapter's files are found in its own package's folder.
 class ListeningPlan {
-  ListeningPlan({required this.document, required this.pathOf}) : starts = document.starts;
+  ListeningPlan({required this.document, required this.pathOf, String Function(int chapter, String assetId)? pathIn})
+    : starts = document.starts,
+      _pathIn = pathIn;
 
   final ListeningDocument document;
+
+  /// A file of the edition's package: its cover.
   final String Function(String assetId) pathOf;
+  final String Function(int chapter, String assetId)? _pathIn;
   final List<Duration> starts;
+
+  /// A file of the package chapter [chapter] came in.
+  String pathIn(int chapter, String assetId) => _pathIn?.call(chapter, assetId) ?? pathOf(assetId);
 
   List<ListeningChapter> get chapters => document.chapters;
 
@@ -77,24 +87,25 @@ class ListeningPlan {
       final next = chapter.pictures.where((p) => p.at > picture.at).firstOrNull;
       final end = picture.hold != null ? picture.at + picture.hold! : (next?.at ?? chapter.duration);
       return ShownPicture(
-        path: pathOf(picture.picture),
+        path: pathIn(index, picture.picture),
         start: start + picture.at,
         end: start + end,
-        tallPath: picture.tall == null ? null : pathOf(picture.tall!),
+        tallPath: picture.tall == null ? null : pathIn(index, picture.tall!),
         focus: picture.focus,
-        motionPath: picture.motion == null ? null : pathOf(picture.motion!.video),
+        motionPath: picture.motion == null ? null : pathIn(index, picture.motion!.video),
         motionRepeats: picture.motion?.behavior != MotionBehavior.hold,
         pushes: picture.motion == null,
       );
     }
     final still = chapter.opening ?? document.cover;
     if (still == null) return null;
+    final stillPath = chapter.opening != null ? pathIn(index, still) : pathOf(still);
     // From the chapter's start, or the end of the hold that left this gap, until the next picture
     // or the chapter's end: so a push across a gap starts with the gap, not with the chapter.
     final before = chapter.pictures.where((p) => p.at <= offset).lastOrNull;
     final from = before?.hold == null ? Duration.zero : before!.at + before.hold!;
     final next = chapter.pictures.where((p) => p.at > offset).firstOrNull;
-    return ShownPicture(path: pathOf(still), start: start + from, end: start + (next?.at ?? chapter.duration), pushes: chapter.opening != null);
+    return ShownPicture(path: stillPath, start: start + from, end: start + (next?.at ?? chapter.duration), pushes: chapter.opening != null);
   }
 
   /// The phrase being heard at [time], for Text (SPEC-047 R-70).
@@ -111,17 +122,37 @@ class ListeningPlan {
   }
 }
 
-/// Reads an installed world's listening document against the manifest kept beside its files.
+/// Reads an installed world's listening documents against the manifests kept beside their files:
+/// the edition's, then each part's (SPEC-058 R-50), as one document.
 Future<ListeningPlan> loadListeningPlan(LibraryStore store, LibraryItem item) async {
-  final folder = store.worldDirectory(item.worldId!).path;
-  final manifest = switch (readWorldManifest(await File('$folder${Platform.pathSeparator}$worldManifestFile').readAsString())) {
-    WorldManifestOk(:final manifest) => manifest,
-    WorldManifestRefused(:final reason) => throw FormatException(reason),
-  };
-  final document = switch (readListening(await File(store.resolve(item.file)).readAsString(), manifest.assets)) {
-    ListeningOk(:final document) => document,
-    ListeningRefused(:final reason) => throw FormatException(reason),
-  };
-  String pathOf(String assetId) => '$folder${Platform.pathSeparator}${manifest.assets[assetId]!.path.replaceAll('/', Platform.pathSeparator)}';
-  return ListeningPlan(document: document, pathOf: pathOf);
+  final separator = Platform.pathSeparator;
+  final world = store.worlds.where((world) => world.id == item.worldId).firstOrNull;
+  final production = world?.productions.where((production) => production.narration == item.id).firstOrNull;
+  if (world == null || production == null) {
+    // An item the index names without its world's record: its own document, as before parts.
+    final folder = store.worldDirectory(item.worldId!).path;
+    final manifest = switch (readWorldManifest(await File('$folder$separator$worldManifestFile').readAsString())) {
+      WorldManifestOk(:final manifest) => manifest,
+      WorldManifestRefused(:final reason) => throw FormatException(reason),
+    };
+    final document = switch (readListening(await File(store.resolve(item.file)).readAsString(), manifest.assets)) {
+      ListeningOk(:final document) => document,
+      ListeningRefused(:final reason) => throw FormatException(reason),
+    };
+    return ListeningPlan(document: document, pathOf: (assetId) => '$folder$separator${manifest.assets[assetId]!.path.replaceAll('/', separator)}');
+  }
+  final sources = await installedListening(store, world, production.id);
+  if (sources.isEmpty) throw const FormatException('no listening document');
+  final folders = [
+    for (final source in sources)
+      for (final _ in source.document.chapters) source,
+  ];
+  String resolve(({ListeningDocument document, Map<String, WorldAsset> assets, String folder}) source, String assetId) =>
+      '${source.folder}$separator${source.assets[assetId]!.path.replaceAll('/', separator)}';
+  final first = sources.first;
+  return ListeningPlan(
+    document: ListeningDocument(title: first.document.title, cover: first.document.cover, chapters: [for (final source in sources) ...source.document.chapters]),
+    pathOf: (assetId) => resolve(first, assetId),
+    pathIn: (chapter, assetId) => resolve(folders[chapter], assetId),
+  );
 }

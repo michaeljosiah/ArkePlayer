@@ -60,6 +60,20 @@ Set<int> newChapters(LibraryWorld world, String productionId, LibraryItem? item)
   };
 }
 
+/// Whether [item]'s place waits at a New chapter: Continue's `New` (P15g), once the chapter before
+/// it was finished and the part moved the place on.
+bool placeIsNew(LibraryWorld world, LibraryItem item) {
+  final production = world.productions.where((production) => production.narration == item.id).firstOrNull;
+  final locator = item.place?.locator;
+  if (production == null || locator == null) return false;
+  final fromParts = [
+    for (final part in world.parts)
+      if (part.production == production.id) ...part.chapters,
+  ];
+  final at = fromParts.indexOf(locator);
+  return at >= 0 && newChapters(world, production.id, item).contains(item.chapters.length - fromParts.length + at);
+}
+
 /// Whether anything of an installed world is New, for its card's tag (P15h).
 bool worldHasNew(LibraryWorld world, Iterable<LibraryItem> items) =>
     world.productions.any((production) => newChapters(world, production.id, items.where((item) => item.id == production.narration).firstOrNull).isNotEmpty);
