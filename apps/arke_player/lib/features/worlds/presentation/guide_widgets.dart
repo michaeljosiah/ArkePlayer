@@ -191,7 +191,8 @@ class _Card extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(ArkeRadius.xl),
+                // A 16:9 card sits in a row of tiles, so it takes their corner (P15 rule 10).
+                borderRadius: BorderRadius.circular(aspectRatio > 1 ? ArkeRadius.lg : ArkeRadius.xl),
                 child: AspectRatio(aspectRatio: aspectRatio, child: picture),
               ),
               const SizedBox(height: 8),
