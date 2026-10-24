@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 19,
+  "serial": 20,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -60,11 +60,11 @@
         { "title": "The Red Quiet", "kind": "Audiobook · Book · 15 m", "picture": "assets/worlds/the-red-quiet/cover.jpg", "tall": "assets/worlds/the-red-quiet/cover-tall.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-player-2026-10-24.zip",
-        "byteLength": 22805992,
-        "sha256": "dfaa5ac88c00df738deee7557596fecf08ad6504713f5e8d231ed78f9836be91",
-        "edition": "2026-10-24",
-        "fingerprint": "fbae0797958e655901eafcbaded4894b0bf6c717f9dcadad9f3573b94a161dc0"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-player-2026-10-24-2.zip",
+        "byteLength": 22839186,
+        "sha256": "1781cb578e2dd1755020840dd4b39dc11ca926e1436a372e8016218c490ae579",
+        "edition": "2026-10-24-2",
+        "fingerprint": "e23d532d5eee284e7885c992b81838425be33439a27a8ece723384db9cd5a8b5"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-guide-2026-10-23.zip",

@@ -70,10 +70,11 @@ void main() {
 
   test('The Red Quiet is pinned to its published package and its guide alone', () {
     // The Studio's Export → Arke Player of the whole novel as a book, Chapter 1 narrated with Tall
-    // pictures, and the guide alone beside it (SPEC-059 R-10).
+    // pictures, and the guide alone beside it (SPEC-059 R-10). Its production's picture is the
+    // face-off poster, so an installed phone shows it after Update without a new build.
     final quiet = catalogue.singleWhere((world) => world.id == 'the-red-quiet');
-    expect(quiet.package!.sha256, 'dfaa5ac88c00df738deee7557596fecf08ad6504713f5e8d231ed78f9836be91');
-    expect(quiet.package!.edition, '2026-10-24');
+    expect(quiet.package!.sha256, '1781cb578e2dd1755020840dd4b39dc11ca926e1436a372e8016218c490ae579');
+    expect(quiet.package!.edition, '2026-10-24-2');
     expect(quiet.guide!.sha256, 'bba813092c1180e74c7cea42cb0c8fd1b98afe3b01790c536cfc732e9189fcc0');
     expect(quiet.productions.single.title, 'The Red Quiet');
   });
