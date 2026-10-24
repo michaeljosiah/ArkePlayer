@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 24,
+  "serial": 25,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -12,9 +12,10 @@
       "keyArt": "assets/worlds/undersong/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-keyArt-20261024.jpg", "byteLength": 183862, "sha256": "e3b91a196743ac9e9363a74b0655448c3d692438710dd3839c13ccfb31b558e9" } },
       "productions": [
-        { "title": "The Ledger of Nights", "kind": "Audiobook · Book · 4 h 50 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg",
+        { "title": "The Ledger of Nights", "kind": "Audiobook · Book · 4 h 50 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
           "pins": {
-            "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" }
+            "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" },
+            "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261024.jpg", "byteLength": 576958, "sha256": "198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776" }
           } }
       ],
       "package": {

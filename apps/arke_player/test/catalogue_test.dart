@@ -72,6 +72,14 @@ void main() {
     expect(dumah.tallPin!.sha256, '612938f535be0f3445ccbc0533e0bbef1e3a6b37e096c9c2b9e945276439aec8');
   });
 
+  test('The Undersong’s Tall cover is its own poster, title at the foot (P16 call 14)', () {
+    // Made upright with Codex Image from Maren's, Bray's, Perrin's and the Chorister's main photos,
+    // the drowned god's face under the title. Pinned as well as bundled, like Dumah's.
+    final ledger = catalogue.singleWhere((world) => world.id == 'the-undersong').productions.single;
+    expect(ledger.tall, 'assets/worlds/undersong/cover-tall.jpg');
+    expect(ledger.tallPin!.sha256, '198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776');
+  });
+
   test('The Undersong is pinned to its published package and its guide alone', () {
     // The Studio's Export → Arke Player of the 23-chapter edition with its guide, named by the
     // world's own slug, and the guide alone that lets it be explored before install (SPEC-059 R-10).
