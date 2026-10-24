@@ -61,6 +61,7 @@ flutter:
     - assets/worlds/legend-of-dumah/
     - assets/worlds/the-red-quiet/
     - assets/worlds/embers-of-the-fallen/
+    - assets/worlds/na-love-or-juju/
 
   # The design's faces (OFL-1.1, licences beside the files): Geist Sans for everything, Jost for
   # the wordmark. Latin only, as the design master vendors them; other scripts fall back to the

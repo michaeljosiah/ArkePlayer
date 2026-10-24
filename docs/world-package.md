@@ -120,6 +120,12 @@ The first published edition, `-2026-10-23-2` (serial 12), said several of Chapte
 
 The guide shows eight characters, no places and no lore. Jace's and Reina's Appearance and Essence are public from the start, as are Jono's and Tala's Appearance. Zeb's Appearance waits for *The Observation Post*, Mag's Essence for *What the Count Missed*, Mercer's Appearance and Relationships for *The Brood*, and Aurora appears after the Epilogue. The logline is new for this edition, written to the world's Echoes lore rather than the old dimensional-Tears premise; as with The Red Quiet, only the copy carries it, so a later edition needs it set in the world first.
 
+## Na Love or Juju
+
+**Pinned now: the 24 October 2026 edition** (list serial 15), the Studio's Export → Arke Player of a copy of the owner's world, with the book: `na-love-or-juju-player-2026-10-24.zip`, 767,521,724 bytes, SHA-256 `1e608147759cf0a947baf477111dbc0dd3f1d2407fdc9d7fcf2f8d232e404330`, on ArkeStudio release `na-love-or-juju-2026-10-24-r1`. Schema 3, world id `na-love-or-juju`: all 26 chapters of *Na love or Juju* as the book, every chapter narrated in the designed Gemini voice Nigerian Woman 2 (11 h 55 m), 361 pictures, Chapter 1's with their Talls (13 of 15: Codex Image's safety filter refused to recompose two close photorealistic portraits of Ife, which keep their wide picture), the key art and the guide. As with the other Tall editions, a Player without P14 refuses the package. Its guide alone, `na-love-or-juju-guide-2026-10-24.zip` (2,048,690 bytes, SHA-256 `c4fa8e6882dd8fd33ba43d9425d1c93d7bf22411bfb23590896901c0ef2eceb6`), is on the same release.
+
+The guide shows fourteen characters and three places. Every character's Essence names what happens to them, so each waits for the last chapter, *Every Day*; each Appearance shows from the chapter that brings them in, and Ife's mother waits for *Ayoka*, which gives Ife's real name. The places show their Look and Atmosphere only. The canon's four open questions stay off. The copy, `D:\ArkePlayerExport-20261024\na-love-or-juju`, left out the world's `.cache` and Bench sessions, which the export does not read.
+
 ## Check immediately (P13)
 
 In **Worlds**, press the round **Check for updates** control in the header. It fetches a fresh

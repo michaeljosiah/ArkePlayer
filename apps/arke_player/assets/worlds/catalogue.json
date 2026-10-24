@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 14,
+  "serial": 15,
   "worlds": [
     {
       "id": "the-undersong",
@@ -93,6 +93,29 @@
         "sha256": "9d99ecacc5350fadaab941f34992e77c3c9c385eb764b07d295cf450710c931a",
         "edition": "2026-10-23-2",
         "fingerprint": "d89b607c26924a261c46d59793e07fc68c53e6bdef9340847163a7b7ce43db9f"
+      }
+    },
+    {
+      "id": "na-love-or-juju",
+      "name": "Na Love or Juju",
+      "logline": "A disciplined Lagos man in his forties falls for a woman who loves him in private and denies him in public, and by the time he learns her hold on him is more than charm, he can no longer tell which of his feelings were ever his own.",
+      "keyArt": "assets/worlds/na-love-or-juju/key-art.jpg",
+      "productions": [
+        { "title": "Na love or Juju", "kind": "Audiobook · Book · 11 h 55 m", "picture": "assets/worlds/na-love-or-juju/key-art.jpg" }
+      ],
+      "package": {
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r1/na-love-or-juju-player-2026-10-24.zip",
+        "byteLength": 767521724,
+        "sha256": "1e608147759cf0a947baf477111dbc0dd3f1d2407fdc9d7fcf2f8d232e404330",
+        "edition": "2026-10-24",
+        "fingerprint": "85c14192f4b632dbe19885f3ac24eba31df5fea7f2105bf14d5cfd7d92ab54b8"
+      },
+      "guide": {
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r1/na-love-or-juju-guide-2026-10-24.zip",
+        "byteLength": 2048690,
+        "sha256": "c4fa8e6882dd8fd33ba43d9425d1c93d7bf22411bfb23590896901c0ef2eceb6",
+        "edition": "2026-10-24",
+        "fingerprint": "7da45d5be03e8cc09a95e29c19a5e0514f9fccb9f2034f561f22f58688c3c767"
       }
     }
   ]

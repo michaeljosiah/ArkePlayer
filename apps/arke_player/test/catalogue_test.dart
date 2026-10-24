@@ -65,4 +65,14 @@ void main() {
     expect(embers.guide!.sha256, '9d99ecacc5350fadaab941f34992e77c3c9c385eb764b07d295cf450710c931a');
     expect(embers.productions.single.title, 'Threshold — Book One');
   });
+
+  test('Na Love or Juju is pinned to its published package and its guide alone', () {
+    // The Studio's Export → Arke Player of the whole novel as a book, all 26 chapters narrated,
+    // Chapter 1's pictures made Tall, and the guide alone beside it (SPEC-059 R-10).
+    final juju = catalogue.singleWhere((world) => world.id == 'na-love-or-juju');
+    expect(juju.package!.sha256, '1e608147759cf0a947baf477111dbc0dd3f1d2407fdc9d7fcf2f8d232e404330');
+    expect(juju.package!.edition, '2026-10-24');
+    expect(juju.guide!.sha256, 'c4fa8e6882dd8fd33ba43d9425d1c93d7bf22411bfb23590896901c0ef2eceb6');
+    expect(juju.productions.single.title, 'Na love or Juju');
+  });
 }
