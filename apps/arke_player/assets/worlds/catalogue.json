@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 17,
+  "serial": 18,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -34,14 +34,14 @@
       "logline": "Twice the world has stood at the edge of ending. The third time begins with a thief in the City of Light.",
       "keyArt": "assets/worlds/legend-of-dumah/key-art.jpg",
       "productions": [
-        { "title": "Whispers from the Void", "kind": "Audiobook · 1 h 0 m", "picture": "assets/worlds/legend-of-dumah/whispers-from-the-void.jpg" }
+        { "title": "Whispers from the Void", "kind": "Audiobook · 1 h 23 m", "picture": "assets/worlds/legend-of-dumah/whispers-from-the-void.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-player-2026-10-23-4.zip",
-        "byteLength": 90631827,
-        "sha256": "ec20646c486f1ef47b21119bfcc09692874d14256560085b77b52a8213a9c731",
-        "edition": "2026-10-23-4",
-        "fingerprint": "d57f3920195d7476b8b3546a6cdb15f3a7a619f1aa8cce7f397456d991eb168a"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-player-2026-10-24.zip",
+        "byteLength": 122331214,
+        "sha256": "dbaad8bc67d8cc095fc4338a3a2420094f965a1a6a3c660702f3b9596ac4898a",
+        "edition": "2026-10-24",
+        "fingerprint": "588f358beb559bc4fc84513227b02abcb02282b2b0a09772d62d0db71c91a11b"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-guide-2026-10-23-2.zip",
