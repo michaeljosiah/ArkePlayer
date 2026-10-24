@@ -79,6 +79,13 @@ in ArkeStudio's CLAUDE.md. **Ask the owner before any public upload.**
 
 Installed phones show `Update` once they fetch the list; new installs and the next build ship it.
 
+**A part** (Release · New chapters, SPEC-058 R-46) is published the same way: uploaded under its own
+name, pinned with `dart run arke_world:pin_world <part.zip> <https url> --follows <the entry's
+package fingerprint>`, its printed `part` appended to the entry's `package.parts` and its
+`production` (id and schedule) set on the listed production, then `serial` raised and the list
+published. Phones fetch it on their own; a new edition empties `parts`. See
+[docs/world-package.md](docs/world-package.md#releasing-new-chapters-as-a-part-spec-058-r-43--r-56-p15).
+
 ## Specs
 
 The ArkeStudio specs are a private sibling repository (`arke-studio-specs`). Cite them by id (`SPEC-048`), never by path. If a spec isn't present, say you can't read it rather than reconstructing it.
