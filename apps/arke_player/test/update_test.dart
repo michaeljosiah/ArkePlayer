@@ -95,8 +95,8 @@ void main() {
     expect(editionLabel('first'), 'first');
   });
 
-  testWidgets('Worlds marks an installed world with a newer edition (P12a, R-32)', (tester) async {
-    await _pump(tester, location: Routes.worlds, catalogue: [_listed()]);
+  testWidgets('Discover marks an installed world with a newer edition (P12a, R-32)', (tester) async {
+    await _pump(tester, location: Routes.discover, catalogue: [_listed()]);
     expect(find.text('Update'), findsOneWidget);
   });
 
@@ -114,7 +114,7 @@ void main() {
         fingerprint: 'c' * 64,
       ),
     );
-    await _pump(tester, location: Routes.worlds, catalogue: [renamed]);
+    await _pump(tester, location: Routes.discover, catalogue: [renamed]);
     expect(find.text('Update'), findsOneWidget);
     expect(find.text('Available'), findsNothing);
     await tester.tap(find.text('The Undersong'));
@@ -133,7 +133,7 @@ void main() {
       installedAt: DateTime.utc(2026, 10, 22),
       productions: const [LibraryProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', book: 'the-undersong.the-ledger-of-nights.book')],
     );
-    await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [renamed], installed: updated);
+    await _pump(tester, location: Routes.discoverWorld('undersong'), catalogue: [renamed], installed: updated);
     final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
     await tester.tap(find.text('The Ledger of Nights'));
     await tester.pumpAndSettle();
@@ -142,7 +142,7 @@ void main() {
     expect(find.byType(ProductionScreen), findsOneWidget);
 
     // A production reached by its old address still opens.
-    router.go('${Routes.worldsWorld('undersong')}/the-ledger-of-nights');
+    router.go('${Routes.discoverWorld('undersong')}/the-ledger-of-nights');
     await tester.pumpAndSettle();
     expect(find.text('Removed'), findsNothing);
     expect(find.text('The Ledger of Nights'), findsWidgets);
@@ -151,7 +151,7 @@ void main() {
   testWidgets('and not when the list names the edition installed', (tester) async {
     await _pump(
       tester,
-      location: Routes.worlds,
+      location: Routes.discover,
       catalogue: [_listed(fingerprint: 'a')],
     );
     expect(find.text('Update'), findsNothing);
@@ -159,7 +159,7 @@ void main() {
 
   testWidgets('the world’s page offers Update with the new edition and the space (P12b), then updates in place (P12c)', (tester) async {
     final installer = _FakeInstaller();
-    await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [_listed()], installer: installer);
+    await _pump(tester, location: Routes.discoverWorld('undersong'), catalogue: [_listed()], installer: installer);
     expect(find.text('Installed · 20 Oct 2026 · 182 MB'), findsOneWidget);
     expect(find.text('Update · 228 MB', findRichText: true), findsOneWidget);
     expect(find.text('22 Oct 2026 · 228 MB'), findsOneWidget);
@@ -174,7 +174,7 @@ void main() {
 
   testWidgets('a refusal is one clause with the edition it would have brought (P12f, R-35)', (tester) async {
     final installer = _FakeInstaller(refusal: const NeedsSpace(456000000, 20000000));
-    await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [_listed()], installer: installer);
+    await _pump(tester, location: Routes.discoverWorld('undersong'), catalogue: [_listed()], installer: installer);
     await tester.tap(find.text('Update · 228 MB', findRichText: true));
     await tester.pumpAndSettle();
     expect(find.text(const NeedsSpace(456000000, 20000000).clause), findsOneWidget);
@@ -188,7 +188,7 @@ void main() {
 
   testWidgets('Downloads lists an update under Worlds (P12e)', (tester) async {
     final installer = _FakeInstaller();
-    await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [_listed()], installer: installer);
+    await _pump(tester, location: Routes.discoverWorld('undersong'), catalogue: [_listed()], installer: installer);
     await tester.tap(find.text('Update · 228 MB', findRichText: true));
     await tester.pump();
     final router = GoRouter.of(tester.element(find.byType(Scaffold).first));

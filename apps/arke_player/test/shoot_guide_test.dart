@@ -314,15 +314,15 @@ void main() {
 
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
-  final world = Routes.worldsWorld('undersong');
+  final world = Routes.discoverWorld('undersong');
   Future<void> toGuide(WidgetTester tester) => tester.scrollUntilVisible(find.text('Characters'), 400, scrollable: find.byType(Scrollable).last);
   Future<void> scrolled(WidgetTester tester) async {
     await toGuide(tester);
     await tester.drag(find.byType(Scrollable).last, const Offset(0, -300));
   }
 
-  testWidgets('P11a worlds', (t) => shoot(t, 'P11a-worlds', phone, Routes.worlds));
-  testWidgets('P11a worlds, light', (t) => shoot(t, 'P11a-worlds-light', phone, Routes.worlds, brightness: Brightness.light));
+  testWidgets('P11a worlds', (t) => shoot(t, 'P11a-worlds', phone, Routes.discover));
+  testWidgets('P11a worlds, light', (t) => shoot(t, 'P11a-worlds-light', phone, Routes.discover, brightness: Brightness.light));
   testWidgets('P11b before install', (t) => shoot(t, 'P11b-before-install', phone, world, isInstalled: false));
   testWidgets('P11b before install, its guide', (t) => shoot(t, 'P11b-before-install-guide', phone, world, isInstalled: false, act: scrolled));
   testWidgets('P11c installed, its guide', (t) => shoot(t, 'P11c-installed-guide', phone, world, act: scrolled));

@@ -158,6 +158,24 @@ class LibraryStore {
     if (superseded && await guideDirectory(world.id).exists()) await guideDirectory(world.id).delete(recursive: true);
   });
 
+  /// Adds a part to an installed world (SPEC-058 R-51): moves its checked files from [staged] into
+  /// the world's folder at [part]'s folder, then names the world as it now is and the items the part
+  /// changed or brought in one write of the index. Nothing playing is touched: an item keeps the
+  /// place the caller gives it.
+  Future<void> addPart(LibraryWorld world, LibraryPart part, List<LibraryItem> changed, Directory staged) => _serial(() async {
+    final folder = Directory(resolve(part.folder));
+    if (await folder.exists()) await folder.delete(recursive: true);
+    await folder.parent.create(recursive: true);
+    await staged.rename(folder.path);
+    final ids = {for (final item in changed) item.id};
+    _cache = List.unmodifiable([
+      ..._cache.map((item) => ids.contains(item.id) ? changed.firstWhere((next) => next.id == item.id) : item),
+      ...changed.where((item) => !_cache.any((existing) => existing.id == item.id)),
+    ]);
+    _worldCache = List.unmodifiable([for (final existing in _worldCache) existing.id == world.id ? world : existing]);
+    await _write();
+  });
+
   /// Keeps a world's guide fetched on its own, whose checked files are in [staged], replacing an
   /// earlier one.
   Future<void> addGuide(LibraryGuide guide, Directory staged) => _serial(() async {

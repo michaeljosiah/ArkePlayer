@@ -10,13 +10,16 @@ import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../add_file/presentation/add_flow.dart';
 import '../../library/presentation/item_menu.dart';
+import '../../parts/application/parts.dart';
+import '../../worlds/application/discover.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/world_widgets.dart';
-import '../../worlds/presentation/worlds_screen.dart';
 
-/// Home before an account (P8b, P8d, P9g): Continue, then Added, then installed Worlds, then
-/// Available; with nothing added, the state line and Add a file, Available under them (P9 rule 2).
-/// No picture in the head: there is no account to show (P8 rule 1).
+/// Home before an account (P8b, P8d, P9g, P15g): Continue — a chapter that came after the one
+/// before it finished leads with `New` — then the installed worlds' New chapters of the last 14
+/// days, Added, installed Worlds, and Discover, the worlds not installed; with nothing added, the
+/// state line and Add a file, Discover under them (P9 rule 2). No picture in the head: there is no
+/// account to show (P8 rule 1).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -26,6 +29,10 @@ class HomeScreen extends ConsumerWidget {
     final store = ref.watch(libraryStoreProvider).value;
     final worlds = ref.watch(libraryWorldsProvider).value ?? const [];
     final available = ref.watch(availableProvider);
+    final catalogue = ref.watch(catalogueProvider).value ?? const [];
+    final fresh = freshParts(catalogue, ref.watch(clockProvider)(), only: (world) => worlds.any((held) => world.covers(held.id)));
+    final now = ref.watch(clockProvider)();
+    final width = rowTileWidth(context);
     final going = continueShelf(items);
     final added = addedShelf(items);
     final cardWidth = MediaQuery.sizeOf(context).width >= WindowBands.fold ? 420.0 : 300.0;
@@ -45,7 +52,7 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(child: EmptyShelf(onAdd: () => addFiles(context, ref))),
-                      if (available.isNotEmpty) ...[_availableRow(context, available), const SizedBox(height: 24)],
+                      if (available.isNotEmpty) ...[_availableRow(context, available, width), const SizedBox(height: 24)],
                     ],
                   )
                 : ListView(
@@ -64,9 +71,30 @@ class HomeScreen extends ConsumerWidget {
                               item: going[index],
                               cover: coverOf(store, going[index]),
                               width: cardWidth,
+                              fresh: worlds.where((world) => world.id == going[index].worldId).any((world) => placeIsNew(world, going[index])),
                               onOpen: () => openItem(context, going[index]),
                             ),
                           ),
+                        ),
+                      ],
+                      if (fresh.isNotEmpty) ...[
+                        const SectionHead('New chapters'),
+                        TileRow(
+                          children: [
+                            for (final item in fresh)
+                              ProductionTile(
+                                title: item.production?.title ?? item.world.name,
+                                kind: '${chaptersLabel(item.part.chapters, episodes: item.episodes)} · ${item.world.name}',
+                                picture: bundledPicture(item.production?.picture ?? item.world.keyArt),
+                                fresh: releasedThisWeek(item.part, now),
+                                width: width,
+                                onOpen: () {
+                                  final held = worlds.where((world) => item.world.covers(world.id)).first;
+                                  final there = held.productions.any((production) => production.id == item.part.production);
+                                  context.push(there ? Routes.production(Routes.world(held.id), item.part.production) : Routes.world(held.id));
+                                },
+                              ),
+                          ],
                         ),
                       ],
                       if (added.isNotEmpty) ...[
@@ -92,11 +120,13 @@ class HomeScreen extends ConsumerWidget {
                               meta: productionCount(world.productions.length),
                               picture: libraryPicture(store, world.keyArt),
                               mini: true,
+                              width: width,
+                              fresh: worldHasNew(world, items),
                               onOpen: () => context.push(Routes.world(world.id)),
                             ),
                         ]),
                       ],
-                      if (available.isNotEmpty) _availableRow(context, available),
+                      if (available.isNotEmpty) _availableRow(context, available, width),
                     ],
                   ),
           ),
@@ -105,12 +135,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// Available at the end of Home (P9g): 240 × 135 cards, each showing its install while one runs.
-  static Widget _availableRow(BuildContext context, List<CatalogueWorld> available) => Column(
+  /// Discover at the end of Home (P9g, P15g): the worlds not installed, in the row's tile, each
+  /// showing its install while one runs.
+  static Widget _availableRow(BuildContext context, List<CatalogueWorld> available, double width) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const SectionHead('Available'),
-      _row([for (final world in available) AvailableCard(world: world, mini: true, onOpen: () => context.push(Routes.world(world.id)))]),
+      const SectionHead('Discover'),
+      _row([for (final world in available) AvailableCard(world: world, mini: true, width: width, onOpen: () => context.push(Routes.world(world.id)))]),
     ],
   );
 

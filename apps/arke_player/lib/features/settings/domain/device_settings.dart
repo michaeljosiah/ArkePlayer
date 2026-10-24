@@ -48,6 +48,7 @@ class DeviceSettings {
     this.autoplayNext = true,
     this.wifiOnly = true,
     this.adultContent = false,
+    this.notify = const {},
   });
 
   /// Captions for films that carry them (a sidecar SRT or VTT). Off until turned on.
@@ -73,8 +74,13 @@ class DeviceSettings {
   // After the MVP (P8 rule 7): these return with the micro dramas, shares and adult-marked
   // productions they belong to. Kept here, with their designed defaults.
   final bool autoplayNext;
-  final bool wifiOnly;
   final bool adultContent;
+
+  /// Downloads only over Wi-Fi (P6b): a world's new chapters wait for it (SPEC-058 R-51).
+  final bool wifiOnly;
+
+  /// The worlds whose new chapters the phone tells of (SPEC-058 R-54, P15j): off until turned on.
+  final Set<String> notify;
 
   DeviceSettings copyWith({
     bool? captions,
@@ -86,6 +92,8 @@ class DeviceSettings {
     bool? seenFirstOpen,
     bool? text,
     bool? slowPush,
+    bool? wifiOnly,
+    Set<String>? notify,
   }) => DeviceSettings(
     captions: captions ?? this.captions,
     captionSize: captionSize ?? this.captionSize,
@@ -97,8 +105,9 @@ class DeviceSettings {
     text: text ?? this.text,
     slowPush: slowPush ?? this.slowPush,
     autoplayNext: autoplayNext,
-    wifiOnly: wifiOnly,
+    wifiOnly: wifiOnly ?? this.wifiOnly,
     adultContent: adultContent,
+    notify: notify ?? this.notify,
   );
 
   /// Slow push as it plays: the saved choice, unless the system asks for reduced motion.
@@ -114,6 +123,9 @@ class DeviceSettings {
     'seenFirstOpen': seenFirstOpen,
     'text': text,
     'slowPush': slowPush,
+    'wifiOnly': wifiOnly,
+    // World ids are slugs, so a comma never falls inside one.
+    'notify': (notify.toList()..sort()).join(','),
   };
 
   static DeviceSettings fromPrefs(Object? Function(String key) read) {
@@ -130,6 +142,11 @@ class DeviceSettings {
       seenFirstOpen: read('seenFirstOpen') == true,
       text: read('text') == true,
       slowPush: read('slowPush') != false,
+      wifiOnly: read('wifiOnly') != false,
+      notify: {
+        for (final id in '${read('notify') ?? ''}'.split(','))
+          if (id.isNotEmpty) id,
+      },
     );
   }
 }

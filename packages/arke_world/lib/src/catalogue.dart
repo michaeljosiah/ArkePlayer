@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:arke_library/arke_library.dart';
 
+import 'manifest.dart';
+
 /// What a production is, as the design writes it (P1 rule 6): `Audiobook · Book · 2 h 3 m` for a
 /// book with its narration, `Audiobook · 6 h 12 m` for narration alone, `Book` for a book alone.
 String productionKind({required bool book, required bool narration, Duration? length}) =>
@@ -10,13 +12,19 @@ String productionKind({required bool book, required bool narration, Duration? le
 /// A production a catalogue world holds, as its page shows it before the world is installed
 /// (P9c's Inside): a title, its kind line and a picture bundled with the app.
 class CatalogueProduction {
-  const CatalogueProduction({required this.title, required this.kind, this.picture});
+  const CatalogueProduction({required this.title, required this.kind, this.picture, this.id, this.schedule});
 
   final String title;
   final String kind;
 
   /// An asset path in the app's bundle.
   final String? picture;
+
+  /// Its id in the world's package, so a tile opens the world's page at it; absent in older lists.
+  final String? id;
+
+  /// When its author says new chapters come (SPEC-058 R-48, R-53), as `pin_world` copied it.
+  final WorldSchedule? schedule;
 }
 
 /// Where a world's package is and the bytes it must have. The digest is pinned by the build, as
@@ -35,6 +43,45 @@ class CataloguePackage {
   /// The edition's fingerprint, as `editionFingerprint` makes it: what an installed world is
   /// compared by to see an update (P12 rule 2, P10 rule 2).
   final String? fingerprint;
+
+  /// The parts released since this edition, in release order (SPEC-058 R-49). Empty for a guide.
+  List<CataloguePart> get parts => const [];
+}
+
+/// A chapter a part brings, as Discover, New and a notification name it before it is fetched.
+class CataloguePartChapter {
+  const CataloguePartChapter({required this.id, required this.number, required this.title});
+  final String id;
+  final int number;
+  final String title;
+}
+
+/// A part pinned as a package is (SPEC-058 R-49): the chapters released after an edition, with
+/// the day it was released and what it brings.
+class CataloguePart extends CataloguePackage {
+  const CataloguePart({
+    required super.url,
+    required super.byteLength,
+    required super.sha256,
+    required String super.edition,
+    required String super.fingerprint,
+    required this.released,
+    required this.production,
+    required this.chapters,
+  });
+
+  /// UTC midnight of the day it was released.
+  final DateTime released;
+  final String production;
+  final List<CataloguePartChapter> chapters;
+}
+
+/// An edition's pin with the parts released since it.
+class CatalogueEdition extends CataloguePackage {
+  const CatalogueEdition({required super.url, required super.byteLength, required super.sha256, super.edition, super.fingerprint, this.parts = const []});
+
+  @override
+  final List<CataloguePart> parts;
 }
 
 /// A world a person can install (P9 rule 1). The list ships with the app, so it shows offline and
@@ -108,24 +155,83 @@ Catalogue parseCatalogue(String text) {
     final productions = [
       for (final production in raw['productions'] as List<Object?>? ?? const [])
         if (production case {'title': final String title, 'kind': final String kind})
-          CatalogueProduction(title: title, kind: kind, picture: production['picture'] as String?)
+          CatalogueProduction(
+            title: title,
+            kind: kind,
+            picture: production['picture'] as String?,
+            id: switch (production['id']) {
+              null => null,
+              final String productionId when _slug.hasMatch(productionId) => productionId,
+              _ => throw FormatException('catalogue world $id production id'),
+            },
+            schedule: production['schedule'] == null ? null : WorldSchedule.read(production['schedule']),
+          )
         else
           throw FormatException('catalogue world $id production'),
     ];
-    CataloguePackage? pinned(String key) {
-      if (raw[key] case {'url': final String url, 'byteLength': final int byteLength, 'sha256': final String sha256}) {
+    (Uri, int, String, String?, String?) pinOf(Object? value, String what) {
+      if (value case {'url': final String url, 'byteLength': final int byteLength, 'sha256': final String sha256}) {
         final uri = Uri.parse(url);
         // A world arrives over HTTPS only (P2 rule 5's Paste a link holds the same line).
-        if (uri.scheme != 'https' || byteLength <= 0 || !_digest.hasMatch(sha256)) throw FormatException('catalogue world $id $key');
-        final pin = raw[key]! as Map<String, Object?>;
+        if (uri.scheme != 'https' || byteLength <= 0 || !_digest.hasMatch(sha256)) throw FormatException('catalogue world $id $what');
+        final pin = value as Map<String, Object?>;
         final edition = pin['edition'];
         final fingerprint = pin['fingerprint'];
-        if (edition != null && (edition is! String || edition.trim().isEmpty)) throw FormatException('catalogue world $id $key edition');
-        if (fingerprint != null && (fingerprint is! String || !_digest.hasMatch(fingerprint))) throw FormatException('catalogue world $id $key fingerprint');
-        return CataloguePackage(url: uri, byteLength: byteLength, sha256: sha256, edition: edition as String?, fingerprint: fingerprint as String?);
+        if (edition != null && (edition is! String || edition.trim().isEmpty)) throw FormatException('catalogue world $id $what edition');
+        if (fingerprint != null && (fingerprint is! String || !_digest.hasMatch(fingerprint))) throw FormatException('catalogue world $id $what fingerprint');
+        return (uri, byteLength, sha256, edition as String?, fingerprint as String?);
       }
-      if (raw[key] != null) throw FormatException('catalogue world $id $key');
-      return null;
+      throw FormatException('catalogue world $id $what');
+    }
+
+    // A part names its day, its production and its chapters, so Discover, New and a notification
+    // show it before it is fetched (SPEC-058 R-49).
+    CataloguePart partOf(Object? value, int index) {
+      final what = 'part ${index + 1}';
+      final (url, byteLength, sha256, edition, fingerprint) = pinOf(value, what);
+      final pin = value! as Map<String, Object?>;
+      final released = parseDay(pin['released']);
+      final production = pin['production'];
+      final chapters = pin['chapters'];
+      if (edition == null || fingerprint == null || released == null || production is! String || !_slug.hasMatch(production) || chapters is! List<Object?>) {
+        throw FormatException('catalogue world $id $what');
+      }
+      return CataloguePart(
+        url: url,
+        byteLength: byteLength,
+        sha256: sha256,
+        edition: edition,
+        fingerprint: fingerprint,
+        released: released,
+        production: production,
+        chapters: List.unmodifiable([
+          for (final chapter in chapters)
+            if (chapter case {
+              'id': final String chapterId,
+              'number': final int number,
+              'title': final String title,
+            } when _slug.hasMatch(chapterId) && number > 0)
+              CataloguePartChapter(id: chapterId, number: number, title: title)
+            else
+              throw FormatException('catalogue world $id $what chapter'),
+        ]),
+      );
+    }
+
+    CataloguePackage? pinned(String key) {
+      if (raw[key] == null) return null;
+      final (url, byteLength, sha256, edition, fingerprint) = pinOf(raw[key], key);
+      if (key != 'package') return CataloguePackage(url: url, byteLength: byteLength, sha256: sha256, edition: edition, fingerprint: fingerprint);
+      final parts = (raw[key]! as Map<String, Object?>)['parts'] ?? const <Object?>[];
+      if (parts is! List<Object?>) throw FormatException('catalogue world $id parts');
+      return CatalogueEdition(
+        url: url,
+        byteLength: byteLength,
+        sha256: sha256,
+        edition: edition,
+        fingerprint: fingerprint,
+        parts: List.unmodifiable([for (final (index, part) in parts.indexed) partOf(part, index)]),
+      );
     }
 
     final replaces = raw['replaces'] ?? const <Object?>[];
@@ -176,6 +282,8 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
                 title: production.title,
                 kind: production.kind,
                 picture: shippedAs(world)?.productions.where((shippedProduction) => shippedProduction.title == production.title).firstOrNull?.picture,
+                id: production.id,
+                schedule: production.schedule,
               ),
           ]),
           package: world.package,
@@ -202,6 +310,18 @@ CatalogueWorld? listedFor(Iterable<CatalogueWorld> catalogue, String installedId
 /// Whether the list names a newer edition of an installed world (SPEC-058 R-32, P12 rule 2): its
 /// fingerprint is not the installed one's, or, for a world installed before fingerprints were kept,
 /// its label is not. A list entry that names no edition offers none.
+/// The parts the list names that an installed world lacks, in order (SPEC-058 R-51): none for a
+/// world whose list entry is a newer edition, which waits for Update instead.
+List<CataloguePart> missingParts(CatalogueWorld listed, LibraryWorld installed) {
+  final package = listed.package;
+  if (package == null || hasUpdate(listed, installed)) return const [];
+  final have = {for (final part in installed.parts) part.fingerprint};
+  return [
+    for (final part in package.parts)
+      if (!have.contains(part.fingerprint)) part,
+  ];
+}
+
 bool hasUpdate(CatalogueWorld listed, LibraryWorld installed) {
   final package = listed.package;
   if (package == null || !listed.covers(installed.id)) return false;

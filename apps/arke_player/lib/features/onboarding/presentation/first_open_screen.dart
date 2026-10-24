@@ -112,7 +112,7 @@ class FirstOpenScreen extends ConsumerWidget {
                 if (canInstall) ...[
                   const SizedBox(height: 10),
                   FilledButton.icon(
-                    onPressed: () => context.go(Routes.worlds),
+                    onPressed: () => context.go(Routes.discover),
                     icon: const Icon(Icons.download_rounded, size: 18),
                     label: const Text('Install a world'),
                     style: FilledButton.styleFrom(

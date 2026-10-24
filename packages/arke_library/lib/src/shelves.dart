@@ -32,6 +32,52 @@ List<LibraryItem> libraryRows(Iterable<LibraryItem> items, {LibraryKind? kind}) 
   return rows;
 }
 
+/// The chapters of a world's production that are New (SPEC-058 R-52): those a part brought after
+/// the world was installed that its narration's place has not opened. A chapter arrived and waiting
+/// at the place it was moved to (Continue's `New`) is new until it plays. Indexes into [item]'s
+/// chapters, whose last ones are the parts', in order.
+Set<int> newChapters(LibraryWorld world, String productionId, LibraryItem? item) {
+  if (item == null) return const {};
+  final parts = world.parts.where((part) => part.production == productionId).toList();
+  final fromParts = parts.fold(0, (sum, part) => sum + part.chapters.length);
+  var index = item.chapters.length - fromParts;
+  if (index < 0) return const {};
+  final place = item.place;
+  final reached = <String, int>{};
+  final arrived = <int, DateTime>{};
+  for (final part in parts) {
+    for (final chapter in part.chapters) {
+      reached[chapter] = index;
+      if (part.installedAt.isAfter(world.installedAt)) arrived[index] = part.installedAt;
+      index++;
+    }
+  }
+  // A place in a chapter of the edition is before every part's.
+  final at = place == null ? -1 : (reached[place.locator] ?? (item.chapters.length - fromParts - 1));
+  return {
+    for (final MapEntry(key: chapter, value: came) in arrived.entries)
+      if (chapter > at || (chapter == at && !place!.updatedAt.isAfter(came))) chapter,
+  };
+}
+
+/// Whether [item]'s place waits at a New chapter: Continue's `New` (P15g), once the chapter before
+/// it was finished and the part moved the place on.
+bool placeIsNew(LibraryWorld world, LibraryItem item) {
+  final production = world.productions.where((production) => production.narration == item.id).firstOrNull;
+  final locator = item.place?.locator;
+  if (production == null || locator == null) return false;
+  final fromParts = [
+    for (final part in world.parts)
+      if (part.production == production.id) ...part.chapters,
+  ];
+  final at = fromParts.indexOf(locator);
+  return at >= 0 && newChapters(world, production.id, item).contains(item.chapters.length - fromParts.length + at);
+}
+
+/// Whether anything of an installed world is New, for its card's tag (P15h).
+bool worldHasNew(LibraryWorld world, Iterable<LibraryItem> items) =>
+    world.productions.any((production) => newChapters(world, production.id, items.where((item) => item.id == production.narration).firstOrNull).isNotEmpty);
+
 /// The space the library takes: its files, and each installed world whole.
 int bytesUsed(Iterable<LibraryItem> items, [Iterable<LibraryWorld> worlds = const []]) =>
     _files(items).fold(0, (sum, item) => sum + item.byteLength) + worlds.fold(0, (sum, world) => sum + world.byteLength);

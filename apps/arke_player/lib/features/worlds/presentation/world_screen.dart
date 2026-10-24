@@ -13,12 +13,14 @@ import '../application/worlds.dart';
 import 'guide_widgets.dart';
 import 'world_widgets.dart';
 
-/// A world's page (P9). Before it is installed: the hero with `Install · 386 MB`, then Inside and
-/// Space (P9c); while it installs, the progress in the press's place (P9d); a refusal as a sheet
-/// (P9e). Installed, the same page becomes P1d's: its productions grouped by what a person does,
-/// one production at the full width (P9f). On a Fold the words keep to the left (P9h). Either
-/// way the world's guide follows its productions (P11b, P11c, P11i). A newer edition in Arke's list
-/// puts `Update` where Install was, with what it brings and the space it needs (P12b – P12f).
+/// A world's page (P9, P15c, P15d). Before it is installed: the hero with `Install · 386 MB`, its
+/// productions grouped by how they are taken, `Listen · Watch · Play · Read`, each head with its
+/// count (P15 rule 3), then Space; while it installs, the progress in the press's place (P9d); a
+/// refusal as a sheet (P9e). Installed, the same groups open their productions, one production at
+/// the full width (P9f), a production with a chapter not yet opened marked `New` (R-52). Every row
+/// is the one tile (P15 rule 10). On a Fold the words keep to the left (P9h). Either way the
+/// world's guide follows its productions (P11b, P11c, P11i). A newer edition in Arke's list puts
+/// `Update` where Install was, with what it brings and the space it needs (P12b – P12f).
 ///
 /// [location] is this page's own path, which a production's page and the guide's pages are pushed
 /// under.
@@ -63,9 +65,13 @@ class _ToInstall extends ConsumerWidget {
     });
     if (world == null) return const _Gone();
     final package = world.package;
-    final size = package == null ? null : formatBytes(package.byteLength);
+    // The edition and every part since it (SPEC-058 R-50).
+    final bytes = package == null ? null : package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength);
+    final size = bytes == null ? null : formatBytes(bytes);
     final free = ref.watch(volumeProvider).value?.free;
     final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
+    final groups = groupByTakenAs(world.productions, (production) => ProductionKind.ofLine(production.kind));
+    final single = world.productions.length == 1;
 
     return ScrolledHead(
       title: world.name,
@@ -88,24 +94,29 @@ class _ToInstall extends ConsumerWidget {
               ),
             },
           ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: wide ? 672 : double.infinity),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: wide ? 16 : 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SectionHead('Inside'),
-                    for (final production in world.productions)
-                      InsideRow(title: production.title, kind: production.kind, picture: bundledPicture(production.picture)),
-                    if (size != null && free != null) ...[const SizedBox(height: 14), GroupRow(label: 'Space', value: '$size of ${formatBytes(free)} free')],
-                  ],
+          // Nothing opens before it is installed (P9 rule 3); the tiles say what is inside.
+          _Groups(
+            groups: groups,
+            single: single,
+            tile: (production, width) => ProductionTile(
+              title: production.title,
+              kind: production.kind,
+              picture: bundledPicture(production.picture ?? world.keyArt),
+              width: width,
+              onOpen: null,
+            ),
+          ),
+          if (size != null && free != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: wide ? 672 : double.infinity),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(wide ? 16 : 0, 14, wide ? 16 : 0, 0),
+                  child: GroupRow(label: 'Space', value: '$size of ${formatBytes(free)} free'),
                 ),
               ),
             ),
-          ),
           GuideSections(worldId: worldId, location: location),
         ],
       ),
@@ -143,6 +154,7 @@ class _Installed extends ConsumerWidget {
         kind: productionKind(book: production.book != null, narration: production.narration != null, length: narration?.duration),
         picture: libraryPicture(store, picture),
         width: width,
+        fresh: newChapters(world, production.id, narration).isNotEmpty,
         onOpen: () => context.push(Routes.production(location, production.id)),
       );
     }
@@ -189,32 +201,41 @@ class _Installed extends ConsumerWidget {
               ],
             ),
           ],
-          for (final MapEntry(key: takenAs, value: productions) in groups.entries) ...[
-            SectionHead(takenAs.label),
-            if (single)
-              LayoutBuilder(
-                builder: (context, box) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Align(alignment: Alignment.centerLeft, child: tile(productions.single, (box.maxWidth - 32).clamp(0, 640))),
-                ),
-              )
-            else
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final (i, production) in productions.indexed) ...[if (i > 0) const SizedBox(width: 12), tile(production, 160)],
-                  ],
-                ),
-              ),
-          ],
+          _Groups(groups: groups, single: single, tile: tile),
           GuideSections(worldId: world.id, location: location),
         ],
       ),
     );
   }
+}
+
+/// A world's productions under `Listen · Watch · Play · Read`, each head with its count (P15 rule
+/// 3), each row the one tile; a world of one production shows it at the full width (P9 rule 6).
+class _Groups<T> extends StatelessWidget {
+  const _Groups({required this.groups, required this.single, required this.tile});
+
+  final Map<TakenAs, List<T>> groups;
+  final bool single;
+  final Widget Function(T production, double width) tile;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (final MapEntry(key: takenAs, value: productions) in groups.entries) ...[
+        if (single) SectionHead(takenAs.label) else CountHead(title: takenAs.label, count: productions.length),
+        if (single)
+          LayoutBuilder(
+            builder: (context, box) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(alignment: Alignment.centerLeft, child: tile(productions.single, (box.maxWidth - 32).clamp(0, 640))),
+            ),
+          )
+        else
+          TileRow(children: [for (final production in productions) tile(production, rowTileWidth(context))]),
+      ],
+    ],
+  );
 }
 
 /// Once the hero has scrolled away, a head in the shelf's colours with back, the world's name and

@@ -1,7 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Audio keeps playing with the screen locked: a media-playback foreground service (audio_service). -->
-    <!-- Installing a world from Available downloads its package (P9). Nothing else uses the network. -->
+    <!-- Installing a world from Available downloads its package (P9), and a world's new chapters come on
+         their own (SPEC-058 R-51): over Wi-Fi only unless You says otherwise, so the network's kind is read. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>

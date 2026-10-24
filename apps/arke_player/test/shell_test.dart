@@ -90,11 +90,23 @@ void main() {
     expect(find.text('Title a'), findsOneWidget);
   });
 
-  testWidgets('Library with two kinds shows their chips, and only theirs (P8 rule 4)', (tester) async {
+  testWidgets('Library with two kinds shows Discover’s chips, which filter (P8 rule 4, P15h)', (tester) async {
     await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3), _item('b', FileFormat.pdf)]);
-    expect(find.text('Listen'), findsOneWidget);
-    expect(find.text('Read'), findsOneWidget);
-    expect(find.text('Watch'), findsNothing);
+    for (final chip in ['All', 'Listen', 'Watch', 'Play', 'Read']) {
+      expect(find.text(chip), findsOneWidget);
+    }
+    expect(find.text('Title a'), findsOneWidget);
+    await tester.ensureVisible(find.text('Read'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Read'));
+    await tester.pumpAndSettle();
+    expect(find.text('Title a'), findsNothing);
+    expect(find.text('Title b'), findsOneWidget);
+  });
+
+  testWidgets('Library with one kind shows no chips (P8 rule 4)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3)]);
+    expect(find.text('Listen'), findsNothing);
   });
 
   testWidgets('You before an account: Playback, Storage, About only (P8f)', (tester) async {

@@ -60,7 +60,7 @@ P9 joined the MVP on 20 October 2026. The world package is [ADR 0005](decisions/
 | Frame | Screen | Route | File |
 |---|---|---|---|
 | P9a | First open, with Install a world | `/welcome` | `features/onboarding/presentation/first_open_screen.dart` |
-| P9b | Available — replaced by the Worlds tab (P11a) | `/worlds` | `features/worlds/presentation/worlds_screen.dart` |
+| P9b | Available — replaced by the Worlds tab (P11a), now Discover (P15a) | `/discover` | `features/worlds/presentation/discover_screen.dart` |
 | P9c–P9f, P9h | A world before, while and after it installs; refused; on a Fold | `/world/:worldId`, `/worlds/world/:worldId`, `/library/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `world_widgets.dart`; `features/worlds/application/worlds.dart` |
 | P1e (for P9) | A production of an installed world: Play or Continue, Read, Chapters | `…/world/:worldId/:productionId` | `features/worlds/presentation/production_screen.dart` |
 | P9g | Home, ending with Worlds and Available | `/` | `features/home/presentation/home_screen.dart` |
@@ -74,7 +74,7 @@ by `arke_world`'s `guide.dart`; a guide alone is fetched against the catalogue's
 
 | Frame | Screen | Route | File |
 |---|---|---|---|
-| P11a | Worlds: In Library, then Available | `/worlds` | `features/worlds/presentation/worlds_screen.dart` |
+| P11a | Worlds: In Library, then Available — now Discover (P15a) | `/discover` | `features/worlds/presentation/discover_screen.dart` |
 | P11b, P11c, P11i | A world's page, before and after install, then its guide; the head once scrolled; on a Fold | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `guide_widgets.dart` (`GuideSections`); `features/worlds/application/guides.dart` |
 | P11d, P11e, P11g | A character, a place, a lore entry | `…/world/:worldId/_guide/:entryId` | `features/worlds/presentation/guide_screens.dart` |
 | P11f | Lore, by kind | `…/world/:worldId/_guide` | `features/worlds/presentation/guide_screens.dart` (`LoreScreen`) |
@@ -90,7 +90,7 @@ then replaces as P10, after the world stops playing.
 
 | Frame | Screen | Route | File |
 |---|---|---|---|
-| P12a | Worlds: `Update` on the installed world's card | `/worlds` | `features/worlds/presentation/worlds_screen.dart` |
+| P12a | `Update` on the installed world's card, in Discover and Library | `/discover`, `/library` | `features/worlds/presentation/discover_screen.dart`, `features/library/presentation/library_screen.dart` |
 | P12b, P12c, P12d, P12f | The world's page: Update, New edition and Space; updating in place; updated; refused | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`; `features/worlds/application/worlds.dart` (`InstallController`) |
 | P12e | Downloads: `Updating · n%` under Worlds | `/downloads` | `features/downloads/presentation/downloads_screen.dart` |
 
@@ -103,7 +103,7 @@ Failure keeps the list visible and permits an immediate retry. No world download
 
 | Frame | Screen | Route | File |
 |---|---|---|---|
-| P13a–P13f | Manual check: idle, checking, checked and failed; phone, tablet and desktop | `/worlds` | `features/worlds/presentation/worlds_screen.dart`, `features/worlds/application/worlds.dart`; `arke_world` `hosted.dart` |
+| P13a–P13f | Manual check: idle, checking, checked and failed; phone, tablet and desktop — in Discover's head since P15 | `/discover` | `features/worlds/presentation/discover_screen.dart`, `features/worlds/application/worlds.dart`; `arke_world` `hosted.dart` |
 
 ## A picture made for the screen (P14, built)
 
@@ -114,6 +114,31 @@ fit about the focus, on P14's foot scrim. Everything else shows the Wide picture
 | Frame | Screen | Route | File |
 |---|---|---|---|
 | P14a, P14b | Audiobook on a phone, a Tall picture, Text off and on | `/open/:itemId` | `features/players/presentation/audio_player_screen.dart`, `picture_of_the_moment.dart`; `features/players/application/listening_plan.dart`; `arke_world` `listening.dart` |
+
+## Discover, a world's kinds, and chapters released over time (P15, built)
+
+Approved on 24 October 2026 with Studio 236 (SPEC-058 R-43 – R-56, SPEC-059 R-24 – R-34). Worlds
+became Discover beside Library; a world comes as its edition and a part per release, each pinned in
+Arke's list (`CataloguePart`, `CatalogueEdition.parts`) and installed as one (`WorldInstaller.install`
+with parts, `installPart`, `LibraryWorld.parts`); a narration plays its edition's chapters then each
+part's (`installedListening`, `loadListeningPlan`). A part arrives when the app opens or comes back
+(`PartsController`, Wi-Fi only from You), and with a world's Notify on, a daily background check
+(`dailyCheckDispatcher`, workmanager) fetches it ahead into `parts-inbox/` and tells of it
+(`Notices`, flutter_local_notifications); the app adds it on its next check. Every row is one 16:9
+tile, 240 on a phone and 300 on a Fold (`rowTileWidth`). `test/shoot_discover_test.dart` renders the
+frames with `SHOOT=1`.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P15a, P15b, P15l | Discover: New chapters, Stories, Teasers, Worlds under the chips; on a Fold | `/discover` | `features/worlds/presentation/discover_screen.dart`; `features/worlds/application/discover.dart` |
+| P15c, P15d | A world's page by kind, each head counted, one tile | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart` (`_Groups`), `guide_widgets.dart` |
+| P15e, P15f | A production released a chapter at a time: schedule, New, each part chapter's day, the next date dashed | `…/world/:worldId/:productionId` | `features/worlds/presentation/production_screen.dart` |
+| P15g | Home: Continue with New, the installed worlds' New chapters, Discover | `/` | `features/home/presentation/home_screen.dart` |
+| P15h | Library: Worlds with New or Update, then Added, under Discover's chips | `/library` | `features/library/presentation/library_screen.dart` |
+| P15i | A new chapter, on the lock screen | (a notification) | `features/parts/application/notices.dart` |
+| P15j | Notify, per world, in its ⋯ | (a sheet over the page) | `features/worlds/presentation/world_widgets.dart` (`showWorldMenu`, `setNotify`) |
+| P15k | Downloads: a chapter arriving or waiting under Worlds | `/downloads` | `features/downloads/presentation/downloads_screen.dart`; `features/parts/application/parts.dart` |
+| (P15 rule 4) | A picture or clip teaser, full screen; a clip with sound | (over the tabs) | `features/worlds/presentation/discover_screen.dart` (`TeaserScreen`) |
 
 ## A world already in Library (P10, approved, not built)
 
@@ -128,9 +153,11 @@ SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not buil
 | Rule | Where | Test |
 |---|---|---|
 | P1 rule 3, P6 rule 5: tabs as a bar under 600, a rail over | `app/shell/adaptive_shell.dart` | `test/shell_test.dart` |
-| P11 rule 1: five tabs, Worlds second | `app/shell/adaptive_shell.dart` | `test/guide_test.dart` |
+| P11 rule 1, P15 rule 1: five tabs, Discover second | `app/shell/adaptive_shell.dart` | `test/guide_test.dart` |
 | P11 rule 7, SPEC-059 R-20: a chapter is reached once its start is passed, heard or read; Reveal shows a production up to that chapter | `arke_world` `reach.dart`, `arke_library` `store.dart` | `guide_test.dart`, `store_test.dart`, `test/guide_test.dart` |
-| P1 rule 6: Watch · Play · Listen · Read, empty groups absent | `features/production/domain/production_kind.dart` | `test/domain_test.dart` |
+| P1 rule 6, P15 rule 3: Listen · Watch · Play · Read, empty groups absent | `features/production/domain/production_kind.dart` | `test/domain_test.dart` |
+| P15 rule 10: every row one 16:9 tile, 240 on a phone, 300 on a Fold | `features/worlds/presentation/world_widgets.dart` (`rowTileWidth`) | `test/discover_test.dart` |
+| SPEC-058 R-52: a chapter a part brought after install is New until it plays | `arke_library` `shelves.dart` (`newChapters`, `placeIsNew`, `worldHasNew`) | `part_install_test.dart`, `test/discover_test.dart` |
 | P2 rule 6: every asset checked before play | `arke_publication` `verify.dart` | `verify_test.dart` |
 | P2 rule 8: unknown profiles refused | `arke_publication` `manifest.dart` | `manifest_test.dart` |
 | P6 rule 3: device settings and their defaults | `features/settings/domain/device_settings.dart` | `test/domain_test.dart` |

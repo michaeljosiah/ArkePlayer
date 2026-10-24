@@ -41,6 +41,34 @@ How a world gets onto Available (P9). The format is [ADR 0005](decisions/0005-wo
 6. **Ship a build, and publish the list.** The list ships with the app (P9 rule 1) and is also fetched from Arke's address (`arkeWorldsList` in `features/worlds/application/worlds.dart`, P12 rule 1), at most once a day. Raise the list's `serial` with every change, commit it, and upload the same `catalogue.json` there, the one file that is replaced in place (`gh release upload arke-player-worlds apps/arke_player/assets/worlds/catalogue.json --clobber --repo michaeljosiah/ArkeStudio`; the release, made 22 October 2026 at serial 1, is never marked Latest, so the Studio's own update check never sees it); a phone takes the list with the higher serial, so a new edition shows on installed phones without a build. A world appears on Available, or an installed world shows `Update`, once its package is pinned in the list a phone has.
 7. **Check it on a phone:** install it from Available, play the narration, and Read the book.
 
+## Releasing new chapters as a part (SPEC-058 R-43 – R-56, P15)
+
+A world released a chapter at a time is its edition and one part per release. A part is the
+Studio's Export → Arke Player with Release · New chapters: a schema 4 package of one production's
+chapters read whole since the last release, naming the edition it follows by label and fingerprint
+(`part`), with the author's schedule. It carries only its own files: the new chapters' audio,
+pictures, phrases and loops, and an EPUB of those chapters alone; never a guide.
+
+1. **Upload it** under its own name to the world's public story release, as a package is. Never
+   replace a published part.
+2. **Pin it** with the fingerprint of the edition in the world's list entry:
+
+   ```
+   dart run arke_world:pin_world <part.zip> <https url> --follows <the entry's package fingerprint>
+   ```
+
+   It refuses a part made after another edition, and prints `part` — the pin with `released`,
+   `production` and `chapters` — and `production`, its id and schedule.
+3. **Add it to the entry:** append `part` to the world's `package.parts`, in release order, and set
+   the listed production's `id` and `schedule` from `production`. The list stays `version: 2`: a
+   Player from before parts ignores both keys and offers the edition alone.
+4. **Raise `serial` and publish the list**, as for an edition. Installed phones fetch the part on
+   their own when the app opens (over Wi-Fi only unless You says otherwise), or ahead in the daily
+   check while a world's Notify is on; new installs fetch the edition and every part.
+
+A new Whole world edition holds every chapter released: pin it as an edition and empty the entry's
+`parts`. Installed phones offer it as `Update`, and their parts fall away once it is checked.
+
 ## The Undersong
 
 **Pinned now: the 24 October 2026 cover edition** (list serial 14): `the-undersong-player-2026-10-24.zip`, 360,101,640 bytes, SHA-256 `a1e1e38e967d01490c7fe471d56cb65234c87ed6491ef2091a8ff75899742dcc`, on the same release. The editorial edition below with one change: *The Ledger of Nights* has its own picture, given as Publish's cover (`--cover`), where before the export used the key art. It was made with Codex Image from Maren Kest's and Perrin Tallow's portraits and the Bell House's view: Maren on the sea-wall steps with a lantern over the drowned god's sleeping face, rings of light rising towards the bells, Perrin at his lit window above. The narration, book, pictures and guide are byte for byte the editorial edition's (290.58 minutes, 23 chapters); it was exported from the same copy, `D:\ArkePlayerEditorialPublication-20261022\the-undersong`, with only the cover added. The app bundles the picture as `assets/worlds/undersong/ledger-of-nights.jpg`, the path the list already named, so a build without it keeps the old picture rather than missing one.

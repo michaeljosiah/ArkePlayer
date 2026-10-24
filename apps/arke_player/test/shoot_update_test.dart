@@ -222,10 +222,10 @@ void main() {
     File('build/shots/$name.png').writeAsBytesSync(png!.buffer.asUint8List());
   }
 
-  final world = Routes.worldsWorld('undersong');
+  final world = Routes.discoverWorld('undersong');
   Future<void> update(WidgetTester tester) => tester.tap(find.text('Update · 228 MB', findRichText: true));
 
-  testWidgets('P12a worlds with an update', (t) => shoot(t, 'P12a-worlds-update', Routes.worlds));
+  testWidgets('P12a worlds with an update', (t) => shoot(t, 'P12a-worlds-update', Routes.discover));
   testWidgets('P12b a newer edition', (t) => shoot(t, 'P12b-newer-edition', world));
   testWidgets('P12b, light', (t) => shoot(t, 'P12b-newer-edition-light', world, brightness: Brightness.light));
   testWidgets('P12c updating', (t) => shoot(t, 'P12c-updating', world, act: update));

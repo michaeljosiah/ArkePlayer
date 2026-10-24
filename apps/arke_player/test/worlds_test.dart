@@ -7,7 +7,9 @@ import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/home/presentation/home_screen.dart';
+import 'package:arke_player/features/library/presentation/library_screen.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
+import 'package:arke_player/features/worlds/presentation/discover_screen.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:arke_world/arke_world.dart';
@@ -136,9 +138,9 @@ void main() {
       expect(find.text('Install a world'), findsOneWidget);
       await tester.tap(find.text('Install a world'));
       await tester.pumpAndSettle();
-      // Worlds, the tab that took P9b's place (P11 rule 1).
-      expect(find.text('Worlds'), findsWidgets);
-      expect(find.text('Available'), findsOneWidget);
+      // Discover, the tab that took P9b's place (P11 rule 1, P15 rule 1), its worlds under Worlds.
+      expect(find.byType(DiscoverScreen), findsOneWidget);
+      expect(find.descendant(of: find.byType(DiscoverScreen), matching: find.text('Worlds')), findsOneWidget);
       expect(find.text('1 production · 386 MB'), findsOneWidget);
     });
     testWidgets('has no second press while nothing is published (P9 rule 2)', (tester) async {
@@ -148,22 +150,23 @@ void main() {
   });
 
   group('Home (P9g)', () {
-    testWidgets('ends with Available after the files', (tester) async {
+    // Home's Discover section, not the tab of the same name (P15g).
+    Finder discoverOnHome() => find.descendant(of: find.byType(HomeScreen), matching: find.text('Discover'));
+    testWidgets('ends with Discover after the files', (tester) async {
       await _pump(tester, location: Routes.home, catalogue: [_undersong], items: [_file]);
       expect(find.text('Added'), findsOneWidget);
-      expect(find.text('Available'), findsOneWidget);
+      expect(discoverOnHome(), findsOneWidget);
       expect(find.text('The Undersong'), findsOneWidget);
     });
-    testWidgets('with nothing added, Available sits under Add a file', (tester) async {
+    testWidgets('with nothing added, Discover sits under Add a file', (tester) async {
       await _pump(tester, location: Routes.home, catalogue: [_undersong]);
       expect(find.text('Nothing added'), findsOneWidget);
-      expect(find.text('Available'), findsOneWidget);
+      expect(discoverOnHome(), findsOneWidget);
     });
-    testWidgets('an installed world is under Worlds, and Available is gone', (tester) async {
+    testWidgets('an installed world is under Worlds, and Discover is gone', (tester) async {
       await _pump(tester, location: Routes.home, catalogue: [_undersong], worlds: [_installed], items: _worldItems);
-      // Home's section, not the tab of the same name.
       expect(find.descendant(of: find.byType(HomeScreen), matching: find.text('Worlds')), findsOneWidget);
-      expect(find.text('Available'), findsNothing);
+      expect(discoverOnHome(), findsNothing);
       // A world's items are not files: no Added, no Nothing added.
       expect(find.text('Added'), findsNothing);
       expect(find.text('Nothing added'), findsNothing);
@@ -171,12 +174,12 @@ void main() {
   });
 
   group('a world before it is installed (P9c–P9e)', () {
-    testWidgets('Install with its size, then Inside and Space', (tester) async {
+    testWidgets('Install with its size, then its productions by kind (P15c) and Space', (tester) async {
       await _pump(tester, location: Routes.world('undersong'), catalogue: [_undersong]);
       expect(find.text('The Undersong'), findsOneWidget);
       expect(find.text('1 production · 386 MB'), findsOneWidget);
       expect(find.textContaining('Install'), findsOneWidget);
-      expect(find.text('Inside'), findsOneWidget);
+      expect(find.text('Listen'), findsOneWidget);
       expect(find.text('The Ledger of Nights'), findsOneWidget);
       expect(find.text('386 MB of 41 GB free'), findsOneWidget);
     });
@@ -224,10 +227,11 @@ void main() {
       expect(find.text('Chapters'), findsOneWidget);
       expect(find.text('The Weir'), findsOneWidget);
     });
-    testWidgets('Library shows the world above the files, under Files', (tester) async {
+    testWidgets('Library shows the world under Worlds, above the files under Added (P15h)', (tester) async {
       await _pump(tester, location: Routes.library, worlds: [_installed], items: [..._worldItems, _file]);
       expect(find.text('The Undersong'), findsOneWidget);
-      expect(find.text('Files'), findsOneWidget);
+      expect(find.descendant(of: find.byType(LibraryScreen), matching: find.text('Worlds')), findsOneWidget);
+      expect(find.text('Added'), findsOneWidget);
       expect(find.text('Harbour Songs'), findsOneWidget);
       // The world's own items are not listed as files.
       expect(find.text('The Ledger of Nights'), findsNothing);
@@ -237,7 +241,7 @@ void main() {
   group('text at 200% clips no press (acceptance 9)', () {
     for (final (name, location, worlds, items) in [
       ('first open with two presses', Routes.welcome, const <LibraryWorld>[], const <LibraryItem>[]),
-      ('Worlds', Routes.worlds, const <LibraryWorld>[], const <LibraryItem>[]),
+      ('Worlds', Routes.discover, const <LibraryWorld>[], const <LibraryItem>[]),
       ('a world to install', Routes.world('undersong'), const <LibraryWorld>[], const <LibraryItem>[]),
       ('Home with Available', Routes.home, const <LibraryWorld>[], [_file]),
       ('the installed world', Routes.world('undersong'), [_installed], _worldItems),

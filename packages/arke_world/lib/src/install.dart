@@ -9,6 +9,7 @@ import 'package:arke_publication/arke_publication.dart';
 import 'package:crypto/crypto.dart';
 
 import 'catalogue.dart';
+import 'listening.dart';
 import 'manifest.dart';
 import 'package.dart';
 
@@ -162,7 +163,8 @@ class WorldInstaller {
       if (installed.id == world.id) return installed;
     }
     final control = cancel ?? InstallCancel();
-    final needed = await _checkSpace(package.byteLength);
+    // The edition and every part since it: the world is installed when all of them are (R-50).
+    final needed = await _checkSpace(package.byteLength + package.parts.fold(0, (sum, part) => sum + part.byteLength));
     final staging = await store.stageWorld();
     try {
       final zip = '${staging.path}${Platform.pathSeparator}package.zip';
@@ -170,12 +172,109 @@ class WorldInstaller {
       control._check();
       final prepared = await _prepare(zip, staging, needed, onStep, control);
       if (prepared.manifest.id != world.id) throw const NotAPackage();
-      return await commit(prepared);
+      return await commit(await _withParts(prepared, package.parts, onStep, control));
     } on FileSystemException catch (error) {
       throw await _full(error, needed);
     } finally {
       if (await staging.exists()) await staging.delete(recursive: true);
     }
+  }
+
+  /// Adds a part to an installed world (SPEC-058 R-51): its pin's length and SHA-256, every file
+  /// checked, then the part beside what is there in one write, so nothing being played changes and
+  /// nothing is ever half-added. A part already installed changes nothing. [from] is the part
+  /// already fetched by [fetchPart], so nothing is downloaded again.
+  Future<LibraryWorld> installPart(
+    CatalogueWorld world,
+    CataloguePart pin, {
+    void Function(InstallStep step)? onStep,
+    InstallCancel? cancel,
+    File? from,
+  }) async {
+    final installed = store.worlds.where((existing) => existing.id == world.id).firstOrNull;
+    if (installed == null) throw const NotAPackage();
+    if (installed.parts.any((part) => part.fingerprint == pin.fingerprint)) return installed;
+    final control = cancel ?? InstallCancel();
+    final needed = await _checkSpace(pin.byteLength);
+    final staging = await store.stageWorld();
+    try {
+      final zip = '${staging.path}${Platform.pathSeparator}part.zip';
+      if (from != null && await from.exists() && await from.length() == pin.byteLength) {
+        await from.copy(zip);
+        if ((await sha256.bind(File(zip).openRead()).first).toString() != pin.sha256) throw const FilesDoNotMatch(1);
+      } else {
+        await _download(pin, zip, onStep, control);
+      }
+      control._check();
+      final content = Directory('${staging.path}${Platform.pathSeparator}world');
+      final manifest = await _check(zip, content, onStep, control);
+      final released = await installedListening(store, installed, manifest.productions.single.id);
+      final (next, part, changed) = await _describePart(
+        manifest,
+        content,
+        installed,
+        {for (final item in store.items) item.id: item},
+        [for (final source in released) source.document],
+        DateTime.now().toUtc(),
+      );
+      if (part.fingerprint != pin.fingerprint) throw const FilesDoNotMatch(1);
+      control._check();
+      await store.addPart(next, part, changed, content);
+      return next;
+    } on FileSystemException catch (error) {
+      throw await _full(error, needed);
+    } finally {
+      if (await staging.exists()) await staging.delete(recursive: true);
+    }
+  }
+
+  /// Fetches a part to [to] with its pin's length and SHA-256 checked, and adds nothing: the daily
+  /// check in the background fetches while the app may be writing the library, so the part waits
+  /// there until the app adds it ([installPart] with `from`).
+  Future<void> fetchPart(CataloguePart pin, File to, {InstallCancel? cancel}) async {
+    await _checkSpace(pin.byteLength);
+    await to.parent.create(recursive: true);
+    final partial = File('${to.path}.part');
+    try {
+      await _download(pin, partial.path, null, cancel ?? InstallCancel());
+      await partial.rename(to.path);
+    } finally {
+      if (await partial.exists()) await partial.delete();
+    }
+  }
+
+  /// Downloads and checks each part after a checked edition, into the edition's folder, so the
+  /// edition and its parts join the library in one write (R-50).
+  Future<PreparedWorld> _withParts(PreparedWorld prepared, List<CataloguePart> parts, void Function(InstallStep step)? onStep, InstallCancel control) async {
+    if (parts.isEmpty) return prepared;
+    var world = prepared.world;
+    final items = {for (final item in prepared.items) item.id: item};
+    final released = <String, List<ListeningDocument>>{
+      for (final MapEntry(:key, :value) in prepared.manifest.listening.entries) key: [value],
+    };
+    for (final pin in parts) {
+      final zip = '${prepared.staging.path}${Platform.pathSeparator}part.zip';
+      await _download(pin, zip, onStep, control);
+      control._check();
+      final content = Directory('${prepared.content.path}${Platform.pathSeparator}_parts${Platform.pathSeparator}${world.parts.length + 1}');
+      final manifest = await _check(zip, content, onStep, control);
+      final production = manifest.productions.single.id;
+      final (next, part, changed) = await _describePart(manifest, content, world, items, released[production] ?? const [], world.installedAt);
+      if (part.fingerprint != pin.fingerprint) throw const FilesDoNotMatch(1);
+      world = next;
+      for (final item in changed) {
+        items[item.id] = item;
+      }
+      if (manifest.listening[production] case final document?) released[production] = [...?released[production], document];
+    }
+    return PreparedWorld(
+      manifest: prepared.manifest,
+      world: world,
+      items: List.unmodifiable(items.values),
+      content: prepared.content,
+      staging: prepared.staging,
+      installed: prepared.installed,
+    );
   }
 
   /// Brings an installed world to the edition its list entry names (SPEC-058 R-33, Player P12): the
@@ -217,9 +316,12 @@ class WorldInstaller {
       final prepared = await _prepare(zip, staging, needed, onStep, control);
       if (prepared.manifest.id != world.id) throw const NotAPackage();
       if (prepared.sameEdition) return prepared.installed!;
+      // A new edition holds every chapter released, so the installed parts fall away with the old
+      // edition's folder (R-55); parts listed after it come with it.
+      final withParts = await _withParts(prepared, package.parts, onStep, control);
       await beforeSwap?.call();
       control._check();
-      return await commit(prepared);
+      return await commit(withParts);
     } on FileSystemException catch (error) {
       throw await _full(error, needed);
     } finally {
@@ -347,6 +449,19 @@ class WorldInstaller {
   }
 
   Future<PreparedWorld> _prepare(String zip, Directory staging, int needed, void Function(InstallStep step)? onStep, InstallCancel control) async {
+    final content = Directory('${staging.path}${Platform.pathSeparator}world');
+    final manifest = await _check(zip, content, onStep, control);
+    // A part is never a world of its own: it is added to its edition (R-46).
+    if (manifest.part != null) throw const NotAPackage();
+    final (world, items) = await _describe(manifest, content);
+    control._check();
+    final installed = store.worlds.where((existing) => existing.id == world.id).firstOrNull;
+    return PreparedWorld(manifest: manifest, world: world, items: items, content: content, staging: staging, installed: installed);
+  }
+
+  /// Reads a downloaded package, extracts every file into [content] checked against its manifest,
+  /// and keeps the manifest beside them, so a player can read a listening document against it.
+  Future<WorldManifest> _check(String zip, Directory content, void Function(InstallStep step)? onStep, InstallCancel control) async {
     final separator = Platform.pathSeparator;
     final WorldManifest manifest;
     try {
@@ -355,7 +470,6 @@ class WorldInstaller {
       throw refused.refusal == WorldRefusal.newerArke ? const NewerArke() : const NotAPackage();
     }
 
-    final content = Directory('${staging.path}${separator}world');
     final total = manifest.assets.length;
     var checked = 0;
     var failed = 0;
@@ -370,11 +484,129 @@ class WorldInstaller {
     await File(zip).delete();
     // The manifest goes with the world, so a player can read a listening document against it.
     await File('${content.path}$separator$worldManifestFile').writeAsString(jsonEncode(manifest.toJson()), flush: true);
+    return manifest;
+  }
 
-    final (world, items) = await _describe(manifest, content);
-    control._check();
-    final installed = store.worlds.where((existing) => existing.id == world.id).firstOrNull;
-    return PreparedWorld(manifest: manifest, world: world, items: items, content: content, staging: staging, installed: installed);
+  /// What a part adds to [world] (R-46, R-50): it must follow the installed edition, come next in
+  /// order and bring chapters the world does not have, after the last released. Its chapters join
+  /// the production's narration back to back; its book is read after the edition's. A narration
+  /// that was finished moves to the first new chapter, so Continue offers it (P15g).
+  Future<(LibraryWorld, LibraryPart, List<LibraryItem>)> _describePart(
+    WorldManifest manifest,
+    Directory content,
+    LibraryWorld world,
+    Map<String, LibraryItem> items,
+    List<ListeningDocument> released,
+    DateTime now,
+  ) async {
+    final part = manifest.part;
+    if (part == null || manifest.id != world.id) throw const NotAPackage();
+    if (world.fingerprint == null || part.fingerprint != world.fingerprint || part.number != world.parts.length + 1) throw const NotAPackage();
+    final production = manifest.productions.single;
+    final target = world.productions.where((existing) => existing.id == production.id).firstOrNull;
+    if (target == null) throw const NotAPackage();
+    final folder = 'worlds/${world.id}/_parts/${part.number}';
+    String stored(WorldAsset asset) => '$folder/${asset.path}';
+    final changed = <LibraryItem>[];
+    var next = target;
+
+    final document = manifest.listening[production.id];
+    if (document != null) {
+      final ids = {for (final earlier in released) ...earlier.chapters.map((chapter) => chapter.id)};
+      final last = released.expand((earlier) => earlier.chapters).fold(0, (most, chapter) => chapter.order > most ? chapter.order : most);
+      if (document.chapters.any((chapter) => ids.contains(chapter.id) || chapter.order <= last)) throw const NotAPackage();
+      final id = '${world.id}.${production.id}.listening';
+      final bytes = {production.listening!, ...document.assetIds}.fold(0, (sum, assetId) => sum + manifest.assets[assetId]!.byteLength);
+      final before = items[id];
+      final offset = before?.duration ?? Duration.zero;
+      final added = [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: offset + document.starts[i], id: chapter.id)];
+      if (before == null) {
+        changed.add(
+          LibraryItem(
+            id: id,
+            format: FileFormat.listening,
+            title: production.title,
+            author: production.author,
+            duration: document.duration,
+            byteLength: bytes,
+            addedAt: now,
+            file: stored(manifest.assets[production.listening]!),
+            cover: target.picture ?? world.keyArt,
+            chapters: added,
+            worldId: world.id,
+          ),
+        );
+        next = next.copyWith(narration: id);
+      } else {
+        final duration = offset + document.duration;
+        final finished = before.finished || (before.place?.progress ?? 0) >= 0.999;
+        changed.add(
+          before.copyWith(
+            chapters: [...before.chapters, ...added],
+            duration: duration,
+            byteLength: before.byteLength + bytes,
+            finished: finished ? false : null,
+            place: finished
+                ? Place(
+                    locator: document.chapters.first.id,
+                    position: Duration.zero,
+                    progress: duration.inMilliseconds == 0 ? 0 : offset.inMilliseconds / duration.inMilliseconds,
+                    updatedAt: now,
+                  )
+                : null,
+          ),
+        );
+      }
+    }
+
+    if (production.book != null) {
+      final asset = manifest.assets[production.book]!;
+      final path = '${content.path}${Platform.pathSeparator}${asset.path.replaceAll('/', Platform.pathSeparator)}';
+      final MediaInfo info;
+      try {
+        info = await Isolate.run(() => readMediaInfo(path, FileFormat.epub));
+      } on UnreadableFile {
+        throw const NotAPackage();
+      }
+      if (info.protectedFile) throw const NotAPackage();
+      final id = '${world.id}.${production.id}.book.${part.number}';
+      changed.add(
+        LibraryItem(
+          id: id,
+          format: FileFormat.epub,
+          title: production.title,
+          author: production.author ?? info.author,
+          byteLength: asset.byteLength,
+          addedAt: now,
+          file: stored(asset),
+          cover: target.picture ?? world.keyArt,
+          chapters: [for (final chapter in info.chapters) Chapter(title: chapter.title, start: chapter.start)],
+          worldId: world.id,
+        ),
+      );
+      next = next.copyWith(bookParts: [...next.bookParts, id]);
+    }
+
+    final bytes = manifest.assets.values.fold(0, (sum, asset) => sum + asset.byteLength);
+    final added = LibraryPart(
+      number: part.number,
+      edition: manifest.edition,
+      fingerprint: editionFingerprint(manifest),
+      production: production.id,
+      chapters: [...?document?.chapters.map((chapter) => chapter.id)],
+      byteLength: bytes,
+      installedAt: now,
+      folder: folder,
+    );
+    return (
+      world.copyWith(
+        productions: [for (final existing in world.productions) existing.id == next.id ? next : existing],
+        parts: [...world.parts, added],
+        byteLength: world.byteLength + bytes,
+      ),
+      added,
+      changed,
+    );
   }
 
   Future<void> _download(CataloguePackage package, String to, void Function(InstallStep step)? onStep, InstallCancel cancel) async {
@@ -460,7 +692,7 @@ class WorldInstaller {
             addedAt: now,
             file: stored(manifest.assets[production.listening]!),
             cover: picture ?? cover ?? keyArt,
-            chapters: [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: starts[i])],
+            chapters: [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: starts[i], id: chapter.id)],
             worldId: manifest.id,
           ),
         );
@@ -531,6 +763,34 @@ class WorldInstaller {
     );
     return (world, items);
   }
+}
+
+/// A production's listening documents as installed (SPEC-058 R-50): the edition's, then each
+/// part's, each with the folder its files are in. Played back to back, they are one narration.
+Future<List<({ListeningDocument document, Map<String, WorldAsset> assets, String folder})>> installedListening(
+  LibraryStore store,
+  LibraryWorld world,
+  String productionId,
+) async {
+  final separator = Platform.pathSeparator;
+  final sources = <({ListeningDocument document, Map<String, WorldAsset> assets, String folder})>[];
+  for (final folder in [store.worldDirectory(world.id).path, for (final part in world.parts) store.resolve(part.folder)]) {
+    final file = File('$folder$separator$worldManifestFile');
+    if (!await file.exists()) continue;
+    final manifest = switch (readWorldManifest(await file.readAsString())) {
+      WorldManifestOk(:final manifest) => manifest,
+      WorldManifestRefused(:final reason) => throw FormatException(reason),
+    };
+    final listening = manifest.productions.where((production) => production.id == productionId).firstOrNull?.listening;
+    if (listening == null) continue;
+    final path = '$folder$separator${manifest.assets[listening]!.path.replaceAll('/', separator)}';
+    final document = switch (readListening(await File(path).readAsString(), manifest.assets)) {
+      ListeningOk(:final document) => document,
+      ListeningRefused(:final reason) => throw FormatException(reason),
+    };
+    sources.add((document: document, assets: manifest.assets, folder: folder));
+  }
+  return sources;
 }
 
 /// Two packages are one edition when their edition labels and every file's SHA-256 agree (P10

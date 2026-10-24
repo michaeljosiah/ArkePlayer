@@ -21,6 +21,11 @@ assets = {
     'g-bray': a('guide/bray-half-hitch.png', 'image/png'),
     'g-vigil': a('guide/the-vigil.jpg', 'image/jpeg'),
     'g-maren-voice': a('guide/maren-kest.m4a', 'audio/mp4'),
+    # Teasers' own files (revision 5): a picture fitted for a phone, a clip's narration and its loop.
+    't-bells': a('guide/teasers/saltmouth-bells.jpg', 'image/jpeg'),
+    't-bells-audio': a('guide/teasers/saltmouth-bells.m4a', 'audio/mp4'),
+    't-bells-loop': a('guide/teasers/saltmouth-bells.mp4', 'video/mp4'),
+    't-weir': a('guide/teasers/the-weir.jpg', 'image/jpeg'),
 }
 LEDGER = 'the-ledger-of-nights'
 SIX = {'production': LEDGER, 'chapter': 'independent-record'}
@@ -85,7 +90,7 @@ def case(name, expect, mutate):
 
 
 case('metadata.json', 'ok', lambda x: (x.update(metadata={'studio': '0.5.62'}), x['characters'][0].update(metadata={'sheet': 'kept'})))
-case('newer-version.json', 'newerArke', lambda x: x.update(version=2))
+case('newer-version.json', 'newerArke', lambda x: x.update(version=3))
 case('requires.json', 'newerArke', lambda x: x.update(requires=['guide-v2']))
 case('unknown-key.json', 'newerArke', lambda x: x['characters'][0].update(age=31))
 case('repeat-id.json', 'notAPackage', lambda x: x['characters'][1].update(id='maren-kest'))
@@ -102,12 +107,51 @@ case('lore-kind.json', 'notAPackage', lambda x: x['lore'][0].update(kind='myth')
 case('chapters-out-of-order.json', 'notAPackage', lambda x: x['productions'][0]['chapters'][2].update(number=2))
 
 
-# world.json with a guide (R-9, R-10): read by each reader's world manifest reader.
+# Teasers (SPEC-059 revision 5, R-28, R-29): version 2 of the guide document adds them, at most six in
+# the author's order. A character or place names an entry public from the start; a picture or clip
+# carries its own files and the chapter it is from, which the Player shows on its card.
+ONE = {'production': LEDGER, 'chapter': 'neap'}
+teasers = copy.deepcopy(valid)
+teasers['version'] = 2
+teasers['teasers'] = [
+    {'kind': 'character', 'id': 'maren-kest'},
+    {'kind': 'clip', 'title': 'Saltmouth bells', 'picture': 't-bells', 'audio': 't-bells-audio', 'duration': 24000, 'motion': 't-bells-loop', **ONE},
+    {'kind': 'place', 'id': 'the-vigil'},
+    {'kind': 'picture', 'title': 'The weir at low water', 'picture': 't-weir', 'production': LEDGER, 'chapter': 'independent-record'},
+]
+w('teasers.json', teasers)
+cases.append({'file': 'teasers.json', 'expect': 'ok', 'counts': {'characters': 3, 'places': 1, 'lore': 2},
+              'teasers': ['character', 'clip', 'place', 'picture']})
+
+
+def teaser_case(name, expect, mutate):
+    doc = copy.deepcopy(teasers)
+    mutate(doc)
+    w(name, doc)
+    cases.append({'file': name, 'expect': expect})
+
+
+teaser_case('teasers-version-1.json', 'newerArke', lambda x: x.update(version=1))
+teaser_case('teaser-seven.json', 'notAPackage', lambda x: x['teasers'].extend([{'kind': 'character', 'id': 'bray-half-hitch'}, {'kind': 'picture', 'title': 'Bells', 'picture': 't-bells', **ONE}, {'kind': 'picture', 'title': 'Weir', 'picture': 't-weir', **ONE}]))
+teaser_case('teaser-repeat.json', 'notAPackage', lambda x: x['teasers'].append({'kind': 'character', 'id': 'maren-kest'}))
+# A character or place that waits for a chapter is never a teaser: Discover shows it to anyone.
+teaser_case('teaser-gated.json', 'notAPackage', lambda x: x['teasers'][0].update(id='the-chorister'))
+teaser_case('teaser-no-entry.json', 'notAPackage', lambda x: x['teasers'][0].update(id='the-quiet-ward'))
+teaser_case('teaser-wrong-kind.json', 'notAPackage', lambda x: x['teasers'][0].update(id='the-vigil'))
+teaser_case('teaser-long-clip.json', 'notAPackage', lambda x: x['teasers'][1].update(duration=30001))
+teaser_case('teaser-no-chapter.json', 'notAPackage', lambda x: x['teasers'][3].update(chapter='the-tithe'))
+teaser_case('teaser-wrong-media.json', 'notAPackage', lambda x: x['teasers'][1].update(audio='t-weir'))
+teaser_case('teaser-unknown-kind.json', 'notAPackage', lambda x: x['teasers'][0].update(kind='poster'))
+teaser_case('teaser-unknown-key.json', 'newerArke', lambda x: x['teasers'][3].update(caption='Low water'))
+teaser_case('teaser-picture-only.json', 'ok', lambda x: x.update(characters=[], places=[], lore=[], teasers=[x['teasers'][3]]))
+# Two moments may share a still, and a package ships that file once: a picture or clip is never a repeat by its picture.
+teaser_case('teaser-same-picture.json', 'ok', lambda x: x['teasers'].append({'kind': 'picture', 'title': 'The weir again', 'picture': 't-weir', **ONE}))
 def world(version=3, productions=None, **extra):
     doc = {
         'format': 'arke-world-package', 'schemaVersion': version, 'id': 'undersong', 'edition': '2026-10-22', 'name': 'The Undersong',
         'keyArt': 'key-art', 'productions': productions if productions is not None else [], 'guide': 'guide',
-        'assets': {'key-art': a('key-art.jpg', 'image/jpeg'), **assets},
+        # The teasers' files stay out: a world.json names nothing its guide does not use.
+        'assets': {'key-art': a('key-art.jpg', 'image/jpeg'), **{key: value for key, value in assets.items() if not key.startswith('t-')}},
     }
     doc.update(extra)
     return {key: value for key, value in doc.items() if value is not None}
