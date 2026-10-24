@@ -388,4 +388,46 @@
 .ap .pill .tab.on{background:color-mix(in srgb,var(--foreground) 10%,transparent)}
 .ap .pill.wide{width:520px}
 .ap .ffoot{position:absolute;z-index:6;left:0;right:0;bottom:0;height:132px;background:linear-gradient(to top,var(--background) 22%,color-mix(in srgb,var(--background) 0%,transparent))}
+/* P17 · Music. A music production's row is square, as album art is everywhere: 160 on a phone,
+   200 on a Fold. Its page puts the square cover over its own blur, then the tracks as numbered rows
+   with one line under each: the character it is the theme of, or where it is heard. Playing it is
+   the audio player with the cover in the picture's place. */
+.ap .mt{flex:none}
+.ap .mt .im{position:relative;width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--media-overlay-bg)}
+.ap .mt .im>img{width:100%;height:100%;object-fit:cover}
+.ap .mt .t{margin-top:7px;font:var(--type-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .mt .m{font:var(--type-meta);color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .po .im.fb>img.wd.sq1{aspect-ratio:1}
+.ap .alb{position:relative;overflow:hidden;background:var(--media-overlay-bg);color:var(--media-overlay-fg);padding:104px 16px 20px;text-align:center}
+.ap .alb>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(30px) saturate(140%) brightness(.55);transform:scale(1.3)}
+.ap .alb>.top{position:absolute;z-index:3;left:12px;right:12px;top:52px;display:flex;justify-content:space-between}
+.ap .alb>*:not(.bg):not(.top){position:relative}
+.ap .alb .cv{display:block;margin:0 auto;width:220px;height:220px;border-radius:12px;object-fit:cover;box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.ap .alb h1{margin-top:18px;font:var(--weight-bold) var(--text-2xl)/1.15 var(--font-sans);letter-spacing:var(--tracking-tighter)}
+.ap .alb .meta{margin-top:5px;font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 74%,transparent)}
+.ap .alb .acts{display:flex;gap:8px;margin-top:16px}
+.ap .alb .btn{background:color-mix(in srgb,var(--media-overlay-fg) 16%,transparent);color:var(--media-overlay-fg)}
+.ap .alb .btn.pri{background:var(--media-overlay-fg);color:var(--media-overlay-bg)}
+.ap .trk{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 8px 6px 16px}
+.ap .trk .no{width:22px;flex:none;text-align:center;font:var(--type-ui);font-variant-numeric:tabular-nums;color:var(--muted-foreground)}
+.ap .trk .t{font:var(--type-ui);font-size:var(--text-base);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .trk .m{margin-top:2px;font:var(--type-meta);color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .trk .d{font:var(--type-meta);font-variant-numeric:tabular-nums;color:var(--muted-foreground)}
+.ap .trk .x{width:36px;height:36px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted-foreground)}
+.ap .trk.now .t,.ap .trk.now .no{color:var(--foreground);font-weight:var(--weight-semibold)}
+.ap .trk>img{width:52px;height:52px;flex:none;border-radius:8px;object-fit:cover}
+.ap .trk .pb{width:40px;height:40px;flex:none;border-radius:99px;display:flex;align-items:center;justify-content:center;background:var(--secondary);color:var(--foreground)}
+.ap .np{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(36px) saturate(150%) brightness(.5);transform:scale(1.35)}
+.ap .npc{position:absolute;z-index:3;left:32px;right:32px;top:116px;aspect-ratio:1;border-radius:14px;overflow:hidden;box-shadow:0 24px 50px rgba(0,0,0,.5)}
+.ap .npc>img{width:100%;height:100%;object-fit:cover}
+.ap .npt{position:absolute;z-index:4;left:20px;right:20px;top:476px}
+.ap .npt .t{font:var(--weight-bold) var(--text-2xl)/1.15 var(--font-sans);letter-spacing:var(--tracking-tight)}
+.ap .npt .m{margin-top:4px;font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 74%,transparent)}
+.ap .trks{columns:2;column-gap:24px}
+.ap .trk{break-inside:avoid}
+.ap .lyr{position:absolute;z-index:4;left:24px;right:24px;top:118px;bottom:272px;overflow:hidden;font:var(--weight-semibold) var(--text-xl)/1.45 var(--font-sans);letter-spacing:var(--tracking-tight);-webkit-mask-image:linear-gradient(to bottom,#000 78%,transparent)}
+.ap .lyr p{margin:0 0 18px}
+.ap .note{display:inline-flex;vertical-align:-2px;color:var(--muted-foreground)}
+.ap .alb.fold{display:grid;grid-template-columns:320px 1fr;gap:0 32px;padding:112px 32px 28px;text-align:left;align-items:end}
+.ap .alb.fold .cv{width:320px;height:320px;margin:0}
 .ap .dock.float{position:absolute;z-index:8;left:16px;right:16px;bottom:98px;margin:0;border-radius:18px;background:color-mix(in srgb,var(--card) 84%,transparent);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:var(--shadow-xl)}
