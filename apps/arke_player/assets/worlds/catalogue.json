@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 20,
+  "serial": 21,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -80,14 +80,14 @@
       "logline": "When a covert military-scientific team investigating impossible spatial anomalies in the Swiss Alps retrieves a living organism from beyond known reality, they trigger a biological nightmare that threatens to break containment. As they race to stop it, they discover another armed expedition in the valley—one that knows far more about the ancient machinery beneath the mountain than it will reveal.",
       "keyArt": "assets/worlds/embers-of-the-fallen/key-art.jpg",
       "productions": [
-        { "title": "Threshold — Book One", "kind": "Audiobook · Book · 1 h 54 m", "picture": "assets/worlds/embers-of-the-fallen/cover.jpg" }
+        { "title": "Threshold — Book One", "kind": "Audiobook · Book · 1 h 54 m", "picture": "assets/worlds/embers-of-the-fallen/cover.jpg", "tall": "assets/worlds/embers-of-the-fallen/cover-tall.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-player-2026-10-24.zip",
-        "byteLength": 126827906,
-        "sha256": "9e34eaf9ab65b4af5786fa63dd89f71465e8562346b55e32e1ea956205b849df",
-        "edition": "2026-10-24",
-        "fingerprint": "3995aa7e4269a78522dc9e0c60a866840209a9be7406286fe6726116fbd425d4"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-player-2026-10-24-3.zip",
+        "byteLength": 126832165,
+        "sha256": "6f9715e501fc2c88cc530bc7629e5e25b8b1ee3e62e195bfbad956c859625404",
+        "edition": "2026-10-24-3",
+        "fingerprint": "17c3ae182b0d8d4bd8136d179a121ef6b4403f77864112449ac2f9d661d3e581"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-guide-2026-10-23-2.zip",

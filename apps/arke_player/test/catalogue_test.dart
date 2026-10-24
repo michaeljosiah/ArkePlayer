@@ -81,10 +81,11 @@ void main() {
 
   test('Embers of the Fallen is pinned to its published package and its guide alone', () {
     // The Studio's Export → Arke Player of the whole book, Chapters 1–5 narrated and Chapter 1's
-    // pictures made Tall, and the guide alone beside it (SPEC-059 R-10).
+    // pictures made Tall, and the guide alone beside it (SPEC-059 R-10). Its production's picture
+    // is the key-art poster, so an installed phone shows it after Update without a new build.
     final embers = catalogue.singleWhere((world) => world.id == 'embers-of-the-fallen');
-    expect(embers.package!.sha256, '9e34eaf9ab65b4af5786fa63dd89f71465e8562346b55e32e1ea956205b849df');
-    expect(embers.package!.edition, '2026-10-24');
+    expect(embers.package!.sha256, '6f9715e501fc2c88cc530bc7629e5e25b8b1ee3e62e195bfbad956c859625404');
+    expect(embers.package!.edition, '2026-10-24-3');
     expect(embers.guide!.sha256, '9d99ecacc5350fadaab941f34992e77c3c9c385eb764b07d295cf450710c931a');
     expect(embers.productions.single.title, 'Threshold — Book One');
   });
