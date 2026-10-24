@@ -149,6 +149,7 @@ On first review the owner found the rows unkempt: each section had its own tile 
 teaser was a portrait card, and the micro drama was an upright tile beside the film. So every row
 now takes one tile (rule 10), 16:9 and 240 wide on a phone, 300 on a Fold, which is the width of a
 world's card in a row. A micro drama's upright episodes stay on its own page.
+Approved by the owner on 24 October 2026, with the one tile and calls 11–13.
 
 Legend of Dumah, The Red Quiet and Embers of the Fallen are Arke's worlds on Available, their
 pictures recompressed from the app's own list (`apps/arke_player/assets/worlds`). The Undersong's
@@ -182,13 +183,13 @@ six productions are P1's sample. Chapter dates, schedules and episode counts are
 10. **A moment's picture comes Wide and Tall** (P14, approved). The Tall is made in the Studio
    from the Wide; a phone in portrait shows it over the whole screen, a tablet, a Fold and a phone
    turned show the Wide. No setting in the Player: the shape follows the screen.
-11. **Worlds becomes Discover** (P15, asked 24 October 2026). Discover is what Arke offers, and
+11. **Worlds becomes Discover** (P15, asked and approved 24 October 2026). Discover is what Arke offers, and
    Library is what is on the phone. Discover leads with productions and new chapters, and its
    teasers are the author's choice.
-12. **A world comes as a base and a part per release** (P15). A new part comes on its own over
+12. **A world comes as a base and a part per release** (P15, approved). A new part comes on its own over
    Wi-Fi, because a part only adds. A new edition still waits for Update (call 9 holds for
    editions).
-13. **A new chapter is notified by the phone itself** (P15). Notifications are per world, off
+13. **A new chapter is notified by the phone itself** (P15, approved). Notifications are per world, off
    until turned on, and come from the daily check of Arke's list, so they need no account and no
    server.
 
