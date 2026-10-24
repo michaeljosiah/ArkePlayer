@@ -64,6 +64,29 @@ ImageProvider? libraryPicture(LibraryStore? store, String? relative) => store ==
 /// A picture bundled with the app, for a world not installed yet.
 ImageProvider? bundledPicture(String? asset) => asset == null ? null : AssetImage(asset);
 
+/// A picture Arke's list names (SPEC-058 rev 10): the file its pin brought, once kept and checked;
+/// else the one bundled with the app; else none, and the row's own fallback shows.
+ImageProvider? listPicture(Map<String, File> kept, String? bundled, PicturePin? pin) {
+  final file = pin == null ? null : kept[pin.sha256];
+  return file != null ? FileImage(file) : bundledPicture(bundled);
+}
+
+/// The pictures of Arke's list as rows show them, watching what is kept, so a picture that arrives
+/// replaces the bundled one where it is shown.
+extension ListPictures on WidgetRef {
+  Map<String, File> get _kept => watch(keptPicturesProvider).value ?? const {};
+
+  /// A world's key art.
+  ImageProvider? keyArtOf(CatalogueWorld world) => listPicture(_kept, world.keyArt, world.keyArtPin);
+
+  /// A production's wide picture, or its world's key art when it has none.
+  ImageProvider? pictureOf(CatalogueWorld world, CatalogueProduction? production) =>
+      (production == null ? null : listPicture(_kept, production.picture, production.picturePin)) ?? keyArtOf(world);
+
+  /// A production's Tall cover (P16 call 14): what a poster and a phone's feature show.
+  ImageProvider? tallOf(CatalogueProduction? production) => production == null ? null : listPicture(_kept, production.tall, production.tallPin);
+}
+
 /// A world as a card: 358 × 190 in Discover's Worlds and in Library (P15b, P15h), and in a row
 /// the width of the row's tile (P9g, P15g, P15l). While it installs, its meta line is
 /// `Installing · 42%` over a line of progress (P9 rule 4); a world with a newer edition carries
@@ -747,7 +770,7 @@ class AvailableCard extends ConsumerWidget {
               if (ref.watch(worldGuideProvider(world.id)).value?.guide.characters.length case final count? when count > 0) characterCount(count),
               if (package != null) formatBytes(package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength)),
             ].join(' · '),
-      picture: bundledPicture(world.keyArt),
+      picture: ref.keyArtOf(world),
       progress: state is Installing ? state.fraction : null,
       mini: mini,
       width: width,

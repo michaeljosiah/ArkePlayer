@@ -81,7 +81,7 @@ class _ToInstall extends ConsumerWidget {
         padding: EdgeInsets.only(bottom: footRoom(context)),
         children: [
           WorldHero(
-            picture: bundledPicture(world.keyArt),
+            picture: ref.keyArtOf(world),
             title: world.name,
             meta: [productionCount(world.productions.length), ?size].join(' · '),
             logline: world.logline,
@@ -104,18 +104,12 @@ class _ToInstall extends ConsumerWidget {
                 ? PosterTile(
                     title: production.title,
                     kind: production.kind,
-                    tall: bundledPicture(production.tall),
-                    wide: bundledPicture(production.picture ?? world.keyArt),
+                    tall: ref.tallOf(production),
+                    wide: ref.pictureOf(world, production),
                     width: width,
                     onOpen: null,
                   )
-                : ProductionTile(
-                    title: production.title,
-                    kind: production.kind,
-                    picture: bundledPicture(production.picture ?? world.keyArt),
-                    width: width,
-                    onOpen: null,
-                  ),
+                : ProductionTile(title: production.title, kind: production.kind, picture: ref.pictureOf(world, production), width: width, onOpen: null),
           ),
           if (size != null && free != null)
             Align(
@@ -166,20 +160,12 @@ class _Installed extends ConsumerWidget {
       if (!poster) {
         return ProductionTile(title: production.title, kind: kind, picture: libraryPicture(store, picture), width: width, fresh: fresh, onOpen: open);
       }
-      // The package carries no Tall cover yet: the list's, bundled with the app, is the one there is.
-      final tall = listed?.productions
-          .where((listedProduction) => listedProduction.id == production.id || listedProduction.title == production.title)
-          .firstOrNull
-          ?.tall;
-      return PosterTile(
-        title: production.title,
-        kind: kind,
-        tall: bundledPicture(tall),
-        wide: libraryPicture(store, picture),
-        width: width,
-        fresh: fresh,
-        onOpen: open,
+      // The package carries no Tall cover yet: the list's, fetched with it or bundled with the app, is
+      // the one there is.
+      final tall = ref.tallOf(
+        listed?.productions.where((listedProduction) => listedProduction.id == production.id || listedProduction.title == production.title).firstOrNull,
       );
+      return PosterTile(title: production.title, kind: kind, tall: tall, wide: libraryPicture(store, picture), width: width, fresh: fresh, onOpen: open);
     }
 
     return ScrolledHead(

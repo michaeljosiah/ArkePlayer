@@ -85,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
                               ProductionTile(
                                 title: item.production?.title ?? item.world.name,
                                 kind: '${chaptersLabel(item.part.chapters, episodes: item.episodes)} · ${item.world.name}',
-                                picture: bundledPicture(item.production?.picture ?? item.world.keyArt),
+                                picture: ref.pictureOf(item.world, item.production),
                                 fresh: releasedThisWeek(item.part, now),
                                 width: width,
                                 onOpen: () {

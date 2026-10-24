@@ -38,7 +38,7 @@ How a world gets onto Available (P9). The format is [ADR 0005](decisions/0005-wo
 5. **Pin it.** Paste the printed entry into `apps/arke_player/assets/worlds/catalogue.json` in place of the world's `"package": null`. Copy the key art and pictures to the `assets/worlds/<id>/` paths the entry names.
    A world's guide alone (SPEC-059 R-10), the Studio's Export of a world with nothing to play, is pinned the same way beside it, as `"guide": { "url", "byteLength", "sha256" }`. Its world page fetches it the first time it opens and keeps it, so the world can be explored before it is installed; a package installed later that carries the guide supersedes it. A guide with teasers (SPEC-059 R-28, P15) is guide version 2, and a Player from before ArkePlayer PR #11 (24 October 2026) refuses it as made with a newer Arke, and a package carrying it too: pin a guide or package with teasers only once phones have that Player.
    Pin a package made by the Studio's Export → Arke Player with `dart run arke_world:pin_world <package.zip> <https url>`: it prints the same entry with the package's `edition` and `fingerprint`, which is how a phone sees an update (SPEC-058 R-30). Every pin carries them.
-   A production may also name `"tall"`, its Tall cover (P16 call 14, SPEC-058 rev 9): an upright picture bundled at `assets/worlds/<id>/`, which a poster in Stories and a world's Listen and Read, and a phone's feature, show. Without one they show its `picture` whole over its own blur. Like `picture`, it is always the app's own: a fetched list's is ignored, so a new Tall cover needs a build. Na Love or Juju's is its book cover, cut from the middle of its published cover. The Red Quiet's (list serial 19) was made upright with Codex Image from Ines Marr's and the Mistress's main photos, with its title at the top: the phone's feature takes 51 px from the top of a 1024 × 1536 poster and shades its foot under the Player's own words, so a title must start below row 70. The Studio does not make a Tall cover yet; until it does, make it from the cover by hand.
+   A production may also name `"tall"`, its Tall cover (P16 call 14, SPEC-058 rev 9): an upright picture bundled at `assets/worlds/<id>/`, which a poster in Stories and a world's Listen and Read, and a phone's feature, show. Without one they show its `picture` whole over its own blur. Like `picture`, the bundle path is always the app's own: a fetched list's is ignored. To bring a new or changed picture without a build, pin it beside the path (Pictures with the list, below). Na Love or Juju's is its book cover, cut from the middle of its published cover. The Red Quiet's (list serial 19) was made upright with Codex Image from Ines Marr's and the Mistress's main photos, with its title at the top: the phone's feature takes 51 px from the top of a 1024 × 1536 poster and shades its foot under the Player's own words, so a title must start below row 70. The Studio does not make a Tall cover yet; until it does, make it from the cover by hand.
    The list may name what Discover opens on, `"feature": { "world": "<id>", "production": "<id>" }` (the production is optional: the world's first), and the world across its band, `"band": "<id>"` (P16 call 15). They are read from whichever list is newer, so they can be moved by publishing the list alone. A name no listed world answers to is ignored; with neither named, Discover features the newest part's production and bands the last world that is not the feature's.
 6. **Ship a build, and publish the list.** The list ships with the app (P9 rule 1) and is also fetched from Arke's address (`arkeWorldsList` in `features/worlds/application/worlds.dart`, P12 rule 1), at most once a day. Raise the list's `serial` with every change, commit it, and upload the same `catalogue.json` there, the one file that is replaced in place (`gh release upload arke-player-worlds apps/arke_player/assets/worlds/catalogue.json --clobber --repo michaeljosiah/ArkeStudio`; the release, made 22 October 2026 at serial 1, is never marked Latest, so the Studio's own update check never sees it); a phone takes the list with the higher serial, so a new edition shows on installed phones without a build. A world appears on Available, or an installed world shows `Update`, once its package is pinned in the list a phone has.
 7. **Check it on a phone:** install it from Available, play the narration, and Read the book.
@@ -70,6 +70,38 @@ pictures, phrases and loops, and an EPUB of those chapters alone; never a guide.
 
 A new Whole world edition holds every chapter released: pin it as an edition and empty the entry's
 `parts`. Installed phones offer it as `Update`, and their parts fall away once it is checked.
+
+## Pictures with the list (SPEC-058 rev 10)
+
+A world's key art, a production's wide `picture` and its upright `tall` can come with the list
+instead of with a build. Each is published like a package and pinned beside its bundle path, under
+`pins`, never in place of the path: every Player before this one reads `picture` as a string, and
+would throw on an object there and ignore the whole list.
+
+1. **Upload it** under a new name to the public release `arke-player-worlds`, beside
+   `catalogue.json` — for example `<world-id>-<slot>-<yyyymmdd>.jpg`. Never replace a published
+   picture: a phone keeps it by its SHA-256 and would refuse other bytes at the same address.
+   JPEG, PNG or WebP, at most 4 MiB (a 2:3 cover at 1024 × 1536 is well under one).
+2. **Pin it:**
+
+   ```
+   dart run arke_world:pin_picture <picture> <https url>
+   ```
+
+   It refuses anything else and prints `{ "url", "byteLength", "sha256" }`.
+3. **Add it to the entry,** beside the path it stands for: a world's `"pins": { "keyArt": … }`, a
+   production's `"pins": { "picture": …, "tall": … }`. Keep the bundle paths: they are the floor on a
+   first open with no network, and what a Player from before rev 10 shows.
+4. **Raise `serial` and publish the list**, as for an edition. Phones fetch the list's pictures
+   when they read it — at launch, when a newer list comes, and on Check for updates — one at a
+   time on any network, check each by its length, SHA-256 and first bytes, and keep it as
+   `pictures/<sha256>.<ext>` beside the library. A row shows the kept file in place of the bundled
+   one as soon as it arrives; until then, or if it never comes, the bundled one. A picture no list
+   names any more is deleted.
+
+Pins come from the list the phone shows, the fetched one when its serial is higher, so a picture
+changes everywhere by publishing the list alone. A world the app does not ship shows its pictures
+by their pins alone.
 
 ## The Undersong
 
