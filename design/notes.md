@@ -149,7 +149,7 @@ On first review the owner found the rows unkempt: each section had its own tile 
 teaser was a portrait card, and the micro drama was an upright tile beside the film. So every row
 now takes one tile (rule 10), 16:9 and 240 wide on a phone, 300 on a Fold, which is the width of a
 world's card in a row. A micro drama's upright episodes stay on its own page.
-Approved by the owner on 24 October 2026, with the one tile and calls 11–13.
+Approved by the owner on 24 October 2026, with the one tile and calls 11–13. Built the same day in ArkePlayer PR #11 (Studio half: ArkeStudio PR #2173); not built: a clip's moving loop in Discover's row, and the daily background check on iOS.
 
 Legend of Dumah, The Red Quiet and Embers of the Fallen are Arke's worlds on Available, their
 pictures recompressed from the app's own list (`apps/arke_player/assets/worlds`). The Undersong's
