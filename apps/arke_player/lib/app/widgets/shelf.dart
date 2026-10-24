@@ -124,7 +124,10 @@ class LabelChips<T> extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: padding,
       child: Row(
-        children: [chip('All', selected == null, () => onSelect(null)), for (final (value, label) in options) chip(label, selected == value, () => onSelect(value))],
+        children: [
+          chip('All', selected == null, () => onSelect(null)),
+          for (final (value, label) in options) chip(label, selected == value, () => onSelect(value)),
+        ],
       ),
     );
   }
@@ -146,7 +149,10 @@ class NewTag extends StatelessWidget {
       decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(ArkeRadius.pill)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Text('New', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: foreground, fontWeight: FontWeight.w600)),
+        child: Text(
+          'New',
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: foreground, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }

@@ -70,7 +70,12 @@ final _undersong = CatalogueWorld(
   logline: 'A drowned god still sings beneath the harbour of Saltmouth.',
   keyArt: 'assets/worlds/undersong/key-art.jpg',
   productions: const [
-    CatalogueProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', kind: 'Audiobook · Book · 23 chapters', picture: 'assets/worlds/undersong/ledger-of-nights.jpg'),
+    CatalogueProduction(
+      id: 'the-ledger-of-nights',
+      title: 'The Ledger of Nights',
+      kind: 'Audiobook · Book · 23 chapters',
+      picture: 'assets/worlds/undersong/ledger-of-nights.jpg',
+    ),
     CatalogueProduction(id: 'undertow', title: 'Undertow', kind: 'Audio drama · 8 episodes'),
     CatalogueProduction(id: 'the-bell-watch', title: 'The Bell Watch', kind: 'Micro drama · 45 episodes'),
     CatalogueProduction(id: 'saltlight', title: 'Saltlight', kind: 'Film · 1 h 32 m'),
@@ -99,25 +104,47 @@ final _embers = CatalogueWorld(
   id: 'embers-of-the-fallen',
   name: 'Embers of the Fallen',
   keyArt: 'assets/worlds/embers-of-the-fallen/key-art.jpg',
-  productions: const [CatalogueProduction(title: 'Threshold — Book One', kind: 'Audiobook · 6 chapters', picture: 'assets/worlds/embers-of-the-fallen/cover.jpg')],
+  productions: const [
+    CatalogueProduction(title: 'Threshold — Book One', kind: 'Audiobook · 6 chapters', picture: 'assets/worlds/embers-of-the-fallen/cover.jpg'),
+  ],
   package: CataloguePackage(url: Uri.parse('https://example.org/embers.zip'), byteLength: 127000000, sha256: 'd' * 64),
 );
 
-GuideCharacter _character(String id, String name, String role, String portrait) =>
-    GuideCharacter(id: id, name: name, role: role, portrait: portrait, sections: [GuideSection(heading: 'Essence', text: role)]);
+GuideCharacter _character(String id, String name, String role, String portrait) => GuideCharacter(
+  id: id,
+  name: name,
+  role: role,
+  portrait: portrait,
+  sections: [GuideSection(heading: 'Essence', text: role)],
+);
 
 /// The Undersong's guide with the three teasers P15a draws: Maren, a clip and the Vigil.
 final _guide = () {
-  const ledger = GuideProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', chapters: [GuideChapter(id: 'neap', number: 1)]);
+  const ledger = GuideProduction(
+    id: 'the-ledger-of-nights',
+    title: 'The Ledger of Nights',
+    chapters: [GuideChapter(id: 'neap', number: 1)],
+  );
   final maren = _character('maren-kest', 'Maren Kest', 'Tide-caller', 'char-maren.jpg');
-  const vigil = GuidePlace(id: 'the-vigil', name: 'The Vigil', role: 'Harbour mouth', picture: 'scene4-shot13.jpg', sections: [GuideSection(heading: 'Look', text: 'A watchtower.')]);
+  const vigil = GuidePlace(
+    id: 'the-vigil',
+    name: 'The Vigil',
+    role: 'Harbour mouth',
+    picture: 'scene4-shot13.jpg',
+    sections: [GuideSection(heading: 'Look', text: 'A watchtower.')],
+  );
   return Guide(
     productions: [ledger],
     characters: [
       maren,
       _character('bray-half-hitch', 'Bray Half-Hitch', 'Rigger', 'char-bray.jpg'),
       _character('the-chorister', 'The Chorister', 'Keeper of the drowned verse', 'char-chorister.jpg'),
-      const GuideCharacter(id: 'perrin-tallow', name: 'Perrin Tallow', role: 'Council actuary', sections: [GuideSection(heading: 'Essence', text: 'Actuary.')]),
+      const GuideCharacter(
+        id: 'perrin-tallow',
+        name: 'Perrin Tallow',
+        role: 'Council actuary',
+        sections: [GuideSection(heading: 'Essence', text: 'Actuary.')],
+      ),
       const GuideCharacter(
         id: 'ines',
         name: 'Ines',
@@ -367,9 +394,7 @@ void main() {
       'P15k-downloads',
       phone,
       Routes.downloads,
-      arriving: {
-        'legend-of-dumah': PartArrival(world: _dumah, part: _dumahPart, step: const Downloading(9000000, 18000000)),
-      },
+      arriving: {'legend-of-dumah': PartArrival(world: _dumah, part: _dumahPart, step: const Downloading(9000000, 18000000))},
     ),
   );
   testWidgets('P15l discover on a fold', (t) => shoot(t, 'P15l-discover-fold', fold, Routes.discover));

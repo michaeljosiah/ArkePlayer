@@ -65,10 +65,10 @@ class ProductionScreen extends ConsumerWidget {
     final narration = items[production.narration];
     // A book released in parts reads as one: the part being read, else the first not finished.
     final books = [?items[production.book], for (final id in production.bookParts) ?items[id]];
-    final book = books.where((book) => book.inProgress).fold<LibraryItem?>(
-          null,
-          (latest, book) => latest == null || book.place!.updatedAt.isAfter(latest.place!.updatedAt) ? book : latest,
-        ) ??
+    final book =
+        books
+            .where((book) => book.inProgress)
+            .fold<LibraryItem?>(null, (latest, book) => latest == null || book.place!.updatedAt.isAfter(latest.place!.updatedAt) ? book : latest) ??
         books.where((book) => !book.finished).firstOrNull ??
         books.firstOrNull;
     final kind = productionKind(book: book != null, narration: narration != null, length: narration?.duration);
@@ -126,12 +126,13 @@ class ProductionScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                      if (first != null) HeroPress(
-                        icon: Icons.play_arrow_rounded,
-                        label: first.inProgress ? 'Continue' : (narration != null ? 'Play' : 'Read'),
-                        detail: first.inProgress ? _where(first) : null,
-                        onPressed: () => open(first),
-                      ),
+                      if (first != null)
+                        HeroPress(
+                          icon: Icons.play_arrow_rounded,
+                          label: first.inProgress ? 'Continue' : (narration != null ? 'Play' : 'Read'),
+                          detail: first.inProgress ? _where(first) : null,
+                          onPressed: () => open(first),
+                        ),
                       if (narration != null && book != null) HeroSecondPress(icon: Icons.menu_book_rounded, label: 'Read', onPressed: () => open(book)),
                     ],
                   ),
@@ -165,7 +166,8 @@ class ProductionScreen extends ConsumerWidget {
                   if (context.mounted) open(narration);
                 },
               ),
-            if (next != null) _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
+            if (next != null)
+              _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
           ],
           const SizedBox(height: 24),
         ],
@@ -281,7 +283,10 @@ class _ChapterRow extends StatelessWidget {
               Container(
                 width: 22,
                 height: 22,
-                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: context.surface.foreground.withValues(alpha: 0.16), width: 2)),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: context.surface.foreground.withValues(alpha: 0.16), width: 2),
+                ),
               ),
           ],
         ),
@@ -289,14 +294,18 @@ class _ChapterRow extends StatelessWidget {
     );
     final framed = soon
         ? DecoratedBox(
-            decoration: BoxDecoration(border: Border(top: BorderSide(color: context.surface.foreground.withValues(alpha: 0.08)))),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: context.surface.foreground.withValues(alpha: 0.08))),
+            ),
             child: CustomPaint(painter: _Dashed(context.surface.foreground.withValues(alpha: 0.16)), child: row),
           )
         : row;
     return Semantics(
       button: onOpen != null,
       label: [title, if (fresh) 'New', ?(data.isEmpty ? null : data), if (heard) 'Heard'].join(', '),
-      child: ExcludeSemantics(child: onOpen == null ? framed : InkWell(onTap: onOpen, child: framed)),
+      child: ExcludeSemantics(
+        child: onOpen == null ? framed : InkWell(onTap: onOpen, child: framed),
+      ),
     );
   }
 }

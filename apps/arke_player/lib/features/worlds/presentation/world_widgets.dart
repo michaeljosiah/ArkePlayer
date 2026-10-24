@@ -629,7 +629,9 @@ class ProductionTile extends StatelessWidget {
                             color: surface.secondary,
                             child: initials == null
                                 ? null
-                                : Center(child: Text(initials!, style: text.titleLarge?.copyWith(color: surface.mutedForeground))),
+                                : Center(
+                                    child: Text(initials!, style: text.titleLarge?.copyWith(color: surface.mutedForeground)),
+                                  ),
                           ),
                         if (fresh) const Positioned(left: 6, top: 6, child: NewTag(onMedia: true)),
                         if (glyph != null)
@@ -776,37 +778,37 @@ Future<void> showWorldMenu(BuildContext context, WidgetRef ref, LibraryWorld wor
         final notify = (ref.watch(settingsProvider).value ?? const DeviceSettings()).notify.contains(world.id);
         return SingleChildScrollView(
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-              child: Text('Notify', style: text.labelSmall?.copyWith(color: context.surface.mutedForeground, fontWeight: FontWeight.w500)),
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.fromLTRB(14, 2, 8, 2),
-              decoration: BoxDecoration(color: context.surface.secondary, borderRadius: BorderRadius.circular(ArkeRadius.xl)),
-              child: MergeSemantics(
-                child: Row(
-                  children: [
-                    Expanded(child: Text('New chapters', style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase))),
-                    Switch(value: notify, onChanged: (on) => setNotify(ref, world.id, on)),
-                  ],
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+                child: Text(
+                  'Notify',
+                  style: text.labelSmall?.copyWith(color: context.surface.mutedForeground, fontWeight: FontWeight.w500),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            GroupRows(
-              rows: [
-                (label: 'Edition', value: editionLabel(world.edition)),
-                (label: 'Space', value: formatBytes(world.byteLength)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ListTile(leading: const Icon(Icons.info_outline), title: const Text('Details'), onTap: () => Navigator.of(context).pop('details')),
-            ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Remove'), onTap: () => Navigator.of(context).pop('remove')),
-          ],
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.fromLTRB(14, 2, 8, 2),
+                decoration: BoxDecoration(color: context.surface.secondary, borderRadius: BorderRadius.circular(ArkeRadius.xl)),
+                child: MergeSemantics(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text('New chapters', style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase)),
+                      ),
+                      Switch(value: notify, onChanged: (on) => setNotify(ref, world.id, on)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              GroupRows(rows: [(label: 'Edition', value: editionLabel(world.edition)), (label: 'Space', value: formatBytes(world.byteLength))]),
+              const SizedBox(height: 8),
+              ListTile(leading: const Icon(Icons.info_outline), title: const Text('Details'), onTap: () => Navigator.of(context).pop('details')),
+              ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Remove'), onTap: () => Navigator.of(context).pop('remove')),
+            ],
           ),
         );
       },

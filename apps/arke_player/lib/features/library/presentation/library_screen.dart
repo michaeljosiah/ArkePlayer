@@ -39,9 +39,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final items = ref.watch(libraryItemsProvider).value ?? const [];
     final store = ref.watch(libraryStoreProvider).value;
     final allWorlds = ref.watch(libraryWorldsProvider).value ?? const [];
-    Set<TakenAs> takenIn(LibraryWorld world) => {
-      for (final production in world.productions) production.narration != null ? TakenAs.listen : TakenAs.read,
-    };
+    Set<TakenAs> takenIn(LibraryWorld world) => {for (final production in world.productions) production.narration != null ? TakenAs.listen : TakenAs.read};
     final present = {for (final kind in kindsPresent(items)) takenAsOf(kind), for (final world in allWorlds) ...takenIn(world)};
     final kinds = [
       for (final taken in TakenAs.values)
@@ -67,7 +65,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             trailing: RoundPress(icon: Icons.add, label: 'Add a file', onPressed: () => addFiles(context, ref)),
           ),
           if (kinds.length > 1)
-            LabelChips<TakenAs>(options: [for (final taken in TakenAs.values) (taken, taken.label)], selected: kind, onSelect: (value) => setState(() => _kind = value)),
+            LabelChips<TakenAs>(
+              options: [for (final taken in TakenAs.values) (taken, taken.label)],
+              selected: kind,
+              onSelect: (value) => setState(() => _kind = value),
+            ),
           Expanded(
             child: empty
                 ? EmptyShelf(onAdd: () => addFiles(context, ref))

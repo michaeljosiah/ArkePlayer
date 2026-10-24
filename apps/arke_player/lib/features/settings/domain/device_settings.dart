@@ -143,7 +143,10 @@ class DeviceSettings {
       text: read('text') == true,
       slowPush: read('slowPush') != false,
       wifiOnly: read('wifiOnly') != false,
-      notify: {for (final id in '${read('notify') ?? ''}'.split(',')) if (id.isNotEmpty) id},
+      notify: {
+        for (final id in '${read('notify') ?? ''}'.split(','))
+          if (id.isNotEmpty) id,
+      },
     );
   }
 }

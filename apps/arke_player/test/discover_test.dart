@@ -76,10 +76,20 @@ final _undersong = CatalogueWorld(
   guide: CataloguePackage(url: Uri.parse('https://example.org/undersong-guide.zip'), byteLength: 3600000, sha256: 'f' * 64),
 );
 
-const _maren = GuideCharacter(id: 'maren-kest', name: 'Maren Kest', role: 'Tide-caller', portrait: 'char-maren.jpg', sections: [GuideSection(heading: 'Essence', text: 'Tide-caller.')]);
+const _maren = GuideCharacter(
+  id: 'maren-kest',
+  name: 'Maren Kest',
+  role: 'Tide-caller',
+  portrait: 'char-maren.jpg',
+  sections: [GuideSection(heading: 'Essence', text: 'Tide-caller.')],
+);
 const _guide = Guide(
   productions: [
-    GuideProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', chapters: [GuideChapter(id: 'neap', number: 1)]),
+    GuideProduction(
+      id: 'the-ledger-of-nights',
+      title: 'The Ledger of Nights',
+      chapters: [GuideChapter(id: 'neap', number: 1)],
+    ),
   ],
   characters: [_maren],
   places: [],
@@ -175,7 +185,13 @@ class _Installer extends WorldInstaller {
   final added = <String>[];
 
   @override
-  Future<LibraryWorld> installPart(CatalogueWorld world, CataloguePart pin, {void Function(InstallStep step)? onStep, InstallCancel? cancel, File? from}) async {
+  Future<LibraryWorld> installPart(
+    CatalogueWorld world,
+    CataloguePart pin, {
+    void Function(InstallStep step)? onStep,
+    InstallCancel? cancel,
+    File? from,
+  }) async {
     onStep?.call(const Downloading(9000000, 18000000));
     added.add(pin.fingerprint!);
     return _installed;
@@ -211,7 +227,10 @@ Future<_Audio> _pump(
         // Settings kept in memory: the phone's storage is a platform channel no widget test has.
         settingsProvider.overrideWith(() => _Settings(const DeviceSettings())),
       ],
-      child: MaterialApp.router(theme: arkeTheme(Brightness.light), routerConfig: buildRouter(initialLocation: location)),
+      child: MaterialApp.router(
+        theme: arkeTheme(Brightness.light),
+        routerConfig: buildRouter(initialLocation: location),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -226,7 +245,11 @@ void main() {
       expect(find.text('Chapter 3 · Legend of Dumah'), findsOneWidget);
       expect(find.text('Stories'), findsOneWidget);
       expect(find.text('Audio drama · The Undersong'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('Worlds'), 300, scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
+      await tester.scrollUntilVisible(
+        find.text('Worlds'),
+        300,
+        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first,
+      );
       expect(find.text('Teasers'), findsOneWidget);
       expect(find.text('Character · The Undersong'), findsOneWidget);
       expect(find.text('Clip · 0:24 · The Undersong'), findsOneWidget);
@@ -250,7 +273,11 @@ void main() {
 
     testWidgets('a clip opens full screen with sound, and stops when closed (SPEC-059 R-32)', (tester) async {
       final audio = await _pump(tester, location: Routes.discover);
-      await tester.scrollUntilVisible(find.text('Saltmouth bells'), 300, scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
+      await tester.scrollUntilVisible(
+        find.text('Saltmouth bells'),
+        300,
+        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first,
+      );
       await tester.tap(find.text('Saltmouth bells'));
       await tester.pumpAndSettle();
       expect(find.byType(TeaserScreen), findsOneWidget);
@@ -295,7 +322,11 @@ void main() {
       await _pump(
         tester,
         location: whispers,
-        items: [_narration(place: Place(locator: 'ch3', position: const Duration(minutes: 2), progress: 0.8, updatedAt: DateTime.utc(2026, 10, 24, 8)))],
+        items: [
+          _narration(
+            place: Place(locator: 'ch3', position: const Duration(minutes: 2), progress: 0.8, updatedAt: DateTime.utc(2026, 10, 24, 8)),
+          ),
+        ],
       );
       expect(find.text('New'), findsNothing);
     });
@@ -370,7 +401,12 @@ void main() {
     test('over Wi-Fi it comes, and a world whose Notify is on is told', () async {
       final installer = _Installer();
       final notices = _Notices();
-      final parts = container(wifi: true, settings: const DeviceSettings(notify: {'legend-of-dumah'}), installer: installer, notices: notices);
+      final parts = container(
+        wifi: true,
+        settings: const DeviceSettings(notify: {'legend-of-dumah'}),
+        installer: installer,
+        notices: notices,
+      );
       final seen = <Map<String, PartArrival>>[];
       parts.listen(partsProvider, (_, next) => seen.add(next));
       await parts.read(partsProvider.notifier).check();

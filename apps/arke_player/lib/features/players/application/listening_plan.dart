@@ -151,7 +151,11 @@ Future<ListeningPlan> loadListeningPlan(LibraryStore store, LibraryItem item) as
       '${source.folder}$separator${source.assets[assetId]!.path.replaceAll('/', separator)}';
   final first = sources.first;
   return ListeningPlan(
-    document: ListeningDocument(title: first.document.title, cover: first.document.cover, chapters: [for (final source in sources) ...source.document.chapters]),
+    document: ListeningDocument(
+      title: first.document.title,
+      cover: first.document.cover,
+      chapters: [for (final source in sources) ...source.document.chapters],
+    ),
     pathOf: (assetId) => resolve(first, assetId),
     pathIn: (chapter, assetId) => resolve(folders[chapter], assetId),
   );

@@ -166,7 +166,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 child: Text(status, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: context.surface.mutedForeground)),
               ),
             ),
-          LabelChips<TakenAs>(options: [for (final taken in TakenAs.values) (taken, taken.label)], selected: kind, onSelect: (value) => setState(() => _kind = value)),
+          LabelChips<TakenAs>(
+            options: [for (final taken in TakenAs.values) (taken, taken.label)],
+            selected: kind,
+            onSelect: (value) => setState(() => _kind = value),
+          ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.only(bottom: 24),
@@ -208,7 +212,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 ],
                 if (kind == null && catalogue.isNotEmpty) ...[
                   const SectionHead('Worlds'),
-                  if (wide) TileRow(children: [for (final world in catalogue) worldCard(world, mini: true)]) else for (final world in catalogue) worldCard(world),
+                  if (wide)
+                    TileRow(children: [for (final world in catalogue) worldCard(world, mini: true)])
+                  else
+                    for (final world in catalogue) worldCard(world),
                 ],
               ],
             ),
@@ -290,11 +297,7 @@ class _TeaserScreenState extends ConsumerState<TeaserScreen> {
                         const SizedBox(height: 2),
                         Text(line, style: text.bodyMedium?.copyWith(color: fg.withValues(alpha: 0.78))),
                         const SizedBox(height: 14),
-                        HeroSecondPress(
-                          icon: Icons.public,
-                          label: widget.world.name,
-                          onPressed: () => Navigator.of(context).pop(true),
-                        ),
+                        HeroSecondPress(icon: Icons.public, label: widget.world.name, onPressed: () => Navigator.of(context).pop(true)),
                       ],
                     ),
                   ),

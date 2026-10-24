@@ -6,7 +6,10 @@ import '../../players/application/players.dart';
 import '../../production/domain/production_kind.dart';
 
 /// The time Discover and Home count days by. Replaced in tests, which fix the day.
-final clockProvider = Provider<DateTime Function()>((ref) => () => DateTime.now().toUtc());
+final clockProvider = Provider<DateTime Function()>(
+  (ref) =>
+      () => DateTime.now().toUtc(),
+);
 
 /// A part Arke's list names as released lately, with its world and its production (SPEC-058 R-49,
 /// R-52).
@@ -38,7 +41,8 @@ List<FreshPart> freshParts(Iterable<CatalogueWorld> catalogue, DateTime now, {bo
 }
 
 /// Whether a part came out within the last week, which its tile marks `New` (P15a).
-bool releasedThisWeek(CataloguePart part, DateTime now) => !part.released.isBefore(DateTime.utc(now.year, now.month, now.day).subtract(const Duration(days: 7)));
+bool releasedThisWeek(CataloguePart part, DateTime now) =>
+    !part.released.isBefore(DateTime.utc(now.year, now.month, now.day).subtract(const Duration(days: 7)));
 
 /// A clip's narration, with sound once it is opened (SPEC-059 R-32), pausing the narration first so
 /// two never speak at once. Replaced in tests, which never play.
