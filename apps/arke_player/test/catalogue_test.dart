@@ -83,12 +83,12 @@ void main() {
 
   test('Na Love or Juju is pinned to its published package and its guide alone', () {
     // The Studio's Export → Arke Player of the whole novel as a book, all 26 chapters narrated,
-    // Chapter 1's new pictures set on their sentences, Chapters 1–12 made Tall, and the guide
+    // Chapter 1's new pictures set on their sentences, every picture made Tall, and the guide
     // alone beside it with its teasers (SPEC-059 R-10, R-24).
     final juju = catalogue.singleWhere((world) => world.id == 'na-love-or-juju');
-    expect(juju.package!.sha256, '021e161add6e3d8073518863088b8f8cb9453cbe9b58e00d7d63c73882ff9677');
+    expect(juju.package!.sha256, '83c120b93095ea0cb1a05e5c709af0d40d0a3b209eb65bcb80f472e69c9af7ff');
     expect(juju.package!.edition, '2026-10-24');
-    expect(juju.guide!.sha256, 'f5153d5b8998366c4bb1cce5e0698d6f0de7c7f9b1845e3baf4f50f492817856');
+    expect(juju.guide!.sha256, '3c4e5df3a6389f66824ebdd4b56c59736242f6b13a0ecb3006fa8961bde6e1e8');
     expect(juju.productions.single.title, 'Na love or Juju');
   });
 }
