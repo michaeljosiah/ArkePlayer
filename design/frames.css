@@ -335,3 +335,48 @@
 .ap .nt .t{margin-top:2px;font:var(--type-ui);font-size:var(--text-base);font-weight:var(--weight-semibold)}
 .ap .nt .m{font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 86%,transparent)}
 .ap .nt>img{width:54px;height:54px;flex:none;border-radius:10px;object-fit:cover}
+
+/* P16 · Rows of different sizes. A row is one size and one shape; a page mixes rows, and the size
+   says how much a row matters, as Netflix's Home does. The feature is the one production Discover
+   opens on: upright on a phone, wide with its words at the left on a Fold. A poster is 2:3 from the
+   production's Tall cover; one without shows its Wide cover whole over its own blur, never cut. The
+   band is one world across the page, its key art blurred behind. */
+.ap .ft{position:relative;flex:none;height:476px;margin:12px 16px 0;border-radius:18px;overflow:hidden;background:var(--media-overlay-bg);border:1px solid color-mix(in srgb,var(--media-overlay-fg) 14%,transparent)}
+.ap .ft>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ap .ft .shade{background:linear-gradient(to top,color-mix(in srgb,var(--media-overlay-bg) 92%,transparent) 8%,color-mix(in srgb,var(--media-overlay-bg) 40%,transparent) 42%,transparent 62%)}
+.ap .ft .in{position:absolute;left:18px;right:18px;bottom:18px}
+.ap .ft .fk{display:flex;align-items:center;gap:8px;font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 86%,transparent)}
+.ap .ft h1{margin-top:8px;font:var(--weight-bold) var(--text-3xl)/1.1 var(--font-sans);letter-spacing:var(--tracking-tighter)}
+.ap .ft .meta{margin-top:5px;font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 74%,transparent)}
+.ap .ft .btn{margin-top:16px}
+.ap .ft.wide{height:424px}
+.ap .ft.wide .shade{background:linear-gradient(to right,color-mix(in srgb,var(--media-overlay-bg) 90%,transparent) 0%,color-mix(in srgb,var(--media-overlay-bg) 58%,transparent) 34%,transparent 62%),linear-gradient(to top,color-mix(in srgb,var(--media-overlay-bg) 60%,transparent),transparent 40%)}
+.ap .ft.wide .in{left:36px;right:auto;bottom:36px;width:380px}
+.ap .ft.wide h1{font-size:var(--text-4xl)}
+.ap .ft.wide .btn{min-width:240px}
+.ap .po{flex:none}
+.ap .po .im{position:relative;width:100%;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:var(--media-overlay-bg)}
+.ap .po .im>img{width:100%;height:100%;object-fit:cover}
+.ap .po .im.fb>img.bl{position:absolute;inset:0;filter:blur(16px) brightness(.62) saturate(120%);transform:scale(1.35)}
+.ap .po .im.fb>img.wd{position:absolute;left:0;right:0;top:50%;height:auto;aspect-ratio:16/9;transform:translateY(-50%)}
+.ap .po .im .tg{position:absolute;left:6px;top:6px}
+.ap .po .im .mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--media-overlay-fg)}
+.ap .po .im .mid.ini{background:var(--secondary);font:var(--weight-semibold) var(--text-2xl)/1 var(--font-sans);letter-spacing:var(--tracking-tight);color:var(--muted-foreground)}
+.ap .po.gated .im{background:var(--secondary)}
+.ap .po.gated .im .mid{color:var(--muted-foreground)}
+.ap .po .t{margin-top:7px;font:var(--type-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .po .m{font:var(--type-meta);color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .po .tag.new{background:var(--media-overlay-fg);color:var(--media-overlay-bg)}
+.ap .band{position:relative;margin-top:28px;padding:20px 0;overflow:hidden;background:var(--media-overlay-bg);color:var(--media-overlay-fg)}
+.ap .band>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(28px) saturate(130%);transform:scale(1.3)}
+.ap .band>.dk{position:absolute;inset:0;background:color-mix(in srgb,var(--media-overlay-bg) 52%,transparent)}
+.ap .band>*:not(.bg):not(.dk){position:relative}
+.ap .band .bh{display:flex;align-items:center;gap:14px;padding:0 16px}
+.ap .band .bh>img{width:64px;height:64px;flex:none;border-radius:14px;object-fit:cover;box-shadow:var(--shadow-md)}
+.ap .band h3{font:var(--type-h2);letter-spacing:var(--tracking-tight)}
+.ap .band .bh .m{margin-top:2px;font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 76%,transparent)}
+.ap .band .bi{display:flex;flex-direction:column;align-items:center;gap:4px;font:var(--type-label);color:var(--media-overlay-fg)}
+.ap .band .bi>span{width:46px;height:46px;border-radius:99px;display:flex;align-items:center;justify-content:center;background:var(--media-overlay-fg);color:var(--media-overlay-bg)}
+.ap .band .lg{margin:12px 16px 0;font:var(--type-body);color:color-mix(in srgb,var(--media-overlay-fg) 86%,transparent);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ap .band .hrow{margin-top:16px}
+.ap .band .po .m{color:color-mix(in srgb,var(--media-overlay-fg) 70%,transparent)}
