@@ -74,7 +74,13 @@ class ProductionScreen extends ConsumerWidget {
     final kind = productionKind(book: book != null, narration: narration != null, length: narration?.duration);
     final first = narration ?? book;
     final now = ref.watch(clockProvider)();
-    final schedule = listedFor(ref.watch(catalogueProvider).value ?? const [], world.id)?.productions.where((listed) => listed.id == production.id).firstOrNull?.schedule;
+    final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], world.id);
+    final schedule = listed?.productions.where((listed) => listed.id == production.id).firstOrNull?.schedule;
+    // The chapter the next date brings, by the author's numbering: after the last one a part named.
+    final lastNamed = [
+      for (final part in listed?.package?.parts ?? const <CataloguePart>[])
+        if (part.production == production.id) ...part.chapters.map((chapter) => chapter.number),
+    ].fold<int?>(null, (most, number) => most == null || number > most ? number : most);
     final scheduled = scheduleLine(schedule, now);
     final next = upcoming(schedule, now);
     final fresh = newChapters(world, production.id, narration);
@@ -142,18 +148,24 @@ class ProductionScreen extends ConsumerWidget {
                 heard: narration.finished || (narration.inProgress && (_chapterAt(narration) ?? 0) > i),
                 current: _chapterAt(narration) == i && narration.inProgress,
                 onOpen: () async {
-                  // A chapter opens the player at its start: the place is the chapter's.
+                  // A chapter opens the player at its start: the place is the chapter's, by its id
+                  // where the narration keeps one (SPEC-058 R-26).
                   final total = narration.duration?.inMilliseconds ?? 0;
                   await ref
                       .read(placeKeeperProvider)
                       .call(
                         narration.id,
-                        Place(position: chapter.start, progress: total <= 0 ? 0 : chapter.start.inMilliseconds / total, updatedAt: DateTime.now().toUtc()),
+                        Place(
+                          locator: chapter.id,
+                          position: chapter.id == null ? chapter.start : Duration.zero,
+                          progress: total <= 0 ? 0 : chapter.start.inMilliseconds / total,
+                          updatedAt: DateTime.now().toUtc(),
+                        ),
                       );
                   if (context.mounted) open(narration);
                 },
               ),
-            if (next != null) _ChapterRow.soon(number: narration.chapters.length + 1, day: shortDate(next)),
+            if (next != null) _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
           ],
           const SizedBox(height: 24),
         ],
@@ -163,7 +175,7 @@ class ProductionScreen extends ConsumerWidget {
 
   /// `Chapter 3 · 12:04` for narration, the time into its chapter; nothing for a book.
   static String? _where(LibraryItem item) {
-    final position = item.place?.position;
+    final position = item.position;
     if (position == null) return null;
     final index = _chapterAt(item);
     if (index == null) return formatClock(position);
@@ -171,7 +183,7 @@ class ProductionScreen extends ConsumerWidget {
   }
 
   static int? _chapterAt(LibraryItem item) {
-    final position = item.place?.position;
+    final position = item.position;
     if (position == null || item.chapters.isEmpty) return null;
     var index = 0;
     for (final (i, chapter) in item.chapters.indexed) {
@@ -201,8 +213,8 @@ class _ChapterRow extends StatelessWidget {
     this.heard = false,
   }) : soon = false;
 
-  const _ChapterRow.soon({required this.number, required this.day})
-    : title = 'Chapter $number',
+  const _ChapterRow.soon({required this.number, required int chapter, required this.day})
+    : title = 'Chapter $chapter',
       length = null,
       current = false,
       onOpen = null,

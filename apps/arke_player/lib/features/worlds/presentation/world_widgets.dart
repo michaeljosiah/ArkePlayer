@@ -769,11 +769,13 @@ Future<void> showWorldMenu(BuildContext context, WidgetRef ref, LibraryWorld wor
   final choice = await showArkeSheet<String>(
     context,
     title: world.name,
+    scrollable: true,
     builder: (context) => Consumer(
       builder: (context, ref, _) {
         final text = Theme.of(context).textTheme;
         final notify = (ref.watch(settingsProvider).value ?? const DeviceSettings()).notify.contains(world.id);
-        return Column(
+        return SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -805,6 +807,7 @@ Future<void> showWorldMenu(BuildContext context, WidgetRef ref, LibraryWorld wor
             ListTile(leading: const Icon(Icons.info_outline), title: const Text('Details'), onTap: () => Navigator.of(context).pop('details')),
             ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Remove'), onTap: () => Navigator.of(context).pop('remove')),
           ],
+          ),
         );
       },
     ),

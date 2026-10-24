@@ -519,7 +519,7 @@ class WorldInstaller {
       final bytes = {production.listening!, ...document.assetIds}.fold(0, (sum, assetId) => sum + manifest.assets[assetId]!.byteLength);
       final before = items[id];
       final offset = before?.duration ?? Duration.zero;
-      final added = [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: offset + document.starts[i])];
+      final added = [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: offset + document.starts[i], id: chapter.id)];
       if (before == null) {
         changed.add(
           LibraryItem(
@@ -692,7 +692,7 @@ class WorldInstaller {
             addedAt: now,
             file: stored(manifest.assets[production.listening]!),
             cover: picture ?? cover ?? keyArt,
-            chapters: [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: starts[i])],
+            chapters: [for (final (i, chapter) in document.chapters.indexed) Chapter(title: chapter.title, start: starts[i], id: chapter.id)],
             worldId: manifest.id,
           ),
         );

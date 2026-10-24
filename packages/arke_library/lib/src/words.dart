@@ -51,8 +51,7 @@ String whereLine(LibraryItem item) {
   final place = item.place;
   if (place == null) return '';
   if (place.page != null) return item.pages != null ? 'Page ${place.page} of ${item.pages}' : 'Page ${place.page}';
-  if (place.position != null && item.duration != null) {
-    final position = place.position!;
+  if (item.position case final position? when item.duration != null) {
     if (item.chapters.length > 1) {
       final index = item.chapters.lastIndexWhere((chapter) => chapter.start <= position);
       if (index >= 0) {

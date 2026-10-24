@@ -20,16 +20,21 @@ enum LibraryKind {
 
 /// A chapter of an audiobook, from the file's own markers.
 class Chapter {
-  const Chapter({required this.title, required this.start});
+  const Chapter({required this.title, required this.start, this.id});
 
   final String title;
   final Duration start;
 
-  Map<String, Object?> toJson() => {'title': title, 'startMs': start.inMilliseconds};
+  /// An illustrated narration's chapter id, which its place names (SPEC-058 R-26); null for a
+  /// file's chapters and for a world installed before it was kept.
+  final String? id;
+
+  Map<String, Object?> toJson() => {'title': title, 'startMs': start.inMilliseconds, if (id != null) 'id': id};
 
   static Chapter fromJson(Map<String, Object?> json) => Chapter(
     title: json['title']! as String,
     start: Duration(milliseconds: json['startMs']! as int),
+    id: json['id'] as String?,
   );
 }
 
@@ -114,6 +119,15 @@ class LibraryItem {
 
   /// In progress: opened, not finished, and somewhere past the start.
   bool get inProgress => place != null && !finished && place!.progress > 0;
+
+  /// Where the place is on the book's clock. An illustrated narration keeps its place as a chapter
+  /// and the time into it, so the chapter's start is added; a file keeps the time itself.
+  Duration? get position {
+    final place = this.place;
+    if (place == null) return null;
+    final at = place.locator == null ? -1 : chapters.indexWhere((chapter) => chapter.id == place.locator);
+    return at < 0 ? place.position : chapters[at].start + (place.position ?? Duration.zero);
+  }
 
   LibraryItem copyWith({Place? place, bool? finished, List<Chapter>? chapters, Duration? duration, int? byteLength}) => LibraryItem(
     id: id,
