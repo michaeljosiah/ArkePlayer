@@ -40,6 +40,27 @@ List<FreshPart> freshParts(Iterable<CatalogueWorld> catalogue, DateTime now, {bo
   return fresh..sort((a, b) => b.part.released.compareTo(a.part.released));
 }
 
+/// What Discover opens on (P16 rule 2, call 15): the production Arke's list names — its world's
+/// first when it names the world alone — else the production of the newest part (P15 rule 7), else
+/// the first listed world's first. A name no listed world answers to is ignored.
+({CatalogueWorld world, CatalogueProduction production})? discoverFeature(List<CatalogueWorld> listed, CatalogueFeature? named, List<FreshPart> fresh) {
+  if (listed.where((world) => world.id == named?.world).firstOrNull case final world? when world.productions.isNotEmpty) {
+    final production = world.productions.where((production) => production.id != null && production.id == named?.production).firstOrNull;
+    return (world: world, production: production ?? world.productions.first);
+  }
+  if (fresh.where((item) => item.production != null).firstOrNull case final item?) return (world: item.world, production: item.production!);
+  final first = listed.where((world) => world.productions.isNotEmpty).firstOrNull;
+  return first == null ? null : (world: first, production: first.productions.first);
+}
+
+/// The world of Discover's band (P16 rule 6, call 15): the one Arke's list names, else the last
+/// listed world that is not the feature's. A world with nothing in it yet has no band: its card in
+/// Worlds says all there is.
+CatalogueWorld? discoverBand(List<CatalogueWorld> listed, String? named, CatalogueWorld? featured) {
+  final full = listed.where((world) => world.productions.isNotEmpty);
+  return full.where((world) => world.id == named).firstOrNull ?? full.toList().reversed.where((world) => world.id != featured?.id).firstOrNull;
+}
+
 /// Whether a part came out within the last week, which its tile marks `New` (P15a).
 bool releasedThisWeek(CataloguePart part, DateTime now) =>
     !part.released.isBefore(DateTime.utc(now.year, now.month, now.day).subtract(const Duration(days: 7)));

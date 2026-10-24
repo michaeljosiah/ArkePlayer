@@ -415,11 +415,17 @@ class AddedSquare extends StatelessWidget {
   }
 }
 
-/// A sheet from the foot on the theme: the grip, a title with its close, then its content.
+/// The room a shelf's list leaves under its last row, so the row clears the tabs' pill and the dock
+/// floating over the page (P16 rule 9): the shell gives it as the page's bottom padding.
+double footRoom(BuildContext context) => MediaQuery.paddingOf(context).bottom;
+
+/// A sheet from the foot on the theme: the grip, a title with its close, then its content. It rises
+/// over the whole app, not inside a tab, so the pill floating over the tab never covers it.
 Future<T?> showArkeSheet<T>(BuildContext context, {required String? title, required WidgetBuilder builder, bool scrollable = false}) => showModalBottomSheet<T>(
   context: context,
   isScrollControlled: scrollable,
   useSafeArea: true,
+  useRootNavigator: true,
   builder: (context) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
     child: Column(

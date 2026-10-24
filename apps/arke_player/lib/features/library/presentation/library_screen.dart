@@ -107,7 +107,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         )
                       else
                         SliverList.builder(itemCount: rows.length, itemBuilder: (context, index) => row(rows[index])),
-                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                      SliverToBoxAdapter(child: SizedBox(height: 24 + footRoom(context))),
                     ],
                   ),
           ),

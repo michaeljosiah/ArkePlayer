@@ -15,6 +15,7 @@ import 'package:arke_player/features/worlds/application/guides.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_player/features/worlds/presentation/discover_screen.dart';
 import 'package:arke_player/features/worlds/presentation/production_screen.dart';
+import 'package:arke_player/features/worlds/presentation/row_widgets.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:arke_world/arke_world.dart';
@@ -67,7 +68,13 @@ final _undersong = CatalogueWorld(
   name: 'The Undersong',
   keyArt: 'assets/worlds/undersong/key-art.jpg',
   productions: const [
-    CatalogueProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', kind: 'Audiobook · Book · 23 chapters'),
+    CatalogueProduction(
+      id: 'the-ledger-of-nights',
+      title: 'The Ledger of Nights',
+      kind: 'Audiobook · Book · 23 chapters',
+      picture: 'assets/worlds/undersong/ledger-of-nights.jpg',
+      tall: 'assets/worlds/na-love-or-juju/cover-tall.jpg',
+    ),
     CatalogueProduction(id: 'undertow', title: 'Undertow', kind: 'Audio drama · 8 episodes'),
     CatalogueProduction(id: 'the-bell-watch', title: 'The Bell Watch', kind: 'Micro drama · 45 episodes'),
     CatalogueProduction(id: 'saltlight', title: 'Saltlight', kind: 'Film · 1 h 32 m'),
@@ -205,6 +212,7 @@ Future<_Audio> _pump(
   List<LibraryItem>? items,
   _Notices? notices,
   Size size = const Size(390, 844),
+  ({CatalogueFeature? feature, String? band}) picks = (feature: null, band: null),
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -218,6 +226,7 @@ Future<_Audio> _pump(
         volumeProvider.overrideWith((ref) async => (free: 40000000000, total: 128000000000)),
         catalogueProvider.overrideWith((ref) async => [_dumah, _undersong]),
         catalogueRefreshProvider.overrideWith((ref) async {}),
+        listPicksProvider.overrideWith((ref) async => picks),
         worldGuideProvider.overrideWith((ref, worldId) async => worldId == 'the-undersong' ? const WorldGuide(guide: _guide, pathOf: _pathOf) : null),
         guideFetchProvider.overrideWith((ref, worldId) async {}),
         guideReachProvider.overrideWith((ref, worldId) async => GuideReach.none),
@@ -237,47 +246,149 @@ Future<_Audio> _pump(
   return audio;
 }
 
+/// Scrolls the page until [target] is in its middle, clear of the tabs' pill floating at the foot
+/// (P16 rule 9).
+Future<void> _reveal(WidgetTester tester, Finder target) async {
+  final page = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
+  await tester.scrollUntilVisible(target, 300, scrollable: page);
+  await Scrollable.ensureVisible(tester.element(target), alignment: 0.5);
+  await tester.pumpAndSettle();
+}
+
+/// The asset an [Image] under [of] shows, for the pictures that are bundled.
+Set<String> _assetsUnder(WidgetTester tester, Finder of) => {
+  for (final image in tester.widgetList<Image>(find.descendant(of: of, matching: find.byType(Image))))
+    if (image.image case AssetImage(:final assetName)) assetName,
+};
+
 void main() {
-  group('Discover (P15a, P15b; SPEC-059 R-30, R-31)', () {
-    testWidgets('New chapters, Stories, Teasers and Worlds, an installed world In Library', (tester) async {
+  group('choosing the feature and the band (P16 call 15)', () {
+    final dumahPart = FreshPart(world: _dumah, part: _part, production: _dumah.productions.single);
+
+    test('the production the list names, or its world’s first', () {
+      final named = discoverFeature([_dumah, _undersong], const CatalogueFeature(world: 'the-undersong', production: 'saltlight'), [dumahPart]);
+      expect(named?.production.title, 'Saltlight');
+      final worldAlone = discoverFeature([_dumah, _undersong], const CatalogueFeature(world: 'the-undersong'), [dumahPart]);
+      expect(worldAlone?.production.title, 'The Ledger of Nights');
+    });
+
+    test('a name no listed world answers to falls to the newest part, then the first world', () {
+      expect(discoverFeature([_dumah, _undersong], const CatalogueFeature(world: 'not-yet'), [dumahPart])?.production.title, 'Whispers from the Void');
+      expect(discoverFeature([_undersong, _dumah], null, const [])?.production.title, 'The Ledger of Nights');
+      expect(discoverFeature(const [], null, const []), isNull);
+    });
+
+    test('the band the list names, else the last world that is not the feature’s', () {
+      expect(discoverBand([_dumah, _undersong], 'legend-of-dumah', _dumah)?.id, 'legend-of-dumah');
+      expect(discoverBand([_dumah, _undersong], null, _undersong)?.id, 'legend-of-dumah');
+      expect(discoverBand([_dumah, _undersong], 'not-yet', _dumah)?.id, 'the-undersong');
+      expect(discoverBand([_dumah], null, _dumah), isNull);
+    });
+  });
+
+  group('Discover (P15a, P15b, P16a – P16c; SPEC-059 R-30, R-31)', () {
+    testWidgets('the feature first, then New chapters, Stories, Teasers, a world’s band and Worlds', (tester) async {
       await _pump(tester, location: Routes.discover);
+      // With nothing named, the newest part's production; installed, so Play at its chapter.
+      final feature = find.byType(FeatureCard);
+      expect(find.descendant(of: feature, matching: find.text('Whispers from the Void')), findsOneWidget);
+      expect(find.descendant(of: feature, matching: find.text('Audiobook · Legend of Dumah')), findsOneWidget);
+      expect(find.descendant(of: feature, matching: find.text('Play · Chapter 3', findRichText: true)), findsOneWidget);
       expect(find.text('New chapters'), findsOneWidget);
-      expect(find.text('Chapter 3 · Legend of Dumah'), findsOneWidget);
-      expect(find.text('Stories'), findsOneWidget);
+      await _reveal(tester, find.text('Stories'));
       expect(find.text('Audio drama · The Undersong'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Worlds'),
-        300,
-        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first,
-      );
-      expect(find.text('Teasers'), findsOneWidget);
+      await _reveal(tester, find.text('Teasers'));
       expect(find.text('Character · The Undersong'), findsOneWidget);
       expect(find.text('Clip · 0:24 · The Undersong'), findsOneWidget);
+      await _reveal(tester, find.byType(WorldBand));
+      final band = find.byType(WorldBand);
+      expect(find.descendant(of: band, matching: find.text('The Undersong')), findsOneWidget);
+      expect(find.descendant(of: band, matching: find.text('4 productions · 1.9 GB')), findsOneWidget);
+      expect(find.descendant(of: band, matching: find.text('Install')), findsOneWidget);
+      expect(find.descendant(of: band, matching: find.text('Maren Kest')), findsOneWidget);
+      await _reveal(tester, find.text('Worlds'));
       expect(find.text('In Library · 1 production'), findsOneWidget);
     });
 
-    testWidgets('a chip keeps what is taken that way, and leaves out Teasers and Worlds', (tester) async {
+    testWidgets('a chip keeps what is taken that way, and leaves out the feature, Teasers, the band and Worlds', (tester) async {
       await _pump(tester, location: Routes.discover);
       await tester.tap(find.text('Watch'));
       await tester.pumpAndSettle();
       expect(find.text('Micro drama · The Undersong'), findsOneWidget);
       expect(find.text('Audiobook · Legend of Dumah'), findsNothing);
+      expect(find.byType(FeatureCard), findsNothing);
+      expect(find.byType(WorldBand), findsNothing);
       expect(find.text('Teasers'), findsNothing);
       expect(find.text('Worlds'), findsNothing);
     });
 
-    testWidgets('every row is the one tile, 240 wide on a phone (P15 rule 10)', (tester) async {
+    testWidgets('each row is one size: the feature 358 × 476, wide tiles 240, posters 172, small posters 112 (P16 rule 1)', (tester) async {
       await _pump(tester, location: Routes.discover);
+      // 358 × 476 inside the page's 16 at each side and 12 above.
+      expect(tester.getSize(find.byType(FeatureCard)), const Size(16 + 358 + 16, 12 + 476));
       expect({for (final tile in find.byType(ProductionTile).evaluate()) tile.size!.width}, {240.0});
+      await _reveal(tester, find.text('Stories'));
+      final stories = find.ancestor(of: find.text('Audio drama · The Undersong'), matching: find.byType(PosterTile));
+      expect(tester.getSize(stories).width, 172);
+      await _reveal(tester, find.text('Teasers'));
+      expect(tester.getSize(find.ancestor(of: find.text('Saltmouth bells'), matching: find.byType(PosterTile))).width, 112);
+    });
+
+    testWidgets('a poster is its Tall cover; without one, its Wide whole over its own blur (P16 rule 3)', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.discover,
+        picks: (feature: const CatalogueFeature(world: 'the-undersong'), band: 'legend-of-dumah'),
+      );
+      await _reveal(tester, find.text('Stories'));
+      final ledger = find.ancestor(of: find.text('Audiobook · The Undersong'), matching: find.byType(PosterTile));
+      expect(_assetsUnder(tester, ledger), {'assets/worlds/na-love-or-juju/cover-tall.jpg'});
+      expect(find.descendant(of: ledger, matching: find.byType(WholeOverBlur)), findsNothing);
+      final whispers = find.ancestor(of: find.text('Audiobook · Legend of Dumah'), matching: find.byType(PosterTile));
+      expect(find.descendant(of: whispers, matching: find.byType(WholeOverBlur)), findsOneWidget);
+      expect(
+        tester.widget<Image>(find.descendant(of: whispers, matching: find.byType(Image)).last).fit,
+        BoxFit.contain,
+        reason: 'the Wide is shown whole, never cut',
+      );
+    });
+
+    testWidgets('the list names the feature and the band: not installed, Install with its size (P16a)', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.discover,
+        picks: (feature: const CatalogueFeature(world: 'the-undersong'), band: 'legend-of-dumah'),
+      );
+      final feature = find.byType(FeatureCard);
+      expect(find.descendant(of: feature, matching: find.text('The Ledger of Nights')), findsOneWidget);
+      expect(find.descendant(of: feature, matching: find.text('Audiobook · Book · The Undersong')), findsOneWidget);
+      expect(find.descendant(of: feature, matching: find.text('Install · 1.9 GB', findRichText: true)), findsOneWidget);
+      // Upright on a phone, from its Tall cover.
+      expect(_assetsUnder(tester, feature), {'assets/worlds/na-love-or-juju/cover-tall.jpg'});
+      await _reveal(tester, find.byType(WorldBand));
+      // An installed world's band says so and has no press.
+      final band = find.byType(WorldBand);
+      expect(find.descendant(of: band, matching: find.text('In Library · 1 production')), findsOneWidget);
+      expect(find.descendant(of: band, matching: find.byType(BandPress)), findsNothing);
+    });
+
+    testWidgets('on a Fold the feature is wide, from its Wide, its words at the left (P16f)', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.discover,
+        size: const Size(984, 1092),
+        picks: (feature: const CatalogueFeature(world: 'the-undersong'), band: null),
+      );
+      final feature = find.byType(FeatureCard);
+      expect(tester.getSize(feature), const Size(984, 12 + 424));
+      expect(_assetsUnder(tester, feature), {'assets/worlds/undersong/ledger-of-nights.jpg'});
+      // 36 in from the card's edge, inside its 1 border.
+      expect(tester.getTopLeft(find.descendant(of: feature, matching: find.text('The Ledger of Nights'))).dx, 16 + 1 + 36);
     });
 
     testWidgets('a clip opens full screen with sound, and stops when closed (SPEC-059 R-32)', (tester) async {
       final audio = await _pump(tester, location: Routes.discover);
-      await tester.scrollUntilVisible(
-        find.text('Saltmouth bells'),
-        300,
-        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first,
-      );
+      await _reveal(tester, find.text('Saltmouth bells'));
       await tester.tap(find.text('Saltmouth bells'));
       await tester.pumpAndSettle();
       expect(find.byType(TeaserScreen), findsOneWidget);
@@ -296,6 +407,17 @@ void main() {
     expect(find.text('Watch'), findsOneWidget);
     expect(find.text('2'), findsNWidgets(2));
     expect(find.text('Inside'), findsNothing);
+  });
+
+  testWidgets('a world’s page: Listen as posters, Watch as wide tiles, its characters as small posters (P16d, P16e)', (tester) async {
+    await _pump(tester, location: Routes.discoverWorld('the-undersong'));
+    await _reveal(tester, find.text('Undertow'));
+    for (final listen in ['The Ledger of Nights', 'Undertow']) {
+      expect(tester.getSize(find.ancestor(of: find.text(listen), matching: find.byType(PosterTile))).width, 172);
+    }
+    await _reveal(tester, find.text('Maren Kest'));
+    expect(find.ancestor(of: find.text('Saltlight'), matching: find.byType(ProductionTile)), findsOneWidget);
+    expect(tester.getSize(find.ancestor(of: find.text('Maren Kest'), matching: find.byType(PosterTile))).width, 112);
   });
 
   group('a production released a chapter at a time (P15e; SPEC-058 R-52, R-53)', () {

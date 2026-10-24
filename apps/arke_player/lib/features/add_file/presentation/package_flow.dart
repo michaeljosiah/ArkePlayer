@@ -51,6 +51,7 @@ Future<PackageOutcome> addPackage(BuildContext context, WidgetRef ref, PickedFil
       await showModalBottomSheet<Object>(
         context: context,
         useSafeArea: true,
+        useRootNavigator: true,
         isDismissible: false,
         enableDrag: false,
         builder: (context) => _CheckingSheet(file: file, step: step, work: work, onCancel: cancel.cancel),

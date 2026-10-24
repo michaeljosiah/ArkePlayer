@@ -56,6 +56,7 @@ Future<int> addFiles(BuildContext context, WidgetRef ref, {List<PickedFile>? fil
             context: context,
             isScrollControlled: true,
             useSafeArea: true,
+            useRootNavigator: true,
             isDismissible: false,
             enableDrag: false,
             builder: (context) => _AddSheet(importer: importer, files: rest, resolve: importer.store.resolve),

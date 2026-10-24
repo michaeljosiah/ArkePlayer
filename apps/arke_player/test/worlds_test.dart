@@ -10,6 +10,7 @@ import 'package:arke_player/features/home/presentation/home_screen.dart';
 import 'package:arke_player/features/library/presentation/library_screen.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_player/features/worlds/presentation/discover_screen.dart';
+import 'package:arke_player/features/worlds/presentation/row_widgets.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:arke_world/arke_world.dart';
@@ -130,6 +131,15 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
+/// Scrolls the page until [target] is in its middle, clear of the tabs' pill floating at the foot
+/// (P16 rule 9): under Discover's feature (P16a), Worlds is further down.
+Future<void> _reveal(WidgetTester tester, Finder target) async {
+  final page = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
+  await tester.scrollUntilVisible(target, 300, scrollable: page);
+  await Scrollable.ensureVisible(tester.element(target), alignment: 0.5);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('first open (P9a)', () {
     testWidgets('offers Install a world when one is published', (tester) async {
@@ -140,6 +150,7 @@ void main() {
       await tester.pumpAndSettle();
       // Discover, the tab that took P9b's place (P11 rule 1, P15 rule 1), its worlds under Worlds.
       expect(find.byType(DiscoverScreen), findsOneWidget);
+      await _reveal(tester, find.text('1 production · 386 MB'));
       expect(find.descendant(of: find.byType(DiscoverScreen), matching: find.text('Worlds')), findsOneWidget);
       expect(find.text('1 production · 386 MB'), findsOneWidget);
     });
@@ -213,12 +224,14 @@ void main() {
   });
 
   group('installed (P9f)', () {
-    testWidgets('the page is P1d’s, its one production at the full width', (tester) async {
+    testWidgets('the page is P1d’s, its one audiobook a poster under Listen (P16 rule 3)', (tester) async {
       await _pump(tester, location: Routes.world('undersong'), catalogue: [_undersong], worlds: [_installed], items: _worldItems);
       expect(find.text('Installed · 1 production · 386 MB'), findsOneWidget);
       expect(find.text('Listen'), findsOneWidget);
       expect(find.text('Audiobook · Book · 2 h 03 m'), findsOneWidget);
-      expect(tester.getSize(find.byType(ProductionTile)).width, 358);
+      // A lone poster keeps the poster's size: at the full width it would be Discover's feature.
+      expect(tester.getSize(find.byType(PosterTile)).width, 172);
+      expect(find.byType(ProductionTile), findsNothing);
     });
     testWidgets('its production page: Play, Read beside it, Chapters', (tester) async {
       await _pump(tester, location: Routes.production(Routes.world('undersong'), 'ledger-of-nights'), worlds: [_installed], items: _worldItems);

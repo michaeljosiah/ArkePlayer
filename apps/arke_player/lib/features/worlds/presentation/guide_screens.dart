@@ -52,7 +52,7 @@ class GuideEntryScreen extends ConsumerWidget {
     return Scaffold(
       body: switch (entry) {
         GuideCharacter() => ListView(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.only(bottom: footRoom(context)),
           children: [
             WorldHero(
               picture: guidePicture(guide, entry),
@@ -78,7 +78,7 @@ class GuideEntryScreen extends ConsumerWidget {
           ],
         ),
         GuidePlace() => ListView(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.only(bottom: footRoom(context)),
           children: [
             WorldHero(picture: guidePicture(guide, entry), title: entry.name, meta: [placeKind(entry), ?world].join(' · ')),
             GuideProse(sections: entry.sections, reach: reach, onReveal: ask),
@@ -107,7 +107,7 @@ class GuideEntryScreen extends ConsumerWidget {
         ),
         GuideLore() => _Bare(
           child: ListView(
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: EdgeInsets.only(bottom: 24 + footRoom(context)),
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
@@ -197,7 +197,7 @@ class _LoreScreenState extends ConsumerState<LoreScreen> {
             const SizedBox(height: 12),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.only(bottom: 24),
+                padding: EdgeInsets.only(bottom: 24 + footRoom(context)),
                 children: [
                   Align(
                     alignment: Alignment.centerLeft,

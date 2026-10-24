@@ -101,7 +101,7 @@ class ProductionScreen extends ConsumerWidget {
 
     return Scaffold(
       body: ListView(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.only(bottom: footRoom(context)),
         children: [
           WorldHero(
             picture: libraryPicture(store, production.picture ?? narration?.cover ?? book?.cover ?? world.keyArt),

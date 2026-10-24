@@ -56,7 +56,7 @@ class HomeScreen extends ConsumerWidget {
                     ],
                   )
                 : ListView(
-                    padding: const EdgeInsets.only(bottom: 24),
+                    padding: EdgeInsets.only(bottom: 24 + footRoom(context)),
                     children: [
                       if (going.isNotEmpty) ...[
                         const SectionHead('Continue'),

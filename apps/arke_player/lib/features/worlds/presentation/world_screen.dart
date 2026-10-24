@@ -11,16 +11,18 @@ import '../../../app/widgets/shelf.dart';
 import '../../production/domain/production_kind.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
+import 'row_widgets.dart';
 import 'world_widgets.dart';
 
-/// A world's page (P9, P15c, P15d). Before it is installed: the hero with `Install · 386 MB`, its
-/// productions grouped by how they are taken, `Listen · Watch · Play · Read`, each head with its
-/// count (P15 rule 3), then Space; while it installs, the progress in the press's place (P9d); a
-/// refusal as a sheet (P9e). Installed, the same groups open their productions, one production at
-/// the full width (P9f), a production with a chapter not yet opened marked `New` (R-52). Every row
-/// is the one tile (P15 rule 10). On a Fold the words keep to the left (P9h). Either way the
-/// world's guide follows its productions (P11b, P11c, P11i). A newer edition in Arke's list puts
-/// `Update` where Install was, with what it brings and the space it needs (P12b – P12f).
+/// A world's page (P9, P15c, P15d, P16d, P16e). Before it is installed: the hero with `Install ·
+/// 386 MB`, its productions grouped by how they are taken, `Listen · Watch · Play · Read`, each head
+/// with its count (P15 rule 3), then Space; while it installs, the progress in the press's place
+/// (P9d); a refusal as a sheet (P9e). Installed, the same groups open their productions, a
+/// production with a chapter not yet opened marked `New` (R-52). Listen and Read are posters from a
+/// production's Tall cover, Watch and Play wide tiles, a lone one at the full width (P16 rules 3 and
+/// 4, P9f). On a Fold the words keep to the left (P9h). Either way the world's guide follows its
+/// productions (P11b, P11c, P11i). A newer edition in Arke's list puts `Update` where Install was,
+/// with what it brings and the space it needs (P12b – P12f).
 ///
 /// [location] is this page's own path, which a production's page and the guide's pages are pushed
 /// under.
@@ -76,7 +78,7 @@ class _ToInstall extends ConsumerWidget {
     return ScrolledHead(
       title: world.name,
       child: ListView(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.only(bottom: footRoom(context)),
         children: [
           WorldHero(
             picture: bundledPicture(world.keyArt),
@@ -98,13 +100,22 @@ class _ToInstall extends ConsumerWidget {
           _Groups(
             groups: groups,
             single: single,
-            tile: (production, width) => ProductionTile(
-              title: production.title,
-              kind: production.kind,
-              picture: bundledPicture(production.picture ?? world.keyArt),
-              width: width,
-              onOpen: null,
-            ),
+            tile: (production, width, poster) => poster
+                ? PosterTile(
+                    title: production.title,
+                    kind: production.kind,
+                    tall: bundledPicture(production.tall),
+                    wide: bundledPicture(production.picture ?? world.keyArt),
+                    width: width,
+                    onOpen: null,
+                  )
+                : ProductionTile(
+                    title: production.title,
+                    kind: production.kind,
+                    picture: bundledPicture(production.picture ?? world.keyArt),
+                    width: width,
+                    onOpen: null,
+                  ),
           ),
           if (size != null && free != null)
             Align(
@@ -146,16 +157,28 @@ class _Installed extends ConsumerWidget {
     final newer = update?.package;
     final free = ref.watch(volumeProvider).value?.free;
 
-    Widget tile(LibraryProduction production, double width) {
+    Widget tile(LibraryProduction production, double width, bool poster) {
       final narration = items[production.narration];
       final picture = production.picture ?? narration?.cover ?? items[production.book]?.cover ?? world.keyArt;
-      return ProductionTile(
+      final kind = productionKind(book: production.book != null, narration: production.narration != null, length: narration?.duration);
+      final fresh = newChapters(world, production.id, narration).isNotEmpty;
+      void open() => context.push(Routes.production(location, production.id));
+      if (!poster) {
+        return ProductionTile(title: production.title, kind: kind, picture: libraryPicture(store, picture), width: width, fresh: fresh, onOpen: open);
+      }
+      // The package carries no Tall cover yet: the list's, bundled with the app, is the one there is.
+      final tall = listed?.productions
+          .where((listedProduction) => listedProduction.id == production.id || listedProduction.title == production.title)
+          .firstOrNull
+          ?.tall;
+      return PosterTile(
         title: production.title,
-        kind: productionKind(book: production.book != null, narration: production.narration != null, length: narration?.duration),
-        picture: libraryPicture(store, picture),
+        kind: kind,
+        tall: bundledPicture(tall),
+        wide: libraryPicture(store, picture),
         width: width,
-        fresh: newChapters(world, production.id, narration).isNotEmpty,
-        onOpen: () => context.push(Routes.production(location, production.id)),
+        fresh: fresh,
+        onOpen: open,
       );
     }
 
@@ -163,7 +186,7 @@ class _Installed extends ConsumerWidget {
       title: world.name,
       onMore: () => showWorldMenu(context, ref, world),
       child: ListView(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.only(bottom: footRoom(context)),
         children: [
           WorldHero(
             picture: libraryPicture(store, world.keyArt),
@@ -210,13 +233,15 @@ class _Installed extends ConsumerWidget {
 }
 
 /// A world's productions under `Listen · Watch · Play · Read`, each head with its count (P15 rule
-/// 3), each row the one tile; a world of one production shows it at the full width (P9 rule 6).
+/// 3). Listen and Read are posters, where audiobooks and books sit (P16 rule 3); Watch and Play are
+/// wide tiles, and a world of one production shows a wide one at the full width (P9 rule 6). A lone
+/// poster keeps the poster's size: at the full width it would be the feature.
 class _Groups<T> extends StatelessWidget {
   const _Groups({required this.groups, required this.single, required this.tile});
 
   final Map<TakenAs, List<T>> groups;
   final bool single;
-  final Widget Function(T production, double width) tile;
+  final Widget Function(T production, double width, bool poster) tile;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -224,15 +249,17 @@ class _Groups<T> extends StatelessWidget {
     children: [
       for (final MapEntry(key: takenAs, value: productions) in groups.entries) ...[
         if (single) SectionHead(takenAs.label) else CountHead(title: takenAs.label, count: productions.length),
-        if (single)
+        if (takenAs == TakenAs.listen || takenAs == TakenAs.read)
+          TileRow(children: [for (final production in productions) tile(production, RowSizes.poster(context), true)])
+        else if (single)
           LayoutBuilder(
             builder: (context, box) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Align(alignment: Alignment.centerLeft, child: tile(productions.single, (box.maxWidth - 32).clamp(0, 640))),
+              child: Align(alignment: Alignment.centerLeft, child: tile(productions.single, (box.maxWidth - 32).clamp(0, 640), false)),
             ),
           )
         else
-          TileRow(children: [for (final production in productions) tile(production, rowTileWidth(context))]),
+          TileRow(children: [for (final production in productions) tile(production, rowTileWidth(context), false)]),
       ],
     ],
   );
