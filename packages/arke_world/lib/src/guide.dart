@@ -413,7 +413,9 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
   if (json['teasers'] == null) return guide;
 
   // Teasers (R-28, R-29): a character or place names an entry public from the start, because
-  // Discover shows it to anyone; a picture or clip carries its own files and its chapter.
+  // Discover shows it to anyone, and is a repeat by its id; a picture or clip carries its own files
+  // and its chapter, and is never a repeat by its picture: two moments may share a still, and a
+  // package ships that file once.
   GuideAfter from(Map<String, Object?> t, String what) {
     final production = _id(t['production'], '$what production');
     final chapter = _id(t['chapter'], '$what chapter');
@@ -442,14 +444,12 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
       case 'picture':
         final t = _object(raw, what, {'kind', 'title', 'picture', 'production', 'chapter'});
         final picture = asset(t['picture'], pictureMediaTypes, '$what picture') ?? _notAPackage('$what picture');
-        if (!seen.add('$kind $picture')) _notAPackage('$what repeats $picture');
         teasers.add(PictureTeaser(title: _text(t['title'], '$what title'), picture: picture, from: from(t, what)));
       case 'clip':
         final t = _object(raw, what, {'kind', 'title', 'picture', 'audio', 'duration', 'production', 'chapter', 'motion'});
         final picture = asset(t['picture'], pictureMediaTypes, '$what picture') ?? _notAPackage('$what picture');
         final duration = t['duration'];
         if (duration is! int || duration < 1 || Duration(milliseconds: duration) > maxTeaserClip) _notAPackage('$what duration');
-        if (!seen.add('$kind $picture')) _notAPackage('$what repeats $picture');
         teasers.add(
           ClipTeaser(
             title: _text(t['title'], '$what title'),

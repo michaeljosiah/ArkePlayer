@@ -35,6 +35,13 @@ void main() {
     }
   });
 
+  test('an empty schedule, an author clearing it, reads as one naming nothing', () {
+    final json = jsonDecode(_read('part.json')) as Map<String, Object?>;
+    (json['part']! as Map<String, Object?>)['schedule'] = <String, Object?>{};
+    final part = (readWorldManifest(jsonEncode(json)) as WorldManifestOk).manifest.part!;
+    expect((part.schedule?.day, part.schedule?.next), (null, null));
+  });
+
   test('a date that does not exist is not one', () {
     expect(parseDay('2026-02-30'), isNull);
     expect(parseDay('2026-11-06'), DateTime.utc(2026, 11, 6));

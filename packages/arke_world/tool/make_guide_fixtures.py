@@ -144,6 +144,8 @@ teaser_case('teaser-wrong-media.json', 'notAPackage', lambda x: x['teasers'][1].
 teaser_case('teaser-unknown-kind.json', 'notAPackage', lambda x: x['teasers'][0].update(kind='poster'))
 teaser_case('teaser-unknown-key.json', 'newerArke', lambda x: x['teasers'][3].update(caption='Low water'))
 teaser_case('teaser-picture-only.json', 'ok', lambda x: x.update(characters=[], places=[], lore=[], teasers=[x['teasers'][3]]))
+# Two moments may share a still, and a package ships that file once: a picture or clip is never a repeat by its picture.
+teaser_case('teaser-same-picture.json', 'ok', lambda x: x['teasers'].append({'kind': 'picture', 'title': 'The weir again', 'picture': 't-weir', **ONE}))
 def world(version=3, productions=None, **extra):
     doc = {
         'format': 'arke-world-package', 'schemaVersion': version, 'id': 'undersong', 'edition': '2026-10-22', 'name': 'The Undersong',
