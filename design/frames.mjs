@@ -1,7 +1,7 @@
 // Arke Player · the frames, turn by turn. The sample is The Undersong, shared by Helen Marsh with
 // Jonah Pike, beside Copper Saints (shared by Ama Mensah) and Meridian Dust (added from a file).
 // Every picture is in design/assets, recompressed from ArkeStudio's design-system/assets; nothing here is generated.
-import { A, ic, seek, sb, hi, tabs, dock, frame, cc, tile, wc, sh, row, sheet, gb } from './view.mjs';
+import { A, ic, seek, sb, hi, tabs, pill, dock, frame, cc, tile, wc, sh, row, sheet, gb } from './view.mjs';
 
 // ---- the sample ------------------------------------------------------------------------------
 const W = {
@@ -565,8 +565,68 @@ ${sh('Worlds')}<div class="hrow">${[DUMAH, QUIET, EMBERS].map((w) => wc({ ...w, 
 </div>${hi()}</div>`),
 ];
 
+// ---- P16 · Rows of different sizes ------------------------------------------------------------
+// The owner, 24 October 2026, with Netflix's Home on a phone and a tablet: boxes of different sizes
+// give some titles emphasis. Netflix keeps every row one size and varies the size between rows; what
+// looked unkempt in P15's first draw was sizes mixed inside one row. So a row is one size and one
+// shape, and a page is a rhythm of rows: the feature, posters, wide tiles, small posters, a band.
+// A poster is the production's Tall cover. Arke's covers are wide today, so one without a Tall shows
+// its Wide whole over its own blur. Na Love or Juju's book cover is the middle of its published cover.
+const JUJU = { img: 'juju-key-art.jpg', pos: '30% 40%', name: 'Na Love or Juju', logline: 'A disciplined Lagos man in his forties falls for a woman who loves him in private and denies him in public, and by the time he learns her hold on him is more than charm, he can no longer tell which of his feelings were ever his own.' };
+const TALL = { ledger: 'maren-ledger-tall.jpg', juju: 'juju-cover-tall.jpg', quiet: 'red-quiet-key-art.jpg', bell: 'char-sereth.jpg' };
+/** A poster: 2:3 from a Tall picture; without one, the Wide whole over its own blur. */
+const poster = ({ tall, img, pos = 'center', title, kind, w = 172, tag = '', mid = '' }) => `<div class="po" style="width:${w}px"><div class="im${tall ? '' : ' fb'}">${tall ? `<img src="${A}${tall}" alt="" style="object-position:${pos}">` : `<img class="bl" src="${A}${img}" alt=""><img class="wd" src="${A}${img}" alt="" style="object-position:${pos}">`}${tag ? `<span class="tg">${tag}</span>` : ''}${mid ? `<span class="mid">${mid}</span>` : ''}</div><div class="t">${title}</div><div class="m">${kind}</div></div>`;
+const castPoster = (c, kind, w) => c.img ? poster({ tall: c.img, pos: c.pos, title: c.name, kind, w }) : `<div class="po" style="width:${w}px"><div class="im"><span class="mid ini">${c.ini}</span></div><div class="t">${c.name}</div><div class="m">${kind}</div></div>`;
+const gatedPoster = (after, w) => `<div class="po gated" style="width:${w}px"><div class="im"><span class="mid">${ic('eyeoff', 24, 1.7)}</span></div><div class="t mute">${after}</div><div class="m">Character</div></div>`;
+/** The feature: one production, its Tall cover upright on a phone, its Wide on a Fold. */
+const feature = (wide = false) => `<div class="ft on-media${wide ? ' wide' : ''}"><img src="${A}${wide ? STORY.ledger.img : TALL.ledger}" alt="" style="object-position:${wide ? '50% 40%' : '50% 30%'}"><div class="shade"></div><div class="in"><div class="fk">${NEWTAG}<span class="num">Chapter 24</span></div><h1>${STORY.ledger.title}</h1><div class="meta">Audiobook · Book · The Undersong</div><span class="btn pri${wide ? '' : ' wide'}">${ic('download', 18)}Install <em>· 1.9 GB</em></span></div></div>`;
+const storyPosters = (w = 172) => `${poster({ tall: TALL.quiet, pos: '50% 40%', title: 'The Red Quiet', kind: 'Audiobook · The Red Quiet', w })}${poster({ img: STORY.whispers.img, title: STORY.whispers.title, kind: 'Audiobook · Legend of Dumah', w })}${poster({ tall: TALL.bell, pos: '50% 28%', title: PR.bell.title, kind: 'Micro drama · The Undersong', w, tag: NEWTAG })}${poster({ img: PR.saltlight.img, pos: PR.saltlight.pos, title: PR.saltlight.title, kind: 'Film · The Undersong', w })}`;
+const teaserPosters = (w = 112) => `${castPoster(CAST.maren, 'Character', w)}${poster({ img: 'scene4-shot14b.jpg', title: 'Saltmouth bells', kind: 'Clip · 0:24', w, mid: `<span class="ib glass">${ic('play', 16)}</span>` })}${castPoster(CAST.chorister, 'Character', w)}${poster({ img: PLACES.vigil.img, title: PLACES.vigil.title, kind: 'Place', w })}`;
+/** The band: one world across the page, its key art blurred behind, its productions and people as small posters. */
+const band = (w = 112, style = '') => `<div class="band on-media"${style ? ` style="${style}"` : ''}><img class="bg" src="${A}${JUJU.img}" alt=""><div class="dk"></div><div class="bh"><img src="${A}${JUJU.img}" alt="" style="object-position:${JUJU.pos}"><div class="grow"><h3>${JUJU.name}</h3><div class="m num">1 production · 808 MB</div></div><span class="bi"><span>${ic('download', 20, 2)}</span>Install</span></div><div class="lg">${JUJU.logline}</div><div class="hrow">${poster({ tall: TALL.juju, title: 'Na love or Juju', kind: 'Audiobook · 11 h 55 m', w })}${[['juju-ife.jpg', 'Ife'], ['juju-ade.jpg', 'Ade Akinola'], ['juju-tunde.jpg', 'Tunde']].map(([img, name]) => poster({ tall: img, pos: '50% 22%', title: name, kind: 'Character', w })).join('')}</div></div>`;
+const foldBody = (inner) => `${tabs('Discover', true, 'discover')}<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb()}${discoverHead('padding:6px 28px 6px 24px')}${discoverChips('padding:2px 24px 0')}<div class="body" style="padding:0 8px">${inner}</div>${hi()}</div>`;
+
+const P16 = [
+  frame('P16a', 'Discover opens on a feature', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body">${feature()}
+${sh('New chapters')}<div class="hrow">${newChapters()}</div>
+</div>${tabs('Discover', false, 'discover')}${hi()}`),
+
+  frame('P16b', 'Further down: wide tiles, then posters', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body">
+${sh('New chapters')}<div class="hrow">${newChapters()}</div>
+${sh('Stories')}<div class="hrow">${storyPosters()}</div>
+</div>${tabs('Discover', false, 'discover')}${hi()}`),
+
+  frame('P16c', 'Further down: small posters, then a world’s band', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body">
+${sh('Teasers')}<div class="hrow">${teaserPosters()}</div>
+${band()}
+</div>${tabs('Discover', false, 'discover')}${hi()}`),
+
+  frame('P16d', 'A world’s page: Listen as posters', 'phone', `${sb(true)}<div class="body">${kindsHero}${sh('Listen', '<span class="ct num">2</span>')}<div class="hrow">${poster({ tall: TALL.ledger, pos: '50% 30%', title: STORY.ledger.title, kind: 'Audiobook · Book · 23 chapters' })}${poster({ img: PR.undertow.img, title: PR.undertow.title, kind: 'Audio drama · 8 episodes' })}</div></div>${tabs('Discover', false, 'discover')}${hi()}`),
+
+  frame('P16e', 'The same world, further down: wide tiles, then its people', 'phone', `${sb()}${scrolledHead('The Undersong')}<div class="body" style="margin-top:-12px">${watchRow}${sh('Characters', '<span class="ct num">5</span>')}<div class="hrow">${[CAST.maren, CAST.bray, CAST.chorister, CAST.perrin].map((c) => castPoster(c, c.role, 112)).join('')}${gatedPoster('After Chapter 9', 112)}</div>
+${sh('Places', '<span class="ct num">6</span>')}<div class="hrow">${[PLACES.vigil, PLACES.saltmarket, PLACES.chapel].map((p) => tile({ ...p, w: TW })).join('')}</div></div>${tabs('Discover', false, 'discover')}${hi()}`),
+
+  frame('P16f', 'Discover on a Fold: the feature wide, then posters', 'fold', foldBody(`${feature(true)}
+${sh('Stories')}<div class="hrow">${storyPosters(260)}</div>`)),
+
+  frame('P16g', 'Discover on a Fold, further down', 'fold', foldBody(`${sh('New chapters')}<div class="hrow">${newChapters(300)}</div>
+${sh('Teasers')}<div class="hrow">${teaserPosters(160)}${castPoster(CAST.bray, 'Character', 160)}</div>
+${band(160, 'margin:28px -8px 0;padding:24px 8px')}`)),
+
+  // Call 16, asked to be seen: the tabs as Netflix's floating pill. The page runs to the foot under
+  // it; a playing chapter's dock floats above it; on a Fold the rail goes and the page takes the width.
+  frame('P16h', 'The tabs as a pill', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body">${feature()}
+${sh('New chapters')}<div class="hrow">${newChapters()}</div>
+</div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
+
+  frame('P16i', 'The pill with a chapter playing', 'phone', `${sb(true)}<div class="body">${kindsHero}${sh('Listen', '<span class="ct num">2</span>')}<div class="hrow">${poster({ tall: TALL.ledger, pos: '50% 30%', title: STORY.ledger.title, kind: 'Audiobook · Book · 23 chapters' })}${poster({ img: PR.undertow.img, title: PR.undertow.title, kind: 'Audio drama · 8 episodes' })}</div></div><div class="ffoot"></div>${dock({ img: STORY.whispers.img, title: STORY.whispers.title, where: 'Chapter 3 · 4:12', at: 24 }).replace('class="dock"', 'class="dock float"')}${pill('Discover')}${hi()}`),
+
+  frame('P16j', 'The pill on a Fold, in the rail’s place', 'fold', `<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb()}${discoverHead('padding:6px 28px 6px 24px')}${discoverChips('padding:2px 24px 0')}<div class="body" style="padding:0 8px">${feature(true)}
+${sh('Stories')}<div class="hrow">${storyPosters(260)}</div></div><div class="ffoot"></div>${pill('Discover', true)}${hi()}</div>`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16) };

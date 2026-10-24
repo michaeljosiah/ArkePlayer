@@ -155,6 +155,31 @@ Legend of Dumah, The Red Quiet and Embers of the Fallen are Arke's worlds on Ava
 pictures recompressed from the app's own list (`apps/arke_player/assets/worlds`). The Undersong's
 six productions are P1's sample. Chapter dates, schedules and episode counts are samples.
 
+## Rows of different sizes (P16)
+
+The owner, on 24 October 2026, with screenshots of Netflix's Home on a phone and a tablet: the
+boxes of different sizes are great, with emphasis on some titles. That reads against P15's one
+tile, but Netflix never mixes sizes inside a row. It changes the size from one row to the next,
+and P15's first draw had mixed them inside a row. So P16 keeps each row to one size and one shape
+and lets the page mix rows: a feature, posters, wide tiles, small posters and a world's band.
+
+Netflix's posters are upright, and Arke's covers are all wide today. A poster therefore needs a
+production's Tall cover, made in the Studio as a moment's Tall picture is (call 14). Until a
+production has one, its poster shows the Wide cover whole over its own blur, because the owner
+chose making shapes over cropping in P14. Characters gain the most: a portrait stays upright
+instead of being cut to 16:9.
+
+Na Love or Juju is Arke's world as published (list serial 16). Its poster is the book cover that
+sits in the middle of its published wide cover, cut out at 480 × 720, and its characters are the
+Studio's `nloj-*` portraits. The Ledger of Nights' Tall is P14's `maren-ledger-tall.jpg`. The Bell
+Watch and The Red Quiet use pictures that are already upright. Every other poster shows the fallback.
+
+Approved by the owner on 24 October 2026, with calls 14 and 15: "We need to support upright. It
+seems to be an industry norm. But we can always mix and match." In the same message they asked to
+see the pill, so P16h – P16j draw it. On a phone, the page runs under the pill to the foot. A
+playing chapter's dock floats above the pill. On a Fold, the pill takes the rail's place, which
+gives the page the full width. Seeing it, the owner chose the pill: "Pill is a better design."
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -192,6 +217,13 @@ six productions are P1's sample. Chapter dates, schedules and episode counts are
 13. **A new chapter is notified by the phone itself** (P15, approved). Notifications are per world, off
    until turned on, and come from the daily check of Arke's list, so they need no account and no
    server.
+14. **A production's cover comes Wide and Tall** (P16, approved). The Tall is made in the Studio
+   from the Wide, as a moment's is (Studio 235). Posters and a phone's feature show the Tall, and a
+   production without one shows the Wide whole over its blur. The Studio half needs a turn of its own.
+15. **Discover's feature and band are named in Arke's list** (P16, approved), one line each. With
+   neither named, the feature is the newest release and the band the newest world.
+16. **The tabs as a pill** (P16h – P16j, chosen by the owner). Netflix floats its tabs as a pill
+   over the page on both a phone and a tablet. The pill replaces P1's bar and P6e's rail.
 
 ## What this rests on
 
