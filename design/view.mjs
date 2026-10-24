@@ -78,6 +78,8 @@ const TABS_WORLDS = [['home', 'Home'], ['globe', 'Worlds'], ['library', 'Library
 const TABS_DISCOVER = [['home', 'Home'], ['compass', 'Discover'], ['library', 'Library'], ['download', 'Downloads'], ['user', 'You']];
 /** The tabs: a bar above the home indicator on a phone, a rail on a Fold; five with Worlds (P11), then Discover (P15). */
 export const tabs = (on, rail = false, worlds = false) => `<div class="${rail ? 'rail' : 'tabs'}">${(worlds === 'discover' ? TABS_DISCOVER : worlds ? TABS_WORLDS : TABS).map(([i, l]) => `<span class="tab${l === on ? ' on' : ''}">${ic(i, rail ? 24 : 24, l === on ? 2.1 : 1.7)}${l}</span>`).join('')}</div>`;
+/** P16, call 16: the same tabs as a pill floating over the page, the current one in a capsule; on a Fold it takes the rail's place. */
+export const pill = (on, wide = false) => `<div class="pill${wide ? ' wide' : ''}">${TABS_DISCOVER.map(([i, l]) => `<span class="tab${l === on ? ' on' : ''}">${ic(i, 22, l === on ? 2.1 : 1.7)}${l}</span>`).join('')}</div>`;
 
 /** The dock: what plays while its player is closed, above the tabs. */
 export const dock = ({ img, title, where, at = 44, playing = true }) => `<div class="dock"><span class="ln" style="width:${at}%"></span><img src="${A}${img}" alt=""><div class="grow"><b>${title}</b><span class="w">${where}</span></div><span class="dib">${seek(15)}</span><span class="dib">${ic(playing ? 'pause' : 'play', 22)}</span></div>`;

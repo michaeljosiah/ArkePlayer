@@ -1,7 +1,7 @@
 // Arke Player · the frames, turn by turn. The sample is The Undersong, shared by Helen Marsh with
 // Jonah Pike, beside Copper Saints (shared by Ama Mensah) and Meridian Dust (added from a file).
 // Every picture is in design/assets, recompressed from ArkeStudio's design-system/assets; nothing here is generated.
-import { A, ic, seek, sb, hi, tabs, dock, frame, cc, tile, wc, sh, row, sheet, gb } from './view.mjs';
+import { A, ic, seek, sb, hi, tabs, pill, dock, frame, cc, tile, wc, sh, row, sheet, gb } from './view.mjs';
 
 // ---- the sample ------------------------------------------------------------------------------
 const W = {
@@ -612,6 +612,17 @@ ${sh('Stories')}<div class="hrow">${storyPosters(260)}</div>`)),
   frame('P16g', 'Discover on a Fold, further down', 'fold', foldBody(`${sh('New chapters')}<div class="hrow">${newChapters(300)}</div>
 ${sh('Teasers')}<div class="hrow">${teaserPosters(160)}${castPoster(CAST.bray, 'Character', 160)}</div>
 ${band(160, 'margin:28px -8px 0;padding:24px 8px')}`)),
+
+  // Call 16, asked to be seen: the tabs as Netflix's floating pill. The page runs to the foot under
+  // it; a playing chapter's dock floats above it; on a Fold the rail goes and the page takes the width.
+  frame('P16h', 'The tabs as a pill', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body">${feature()}
+${sh('New chapters')}<div class="hrow">${newChapters()}</div>
+</div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
+
+  frame('P16i', 'The pill with a chapter playing', 'phone', `${sb(true)}<div class="body">${kindsHero}${sh('Listen', '<span class="ct num">2</span>')}<div class="hrow">${poster({ tall: TALL.ledger, pos: '50% 30%', title: STORY.ledger.title, kind: 'Audiobook · Book · 23 chapters' })}${poster({ img: PR.undertow.img, title: PR.undertow.title, kind: 'Audio drama · 8 episodes' })}</div></div><div class="ffoot"></div>${dock({ img: STORY.whispers.img, title: STORY.whispers.title, where: 'Chapter 3 · 4:12', at: 24 }).replace('class="dock"', 'class="dock float"')}${pill('Discover')}${hi()}`),
+
+  frame('P16j', 'The pill on a Fold, in the rail’s place', 'fold', `<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb()}${discoverHead('padding:6px 28px 6px 24px')}${discoverChips('padding:2px 24px 0')}<div class="body" style="padding:0 8px">${feature(true)}
+${sh('Stories')}<div class="hrow">${storyPosters(260)}</div></div><div class="ffoot"></div>${pill('Discover', true)}${hi()}</div>`),
 ];
 
 // Widths per frame class; a frame's card is drawn at its frame's own size.

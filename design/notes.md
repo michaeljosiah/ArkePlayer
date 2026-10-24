@@ -174,6 +174,13 @@ sits in the middle of its published wide cover, cut out at 480 × 720, and its c
 Studio's `nloj-*` portraits. The Ledger of Nights' Tall is P14's `maren-ledger-tall.jpg`. The Bell
 Watch and The Red Quiet use pictures that are already upright. Every other poster shows the fallback.
 
+Approved by the owner on 24 October 2026, with calls 14 and 15: "We need to support upright. It
+seems to be an industry norm. But we can always mix and match." In the same message they asked to
+see the pill, so P16h – P16j draw it. On a phone, the page runs under the pill to the foot. A
+playing chapter's dock floats above the pill. On a Fold, the pill takes the rail's place, which
+gives the page the full width. Call 16 stays open until the owner chooses, and the bar and rail
+stand until then.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -211,13 +218,14 @@ Watch and The Red Quiet use pictures that are already upright. Every other poste
 13. **A new chapter is notified by the phone itself** (P15, approved). Notifications are per world, off
    until turned on, and come from the daily check of Arke's list, so they need no account and no
    server.
-14. **A production's cover comes Wide and Tall** (P16, proposed). The Tall is made in the Studio
+14. **A production's cover comes Wide and Tall** (P16, approved). The Tall is made in the Studio
    from the Wide, as a moment's is (Studio 235). Posters and a phone's feature show the Tall, and a
    production without one shows the Wide whole over its blur. The Studio half needs a turn of its own.
-15. **Discover's feature and band are named in Arke's list** (P16, proposed), one line each. With
+15. **Discover's feature and band are named in Arke's list** (P16, approved), one line each. With
    neither named, the feature is the newest release and the band the newest world.
-16. **The tabs stay a bar and a rail** (P16, proposed). Netflix floats its tabs as a pill over the
-   page on both a phone and a tablet. P16 does not draw that, but it can be drawn if asked for.
+16. **The tabs as a pill** (P16h – P16j, drawn for the owner's choice). Netflix floats its tabs as
+   a pill over the page on both a phone and a tablet. The pill would replace P1's bar and P6e's
+   rail; until it is chosen, they stand.
 
 ## What this rests on
 
