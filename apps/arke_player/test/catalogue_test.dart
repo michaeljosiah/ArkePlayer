@@ -59,11 +59,11 @@ void main() {
   });
 
   test('Legend of Dumah is pinned to its published package and its guide alone', () {
-    // The Studio's Export → Arke Player of the Prologue and Chapters 1 to 3, narrated with Tall pictures, without the book,
+    // The Studio's Export → Arke Player of the Prologue and Chapters 1 to 4, narrated with Tall pictures, without the book,
     // and the guide alone beside it (SPEC-059 R-10).
     final dumah = catalogue.singleWhere((world) => world.id == 'legend-of-dumah');
-    expect(dumah.package!.sha256, 'dbaad8bc67d8cc095fc4338a3a2420094f965a1a6a3c660702f3b9596ac4898a');
-    expect(dumah.package!.edition, '2026-10-24');
+    expect(dumah.package!.sha256, '47b73ec4d7fdae531c2509de3dfa47c12a1fab28bd0df7110e315491fbf5fdc7');
+    expect(dumah.package!.edition, '2026-10-24-2');
     expect(dumah.guide!.sha256, '99eb0e765e01eaf7421a0c690159480557c234c93cd47139ad901c2754315239');
     expect(dumah.productions.single.title, 'Whispers from the Void');
   });
