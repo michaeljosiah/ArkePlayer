@@ -179,6 +179,8 @@ seems to be an industry norm. But we can always mix and match." In the same mess
 see the pill, so P16h – P16j draw it. On a phone, the page runs under the pill to the foot. A
 playing chapter's dock floats above the pill. On a Fold, the pill takes the rail's place, which
 gives the page the full width. Seeing it, the owner chose the pill: "Pill is a better design."
+Built the same day in ArkePlayer PR #14. Not built: a Tall cover in the package — the list's,
+bundled with the app, is the one there is until the Studio's Publish makes one.
 
 ## Calls for the owner
 
