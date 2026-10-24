@@ -11,4 +11,5 @@ export 'src/listening.dart';
 export 'src/manifest.dart';
 export 'src/pack.dart';
 export 'src/package.dart';
+export 'src/pictures.dart';
 export 'src/reach.dart';

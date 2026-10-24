@@ -18,12 +18,12 @@ import 'theme/arke_theme.dart';
 /// The app: the router and the two themes (the shelves follow the phone's light or dark), and the
 /// files the system hands over through Share to Arke Player and Open in, which go through the same
 /// reading as Add a file (P7 rule 3). It brings a world's new chapters when it opens or comes back,
-/// and when Arke's list changes (SPEC-058 R-51), and keeps the daily check scheduled while any
-/// world's Notify is on (R-54).
+/// and when Arke's list changes (SPEC-058 R-51), with the pictures that list pins (rev 10), and
+/// keeps the daily check scheduled while any world's Notify is on (R-54).
 class ArkePlayerApp extends ConsumerStatefulWidget {
   const ArkePlayerApp({this.receiveShares = true, super.key});
 
-  /// Off in tests, which have no platform to hand files over, nor parts to bring.
+  /// Off in tests, which have no platform to hand files over, nor parts or pictures to bring.
   final bool receiveShares;
 
   @override
@@ -70,7 +70,11 @@ class _ArkePlayerAppState extends ConsumerState<ArkePlayerApp> {
   Widget build(BuildContext context) {
     if (widget.receiveShares) {
       ref.listen(catalogueProvider, (previous, next) {
-        if (next.hasValue && previous?.value != next.value) ref.read(partsProvider.notifier).check();
+        if (!next.hasValue || previous?.value == next.value) return;
+        ref.read(partsProvider.notifier).check();
+        // The pictures the list pins come with it (SPEC-058 rev 10): at launch, and whenever a
+        // fetch, a check or a newer list replaces the one shown.
+        ref.read(keptPicturesProvider.notifier).keepFor(next.value!);
       });
       ref.listen(settingsProvider, (previous, next) {
         final (before, after) = (previous?.value, next.value);

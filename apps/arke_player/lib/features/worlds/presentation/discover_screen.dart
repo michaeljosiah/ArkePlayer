@@ -163,7 +163,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               ].join(' · '),
         progress: state is Installing ? state.fraction : null,
         tag: update != null && state is! Installing ? 'Update' : null,
-        picture: bundledPicture(world.keyArt) ?? libraryPicture(ref.watch(libraryStoreProvider).value, held.keyArt),
+        picture: ref.keyArtOf(world) ?? libraryPicture(ref.watch(libraryStoreProvider).value, held.keyArt),
         mini: mini,
         width: mini ? wideWidth : null,
         onOpen: () => context.push(Routes.discoverWorld(held.id)),
@@ -183,8 +183,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       return FeatureCard(
         title: production.title,
         meta: [kindWords(production.kind), world.name].where((word) => word.isNotEmpty).join(' · '),
-        tall: bundledPicture(production.tall),
-        wide: bundledPicture(production.picture ?? world.keyArt),
+        tall: ref.tallOf(production),
+        wide: ref.pictureOf(world, production),
         fresh: arrived != null && releasedThisWeek(arrived.part, now),
         chapter: chapter,
         onOpen: () => openProduction(world, production.id ?? heldProduction?.id),
@@ -216,7 +216,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       return WorldBand(
         name: world.name,
         meta: [if (held != null) 'In Library', productionCount(world.productions.length), if (held == null) ?sizeOf(world)].join(' · '),
-        keyArt: bundledPicture(world.keyArt) ?? libraryPicture(ref.watch(libraryStoreProvider).value, held?.keyArt),
+        keyArt: ref.keyArtOf(world) ?? libraryPicture(ref.watch(libraryStoreProvider).value, held?.keyArt),
         logline: world.logline,
         onOpen: () => context.push(page),
         press: switch (state) {
@@ -229,8 +229,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             PosterTile(
               title: production.title,
               kind: kindWords(production.kind),
-              tall: bundledPicture(production.tall),
-              wide: bundledPicture(production.picture ?? world.keyArt),
+              tall: ref.tallOf(production),
+              wide: ref.pictureOf(world, production),
               width: smallWidth,
               onMedia: true,
               onOpen: () => openProduction(world, production.id),
@@ -292,7 +292,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                         ProductionTile(
                           title: item.production?.title ?? item.world.name,
                           kind: '${chaptersLabel(item.part.chapters, episodes: item.episodes)} · ${item.world.name}',
-                          picture: bundledPicture(item.production?.picture ?? item.world.keyArt),
+                          picture: ref.pictureOf(item.world, item.production),
                           fresh: releasedThisWeek(item.part, now),
                           width: wideWidth,
                           onOpen: () => openProduction(item.world, item.part.production),
@@ -308,8 +308,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                         PosterTile(
                           title: production.title,
                           kind: '${ProductionKind.ofLine(production.kind).label} · ${world.name}',
-                          tall: bundledPicture(production.tall),
-                          wide: bundledPicture(production.picture ?? world.keyArt),
+                          tall: ref.tallOf(production),
+                          wide: ref.pictureOf(world, production),
                           width: posterWidth,
                           onOpen: () => openProduction(world, production.id),
                         ),

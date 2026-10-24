@@ -99,7 +99,7 @@ class DownloadsScreen extends ConsumerWidget {
                         _WorldRow(
                           name: world.name,
                           line: state.short,
-                          picture: bundledPicture(world.keyArt),
+                          picture: ref.keyArtOf(world),
                           progress: state.fraction,
                           onOpen: () => context.push(Routes.world(world.id)),
                           end: IconButton(

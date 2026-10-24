@@ -213,6 +213,8 @@ Future<_Audio> _pump(
   _Notices? notices,
   Size size = const Size(390, 844),
   ({CatalogueFeature? feature, String? band}) picks = (feature: null, band: null),
+  List<CatalogueWorld>? catalogue,
+  Map<String, File>? kept,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -224,9 +226,10 @@ Future<_Audio> _pump(
         libraryItemsProvider.overrideWith((ref) => Stream.value(items ?? [_narration()])),
         libraryWorldsProvider.overrideWith((ref) => Stream.value(worlds ?? [_installed])),
         volumeProvider.overrideWith((ref) async => (free: 40000000000, total: 128000000000)),
-        catalogueProvider.overrideWith((ref) async => [_dumah, _undersong]),
+        catalogueProvider.overrideWith((ref) async => catalogue ?? [_dumah, _undersong]),
         catalogueRefreshProvider.overrideWith((ref) async {}),
         listPicksProvider.overrideWith((ref) async => picks),
+        if (kept != null) keptPicturesProvider.overrideWith(() => _Kept(kept)),
         worldGuideProvider.overrideWith((ref, worldId) async => worldId == 'the-undersong' ? const WorldGuide(guide: _guide, pathOf: _pathOf) : null),
         guideFetchProvider.overrideWith((ref, worldId) async {}),
         guideReachProvider.overrideWith((ref, worldId) async => GuideReach.none),
@@ -260,6 +263,43 @@ Set<String> _assetsUnder(WidgetTester tester, Finder of) => {
   for (final image in tester.widgetList<Image>(find.descendant(of: of, matching: find.byType(Image))))
     if (image.image case AssetImage(:final assetName)) assetName,
 };
+
+/// The files an [Image] under [of] shows, for the pictures fetched with the list.
+Set<String> _filesUnder(WidgetTester tester, Finder of) => {
+  for (final image in tester.widgetList<Image>(find.descendant(of: of, matching: find.byType(Image))))
+    if (image.image case FileImage(:final file)) file.path,
+};
+
+/// The pictures kept, as a test names them.
+class _Kept extends KeptPictures {
+  _Kept(this.files);
+  final Map<String, File> files;
+
+  @override
+  Future<Map<String, File>> build() async => files;
+}
+
+PicturePin _picturePin(String digit) => PicturePin(url: Uri.parse('https://example.org/$digit.jpg'), byteLength: 10, sha256: digit * 64);
+
+// SPEC-058 rev 10: a world whose pictures come with the list. A cover with no bundle path at all, a
+// Tall cover whose fetched file replaces the bundled one, and one still waiting for its file.
+final _pinned = CatalogueWorld(
+  id: 'the-red-quiet',
+  name: 'The Red Quiet',
+  keyArt: 'assets/worlds/the-red-quiet/key-art.jpg',
+  productions: [
+    CatalogueProduction(id: 'only-pinned', title: 'Only pinned', kind: 'Audiobook', picturePin: _picturePin('1')),
+    CatalogueProduction(id: 'fetched', title: 'Fetched', kind: 'Audiobook', tall: 'assets/worlds/the-red-quiet/cover-tall.jpg', tallPin: _picturePin('2')),
+    CatalogueProduction(
+      id: 'waiting',
+      title: 'Waiting',
+      kind: 'Audiobook',
+      tall: 'assets/worlds/embers-of-the-fallen/cover-tall.jpg',
+      tallPin: _picturePin('3'),
+    ),
+  ],
+  package: CataloguePackage(url: Uri.parse('https://example.org/quiet.zip'), byteLength: 23000000, sha256: 'd' * 64),
+);
 
 void main() {
   group('choosing the feature and the band (P16 call 15)', () {
@@ -351,6 +391,29 @@ void main() {
         BoxFit.contain,
         reason: 'the Wide is shown whole, never cut',
       );
+    });
+
+    testWidgets('a picture fetched with the list is shown in place of the bundled one (SPEC-058 rev 10)', (tester) async {
+      final only = File(_pathOf('char-maren.jpg'));
+      final fetched = File(_pathOf('char-bray.jpg'));
+      await _pump(
+        tester,
+        location: Routes.discover,
+        catalogue: [_pinned],
+        kept: {'1' * 64: only, '2' * 64: fetched},
+        picks: (feature: const CatalogueFeature(world: 'the-red-quiet', production: 'waiting'), band: 'not-listed'),
+      );
+      await _reveal(tester, find.text('Stories'));
+      Finder poster(String title) => find.ancestor(of: find.text(title), matching: find.byType(PosterTile));
+      // A cover the app never bundled: its file, whole over its blur.
+      expect(_filesUnder(tester, poster('Only pinned')), {only.path});
+      expect(find.descendant(of: poster('Only pinned'), matching: find.byType(WholeOverBlur)), findsOneWidget);
+      // A Tall cover whose file came: the file, not the bundled one.
+      expect(_filesUnder(tester, poster('Fetched')), {fetched.path});
+      expect(_assetsUnder(tester, poster('Fetched')), isEmpty);
+      // One still waiting for its file: the bundled one meanwhile.
+      expect(_assetsUnder(tester, poster('Waiting')), {'assets/worlds/embers-of-the-fallen/cover-tall.jpg'});
+      expect(_filesUnder(tester, poster('Waiting')), isEmpty);
     });
 
     testWidgets('the list names the feature and the band: not installed, Install with its size (P16a)', (tester) async {

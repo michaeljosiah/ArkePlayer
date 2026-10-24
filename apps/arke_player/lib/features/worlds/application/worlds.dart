@@ -42,6 +42,50 @@ final listPicksProvider = FutureProvider<({CatalogueFeature? feature, String? ba
   return (feature: newest.feature, band: newest.band);
 });
 
+/// Where the pictures Arke's list pins are kept (SPEC-058 rev 10), beside the library as the list is.
+final pictureKeeperProvider = FutureProvider<PictureKeeper>((ref) async {
+  final root = await ref.watch(libraryRootProvider.future);
+  return PictureKeeper(folder: Directory('${root.parent.path}${Platform.pathSeparator}pictures'));
+});
+
+/// The pictures kept, by digest (SPEC-058 rev 10): what a row shows in place of the bundled one. It
+/// grows as each picture arrives, so every row showing it changes without a restart.
+final keptPicturesProvider = AsyncNotifierProvider<KeptPictures, Map<String, File>>(KeptPictures.new);
+
+class KeptPictures extends AsyncNotifier<Map<String, File>> {
+  var _generation = 0;
+  Future<void> _running = Future.value();
+
+  @override
+  Future<Map<String, File>> build() async => (await ref.watch(pictureKeeperProvider.future)).kept();
+
+  /// Keeps the pictures [worlds] pin: fetches each one not yet kept, one at a time and on any
+  /// network — they are small, as the list is; `Wi-Fi only` is for worlds — and deletes those no
+  /// list names any more. A newer list waits for the picture in hand, then the older one stops.
+  /// A picture that does not come is simply not there yet: its row keeps the bundled one.
+  Future<void> keepFor(Iterable<CatalogueWorld> worlds) {
+    final generation = ++_generation;
+    final pins = pinsOf(worlds);
+    return _running = _running
+        .then((_) async {
+          if (generation != _generation) return;
+          await future;
+          final keeper = await ref.read(pictureKeeperProvider.future);
+          await keeper.keep(
+            pins,
+            stopped: () => generation != _generation || !ref.mounted,
+            onKept: (pin, file) {
+              if (ref.mounted) state = AsyncData({...?state.value, pin.sha256: file});
+            },
+          );
+          // What the list no longer names went with it.
+          final kept = await keeper.kept();
+          if (ref.mounted) state = AsyncData(kept);
+        })
+        .catchError((Object _) {});
+  }
+}
+
 /// Asks Arke's address for its list once a launch, when Worlds or a world's page opens; the hosted
 /// list itself asks at most once a day. A newer list replaces the one shown. Never under test, which
 /// must not reach the network.

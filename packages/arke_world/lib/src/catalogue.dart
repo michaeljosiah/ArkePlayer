@@ -9,10 +9,31 @@ import 'manifest.dart';
 String productionKind({required bool book, required bool narration, Duration? length}) =>
     [if (narration) 'Audiobook', if (book) 'Book', if (narration && length != null) formatLength(length)].join(' · ');
 
+/// A picture published beside Arke's list (SPEC-058 rev 10): where it is and the bytes it must have,
+/// pinned as a package is. It comes with the list, so a new or changed picture needs no new app.
+/// It rides under `pins`, never in place of the bundle path beside it: every Player before it reads
+/// `picture` as a string, and would throw on an object there and ignore the whole list.
+class PicturePin {
+  const PicturePin({required this.url, required this.byteLength, required this.sha256});
+
+  final Uri url;
+  final int byteLength;
+  final String sha256;
+
+  /// A cover at 1024 × 1536 is well under a megabyte; anything near this is not a picture for a row.
+  static const maxBytes = 4 * 1024 * 1024;
+
+  @override
+  bool operator ==(Object other) => other is PicturePin && other.url == url && other.byteLength == byteLength && other.sha256 == sha256;
+
+  @override
+  int get hashCode => Object.hash(url, byteLength, sha256);
+}
+
 /// A production a catalogue world holds, as its page shows it before the world is installed
 /// (P9c's Inside): a title, its kind line and a picture bundled with the app.
 class CatalogueProduction {
-  const CatalogueProduction({required this.title, required this.kind, this.picture, this.tall, this.id, this.schedule});
+  const CatalogueProduction({required this.title, required this.kind, this.picture, this.tall, this.picturePin, this.tallPin, this.id, this.schedule});
 
   final String title;
   final String kind;
@@ -23,6 +44,11 @@ class CatalogueProduction {
   /// Its Tall cover, an asset path in the app's bundle (SPEC-058 rev 9, Player P16 call 14): what a
   /// poster and a phone's feature show. Without one they show [picture] whole over its blur.
   final String? tall;
+
+  /// The same pictures published beside the list (SPEC-058 rev 10): shown in place of [picture] and
+  /// [tall] once fetched and checked.
+  final PicturePin? picturePin;
+  final PicturePin? tallPin;
 
   /// Its id in the world's package, so a tile opens the world's page at it; absent in older lists.
   final String? id;
@@ -98,6 +124,7 @@ class CatalogueWorld {
     required this.productions,
     this.logline,
     this.keyArt,
+    this.keyArtPin,
     this.package,
     this.guide,
     this.replaces = const [],
@@ -109,6 +136,10 @@ class CatalogueWorld {
 
   /// An asset path in the app's bundle.
   final String? keyArt;
+
+  /// The key art published beside the list (SPEC-058 rev 10), shown in place of [keyArt] once
+  /// fetched and checked.
+  final PicturePin? keyArtPin;
   final List<CatalogueProduction> productions;
 
   /// Null until the world's package is published: such a world is not offered.
@@ -150,6 +181,27 @@ class Catalogue {
 final _slug = RegExp(r'^[a-z0-9][a-z0-9-]{0,63}$');
 final _digest = RegExp(r'^[a-f0-9]{64}$');
 
+/// An entry's `pins` (SPEC-058 rev 10): a map from the bundle-path key it stands beside to a pin.
+/// Keys it does not know are left for a newer reader; a known one must be a pin.
+Map<String, Object?> _pins(Object? value, String what) => switch (value) {
+  null => const {},
+  final Map<String, Object?> pins => pins,
+  _ => throw FormatException('$what pins'),
+};
+
+PicturePin? _picturePin(Map<String, Object?> pins, String key, String what) {
+  final value = pins[key];
+  if (value == null) return null;
+  if (value case {'url': final String url, 'byteLength': final int byteLength, 'sha256': final String sha256}) {
+    final uri = Uri.tryParse(url);
+    // A picture comes over HTTPS only, as a world does, and is checked by its length and digest.
+    if (uri != null && uri.scheme == 'https' && uri.host.isNotEmpty && byteLength > 0 && byteLength <= PicturePin.maxBytes && _digest.hasMatch(sha256)) {
+      return PicturePin(url: uri, byteLength: byteLength, sha256: sha256);
+    }
+  }
+  throw FormatException('$what pins $key');
+}
+
 /// Reads a list of Arke's worlds: the one the app ships (`assets/worlds/catalogue.json`) or one
 /// fetched from Arke's address. Version 1 has no serial and no editions. Throws [FormatException]
 /// when it is malformed: the app's own list is a build error, a fetched one is ignored.
@@ -179,6 +231,8 @@ Catalogue parseCatalogue(String text) {
               final String tall when tall.isNotEmpty => tall,
               _ => throw FormatException('catalogue world $id production tall'),
             },
+            picturePin: _picturePin(_pins(production['pins'], 'catalogue world $id production'), 'picture', 'catalogue world $id production'),
+            tallPin: _picturePin(_pins(production['pins'], 'catalogue world $id production'), 'tall', 'catalogue world $id production'),
             id: switch (production['id']) {
               null => null,
               final String productionId when _slug.hasMatch(productionId) => productionId,
@@ -264,6 +318,7 @@ Catalogue parseCatalogue(String text) {
         name: name,
         logline: raw['logline'] as String?,
         keyArt: raw['keyArt'] as String?,
+        keyArtPin: _picturePin(_pins(raw['pins'], 'catalogue world $id'), 'keyArt', 'catalogue world $id'),
         productions: List.unmodifiable(productions),
         package: pinned('package'),
         guide: pinned('guide'),
@@ -297,10 +352,12 @@ Catalogue parseCatalogue(String text) {
 List<CatalogueWorld> readCatalogue(String text) => parseCatalogue(text).worlds;
 
 /// The list Worlds shows (SPEC-058 R-31): of the list the app ships and the list it fetched and
-/// kept, the one with the higher serial, so it never goes back to an older one. Pictures come from
-/// the app: a fetched list names bundle paths it cannot know are in this build, so a world's key
-/// art and its productions' pictures and Tall covers are the shipped list's, and a world the app
-/// does not ship has none. Discover's feature and band are the newer list's.
+/// kept, the one with the higher serial, so it never goes back to an older one. Bundle paths come
+/// from the app: a fetched list names paths it cannot know are in this build, so a world's key art
+/// and its productions' pictures and Tall covers are the shipped list's. Their pins are the newer
+/// list's (SPEC-058 rev 10): a pin is an address, not a path, so a fetched list can bring a picture
+/// this build never shipped, for a world it does not ship too. Discover's feature and band are the
+/// newer list's.
 Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
   if (kept == null || kept.serial <= shipped.serial) return shipped;
   final bundled = {for (final world in shipped.worlds) world.id: world};
@@ -319,6 +376,7 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
           name: world.name,
           logline: world.logline,
           keyArt: shippedAs(world)?.keyArt,
+          keyArtPin: world.keyArtPin,
           productions: List.unmodifiable([
             for (final production in world.productions)
               CatalogueProduction(
@@ -326,6 +384,8 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
                 kind: production.kind,
                 picture: shippedProduction(world, production)?.picture,
                 tall: shippedProduction(world, production)?.tall,
+                picturePin: production.picturePin,
+                tallPin: production.tallPin,
                 id: production.id,
                 schedule: production.schedule,
               ),
