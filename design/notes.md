@@ -145,6 +145,11 @@ The real cost of a serial was delivery: a 20 MB chapter meant re-downloading a 3
 world becomes a base plus one part per release, each pinned as a package is. The author's half is
 Studio 236: releasing a chapter as a part, and choosing teasers.
 
+On first review the owner found the rows unkempt: each section had its own tile width, a character
+teaser was a portrait card, and the micro drama was an upright tile beside the film. So every row
+now takes one tile (rule 10), 16:9 and 240 wide on a phone, 300 on a Fold, which is the width of a
+world's card in a row. A micro drama's upright episodes stay on its own page.
+
 Legend of Dumah, The Red Quiet and Embers of the Fallen are Arke's worlds on Available, their
 pictures recompressed from the app's own list (`apps/arke_player/assets/worlds`). The Undersong's
 six productions are P1's sample. Chapter dates, schedules and episode counts are samples.

@@ -485,14 +485,21 @@ const STORY = {
 };
 const discoverChips = (style = '') => `<div class="chips"${style ? ` style="${style}"` : ''}><span class="chip on">All</span><span class="chip">Listen</span><span class="chip">Watch</span><span class="chip">Play</span><span class="chip">Read</span></div>`;
 const discoverHead = (style = '') => `<div class="hd"${style ? ` style="${style}"` : ''}><h1 class="grow">Discover</h1><span class="icb" title="Check for updates">${ic('replay', 20)}</span></div>`;
-const newChapters = (w = 240) => `${tile({ ...STORY.whispers, kind: 'Chapter 3 · Legend of Dumah', w, tag: NEWTAG })}${tile({ ...PR.bell, kind: 'Episodes 41–45 · The Undersong', w, tag: NEWTAG })}${tile({ ...STORY.threshold, kind: 'Chapter 6 · Embers of the Fallen', w })}`;
-const stories = (w = 160) => `${tile({ ...STORY.ledger, kind: 'Audiobook · The Undersong', w })}${tile({ ...STORY.quiet, kind: 'Audiobook · The Red Quiet', w })}${tile({ ...PR.saltlight, kind: 'Film · The Undersong', w })}${tile({ ...PR.low, kind: 'Interactive movie · The Undersong', w })}`;
-const teasers = (pcw = 120, tw = 200) => `${pc({ ...CAST.maren, role: 'The Undersong' }, pcw)}${tile({ img: 'scene4-shot14b.jpg', pos: '50% 50%', title: 'Saltmouth bells', kind: 'Clip · 0:24 · The Undersong', w: tw, mid: `<span class="ib glass">${ic('play', 18)}</span>` })}${tile({ ...PLACES.vigil, kind: 'Place · The Undersong', w: tw })}`;
-// A world's page groups its productions by how they are taken; a micro drama is upright.
+// One tile in every row, 16:9 and as wide as a world's card in a row (wc.mini), so a page's rows line
+// up whatever they hold: a chapter, a film, a micro drama, a character. The owner, 24 October 2026:
+// rows of different sizes and shapes look unkempt. A Fold's rows take its world cards' 300.
+const TW = 240;
+const charTile = (c, kind = c.role, w = TW) => c.img ? tile({ img: c.img, pos: c.pos, title: c.name, kind, w }) : `<div class="tile" style="width:${w}px"><div class="im"><span class="mid ini">${c.ini}</span></div><div class="t">${c.name}</div><div class="m">${kind}</div></div>`;
+const gatedTile = (after, w = TW) => `<div class="tile gated" style="width:${w}px"><div class="im"><span class="mid">${ic('eyeoff', 26, 1.7)}</span></div><div class="t mute">${after}</div><div class="m">Character</div></div>`;
+const newChapters = (w = TW) => `${tile({ ...STORY.whispers, kind: 'Chapter 3 · Legend of Dumah', w, tag: NEWTAG })}${tile({ ...PR.bell, kind: 'Episodes 41–45 · The Undersong', w, tag: NEWTAG })}${tile({ ...STORY.threshold, kind: 'Chapter 6 · Embers of the Fallen', w })}`;
+const stories = (w = TW) => `${tile({ ...STORY.ledger, kind: 'Audiobook · The Undersong', w })}${tile({ ...STORY.quiet, kind: 'Audiobook · The Red Quiet', w })}${tile({ ...PR.saltlight, kind: 'Film · The Undersong', w })}${tile({ ...PR.low, kind: 'Interactive movie · The Undersong', w })}`;
+const teasers = (w = TW) => `${charTile(CAST.maren, 'Character · The Undersong', w)}${tile({ img: 'scene4-shot14b.jpg', pos: '50% 50%', title: 'Saltmouth bells', kind: 'Clip · 0:24 · The Undersong', w, mid: `<span class="ib glass">${ic('play', 18)}</span>` })}${tile({ ...PLACES.vigil, kind: 'Place · The Undersong', w })}`;
+const castTiles = `${[CAST.maren, CAST.bray, CAST.perrin].map((c) => charTile(c)).join('')}${gatedTile('After Chapter 9')}`;
+// A world's page groups its productions by how they are taken, each in the one tile.
 const kindsHero = `<div class="hero" style="padding-top:200px"><img src="${A}${W.undersong.img}" alt="" style="height:272px;object-position:60% 50%"><div class="fade" style="top:72px;height:201px"></div><div class="top">${back}${more}</div><div class="in"><h1>${W.undersong.name}</h1><div class="meta num">6 productions · 1.9 GB</div><div class="lg">${W.undersong.logline}</div><div style="margin-top:16px"><span class="btn pri wide">${ic('download', 18)}Install <em>· 1.9 GB</em></span></div></div></div>`;
-const listenRow = `${sh('Listen', '<span class="ct num">2</span>')}<div class="hrow">${tile({ ...STORY.ledger, kind: 'Audiobook · Book · 23 chapters', w: 220 })}${tile({ ...PR.undertow, kind: 'Audio drama · 8 episodes', w: 220 })}</div>`;
-const watchRow = `${sh('Watch', '<span class="ct num">2</span>')}<div class="hrow top">${tile({ ...PR.bell, kind: 'Micro drama · 45 episodes', w: 150, cls: 'tall', tag: NEWTAG })}${tile({ ...PR.saltlight, kind: 'Film · 1 h 32 m', w: 196 })}</div>`;
-const playRow = `${sh('Play', '<span class="ct num">2</span>')}<div class="hrow">${tile({ ...PR.low, kind: 'Interactive movie · 14 scenes', w: 220 })}${tile({ ...PR.lantern, kind: 'Visual novel · 9 scenes', w: 220 })}</div>`;
+const listenRow = `${sh('Listen', '<span class="ct num">2</span>')}<div class="hrow">${tile({ ...STORY.ledger, kind: 'Audiobook · Book · 23 chapters', w: TW })}${tile({ ...PR.undertow, kind: 'Audio drama · 8 episodes', w: TW })}</div>`;
+const watchRow = `${sh('Watch', '<span class="ct num">2</span>')}<div class="hrow">${tile({ ...PR.bell, kind: 'Micro drama · 45 episodes', w: TW, tag: NEWTAG })}${tile({ ...PR.saltlight, kind: 'Film · 1 h 32 m', w: TW })}</div>`;
+const playRow = `${sh('Play', '<span class="ct num">2</span>')}<div class="hrow">${tile({ ...PR.low, kind: 'Interactive movie · 14 scenes', w: TW })}${tile({ ...PR.lantern, kind: 'Visual novel · 9 scenes', w: TW })}</div>`;
 // A chapter as a row of data: its name, its length and the day it came out, and where you are in it.
 const chr = (name, data, end, { fresh = false, soon = false } = {}) => `<div class="chr${soon ? ' soon' : ''}"><div class="grow"><div class="t">${name}</div><div class="m">${fresh ? NEWTAG : ''}<span class="num">${data}</span></div></div><span class="end">${end}</span></div>`;
 const heard = ic('downloaded', 22, 1.7);
@@ -506,17 +513,17 @@ const P15 = [
   frame('P15a', 'Discover', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body">
 ${sh('New chapters')}<div class="hrow">${newChapters()}</div>
 ${sh('Stories')}<div class="hrow">${stories()}</div>
-${sh('Teasers')}<div class="hrow top">${teasers()}</div>
+${sh('Teasers')}<div class="hrow">${teasers()}</div>
 </div>${tabs('Discover', false, 'discover')}${hi()}`),
 
   frame('P15b', 'Discover, further down: teasers and worlds', 'phone', `${sb()}${discoverHead()}${discoverChips()}<div class="body">
-${sh('Teasers')}<div class="hrow top">${teasers()}</div>
+${sh('Teasers')}<div class="hrow">${teasers()}</div>
 ${sh('Worlds')}${wc({ ...DUMAH, meta: 'In Library · 1 production · 4 chapters' })}${wc({ ...QUIET, meta: '1 production · 4 characters · 23 MB' })}${wc({ ...EMBERS, meta: '1 production · 6 characters · 127 MB' })}
 </div>${tabs('Discover', false, 'discover')}${hi()}`),
 
   frame('P15c', 'A world with several kinds of production', 'phone', `${sb(true)}<div class="body">${kindsHero}${listenRow}${watchRow}</div>${tabs('Discover', false, 'discover')}${hi()}`),
 
-  frame('P15d', 'The same world, further down: Watch and Play', 'phone', `${sb()}${scrolledHead('The Undersong')}<div class="body" style="margin-top:-12px">${watchRow}${playRow}${sh('Characters', '<span class="ct num">5</span>')}<div class="hrow">${castRow}</div></div>${tabs('Discover', false, 'discover')}${hi()}`),
+  frame('P15d', 'The same world, further down: Watch and Play', 'phone', `${sb()}${scrolledHead('The Undersong')}<div class="body" style="margin-top:-12px">${watchRow}${playRow}${sh('Characters', '<span class="ct num">5</span>')}<div class="hrow">${castTiles}</div></div>${tabs('Discover', false, 'discover')}${hi()}`),
 
   frame('P15e', 'An audiobook released a chapter at a time', 'phone', `${sb(true)}<div class="body"><div class="hero" style="padding-top:218px"><img src="${A}${STORY.whispers.img}" alt="" style="height:290px;object-position:${STORY.whispers.pos}"><div class="fade" style="top:90px;height:201px"></div><div class="top">${back}${more}</div><div class="in"><h1>${STORY.whispers.title}</h1><div class="meta num">Audiobook · Legend of Dumah · 4 chapters · 1 h 18 m</div>${sched('Fridays')}
 <div style="margin-top:16px"><span class="btn pri wide">${ic('play', 16)}Play <em>· Chapter 3</em></span></div></div></div>
@@ -531,7 +538,7 @@ ${sh('Episodes', '<span class="ct num">45</span>')}<div class="grid4">${['char-m
 
   frame('P15g', 'Home, a new chapter to continue', 'phone', `${sb()}<div class="hd"><h1>Home</h1></div><div class="body">
 ${sh('Continue')}<div class="hrow">${cc({ ...STORY.whispers, kind: 'Audiobook', where: `${NEWTAG}Chapter 3 · 18 min`, at: 0 })}${cc({ ...STORY.ledger, kind: 'Audiobook', where: 'Chapter 12 · 21 min left', at: 44 })}</div>
-${sh('New chapters')}<div class="hrow">${tile({ ...PR.bell, kind: 'Episodes 41–45 · The Undersong', w: 200, tag: NEWTAG })}${tile({ ...STORY.ledger, kind: 'Chapter 24 · The Undersong', w: 200, tag: NEWTAG })}</div>
+${sh('New chapters')}<div class="hrow">${tile({ ...PR.bell, kind: 'Episodes 41–45 · The Undersong', w: TW, tag: NEWTAG })}${tile({ ...STORY.ledger, kind: 'Chapter 24 · The Undersong', w: TW, tag: NEWTAG })}</div>
 ${sh('Discover')}<div class="hrow">${wc({ ...QUIET, meta: '1 production · 23 MB', cls: 'mini' })}${wc({ ...EMBERS, meta: '1 production · 127 MB', cls: 'mini' })}</div>
 </div>${tabs('Home', false, 'discover')}${hi()}`),
 
@@ -552,8 +559,8 @@ ${sh('Added')}${dlRow(W.meridian.img, '40% 50%', 'Meridian Dust', '<span class="
 
   frame('P15l', 'Discover on a Fold', 'fold', `${tabs('Discover', true, 'discover')}<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb()}${discoverHead('padding:6px 28px 6px 24px')}${discoverChips('padding:2px 24px 0')}<div class="body" style="padding:0 8px">
 ${sh('New chapters')}<div class="hrow">${newChapters(300)}</div>
-${sh('Stories')}<div class="hrow">${stories(220)}</div>
-${sh('Teasers')}<div class="hrow top">${teasers(160, 280)}</div>
+${sh('Stories')}<div class="hrow">${stories(300)}</div>
+${sh('Teasers')}<div class="hrow">${teasers(300)}</div>
 ${sh('Worlds')}<div class="hrow">${[DUMAH, QUIET, EMBERS].map((w) => wc({ ...w, meta: w === DUMAH ? 'In Library' : '1 production', cls: 'mini', style: 'width:300px;height:169px' })).join('')}</div>
 </div>${hi()}</div>`),
 ];
