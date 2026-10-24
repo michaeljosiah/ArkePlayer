@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 13,
+  "serial": 14,
   "worlds": [
     {
       "id": "the-undersong",
@@ -12,11 +12,11 @@
         { "title": "The Ledger of Nights", "kind": "Audiobook · Book · 4 h 50 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-player-2026-10-22-3.zip",
-        "byteLength": 359819305,
-        "sha256": "b521f0c846c8f41d16fc1c1fb71cc5a8d8b333cbc6662c508f3968a6135815f3",
-        "edition": "2026-10-22-3",
-        "fingerprint": "00a891bd6e611dbf5bc05777687ef59f1c8a1d6790b0b71217c0e12995629216"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-player-2026-10-24.zip",
+        "byteLength": 360101640,
+        "sha256": "a1e1e38e967d01490c7fe471d56cb65234c87ed6491ef2091a8ff75899742dcc",
+        "edition": "2026-10-24",
+        "fingerprint": "deab9a797666a65713ca1d93065638be291c38434d14a1bf5d194161c05ea449"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-guide-2026-10-22.zip",
@@ -55,14 +55,14 @@
       "logline": "A colony crash-lands on a moon its survey called dead. The moon is not empty, and the Mistress was here first.",
       "keyArt": "assets/worlds/the-red-quiet/key-art.jpg",
       "productions": [
-        { "title": "The Red Quiet", "kind": "Audiobook · Book · 15 m", "picture": "assets/worlds/the-red-quiet/key-art.jpg" }
+        { "title": "The Red Quiet", "kind": "Audiobook · Book · 15 m", "picture": "assets/worlds/the-red-quiet/cover.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-player-2026-10-23-2.zip",
-        "byteLength": 22583065,
-        "sha256": "c490b30cb868a6fd4cd085f26c74f76b52ef90e0607ca9ffc49fdcdb095e9753",
-        "edition": "2026-10-23-2",
-        "fingerprint": "6d3528d910f9fd1b37f2d31bca2dc3cdec1af23c864399ca12340da8e7db6273"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-player-2026-10-24.zip",
+        "byteLength": 22805992,
+        "sha256": "dfaa5ac88c00df738deee7557596fecf08ad6504713f5e8d231ed78f9836be91",
+        "edition": "2026-10-24",
+        "fingerprint": "fbae0797958e655901eafcbaded4894b0bf6c717f9dcadad9f3573b94a161dc0"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-guide-2026-10-23.zip",
@@ -78,14 +78,14 @@
       "logline": "When a covert military-scientific team investigating impossible spatial anomalies in the Swiss Alps retrieves a living organism from beyond known reality, they trigger a biological nightmare that threatens to break containment. As they race to stop it, they discover another armed expedition in the valley—one that knows far more about the ancient machinery beneath the mountain than it will reveal.",
       "keyArt": "assets/worlds/embers-of-the-fallen/key-art.jpg",
       "productions": [
-        { "title": "Threshold — Book One", "kind": "Audiobook · Book · 1 h 54 m", "picture": "assets/worlds/embers-of-the-fallen/key-art.jpg" }
+        { "title": "Threshold — Book One", "kind": "Audiobook · Book · 1 h 54 m", "picture": "assets/worlds/embers-of-the-fallen/cover.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-player-2026-10-23-4.zip",
-        "byteLength": 126323097,
-        "sha256": "466e33ca699ec47df2b56ae5f8d2f3f80609bf06056a39094d421bb85feb4087",
-        "edition": "2026-10-23-4",
-        "fingerprint": "e123d8d83ce245157b2d5e47bfb9ad07e7926ec7a51263b055796ca956367f36"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-player-2026-10-24.zip",
+        "byteLength": 126827906,
+        "sha256": "9e34eaf9ab65b4af5786fa63dd89f71465e8562346b55e32e1ea956205b849df",
+        "edition": "2026-10-24",
+        "fingerprint": "3995aa7e4269a78522dc9e0c60a866840209a9be7406286fe6726116fbd425d4"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/embers-of-the-fallen-2026-10-23-r1/embers-of-the-fallen-guide-2026-10-23-2.zip",

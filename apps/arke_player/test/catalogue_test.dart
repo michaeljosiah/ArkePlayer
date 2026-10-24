@@ -27,8 +27,8 @@ void main() {
     // The Studio's Export → Arke Player of the 23-chapter edition with its guide, named by the
     // world's own slug, and the guide alone that lets it be explored before install (SPEC-059 R-10).
     final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
-    expect(undersong.package!.sha256, 'b521f0c846c8f41d16fc1c1fb71cc5a8d8b333cbc6662c508f3968a6135815f3');
-    expect(undersong.package!.edition, '2026-10-22-3');
+    expect(undersong.package!.sha256, 'a1e1e38e967d01490c7fe471d56cb65234c87ed6491ef2091a8ff75899742dcc');
+    expect(undersong.package!.edition, '2026-10-24');
     expect(undersong.guide!.url.scheme, 'https');
     expect(undersong.guide!.sha256, 'ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123');
     // The hand-packed editions were published as `undersong`: a phone holding one is offered Update.
@@ -50,8 +50,8 @@ void main() {
     // The Studio's Export → Arke Player of the whole novel as a book, Chapter 1 narrated with Tall
     // pictures, and the guide alone beside it (SPEC-059 R-10).
     final quiet = catalogue.singleWhere((world) => world.id == 'the-red-quiet');
-    expect(quiet.package!.sha256, 'c490b30cb868a6fd4cd085f26c74f76b52ef90e0607ca9ffc49fdcdb095e9753');
-    expect(quiet.package!.edition, '2026-10-23-2');
+    expect(quiet.package!.sha256, 'dfaa5ac88c00df738deee7557596fecf08ad6504713f5e8d231ed78f9836be91');
+    expect(quiet.package!.edition, '2026-10-24');
     expect(quiet.guide!.sha256, 'bba813092c1180e74c7cea42cb0c8fd1b98afe3b01790c536cfc732e9189fcc0');
     expect(quiet.productions.single.title, 'The Red Quiet');
   });
@@ -60,8 +60,8 @@ void main() {
     // The Studio's Export → Arke Player of the whole book, Chapters 1–5 narrated and Chapter 1's
     // pictures made Tall, and the guide alone beside it (SPEC-059 R-10).
     final embers = catalogue.singleWhere((world) => world.id == 'embers-of-the-fallen');
-    expect(embers.package!.sha256, '466e33ca699ec47df2b56ae5f8d2f3f80609bf06056a39094d421bb85feb4087');
-    expect(embers.package!.edition, '2026-10-23-4');
+    expect(embers.package!.sha256, '9e34eaf9ab65b4af5786fa63dd89f71465e8562346b55e32e1ea956205b849df');
+    expect(embers.package!.edition, '2026-10-24');
     expect(embers.guide!.sha256, '9d99ecacc5350fadaab941f34992e77c3c9c385eb764b07d295cf450710c931a');
     expect(embers.productions.single.title, 'Threshold — Book One');
   });
