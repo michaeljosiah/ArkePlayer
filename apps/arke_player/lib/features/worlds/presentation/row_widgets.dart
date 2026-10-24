@@ -193,8 +193,10 @@ class FeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final fold = MediaQuery.sizeOf(context).width >= WindowBands.fold;
+    // The Fold's feature is wider than 16:9, so its Wide loses some top and bottom; it keeps more of
+    // the top, where a cover's title and faces sit (P16f's 50% 40%, nudged up).
     final picture = fold
-        ? (wide == null ? null : Image(image: wide!, fit: BoxFit.cover))
+        ? (wide == null ? null : Image(image: wide!, fit: BoxFit.cover, alignment: const Alignment(0, -0.4)))
         : switch ((tall, wide)) {
             (final ImageProvider tall, _) => Image(image: tall, fit: BoxFit.cover, alignment: const Alignment(0, -0.4)),
             (null, final ImageProvider wide) => WholeOverBlur(picture: wide),

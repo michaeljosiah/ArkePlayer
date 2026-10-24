@@ -124,9 +124,9 @@ with parts, `installPart`, `LibraryWorld.parts`); a narration plays its edition'
 part's (`installedListening`, `loadListeningPlan`). A part arrives when the app opens or comes back
 (`PartsController`, Wi-Fi only from You), and with a world's Notify on, a daily background check
 (`dailyCheckDispatcher`, workmanager) fetches it ahead into `parts-inbox/` and tells of it
-(`Notices`, flutter_local_notifications); the app adds it on its next check. Every row is one 16:9
-tile, 240 on a phone and 300 on a Fold (`rowTileWidth`). `test/shoot_discover_test.dart` renders the
-frames with `SHOOT=1`.
+(`Notices`, flutter_local_notifications); the app adds it on its next check. Every row was one 16:9
+tile, 240 on a phone and 300 on a Fold, until P16 gave rows their own sizes (below).
+`test/shoot_discover_test.dart` renders the frames with `SHOOT=1`.
 
 | Frame | Screen | Route | File |
 |---|---|---|---|
@@ -140,6 +140,24 @@ frames with `SHOOT=1`.
 | P15k | Downloads: a chapter arriving or waiting under Worlds | `/downloads` | `features/downloads/presentation/downloads_screen.dart`; `features/parts/application/parts.dart` |
 | (P15 rule 4) | A picture or clip teaser, full screen; a clip with sound | (over the tabs) | `features/worlds/presentation/discover_screen.dart` (`TeaserScreen`) |
 
+## Rows of different sizes and the pill (P16, built)
+
+Approved on 24 October 2026 with calls 14 – 16 (SPEC-058 rev 9). Each row is one size and one shape
+and the page mixes rows (`RowSizes`, `rowTileWidth`): the feature, posters, wide tiles, small
+posters and a world's band. A poster shows a production's Tall cover, the list's `tall`, bundled
+with the app; without one, its Wide whole over its blur (`WholeOverBlur`). The list names the
+feature and the band (`Catalogue.feature`, `Catalogue.band`, `listPicksProvider`); without them
+`discoverFeature` and `discoverBand` choose. The tabs are a pill floating over the page on a phone
+and a Fold, the rail gone; a page gets its room as bottom padding (`footRoom`), the dock floats above
+it, and sheets rise on the root navigator so the pill never covers them. `test/shoot_p16_test.dart`
+renders the frames with `SHOOT=1`.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P16a – P16c, P16f, P16g | Discover: the feature, New chapters wide, Stories as posters, Teasers as small posters, a world's band, Worlds; on a Fold the feature wide | `/discover` | `features/worlds/presentation/discover_screen.dart`, `row_widgets.dart` (`FeatureCard`, `PosterTile`, `WorldBand`, `BandPress`); `features/worlds/application/discover.dart` |
+| P16d, P16e | A world's page: Listen and Read as posters, Watch and Play wide, Characters as small upright posters, Places wide | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart` (`_Groups`), `guide_widgets.dart` (`GuideSections`) |
+| P16h – P16j | The tabs as a pill; the dock floating above it; on a Fold in the rail's place | (every tab) | `app/shell/adaptive_shell.dart` (`TabPill`), `features/players/presentation/dock.dart` |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.
@@ -152,11 +170,12 @@ SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not buil
 
 | Rule | Where | Test |
 |---|---|---|
-| P1 rule 3, P6 rule 5: tabs as a bar under 600, a rail over | `app/shell/adaptive_shell.dart` | `test/shell_test.dart` |
+| P16 rule 9, call 16: the tabs a pill, 358 × 64 on a phone and 520 on a Fold, in place of P1 rule 3's bar and P6 rule 5's rail | `app/shell/adaptive_shell.dart` | `test/shell_test.dart` |
 | P11 rule 1, P15 rule 1: five tabs, Discover second | `app/shell/adaptive_shell.dart` | `test/guide_test.dart` |
 | P11 rule 7, SPEC-059 R-20: a chapter is reached once its start is passed, heard or read; Reveal shows a production up to that chapter | `arke_world` `reach.dart`, `arke_library` `store.dart` | `guide_test.dart`, `store_test.dart`, `test/guide_test.dart` |
 | P1 rule 6, P15 rule 3: Listen · Watch · Play · Read, empty groups absent | `features/production/domain/production_kind.dart` | `test/domain_test.dart` |
-| P15 rule 10: every row one 16:9 tile, 240 on a phone, 300 on a Fold | `features/worlds/presentation/world_widgets.dart` (`rowTileWidth`) | `test/discover_test.dart` |
+| P16 rule 1 (replacing P15 rule 10): each row one size — the feature 358 × 476, posters 172, wide 240, small posters 112; on a Fold 424 high, 260, 300, 160 | `features/worlds/presentation/row_widgets.dart` (`RowSizes`), `world_widgets.dart` (`rowTileWidth`) | `test/discover_test.dart` |
+| P16 calls 14 and 15: a production's Tall cover; the list's feature and band | `arke_world` `catalogue.dart`; `features/worlds/application/discover.dart` | `catalogue_test.dart`, `test/catalogue_test.dart`, `test/discover_test.dart` |
 | SPEC-058 R-52: a chapter a part brought after install is New until it plays | `arke_library` `shelves.dart` (`newChapters`, `placeIsNew`, `worldHasNew`) | `part_install_test.dart`, `test/discover_test.dart` |
 | P2 rule 6: every asset checked before play | `arke_publication` `verify.dart` | `verify_test.dart` |
 | P2 rule 8: unknown profiles refused | `arke_publication` `manifest.dart` | `manifest_test.dart` |

@@ -298,8 +298,8 @@ void main() {
       await _reveal(tester, find.text('Stories'));
       expect(find.text('Audio drama · The Undersong'), findsOneWidget);
       await _reveal(tester, find.text('Teasers'));
-      expect(find.text('Character · The Undersong'), findsOneWidget);
-      expect(find.text('Clip · 0:24 · The Undersong'), findsOneWidget);
+      expect(find.text('Clip · 0:24'), findsOneWidget);
+      expect(find.ancestor(of: find.text('Saltmouth bells'), matching: find.byType(PosterTile)), findsOneWidget);
       await _reveal(tester, find.byType(WorldBand));
       final band = find.byType(WorldBand);
       expect(find.descendant(of: band, matching: find.text('The Undersong')), findsOneWidget);

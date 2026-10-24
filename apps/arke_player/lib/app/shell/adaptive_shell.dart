@@ -128,14 +128,8 @@ class TabPill extends StatelessWidget {
     // The labels grow with the phone's text only so far: five must share 358.
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.3,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(ArkeRadius.pill),
-          boxShadow: const [
-            BoxShadow(color: Color(0x1A000000), offset: Offset(0, 20), blurRadius: 25, spreadRadius: -5),
-            BoxShadow(color: Color(0x1A000000), offset: Offset(0, 8), blurRadius: 10, spreadRadius: -6),
-          ],
-        ),
+      child: CustomPaint(
+        painter: const _OuterShadow(),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(ArkeRadius.pill),
           child: BackdropFilter(
@@ -163,6 +157,32 @@ class TabPill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The pill's shadow, the tokens' shadow-xl, drawn only outside it as CSS draws a box shadow: a
+/// BoxShadow paints under the whole box too, and through the pill's glass it greyed the light pill.
+class _OuterShadow extends CustomPainter {
+  const _OuterShadow();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pill = RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(size.height / 2));
+    canvas
+      ..save()
+      ..clipPath(Path.combine(PathOperation.difference, Path()..addRect((Offset.zero & size).inflate(80)), Path()..addRRect(pill)));
+    for (final (offset, blur, spread) in const [(20.0, 25.0, -5.0), (8.0, 10.0, -6.0)]) {
+      canvas.drawRRect(
+        pill.shift(Offset(0, offset)).inflate(spread),
+        Paint()
+          ..color = const Color(0x1A000000)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur / 2),
+      );
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_OuterShadow oldDelegate) => false;
 }
 
 class _PillTab extends StatelessWidget {

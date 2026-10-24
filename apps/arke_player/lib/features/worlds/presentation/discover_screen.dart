@@ -103,12 +103,14 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       });
     }
 
+    // A small poster has room for what a teaser is, not its world's name too (P16c); it opens into
+    // its world all the same (P15 rule 4).
     Widget teaserPoster(CatalogueWorld world, WorldGuide guide, GuideTeaser teaser) {
       final page = Routes.discoverWorld(installedAs(world)?.id ?? world.id);
       return switch (teaser) {
         EntryTeaser(entry: final GuideCharacter character) => PosterTile(
           title: character.name,
-          kind: 'Character · ${world.name}',
+          kind: 'Character',
           tall: guidePicture(guide, character),
           initials: initials(character.name),
           pictureAlignment: const Alignment(0, -0.6),
@@ -117,14 +119,14 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         ),
         EntryTeaser(:final entry) => PosterTile(
           title: entryName(entry),
-          kind: '${entry is GuidePlace ? placeKind(entry) : 'Place'} · ${world.name}',
+          kind: entry is GuidePlace ? placeKind(entry) : 'Place',
           wide: guidePicture(guide, entry),
           width: smallWidth,
           onOpen: () => context.push(Routes.guideEntry(page, entry.id)),
         ),
         ClipTeaser(:final title, :final picture, :final duration) => PosterTile(
           title: title,
-          kind: 'Clip · ${formatClock(duration)} · ${world.name}',
+          kind: 'Clip · ${formatClock(duration)}',
           wide: FileImage(File(guide.pathOf(picture))),
           glyph: Icons.play_arrow_rounded,
           width: smallWidth,
@@ -132,7 +134,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         ),
         PictureTeaser(:final title, :final picture) => PosterTile(
           title: title,
-          kind: 'Picture · ${world.name}',
+          kind: 'Picture',
           wide: FileImage(File(guide.pathOf(picture))),
           width: smallWidth,
           onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),

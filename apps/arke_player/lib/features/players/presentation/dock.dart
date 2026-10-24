@@ -46,9 +46,10 @@ class Dock extends ConsumerWidget {
             return Padding(
               padding: floating ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 0, 8, 8),
               child: Material(
-                color: floating ? surface.card.withValues(alpha: 0.92) : surface.card,
-                elevation: floating ? 8 : 3,
-                shadowColor: floating ? Colors.black38 : Colors.black26,
+                // Opaque, so its shadow stays outside it: through glass it greyed the light dock.
+                color: surface.card,
+                elevation: 3,
+                shadowColor: Colors.black26,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(floating ? ArkeRadius.xxl : ArkeRadius.xl),
                   side: BorderSide(color: floating ? surface.foreground.withValues(alpha: 0.11) : surface.border),
