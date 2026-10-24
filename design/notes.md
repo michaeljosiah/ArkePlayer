@@ -128,6 +128,27 @@ real: The Undersong's p004, Maren at the ledger, made at 9:16 with its 16:9 pict
 reference (`assets/maren-ledger-tall.jpg`). Approved as drawn by the owner on 23 October 2026, with
 Studio 235; SPEC-058 is amended for the package next.
 
+## Discover and chapters released over time (P15)
+
+The owner, on 24 October 2026: should Worlds become Discover, showing worlds, their productions and
+other things made for them; and a world may release its story a chapter at a time to bring its
+audience back, so how is that shown? Also asked: a world's page with several kinds of production, a
+micro drama among them. The owner approved five recommendations the same day, and P15 draws them:
+
+- Discover is what you can get, and Library is what you have.
+- Discover leads with productions and new chapters.
+- Teasers are the author's choice.
+- A new chapter comes on its own over Wi-Fi.
+- Notifications are the phone's own, per world.
+
+The real cost of a serial was delivery: a 20 MB chapter meant re-downloading a 360 MB package. So a
+world becomes a base plus one part per release, each pinned as a package is. The author's half is
+Studio 236: releasing a chapter as a part, and choosing teasers.
+
+Legend of Dumah, The Red Quiet and Embers of the Fallen are Arke's worlds on Available, their
+pictures recompressed from the app's own list (`apps/arke_player/assets/worlds`). The Undersong's
+six productions are P1's sample. Chapter dates, schedules and episode counts are samples.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -156,6 +177,15 @@ Studio 235; SPEC-058 is amended for the package next.
 10. **A moment's picture comes Wide and Tall** (P14, approved). The Tall is made in the Studio
    from the Wide; a phone in portrait shows it over the whole screen, a tablet, a Fold and a phone
    turned show the Wide. No setting in the Player: the shape follows the screen.
+11. **Worlds becomes Discover** (P15, asked 24 October 2026). Discover is what Arke offers, and
+   Library is what is on the phone. Discover leads with productions and new chapters, and its
+   teasers are the author's choice.
+12. **A world comes as a base and a part per release** (P15). A new part comes on its own over
+   Wi-Fi, because a part only adds. A new edition still waits for Update (call 9 holds for
+   editions).
+13. **A new chapter is notified by the phone itself** (P15). Notifications are per world, off
+   until turned on, and come from the daily check of Arke's list, so they need no account and no
+   server.
 
 ## What this rests on
 
