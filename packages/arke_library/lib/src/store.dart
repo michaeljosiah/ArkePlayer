@@ -176,6 +176,23 @@ class LibraryStore {
     await _write();
   });
 
+  /// Adds a production published on its own to an installed world (SPEC-058 R-72), or replaces an
+  /// earlier package of it (its Update): moves its checked files from [staged] to its package's
+  /// folder, then names the world as it now is and the production's items in one write. The items of
+  /// the production's earlier package that [items] does not carry go with it.
+  Future<void> addProduction(LibraryWorld world, LibraryProduction production, List<LibraryItem> items, Directory staged) => _serial(() async {
+    final folder = Directory(resolve(production.package!.folder));
+    if (await folder.exists()) await folder.delete(recursive: true);
+    await folder.parent.create(recursive: true);
+    await staged.rename(folder.path);
+    final before = _worldCache.where((existing) => existing.id == world.id).firstOrNull?.productions.where((p) => p.id == production.id).firstOrNull;
+    final gone = {...?before?.itemIds}..removeAll(items.map((item) => item.id));
+    final ids = {for (final item in items) item.id};
+    _cache = List.unmodifiable([...items, ..._cache.where((existing) => !ids.contains(existing.id) && !gone.contains(existing.id))]);
+    _worldCache = List.unmodifiable([for (final existing in _worldCache) existing.id == world.id ? world : existing]);
+    await _write();
+  });
+
   /// Keeps a world's guide fetched on its own, whose checked files are in [staged], replacing an
   /// earlier one.
   Future<void> addGuide(LibraryGuide guide, Directory staged) => _serial(() async {

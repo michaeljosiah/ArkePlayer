@@ -1,7 +1,84 @@
+/// A music production as installed (SPEC-058 R-69, R-70; Player P17): where its music document is,
+/// and what a tile and a page say of it before the document is read — its kind, the production a
+/// soundtrack is for, how many tracks and how long. Its tracks play from the document; a song keeps
+/// no place, so no library item stands for it (P17 call 20).
+class LibraryMusic {
+  const LibraryMusic({required this.document, required this.kind, required this.tracks, required this.duration, this.forProduction});
+
+  /// The music document, relative to the library's root.
+  final String document;
+
+  /// `album`, `single` or `soundtrack`, as the document names it.
+  final String kind;
+
+  /// The production a soundtrack is for, by id.
+  final String? forProduction;
+  final int tracks;
+  final Duration duration;
+
+  Map<String, Object?> toJson() => {
+    'document': document,
+    'kind': kind,
+    if (forProduction != null) 'for': forProduction,
+    'tracks': tracks,
+    'durationMs': duration.inMilliseconds,
+  };
+
+  static LibraryMusic fromJson(Map<String, Object?> json) => LibraryMusic(
+    document: json['document']! as String,
+    kind: json['kind']! as String,
+    forProduction: json['for'] as String?,
+    tracks: json['tracks']! as int,
+    duration: Duration(milliseconds: json['durationMs']! as int),
+  );
+}
+
+/// A production published as a package of its own beside its world's edition (SPEC-058 R-68, R-72):
+/// the edition and fingerprint its pin in Arke's list names, so a changed one is its Update, and the
+/// folder it was installed into, `worlds/<id>/_productions/<production>`.
+class LibraryProductionPackage {
+  const LibraryProductionPackage({required this.edition, required this.fingerprint, required this.byteLength, required this.installedAt, required this.folder});
+
+  final String edition;
+  final String fingerprint;
+  final int byteLength;
+  final DateTime installedAt;
+
+  /// Relative to the library's root; its `world.json` is at the top.
+  final String folder;
+
+  Map<String, Object?> toJson() => {
+    'edition': edition,
+    'fingerprint': fingerprint,
+    'byteLength': byteLength,
+    'installedAt': installedAt.toUtc().toIso8601String(),
+    'folder': folder,
+  };
+
+  static LibraryProductionPackage fromJson(Map<String, Object?> json) => LibraryProductionPackage(
+    edition: json['edition']! as String,
+    fingerprint: json['fingerprint']! as String,
+    byteLength: json['byteLength']! as int,
+    installedAt: DateTime.parse(json['installedAt']! as String),
+    folder: json['folder']! as String,
+  );
+}
+
 /// A production of an installed world (Arke Player P9 rule 6): its title, and the library items
-/// its book and narration became, so each plays and keeps its place as an added file does.
+/// its book and narration became, so each plays and keeps its place as an added file does. A music
+/// production names its [music] instead (P17), and one published alone its [package] (R-68).
 class LibraryProduction {
-  const LibraryProduction({required this.id, required this.title, this.author, this.picture, this.book, this.narration, this.bookParts = const []});
+  const LibraryProduction({
+    required this.id,
+    required this.title,
+    this.author,
+    this.picture,
+    this.book,
+    this.narration,
+    this.bookParts = const [],
+    this.music,
+    this.package,
+  });
 
   final String id;
   final String title;
@@ -18,6 +95,12 @@ class LibraryProduction {
   /// chapters alone, read after [book] as one book. Item ids, in release order.
   final List<String> bookParts;
 
+  /// Its music, when it is an album, a single or a soundtrack (SPEC-058 R-69).
+  final LibraryMusic? music;
+
+  /// The package it came in on its own (R-68, R-72); null when it came in its world's edition.
+  final LibraryProductionPackage? package;
+
   /// The items this production plays from, narration first.
   List<String> get itemIds => [?narration, ?book, ...bookParts];
 
@@ -29,6 +112,8 @@ class LibraryProduction {
     book: book,
     narration: narration ?? this.narration,
     bookParts: bookParts ?? this.bookParts,
+    music: music,
+    package: package,
   );
 
   Map<String, Object?> toJson() => {
@@ -39,6 +124,8 @@ class LibraryProduction {
     if (book != null) 'book': book,
     if (narration != null) 'narration': narration,
     if (bookParts.isNotEmpty) 'bookParts': bookParts,
+    if (music != null) 'music': music!.toJson(),
+    if (package != null) 'package': package!.toJson(),
   };
 
   static LibraryProduction fromJson(Map<String, Object?> json) => LibraryProduction(
@@ -49,6 +136,8 @@ class LibraryProduction {
     book: json['book'] as String?,
     narration: json['narration'] as String?,
     bookParts: [for (final id in (json['bookParts'] as List<Object?>? ?? const [])) id! as String],
+    music: json['music'] == null ? null : LibraryMusic.fromJson((json['music']! as Map).cast<String, Object?>()),
+    package: json['package'] == null ? null : LibraryProductionPackage.fromJson((json['package']! as Map).cast<String, Object?>()),
   );
 }
 

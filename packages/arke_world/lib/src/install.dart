@@ -163,8 +163,12 @@ class WorldInstaller {
       if (installed.id == world.id) return installed;
     }
     final control = cancel ?? InstallCancel();
-    // The edition and every part since it: the world is installed when all of them are (R-50).
-    final needed = await _checkSpace(package.byteLength + package.parts.fold(0, (sum, part) => sum + part.byteLength));
+    // The edition, every part since it and every production published on its own: the world is
+    // installed when all of them are (R-50, R-72).
+    final alone = [for (final production in world.productions) ?production.package];
+    final needed = await _checkSpace(
+      package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength) + alone.fold<int>(0, (sum, pin) => sum + pin.byteLength),
+    );
     final staging = await store.stageWorld();
     try {
       final zip = '${staging.path}${Platform.pathSeparator}package.zip';
@@ -172,7 +176,7 @@ class WorldInstaller {
       control._check();
       final prepared = await _prepare(zip, staging, needed, onStep, control);
       if (prepared.manifest.id != world.id) throw const NotAPackage();
-      return await commit(await _withParts(prepared, package.parts, onStep, control));
+      return await commit(await _withProductions(await _withParts(prepared, package.parts, onStep, control), world.productions, onStep, control));
     } on FileSystemException catch (error) {
       throw await _full(error, needed);
     } finally {
@@ -226,6 +230,156 @@ class WorldInstaller {
     } finally {
       if (await staging.exists()) await staging.delete(recursive: true);
     }
+  }
+
+  /// Adds a production published on its own to an installed world (SPEC-058 R-72), or brings it to
+  /// the package its list entry now pins (its Update): the pin's length and SHA-256, every file
+  /// checked, then the production beside the edition in one write. A production already installed
+  /// from the same package changes nothing. [beforeSwap] is awaited before an earlier package gives
+  /// way, so a caller can wait for it to stop playing.
+  Future<LibraryWorld> installProduction(
+    CatalogueWorld world,
+    CatalogueProduction listed, {
+    void Function(InstallStep step)? onStep,
+    InstallCancel? cancel,
+    Future<void> Function()? beforeSwap,
+  }) async {
+    final pin = listed.package;
+    final installed = store.worlds.where((existing) => world.covers(existing.id)).firstOrNull;
+    if (pin == null || installed == null) throw const NotAPackage();
+    if (installedProduction(listed, installed)?.package?.fingerprint case final held? when held == pin.fingerprint) return installed;
+    final control = cancel ?? InstallCancel();
+    final needed = await _checkSpace(pin.byteLength);
+    final staging = await store.stageWorld();
+    try {
+      final zip = '${staging.path}${Platform.pathSeparator}production.zip';
+      await _download(pin, zip, onStep, control);
+      control._check();
+      final content = Directory('${staging.path}${Platform.pathSeparator}production');
+      final (production, items) = await _describeProduction(zip, content, installed.id, listed, onStep, control);
+      if (production.package!.fingerprint != pin.fingerprint) throw const FilesDoNotMatch(1);
+      final earlier = installed.productions.where((existing) => existing.id == production.id).firstOrNull;
+      final next = installed.copyWith(
+        productions: [for (final existing in installed.productions) existing.id == production.id ? production : existing, if (earlier == null) production],
+        byteLength: installed.byteLength - (earlier?.package?.byteLength ?? 0) + production.package!.byteLength,
+      );
+      if (earlier != null) await beforeSwap?.call();
+      control._check();
+      await store.addProduction(next, production, items, content);
+      return next;
+    } on FileSystemException catch (error) {
+      throw await _full(error, needed);
+    } finally {
+      if (await staging.exists()) await staging.delete(recursive: true);
+    }
+  }
+
+  /// Downloads and checks each production a world's list entry pins on its own, after a checked
+  /// edition, into the edition's folder at `_productions/<id>`, so they join the library with it in
+  /// one write (R-72).
+  Future<PreparedWorld> _withProductions(
+    PreparedWorld prepared,
+    List<CatalogueProduction> listed,
+    void Function(InstallStep step)? onStep,
+    InstallCancel control,
+  ) async {
+    final alone = [
+      for (final production in listed)
+        if (production.package != null && installedProduction(production, prepared.world) == null) production,
+    ];
+    if (alone.isEmpty) return prepared;
+    var world = prepared.world;
+    final items = [...prepared.items];
+    final separator = Platform.pathSeparator;
+    for (final production in alone) {
+      final zip = '${prepared.staging.path}${separator}production.zip';
+      await _download(production.package!, zip, onStep, control);
+      control._check();
+      // Checked aside, then moved to the folder its own production id names, which its files' paths
+      // are under.
+      final checked = Directory('${prepared.staging.path}${separator}production');
+      final (added, addedItems) = await _describeProduction(zip, checked, world.id, production, onStep, control);
+      if (added.package!.fingerprint != production.package!.fingerprint) throw const FilesDoNotMatch(1);
+      final to = Directory('${prepared.content.path}${separator}_productions$separator${added.id}');
+      await to.parent.create(recursive: true);
+      await checked.rename(to.path);
+      world = world.copyWith(productions: [...world.productions, added], byteLength: world.byteLength + added.package!.byteLength);
+      items.addAll(addedItems);
+    }
+    return PreparedWorld(
+      manifest: prepared.manifest,
+      world: world,
+      items: List.unmodifiable(items),
+      content: prepared.content,
+      staging: prepared.staging,
+      installed: prepared.installed,
+    );
+  }
+
+  /// Carries the productions an installed world has on their own into its new edition (R-72): a
+  /// production published alone is not in the edition, so it would go with the old edition's folder.
+  /// Its folder moves across, once the old edition has stopped playing, and its items keep their
+  /// places as the edition's do.
+  Future<PreparedWorld> _carryProductions(PreparedWorld prepared, LibraryWorld installed) async {
+    final carried = [
+      for (final production in installed.productions)
+        if (production.package != null && !prepared.world.productions.any((existing) => existing.id == production.id)) production,
+    ];
+    if (carried.isEmpty) return prepared;
+    final separator = Platform.pathSeparator;
+    final from = Directory('${store.worldDirectory(installed.id).path}${separator}_productions');
+    if (await from.exists()) await from.rename('${prepared.content.path}${separator}_productions');
+    final ids = {for (final production in carried) ...production.itemIds};
+    return PreparedWorld(
+      manifest: prepared.manifest,
+      world: prepared.world.copyWith(
+        productions: [...prepared.world.productions, ...carried],
+        byteLength: prepared.world.byteLength + carried.fold<int>(0, (sum, production) => sum + production.package!.byteLength),
+      ),
+      items: List.unmodifiable([...prepared.items, ...store.items.where((item) => ids.contains(item.id))]),
+      content: prepared.content,
+      staging: prepared.staging,
+      installed: prepared.installed,
+    );
+  }
+
+  /// Checks a production package downloaded to [zip] into [content] and describes it (R-68): it is
+  /// a production published alone, of the world it is listed under, holding the production its list
+  /// entry names; its files are named under `worlds/<world>/_productions/<production>`, where the
+  /// caller moves [content].
+  Future<(LibraryProduction, List<LibraryItem>)> _describeProduction(
+    String zip,
+    Directory content,
+    String worldId,
+    CatalogueProduction listed,
+    void Function(InstallStep step)? onStep,
+    InstallCancel control,
+  ) async {
+    final manifest = await _check(zip, content, onStep, control);
+    final production = manifest.productions.single;
+    if (!manifest.alone || manifest.id != worldId || (listed.id != null && production.id != listed.id)) throw const NotAPackage();
+    final folder = 'worlds/$worldId/_productions/${production.id}';
+    final (described, items) = await _describe(manifest, content, under: folder);
+    final bytes = manifest.assets.values.fold(0, (sum, asset) => sum + asset.byteLength);
+    return (
+      LibraryProduction(
+        id: production.id,
+        title: production.title,
+        author: production.author,
+        picture: described.productions.single.picture,
+        book: described.productions.single.book,
+        narration: described.productions.single.narration,
+        music: described.productions.single.music,
+        package: LibraryProductionPackage(
+          edition: manifest.edition,
+          fingerprint: editionFingerprint(manifest),
+          byteLength: bytes,
+          installedAt: DateTime.now().toUtc(),
+          folder: folder,
+        ),
+      ),
+      items,
+    );
   }
 
   /// Fetches a part to [to] with its pin's length and SHA-256 checked, and adds nothing: the daily
@@ -321,7 +475,7 @@ class WorldInstaller {
       final withParts = await _withParts(prepared, package.parts, onStep, control);
       await beforeSwap?.call();
       control._check();
-      return await commit(withParts);
+      return await commit(await _carryProductions(withParts, prepared.installed!));
     } on FileSystemException catch (error) {
       throw await _full(error, needed);
     } finally {
@@ -662,9 +816,13 @@ class WorldInstaller {
   /// Reads each production's book and narration as an added file is read (P7 rule 3), and names
   /// them as library items under the world's folder. A listening document becomes one item whose
   /// chapters are the document's, back to back.
-  Future<(LibraryWorld, List<LibraryItem>)> _describe(WorldManifest manifest, Directory content) async {
+  ///
+  /// A music production becomes no item: its tracks play from its document and keep no place (P17
+  /// call 20), so it names the document and what a tile says of it. [base] is where the package's
+  /// files are, relative to the library's root: the world's folder, or a production's own under it.
+  Future<(LibraryWorld, List<LibraryItem>)> _describe(WorldManifest manifest, Directory content, {String? under}) async {
     final separator = Platform.pathSeparator;
-    final base = 'worlds/${manifest.id}';
+    final base = under ?? 'worlds/${manifest.id}';
     String stored(WorldAsset asset) => '$base/${asset.path}';
     final keyArt = manifest.keyArt == null ? null : stored(manifest.assets[manifest.keyArt]!);
     final now = DateTime.now().toUtc();
@@ -745,8 +903,25 @@ class WorldInstaller {
           narrationId = id;
         }
       }
+      final music = manifest.music[production.id];
       productions.add(
-        LibraryProduction(id: production.id, title: production.title, author: production.author, picture: picture, book: bookId, narration: narrationId),
+        LibraryProduction(
+          id: production.id,
+          title: production.title,
+          author: production.author,
+          picture: picture,
+          book: bookId,
+          narration: narrationId,
+          music: music == null
+              ? null
+              : LibraryMusic(
+                  document: stored(manifest.assets[production.music]!),
+                  kind: music.kind.name,
+                  forProduction: music.forProduction,
+                  tracks: music.tracks.length,
+                  duration: music.duration,
+                ),
+        ),
       );
     }
 
