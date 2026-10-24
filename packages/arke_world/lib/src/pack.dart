@@ -30,7 +30,7 @@ class ProductionSpec {
 
 /// A world to pack, as its author published it.
 class WorldSpec {
-  const WorldSpec({required this.id, required this.edition, required this.name, required this.productions, this.logline, this.keyArt});
+  const WorldSpec({required this.id, required this.edition, required this.name, required this.productions, this.logline, this.keyArt, this.part});
 
   final String id;
   final String edition;
@@ -38,6 +38,9 @@ class WorldSpec {
   final String? logline;
   final String? keyArt;
   final List<ProductionSpec> productions;
+
+  /// Set to pack a part (SPEC-058 R-46): the chapters released after the edition it names.
+  final WorldPart? part;
 
   /// Reads a spec file; relative paths in it are relative to the file.
   static WorldSpec fromJson(Map<String, Object?> json, {String base = '.'}) {
@@ -151,7 +154,8 @@ Future<PackedWorld> packWorld(WorldSpec spec, String outZip, {String url = 'http
     productions: productions,
     assets: assets,
     // Schema 1 while it suffices, so a Player that reads only schema 1 still opens it.
-    schemaVersion: productions.any((production) => production.listening != null) ? 2 : 1,
+    schemaVersion: spec.part != null ? 4 : (productions.any((production) => production.listening != null) ? 2 : 1),
+    part: spec.part,
   );
   final text = const JsonEncoder.withIndent('  ').convert(manifest.toJson());
   if (readWorldManifest(text) case WorldManifestRefused(:final reason)) throw StateError('the packer made a manifest the Player refuses: $reason');

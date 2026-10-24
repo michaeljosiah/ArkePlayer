@@ -115,19 +115,19 @@ class LibraryItem {
   /// In progress: opened, not finished, and somewhere past the start.
   bool get inProgress => place != null && !finished && place!.progress > 0;
 
-  LibraryItem copyWith({Place? place, bool? finished}) => LibraryItem(
+  LibraryItem copyWith({Place? place, bool? finished, List<Chapter>? chapters, Duration? duration, int? byteLength}) => LibraryItem(
     id: id,
     format: format,
     title: title,
-    byteLength: byteLength,
+    byteLength: byteLength ?? this.byteLength,
     addedAt: addedAt,
     file: file,
     author: author,
-    duration: duration,
+    duration: duration ?? this.duration,
     pages: pages,
     cover: cover,
     captions: captions,
-    chapters: chapters,
+    chapters: chapters ?? this.chapters,
     place: place ?? this.place,
     finished: finished ?? this.finished,
     worldId: worldId,

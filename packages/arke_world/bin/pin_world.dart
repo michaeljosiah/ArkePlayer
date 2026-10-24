@@ -8,10 +8,16 @@ import 'package:crypto/crypto.dart';
 /// address, length and SHA-256, and the edition and fingerprint an installed world is compared by
 /// to see an update. Any package the Player reads will do, the Studio's Export → Arke Player or
 /// `pack_world`'s.
+///
+/// A part (SPEC-058 R-46, R-49) is pinned with the fingerprint of the edition it must follow, the
+/// one in its world's list entry: a part made after another edition is refused. It prints the part's
+/// pin for the entry's `parts`, and its production's id and schedule for the listed production.
 ///   `dart run arke_world:pin_world <package.zip> <https url>`
+///   `dart run arke_world:pin_world <part.zip> <https url> --follows <edition fingerprint>`
 Future<void> main(List<String> args) async {
-  if (args.length != 2) {
-    stderr.writeln('usage: dart run arke_world:pin_world <package.zip> <https url>');
+  final follows = args.length == 4 && args[2] == '--follows' ? args[3] : null;
+  if (args.length != 2 && follows == null) {
+    stderr.writeln('usage: dart run arke_world:pin_world <package.zip> <https url> [--follows <edition fingerprint>]');
     exit(64);
   }
   final zip = File(args[0]);
@@ -28,13 +34,49 @@ Future<void> main(List<String> args) async {
     exit(65);
   }
   final digest = await sha256.bind(zip.openRead()).first;
+  final pin = {
+    'url': url.toString(),
+    'byteLength': await zip.length(),
+    'sha256': digest.toString(),
+    'edition': manifest.edition,
+    'fingerprint': editionFingerprint(manifest),
+  };
+  final part = manifest.part;
+  if (part == null) {
+    if (follows != null) {
+      stderr.writeln('not a part: --follows is for a part');
+      exit(64);
+    }
+    stdout.writeln(const JsonEncoder.withIndent('  ').convert(pin));
+    return;
+  }
+  if (follows == null) {
+    stderr.writeln('a part is pinned with --follows <the fingerprint of the edition in its list entry>');
+    exit(64);
+  }
+  if (part.fingerprint != follows) {
+    stderr.writeln('this part follows another edition (${part.follows}), not the one given');
+    exit(65);
+  }
+  final production = manifest.productions.single;
+  final document = manifest.listening[production.id];
+  // The day it is released: its edition label's date, which the Studio writes.
+  final released = parseDay(manifest.edition.length >= 10 ? manifest.edition.substring(0, 10) : manifest.edition);
+  if (released == null) {
+    stderr.writeln('the part is labelled ${manifest.edition}, which names no day');
+    exit(65);
+  }
   stdout.writeln(
     const JsonEncoder.withIndent('  ').convert({
-      'url': url.toString(),
-      'byteLength': await zip.length(),
-      'sha256': digest.toString(),
-      'edition': manifest.edition,
-      'fingerprint': editionFingerprint(manifest),
+      'part': {
+        ...pin,
+        'released': dayText(released),
+        'production': production.id,
+        'chapters': [
+          for (final chapter in document?.chapters ?? const <ListeningChapter>[]) {'id': chapter.id, 'number': chapter.order, 'title': chapter.title},
+        ],
+      },
+      'production': {'id': production.id, if (part.schedule != null) 'schedule': part.schedule!.toJson()},
     }),
   );
 }

@@ -1,7 +1,7 @@
 /// A production of an installed world (Arke Player P9 rule 6): its title, and the library items
 /// its book and narration became, so each plays and keeps its place as an added file does.
 class LibraryProduction {
-  const LibraryProduction({required this.id, required this.title, this.author, this.picture, this.book, this.narration});
+  const LibraryProduction({required this.id, required this.title, this.author, this.picture, this.book, this.narration, this.bookParts = const []});
 
   final String id;
   final String title;
@@ -14,8 +14,22 @@ class LibraryProduction {
   final String? book;
   final String? narration;
 
+  /// The books of the parts released since the edition (SPEC-058 R-50): each part's EPUB holds its
+  /// chapters alone, read after [book] as one book. Item ids, in release order.
+  final List<String> bookParts;
+
   /// The items this production plays from, narration first.
-  List<String> get itemIds => [?narration, ?book];
+  List<String> get itemIds => [?narration, ?book, ...bookParts];
+
+  LibraryProduction copyWith({String? narration, List<String>? bookParts}) => LibraryProduction(
+    id: id,
+    title: title,
+    author: author,
+    picture: picture,
+    book: book,
+    narration: narration ?? this.narration,
+    bookParts: bookParts ?? this.bookParts,
+  );
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -24,6 +38,7 @@ class LibraryProduction {
     if (picture != null) 'picture': picture,
     if (book != null) 'book': book,
     if (narration != null) 'narration': narration,
+    if (bookParts.isNotEmpty) 'bookParts': bookParts,
   };
 
   static LibraryProduction fromJson(Map<String, Object?> json) => LibraryProduction(
@@ -33,6 +48,62 @@ class LibraryProduction {
     picture: json['picture'] as String?,
     book: json['book'] as String?,
     narration: json['narration'] as String?,
+    bookParts: [for (final id in (json['bookParts'] as List<Object?>? ?? const [])) id! as String],
+  );
+}
+
+/// A part of an installed world (SPEC-058 R-46, R-50): one production's chapters released after
+/// the world's edition, kept in its own folder under the world's, `_parts/<number>`.
+class LibraryPart {
+  const LibraryPart({
+    required this.number,
+    required this.edition,
+    required this.fingerprint,
+    required this.production,
+    required this.chapters,
+    required this.byteLength,
+    required this.installedAt,
+    required this.folder,
+  });
+
+  /// Its place among the parts after the edition, from 1.
+  final int number;
+
+  /// The part's own label, its date.
+  final String edition;
+
+  /// The part's own fingerprint, as its pin in Arke's list names it.
+  final String fingerprint;
+
+  /// The production it extends, and the ids of the chapters it brought, in order.
+  final String production;
+  final List<String> chapters;
+  final int byteLength;
+  final DateTime installedAt;
+
+  /// Relative to the library's root; its `world.json` is at the top.
+  final String folder;
+
+  Map<String, Object?> toJson() => {
+    'number': number,
+    'edition': edition,
+    'fingerprint': fingerprint,
+    'production': production,
+    'chapters': chapters,
+    'byteLength': byteLength,
+    'installedAt': installedAt.toUtc().toIso8601String(),
+    'folder': folder,
+  };
+
+  static LibraryPart fromJson(Map<String, Object?> json) => LibraryPart(
+    number: json['number']! as int,
+    edition: json['edition']! as String,
+    fingerprint: json['fingerprint']! as String,
+    production: json['production']! as String,
+    chapters: [for (final id in json['chapters']! as List<Object?>) id! as String],
+    byteLength: json['byteLength']! as int,
+    installedAt: DateTime.parse(json['installedAt']! as String),
+    folder: json['folder']! as String,
   );
 }
 
@@ -50,6 +121,7 @@ class LibraryWorld {
     this.keyArt,
     this.fingerprint,
     this.guide,
+    this.parts = const [],
   });
 
   final String id;
@@ -73,6 +145,24 @@ class LibraryWorld {
   /// R-18).
   final String? guide;
 
+  /// The parts released since its edition, in order (SPEC-058 R-50). A new edition holds every
+  /// chapter released, so its parts fall away when it is installed (R-55).
+  final List<LibraryPart> parts;
+
+  LibraryWorld copyWith({List<LibraryProduction>? productions, List<LibraryPart>? parts, int? byteLength}) => LibraryWorld(
+    id: id,
+    edition: edition,
+    name: name,
+    byteLength: byteLength ?? this.byteLength,
+    installedAt: installedAt,
+    productions: productions ?? this.productions,
+    logline: logline,
+    keyArt: keyArt,
+    fingerprint: fingerprint,
+    guide: guide,
+    parts: parts ?? this.parts,
+  );
+
   Map<String, Object?> toJson() => {
     'id': id,
     'edition': edition,
@@ -84,6 +174,7 @@ class LibraryWorld {
     'productions': [for (final production in productions) production.toJson()],
     if (fingerprint != null) 'fingerprint': fingerprint,
     if (guide != null) 'guide': guide,
+    if (parts.isNotEmpty) 'parts': [for (final part in parts) part.toJson()],
   };
 
   static LibraryWorld fromJson(Map<String, Object?> json) => LibraryWorld(
@@ -97,6 +188,7 @@ class LibraryWorld {
     productions: [for (final production in json['productions']! as List<Object?>) LibraryProduction.fromJson((production! as Map).cast<String, Object?>())],
     fingerprint: json['fingerprint'] as String?,
     guide: json['guide'] as String?,
+    parts: [for (final part in (json['parts'] as List<Object?>? ?? const [])) LibraryPart.fromJson((part! as Map).cast<String, Object?>())],
   );
 }
 
