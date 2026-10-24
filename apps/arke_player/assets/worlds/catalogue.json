@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 18,
+  "serial": 19,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -57,7 +57,7 @@
       "logline": "A colony crash-lands on a moon its survey called dead. The moon is not empty, and the Mistress was here first.",
       "keyArt": "assets/worlds/the-red-quiet/key-art.jpg",
       "productions": [
-        { "title": "The Red Quiet", "kind": "Audiobook · Book · 15 m", "picture": "assets/worlds/the-red-quiet/cover.jpg" }
+        { "title": "The Red Quiet", "kind": "Audiobook · Book · 15 m", "picture": "assets/worlds/the-red-quiet/cover.jpg", "tall": "assets/worlds/the-red-quiet/cover-tall.jpg" }
       ],
       "package": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/the-red-quiet-player-2026-10-24.zip",

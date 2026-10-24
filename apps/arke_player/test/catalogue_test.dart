@@ -38,6 +38,13 @@ void main() {
     expect(juju.tall, 'assets/worlds/na-love-or-juju/cover-tall.jpg');
   });
 
+  test('The Red Quiet’s Tall cover is its own poster, title at the top (P16 call 14)', () {
+    // Made upright rather than cut from the Wide cover: Ines Marr and the Mistress, with the title
+    // below the 51 px the phone's feature takes from a poster's top.
+    final quiet = catalogue.singleWhere((world) => world.id == 'the-red-quiet').productions.single;
+    expect(quiet.tall, 'assets/worlds/the-red-quiet/cover-tall.jpg');
+  });
+
   test('The Undersong is pinned to its published package and its guide alone', () {
     // The Studio's Export → Arke Player of the 23-chapter edition with its guide, named by the
     // world's own slug, and the guide alone that lets it be explored before install (SPEC-059 R-10).
