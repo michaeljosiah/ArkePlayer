@@ -26,6 +26,24 @@ void main() {
     }
   });
 
+  test('every picture comes with the list too, from Arke’s own release under a name of its own (SPEC-058 R-63, R-67)', () {
+    // Pinned on 2026-10-24, the day three upright covers reached the list and phones running that
+    // morning's build showed none of them. A pin per slot, so a new cover needs no app release.
+    final name = RegExp(r'^[a-z0-9-]+-(keyArt|picture|tall)-\d{8}\.(jpg|png|webp)$');
+    for (final world in catalogue) {
+      final pinned = <(String, String?, PicturePin?)>[
+        ('keyArt', world.keyArt, world.keyArtPin),
+        for (final production in world.productions) ...[('picture', production.picture, production.picturePin), ('tall', production.tall, production.tallPin)],
+      ];
+      for (final (slot, bundled, pin) in pinned) {
+        if (bundled == null) continue;
+        expect(pin, isNotNull, reason: '${world.id} $slot');
+        expect(pin!.url.toString(), startsWith('https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/${world.id}-$slot-'));
+        expect(name.hasMatch(pin.url.pathSegments.last), isTrue, reason: pin.url.toString());
+      }
+    }
+  });
+
   test('Discover’s feature and band name listed worlds (P16 call 15)', () {
     final list = parseCatalogue(File('assets/worlds/catalogue.json').readAsStringSync());
     final ids = {for (final world in list.worlds) world.id};

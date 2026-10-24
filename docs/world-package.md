@@ -103,6 +103,12 @@ Pins come from the list the phone shows, the fetched one when its serial is high
 changes everywhere by publishing the list alone. A world the app does not ship shows its pictures
 by their pins alone.
 
+**Published 24 October 2026 at list serial 23.** All 13 pictures the list names were uploaded to
+`arke-player-worlds`: each world's key art, each story's wide cover, and the upright covers of The
+Red Quiet, Threshold — Book One and Na love or Juju. Each is named `<world id>-<slot>-20261024.jpg`
+and is byte for byte the bundled file. Every public copy was downloaded back and matched before it
+was pinned. `test/catalogue_test.dart` holds every bundled picture to a pin from that release.
+
 ## The Undersong
 
 **Pinned now: the 24 October 2026 cover edition** (list serial 14): `the-undersong-player-2026-10-24.zip`, 360,101,640 bytes, SHA-256 `a1e1e38e967d01490c7fe471d56cb65234c87ed6491ef2091a8ff75899742dcc`, on the same release. The editorial edition below with one change: *The Ledger of Nights* has its own picture, given as Publish's cover (`--cover`), where before the export used the key art. It was made with Codex Image from Maren Kest's and Perrin Tallow's portraits and the Bell House's view: Maren on the sea-wall steps with a lantern over the drowned god's sleeping face, rings of light rising towards the bells, Perrin at his lit window above. The narration, book, pictures and guide are byte for byte the editorial edition's (290.58 minutes, 23 chapters); it was exported from the same copy, `D:\ArkePlayerEditorialPublication-20261022\the-undersong`, with only the cover added. The app bundles the picture as `assets/worlds/undersong/ledger-of-nights.jpg`, the path the list already named, so a build without it keeps the old picture rather than missing one.
