@@ -7,13 +7,20 @@ import 'manifest.dart';
 /// given (R-12): no notes, no canon status, nothing unpublished.
 const guideMediaType = 'application/vnd.arke.guide+json';
 const guideFormat = 'arke-guide';
-const guideVersion = 1;
+
+/// Version 2 (SPEC-059 R-28) adds `teasers`; version 1, a guide with none, is still read.
+const guideVersion = 2;
 
 /// Media by role in a guide (R-13).
 const guideVoiceMediaTypes = {'audio/mp4'};
+const guideMotionMediaTypes = {'video/mp4'};
 
 /// A line in a character's voice is a sentence, not a scene (R-6).
 const maxGuideVoice = Duration(seconds: 15);
+
+/// A world shows at most six teasers (R-24), and a clip is a moment, not a scene (R-25).
+const maxTeasers = 6;
+const maxTeaserClip = Duration(seconds: 30);
 
 /// Canon's entry types (SPEC-059 §1.3). Lore files them under Lore, Rules and Timeline; the rest
 /// show under All.
@@ -116,12 +123,48 @@ class GuideLore extends GuideEntry {
   final String text;
 }
 
+/// What a world shows to anyone in Discover, chosen by its author (SPEC-059 R-24 – R-28).
+sealed class GuideTeaser {
+  const GuideTeaser();
+}
+
+/// A character or place of the guide, public from the start.
+class EntryTeaser extends GuideTeaser {
+  const EntryTeaser(this.entry);
+
+  /// A [GuideCharacter] or a [GuidePlace].
+  final GuideEntry entry;
+}
+
+/// A picture made for a production, with the chapter it comes from, which shows on its card.
+class PictureTeaser extends GuideTeaser {
+  const PictureTeaser({required this.title, required this.picture, required this.from});
+  final String title;
+
+  /// An asset id.
+  final String picture;
+  final GuideAfter from;
+}
+
+/// A moment of a chapter read whole: its picture, its narration and, perhaps, its loop.
+class ClipTeaser extends PictureTeaser {
+  const ClipTeaser({required super.title, required super.picture, required super.from, required this.audio, required this.duration, this.motion});
+
+  /// Asset ids.
+  final String audio;
+  final String? motion;
+  final Duration duration;
+}
+
 class Guide {
-  const Guide({required this.productions, required this.characters, required this.places, required this.lore});
+  const Guide({required this.productions, required this.characters, required this.places, required this.lore, this.teasers = const []});
   final List<GuideProduction> productions;
   final List<GuideCharacter> characters;
   final List<GuidePlace> places;
   final List<GuideLore> lore;
+
+  /// In the author's order.
+  final List<GuideTeaser> teasers;
 
   List<GuideEntry> get entries => [...characters, ...places, ...lore];
 
@@ -136,6 +179,11 @@ class Guide {
   Set<String> get assetIds => {
     for (final character in characters) ...[?character.portrait, ?character.voice?.audio],
     for (final place in places) ?place.picture,
+    for (final teaser in teasers)
+      if (teaser case PictureTeaser(:final picture)) ...[
+        picture,
+        if (teaser case ClipTeaser(:final audio, :final motion)) ...[audio, ?motion],
+      ],
   };
 }
 
@@ -209,11 +257,12 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
   final version = decoded['version'];
   if (version is! int) _notAPackage('no version');
   if (version > guideVersion) _newer('guide version $version');
-  if (version != guideVersion) _notAPackage('guide version $version');
+  if (version < 1) _notAPackage('guide version $version');
   final requires = decoded['requires'] ?? const <Object?>[];
   if (requires is! List<Object?>) _notAPackage('requires is not a list');
   if (requires.isNotEmpty) _newer('requires ${requires.join(', ')}');
-  final json = _object(decoded, 'the guide', {'format', 'version', 'requires', 'productions', 'characters', 'places', 'lore'});
+  // Teasers came with version 2: a version 1 guide naming them was made by something newer.
+  final json = _object(decoded, 'the guide', {'format', 'version', 'requires', 'productions', 'characters', 'places', 'lore', if (version >= 2) 'teasers'});
 
   final productions = <GuideProduction>[];
   final numbers = <String, Map<String, int>>{};
@@ -361,5 +410,59 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
       if (!ids.contains(link)) _notAPackage('entry ${entry.id}: a link to $link, which is not in the guide');
     }
   }
-  return guide;
+  if (json['teasers'] == null) return guide;
+
+  // Teasers (R-28, R-29): a character or place names an entry public from the start, because
+  // Discover shows it to anyone; a picture or clip carries its own files and its chapter.
+  GuideAfter from(Map<String, Object?> t, String what) {
+    final production = _id(t['production'], '$what production');
+    final chapter = _id(t['chapter'], '$what chapter');
+    final number = numbers[production]?[chapter];
+    if (number == null) _notAPackage('$what names no chapter of the guide');
+    return GuideAfter(production: production, chapter: chapter, number: number);
+  }
+
+  final rawTeasers = _list(json['teasers'], 'teasers', 64);
+  if (rawTeasers.length > maxTeasers) _notAPackage('more than $maxTeasers teasers');
+  final teasers = <GuideTeaser>[];
+  final seen = <String>{};
+  for (final (index, raw) in rawTeasers.indexed) {
+    final what = 'teaser ${index + 1}';
+    if (raw is! Map<String, Object?>) _notAPackage(what);
+    final kind = raw['kind'];
+    switch (kind) {
+      case 'character' || 'place':
+        final t = _object(raw, what, {'kind', 'id'});
+        final id = _id(t['id'], '$what id');
+        final entry = guide.entry(id);
+        if (kind == 'character' ? entry is! GuideCharacter : entry is! GuidePlace) _notAPackage('$what names no $kind $id');
+        if (entry!.after != null) _notAPackage('$what: $id waits for a chapter');
+        if (!seen.add('$kind $id')) _notAPackage('$what repeats $id');
+        teasers.add(EntryTeaser(entry));
+      case 'picture':
+        final t = _object(raw, what, {'kind', 'title', 'picture', 'production', 'chapter'});
+        final picture = asset(t['picture'], pictureMediaTypes, '$what picture') ?? _notAPackage('$what picture');
+        if (!seen.add('$kind $picture')) _notAPackage('$what repeats $picture');
+        teasers.add(PictureTeaser(title: _text(t['title'], '$what title'), picture: picture, from: from(t, what)));
+      case 'clip':
+        final t = _object(raw, what, {'kind', 'title', 'picture', 'audio', 'duration', 'production', 'chapter', 'motion'});
+        final picture = asset(t['picture'], pictureMediaTypes, '$what picture') ?? _notAPackage('$what picture');
+        final duration = t['duration'];
+        if (duration is! int || duration < 1 || Duration(milliseconds: duration) > maxTeaserClip) _notAPackage('$what duration');
+        if (!seen.add('$kind $picture')) _notAPackage('$what repeats $picture');
+        teasers.add(
+          ClipTeaser(
+            title: _text(t['title'], '$what title'),
+            picture: picture,
+            from: from(t, what),
+            audio: asset(t['audio'], guideVoiceMediaTypes, '$what audio') ?? _notAPackage('$what audio'),
+            duration: Duration(milliseconds: duration),
+            motion: asset(t['motion'], guideMotionMediaTypes, '$what motion'),
+          ),
+        );
+      default:
+        _notAPackage('$what kind $kind');
+    }
+  }
+  return Guide(productions: guide.productions, characters: guide.characters, places: guide.places, lore: guide.lore, teasers: List.unmodifiable(teasers));
 }

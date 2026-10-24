@@ -13,8 +13,9 @@ const worldManifestFile = 'world.json';
 const worldPackageFormat = 'arke-world-package';
 
 /// Schema 2 (SPEC-058 R-9) adds a production's `listening` document; schema 3 (SPEC-059 R-9, R-10)
-/// adds the world's `guide`, and a package with the guide alone. Schemas 1 and 2 are still read.
-const worldSchemaVersion = 3;
+/// adds the world's `guide`, and a package with the guide alone; schema 4 (SPEC-058 R-46) is a part,
+/// the chapters released since an edition. Schemas 1 to 3 are still read.
+const worldSchemaVersion = 4;
 
 /// A world package's media, by the role it plays: the book a reader opens, the narration the
 /// audio player plays, and the pictures shown around them.
@@ -39,6 +40,57 @@ class WorldAsset {
   PublicationAsset get asPublicationAsset => PublicationAsset(href: path, mediaType: mediaType, byteLength: byteLength, sha256: sha256);
 
   Map<String, Object?> toJson() => {'path': path, 'mediaType': mediaType, 'byteLength': byteLength, 'sha256': sha256};
+}
+
+/// The days an author's schedule names (SPEC-058 R-48): a weekday, or every day.
+enum ScheduleDay { monday, tuesday, wednesday, thursday, friday, saturday, sunday, daily }
+
+final _date = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+
+/// A calendar date written `YYYY-MM-DD`, as UTC midnight; null when it is not one.
+DateTime? parseDay(Object? value) {
+  if (value is! String || !_date.hasMatch(value)) return null;
+  final day = DateTime.tryParse('${value}T00:00:00Z');
+  // DateTime.parse rolls 2026-02-30 over into March; a date that does not write back is not one.
+  return day != null && dayText(day) == value ? day : null;
+}
+
+String dayText(DateTime day) => '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+
+/// When an author says new chapters come: a day, the next date, or both. The author's word, shown
+/// as written (R-53), never a promise the app keeps.
+class WorldSchedule {
+  const WorldSchedule({this.day, this.next});
+  final ScheduleDay? day;
+
+  /// UTC midnight of the date.
+  final DateTime? next;
+
+  Map<String, Object?> toJson() => {if (day != null) 'day': day!.name, if (next != null) 'next': dayText(next!)};
+
+  /// Reads a schedule's values; throws [FormatException] when one is malformed. Keys it does not
+  /// know are the caller's to judge: a package refuses them, Arke's list ignores them.
+  static WorldSchedule read(Object? raw) {
+    if (raw is! Map<String, Object?>) throw const FormatException('schedule');
+    final day = raw['day'];
+    final next = raw['next'];
+    final parsedDay = day == null ? null : ScheduleDay.values.where((value) => value.name == day).firstOrNull;
+    final parsedNext = next == null ? null : parseDay(next);
+    if ((day != null && parsedDay == null) || (next != null && parsedNext == null)) throw const FormatException('schedule');
+    return WorldSchedule(day: parsedDay, next: parsedNext);
+  }
+}
+
+/// What makes a package a part (R-46): the edition it was made after, by label and fingerprint, its
+/// number among the parts after that edition, and the author's schedule.
+class WorldPart {
+  const WorldPart({required this.follows, required this.fingerprint, required this.number, this.schedule});
+  final String follows;
+  final String fingerprint;
+  final int number;
+  final WorldSchedule? schedule;
+
+  Map<String, Object?> toJson() => {'follows': follows, 'fingerprint': fingerprint, 'number': number, if (schedule != null) 'schedule': schedule!.toJson()};
 }
 
 /// A production a world package carries: a book, its narration, or both (P9 rule 7). Each names
@@ -82,6 +134,7 @@ class WorldManifest {
     this.schemaVersion = worldSchemaVersion,
     this.listening = const {},
     this.guideDocument,
+    this.part,
   });
 
   final String id;
@@ -103,6 +156,9 @@ class WorldManifest {
 
   /// A package that carries a world's guide and nothing to play (R-10).
   bool get isGuideAlone => productions.isEmpty;
+
+  /// Set when this package is a part, the chapters released after an edition (SPEC-058 R-46).
+  final WorldPart? part;
 
   /// Each production's listening document, by production id, once the package reader has read
   /// them (`readWorldPackage`); empty from `readWorldManifest` alone.
@@ -127,6 +183,7 @@ class WorldManifest {
     schemaVersion: schemaVersion,
     listening: Map.unmodifiable(documents),
     guideDocument: guide,
+    part: part,
   );
 
   Map<String, Object?> toJson() => {
@@ -139,6 +196,7 @@ class WorldManifest {
     if (keyArt != null) 'keyArt': keyArt,
     'productions': [for (final production in productions) production.toJson()],
     if (guide != null) 'guide': guide,
+    if (part != null) 'part': part!.toJson(),
     'assets': {for (final MapEntry(:key, :value) in assets.entries) key: value.toJson()},
   };
 }
@@ -167,6 +225,9 @@ final _slug = RegExp(r'^[a-z0-9][a-z0-9-]{0,63}$');
 final _digest = RegExp(r'^[a-f0-9]{64}$');
 const _topKeys = {'format', 'schemaVersion', 'id', 'edition', 'name', 'logline', 'keyArt', 'productions', 'assets', 'requires', 'metadata', 'provenance'};
 const _topKeys3 = {..._topKeys, 'guide'};
+const _topKeys4 = {..._topKeys3, 'part'};
+const _partKeys = {'follows', 'fingerprint', 'number', 'schedule'};
+const _scheduleKeys = {'day', 'next'};
 const _productionKeys = {'id', 'title', 'author', 'picture', 'book', 'narration', 'metadata'};
 const _productionKeys2 = {..._productionKeys, 'listening'};
 const _assetKeys = {'path', 'mediaType', 'byteLength', 'sha256'};
@@ -197,7 +258,7 @@ WorldManifestRead readWorldManifest(String text) {
   final requires = json['requires'] ?? const <Object?>[];
   if (requires is! List<Object?>) return notAPackage('requires is not a list');
   if (requires.isNotEmpty) return newer('requires ${requires.join(', ')}');
-  final unknown = json.keys.where((key) => !(version >= 3 ? _topKeys3 : _topKeys).contains(key));
+  final unknown = json.keys.where((key) => !(version >= 4 ? _topKeys4 : (version >= 3 ? _topKeys3 : _topKeys)).contains(key));
   if (unknown.isNotEmpty) return newer('unknown keys ${unknown.join(', ')}');
 
   String? textOf(Object? value, int max) => value is String && value.trim().isNotEmpty && value.length <= max ? value : null;
@@ -243,6 +304,36 @@ WorldManifestRead readWorldManifest(String text) {
   final guide = json['guide'];
   if (guide != null && role(guide, const {guideMediaType}) == null) return notAPackage('guide');
 
+  // Schema 4 is a part, and a part is nothing else: one production's new chapters and no guide (a
+  // guide reaches a phone alone, or in the next edition).
+  WorldPart? part;
+  if (version >= 4) {
+    final raw = json['part'];
+    if (raw is! Map<String, Object?>) return notAPackage('schema 4 without a part');
+    final extra = raw.keys.where((key) => !_partKeys.contains(key));
+    if (extra.isNotEmpty) return newer('part keys ${extra.join(', ')}');
+    final follows = textOf(raw['follows'], 64);
+    final fingerprint = raw['fingerprint'];
+    final number = raw['number'];
+    if (follows == null) return notAPackage('part follows');
+    if (fingerprint is! String || !_digest.hasMatch(fingerprint)) return notAPackage('part fingerprint');
+    if (number is! int || number < 1) return notAPackage('part number');
+    WorldSchedule? schedule;
+    final rawSchedule = raw['schedule'];
+    if (rawSchedule != null) {
+      if (rawSchedule is! Map<String, Object?>) return notAPackage('part schedule');
+      final unknownSchedule = rawSchedule.keys.where((key) => !_scheduleKeys.contains(key));
+      if (unknownSchedule.isNotEmpty) return newer('schedule keys ${unknownSchedule.join(', ')}');
+      try {
+        schedule = WorldSchedule.read(rawSchedule);
+      } on FormatException {
+        return notAPackage('part schedule');
+      }
+    }
+    if (guide != null) return notAPackage('a part carries a guide');
+    part = WorldPart(follows: follows, fingerprint: fingerprint, number: number, schedule: schedule);
+  }
+
   // A guide alone carries no production (R-10); anything else carries one at least.
   final rawProductions = json['productions'];
   if (rawProductions is! List<Object?> || (rawProductions.isEmpty && guide == null) || rawProductions.length > 64) return notAPackage('productions');
@@ -271,10 +362,13 @@ WorldManifestRead readWorldManifest(String text) {
     }
     if (narration != null && listening != null) return notAPackage('production $productionId names a narration and a listening document');
     if (book == null && narration == null && listening == null) return notAPackage('production $productionId has nothing to play');
+    // A single narration file cannot be added to: a part's chapters come as a listening document.
+    if (part != null && narration != null) return notAPackage('part production $productionId names a narration');
     productions.add(
       WorldProduction(id: productionId, title: title, author: author as String?, picture: picture, book: book, narration: narration, listening: listening),
     );
   }
+  if (part != null && productions.length != 1) return notAPackage('a part carries one production');
   // Every file is one the world uses: nothing unreferenced rides along (SPEC-048 R-13). The files a
   // listening document or a guide names are known only once it is read, so with one the package
   // reader makes this check instead.
@@ -294,6 +388,7 @@ WorldManifestRead readWorldManifest(String text) {
       productions: List.unmodifiable(productions),
       assets: Map.unmodifiable(assets),
       schemaVersion: version,
+      part: part,
     ),
   );
 }

@@ -148,7 +148,8 @@ def world(version=3, productions=None, **extra):
     doc = {
         'format': 'arke-world-package', 'schemaVersion': version, 'id': 'undersong', 'edition': '2026-10-22', 'name': 'The Undersong',
         'keyArt': 'key-art', 'productions': productions if productions is not None else [], 'guide': 'guide',
-        'assets': {'key-art': a('key-art.jpg', 'image/jpeg'), **assets},
+        # The teasers' files stay out: a world.json names nothing its guide does not use.
+        'assets': {'key-art': a('key-art.jpg', 'image/jpeg'), **{key: value for key, value in assets.items() if not key.startswith('t-')}},
     }
     doc.update(extra)
     return {key: value for key, value in doc.items() if value is not None}

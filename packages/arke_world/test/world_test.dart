@@ -125,7 +125,7 @@ void main() {
     test('a valid manifest', () => expect(read(valid()), isA<WorldManifestOk>()));
     test('a newer schema, a required capability or an unknown key: made with a newer Arke', () {
       for (final json in [
-        valid()..['schemaVersion'] = 4,
+        valid()..['schemaVersion'] = 5,
         valid()..['requires'] = ['narrated-book-v1'],
         valid()..['chapters'] = <Object?>[],
       ]) {
@@ -337,7 +337,7 @@ void main() {
       });
       test('a newer schema: Made with a newer Arke', () async {
         final json = jsonDecode(utf8.decode(entries['world.json']!)) as Map<String, Object?>;
-        json['schemaVersion'] = 4;
+        json['schemaVersion'] = 5;
         expect(await refusalFor({...entries, 'world.json': utf8.encode(jsonEncode(json))}), isA<NewerArke>());
       });
       test('not a ZIP: Not an Arke package', () async {

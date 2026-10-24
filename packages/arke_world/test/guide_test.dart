@@ -57,6 +57,15 @@ void main() {
         if (raw['counts'] case {'characters': final int characters, 'places': final int places, 'lore': final int lore}) {
           expect((guide.characters.length, guide.places.length, guide.lore.length), (characters, places, lore));
         }
+        if (raw['teasers'] case final List<Object?> kinds) {
+          String kindOf(GuideTeaser teaser) => switch (teaser) {
+            EntryTeaser(entry: GuideCharacter()) => 'character',
+            EntryTeaser() => 'place',
+            ClipTeaser() => 'clip',
+            PictureTeaser() => 'picture',
+          };
+          expect(guide.teasers.map(kindOf), kinds);
+        }
         for (final probe in (raw['after'] as List<Object?>? ?? const []).cast<Map<String, Object?>>()) {
           expect(
             _afterOf(guide, probe['entry']! as String, probe['section'] as int?)?.number,
@@ -83,6 +92,16 @@ void main() {
       expect(guide.lore.map((lore) => lore.kind), [LoreKind.lore, LoreKind.timeline]);
       expect(guide.productions.single.chapters.first.book, 'OEBPS/chapter-1.xhtml');
       expect(guide.assetIds, {'g-maren', 'g-maren-voice', 'g-bray', 'g-vigil'});
+      expect(guide.teasers, isEmpty);
+    });
+
+    test('what a guide with teasers carries (R-28)', () {
+      final guide = (readGuide(_read('teasers.json'), _assets()) as GuideOk).guide;
+      final clip = guide.teasers[1] as ClipTeaser;
+      expect((clip.title, clip.duration, clip.motion, clip.from.number), ('Saltmouth bells', const Duration(seconds: 24), 't-bells-loop', 1));
+      expect((guide.teasers.first as EntryTeaser).entry.id, 'maren-kest');
+      expect((guide.teasers.last as PictureTeaser).from.number, 6);
+      expect(guide.assetIds, containsAll(['t-bells', 't-bells-audio', 't-bells-loop', 't-weir']));
     });
   });
 
