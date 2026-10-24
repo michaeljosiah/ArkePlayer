@@ -38,6 +38,9 @@ const P = {
   pausec: '<circle cx="12" cy="12" r="9.5"/><path d="M10 9v6M14 9v6"/>',
   volume: '<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>',
   globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  compass: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>',
+  bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
+  calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
 };
 const FILLED = {
   play: '<path d="M7 4.5v15l13-7.5z"/>',
@@ -71,8 +74,10 @@ export const hi = () => '<div class="hi"></div>';
 const TABS = [['home', 'Home'], ['library', 'Library'], ['download', 'Downloads'], ['user', 'You']];
 // P11: Worlds joins the tabs, second.
 const TABS_WORLDS = [['home', 'Home'], ['globe', 'Worlds'], ['library', 'Library'], ['download', 'Downloads'], ['user', 'You']];
-/** The tabs: a bar above the home indicator on a phone, a rail on a Fold; five with Worlds (P11). */
-export const tabs = (on, rail = false, worlds = false) => `<div class="${rail ? 'rail' : 'tabs'}">${(worlds ? TABS_WORLDS : TABS).map(([i, l]) => `<span class="tab${l === on ? ' on' : ''}">${ic(i, rail ? 24 : 24, l === on ? 2.1 : 1.7)}${l}</span>`).join('')}</div>`;
+// P15: Discover takes Worlds' place: what you can get, beside Library, what you have.
+const TABS_DISCOVER = [['home', 'Home'], ['compass', 'Discover'], ['library', 'Library'], ['download', 'Downloads'], ['user', 'You']];
+/** The tabs: a bar above the home indicator on a phone, a rail on a Fold; five with Worlds (P11), then Discover (P15). */
+export const tabs = (on, rail = false, worlds = false) => `<div class="${rail ? 'rail' : 'tabs'}">${(worlds === 'discover' ? TABS_DISCOVER : worlds ? TABS_WORLDS : TABS).map(([i, l]) => `<span class="tab${l === on ? ' on' : ''}">${ic(i, rail ? 24 : 24, l === on ? 2.1 : 1.7)}${l}</span>`).join('')}</div>`;
 
 /** The dock: what plays while its player is closed, above the tabs. */
 export const dock = ({ img, title, where, at = 44, playing = true }) => `<div class="dock"><span class="ln" style="width:${at}%"></span><img src="${A}${img}" alt=""><div class="grow"><b>${title}</b><span class="w">${where}</span></div><span class="dib">${seek(15)}</span><span class="dib">${ic(playing ? 'pause' : 'play', 22)}</span></div>`;

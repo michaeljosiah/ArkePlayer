@@ -308,3 +308,30 @@
 .ap .chip>img{width:22px;height:22px;border-radius:99px;object-fit:cover;margin-left:-8px}
 .ap .chip>.dot{width:22px;height:22px;border-radius:99px;margin-left:-8px;display:inline-flex;align-items:center;justify-content:center;background:var(--background);color:var(--muted-foreground)}
 .ap .cols2g{display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+
+/* P15 · Discover and new chapters. New is the one filled tag: on a picture in the overlay's ink, in a
+   list in the page's. Every row is the one 16:9 tile, a character's too: without a picture it shows
+   its initials, and one that waits for a chapter is a quiet gated tile. A chapter list is rows of
+   data; the author's next date is the last row, dashed, until it passes. */
+.ap .tag.new{background:var(--foreground);color:var(--background)}
+.ap .tile .im .tag.new,.ap .cc .tag.new,.ap .wc .tag.new,.ap .vt .tag.new,.ap .hero .tag.new,.ap .on-media .tag.new{background:var(--media-overlay-fg);color:var(--media-overlay-bg)}
+.ap .tile .im .mid.ini{font:var(--weight-semibold) var(--text-2xl)/1 var(--font-sans);letter-spacing:var(--tracking-tight);color:var(--muted-foreground)}
+.ap .tile.gated .im .mid{color:var(--muted-foreground)}
+.ap .cc .w .tag{margin-right:6px;vertical-align:1px}
+.ap .vt .tg{position:absolute;left:6px;top:6px}
+.ap .hero .sched{margin-top:6px;display:flex;align-items:center;gap:6px;font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 74%,transparent)}
+.ap .chr{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 16px;border-top:1px solid color-mix(in srgb,var(--foreground) 8%,transparent)}
+.ap .chr .t{font:var(--type-ui);font-size:var(--text-base)}
+.ap .chr .m{margin-top:3px;display:flex;align-items:center;gap:8px;font:var(--type-meta);color:var(--muted-foreground)}
+.ap .chr .end{color:var(--muted-foreground);display:inline-flex}
+.ap .chr .ring{width:22px;height:22px;border-radius:99px;border:2px solid color-mix(in srgb,var(--foreground) 16%,transparent)}
+.ap .chr.soon{border-top-style:dashed}
+.ap .chr.soon .t{color:var(--muted-foreground)}
+.ap .lkd{font:var(--type-ui);font-size:var(--text-md);color:color-mix(in srgb,var(--media-overlay-fg) 86%,transparent)}
+.ap .lkt{margin-top:4px;font:var(--weight-semibold) var(--text-5xl)/1 var(--font-sans);letter-spacing:var(--tracking-tighter)}
+.ap .nt{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:20px;background:color-mix(in srgb,var(--media-overlay-bg) 46%,transparent);backdrop-filter:blur(18px);border:1px solid color-mix(in srgb,var(--media-overlay-fg) 14%,transparent)}
+.ap .nt .app{width:38px;height:38px;flex:none;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--media-overlay-fg);color:var(--media-overlay-bg);font-family:"Jost",var(--font-sans);font-weight:300;font-size:var(--text-lg)}
+.ap .nt .nth{display:flex;justify-content:space-between;font:var(--type-meta);color:color-mix(in srgb,var(--media-overlay-fg) 70%,transparent)}
+.ap .nt .t{margin-top:2px;font:var(--type-ui);font-size:var(--text-base);font-weight:var(--weight-semibold)}
+.ap .nt .m{font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 86%,transparent)}
+.ap .nt>img{width:54px;height:54px;flex:none;border-radius:10px;object-fit:cover}
