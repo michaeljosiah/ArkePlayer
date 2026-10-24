@@ -12,13 +12,17 @@ String productionKind({required bool book, required bool narration, Duration? le
 /// A production a catalogue world holds, as its page shows it before the world is installed
 /// (P9c's Inside): a title, its kind line and a picture bundled with the app.
 class CatalogueProduction {
-  const CatalogueProduction({required this.title, required this.kind, this.picture, this.id, this.schedule});
+  const CatalogueProduction({required this.title, required this.kind, this.picture, this.tall, this.id, this.schedule});
 
   final String title;
   final String kind;
 
   /// An asset path in the app's bundle.
   final String? picture;
+
+  /// Its Tall cover, an asset path in the app's bundle (SPEC-058 rev 9, Player P16 call 14): what a
+  /// poster and a phone's feature show. Without one they show [picture] whole over its blur.
+  final String? tall;
 
   /// Its id in the world's package, so a tile opens the world's page at it; absent in older lists.
   final String? id;
@@ -122,12 +126,23 @@ class CatalogueWorld {
   bool covers(String id) => id == this.id || replaces.contains(id);
 }
 
+/// The production Discover opens on (SPEC-058 rev 9, Player P16 call 15): a world, and one of its
+/// productions or, unnamed, its first.
+class CatalogueFeature {
+  const CatalogueFeature({required this.world, this.production});
+  final String world;
+  final String? production;
+}
+
 /// A list of Arke's worlds (SPEC-058 R-30): its [serial] rises with every list published, so of two
-/// lists the one with the higher serial is the newer.
+/// lists the one with the higher serial is the newer. It may name Discover's [feature] and the world
+/// of its [band] (P16 call 15); a name that matches no world is the reader's to ignore.
 class Catalogue {
-  const Catalogue({required this.serial, required this.worlds});
+  const Catalogue({required this.serial, required this.worlds, this.feature, this.band});
   final int serial;
   final List<CatalogueWorld> worlds;
+  final CatalogueFeature? feature;
+  final String? band;
 
   static const empty = Catalogue(serial: 0, worlds: []);
 }
@@ -159,6 +174,11 @@ Catalogue parseCatalogue(String text) {
             title: title,
             kind: kind,
             picture: production['picture'] as String?,
+            tall: switch (production['tall']) {
+              null => null,
+              final String tall when tall.isNotEmpty => tall,
+              _ => throw FormatException('catalogue world $id production tall'),
+            },
             id: switch (production['id']) {
               null => null,
               final String productionId when _slug.hasMatch(productionId) => productionId,
@@ -251,7 +271,26 @@ Catalogue parseCatalogue(String text) {
       ),
     );
   }
-  return Catalogue(serial: serial, worlds: List.unmodifiable(worlds));
+  // Discover's feature and band (P16 call 15) are names, kept even when no listed world answers to them,
+  // so a list that names a world before it is published still reads.
+  final feature = switch (json['feature']) {
+    null => null,
+    {'world': final String world} && final Map<String, Object?> named when _slug.hasMatch(world) => CatalogueFeature(
+      world: world,
+      production: switch (named['production']) {
+        null => null,
+        final String production when _slug.hasMatch(production) => production,
+        _ => throw const FormatException('catalogue feature production'),
+      },
+    ),
+    _ => throw const FormatException('catalogue feature'),
+  };
+  final band = switch (json['band']) {
+    null => null,
+    final String world when _slug.hasMatch(world) => world,
+    _ => throw const FormatException('catalogue band'),
+  };
+  return Catalogue(serial: serial, worlds: List.unmodifiable(worlds), feature: feature, band: band);
 }
 
 /// The worlds of the list the app ships, as [parseCatalogue] reads them.
@@ -260,15 +299,19 @@ List<CatalogueWorld> readCatalogue(String text) => parseCatalogue(text).worlds;
 /// The list Worlds shows (SPEC-058 R-31): of the list the app ships and the list it fetched and
 /// kept, the one with the higher serial, so it never goes back to an older one. Pictures come from
 /// the app: a fetched list names bundle paths it cannot know are in this build, so a world's key
-/// art and its productions' pictures are the shipped list's, and a world the app does not ship has
-/// none.
+/// art and its productions' pictures and Tall covers are the shipped list's, and a world the app
+/// does not ship has none. Discover's feature and band are the newer list's.
 Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
   if (kept == null || kept.serial <= shipped.serial) return shipped;
   final bundled = {for (final world in shipped.worlds) world.id: world};
   // A world the app ships under an id the fetched one replaces keeps its pictures.
   CatalogueWorld? shippedAs(CatalogueWorld world) => bundled[world.id] ?? world.replaces.map((id) => bundled[id]).nonNulls.firstOrNull;
+  CatalogueProduction? shippedProduction(CatalogueWorld world, CatalogueProduction production) =>
+      shippedAs(world)?.productions.where((shippedProduction) => shippedProduction.title == production.title).firstOrNull;
   return Catalogue(
     serial: kept.serial,
+    feature: kept.feature,
+    band: kept.band,
     worlds: List.unmodifiable([
       for (final world in kept.worlds)
         CatalogueWorld(
@@ -281,7 +324,8 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
               CatalogueProduction(
                 title: production.title,
                 kind: production.kind,
-                picture: shippedAs(world)?.productions.where((shippedProduction) => shippedProduction.title == production.title).firstOrNull?.picture,
+                picture: shippedProduction(world, production)?.picture,
+                tall: shippedProduction(world, production)?.tall,
                 id: production.id,
                 schedule: production.schedule,
               ),
