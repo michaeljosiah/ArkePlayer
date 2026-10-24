@@ -29,7 +29,7 @@ class YouScreen extends ConsumerWidget {
           const ShelfHeader(title: 'You'),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.only(top: 8, bottom: 24),
+              padding: EdgeInsets.only(top: 8, bottom: 24 + footRoom(context)),
               children: [
                 const _GroupLabel('Playback'),
                 _Group(

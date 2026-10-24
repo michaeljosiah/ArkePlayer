@@ -15,12 +15,27 @@ void main() {
     }
   });
 
-  test('every picture it names is bundled', () {
+  test('every picture it names is bundled, Tall covers too', () {
     for (final world in catalogue) {
-      for (final picture in [world.keyArt, for (final production in world.productions) production.picture].whereType<String>()) {
+      for (final picture in [
+        world.keyArt,
+        for (final production in world.productions) ...[production.picture, production.tall],
+      ].whereType<String>()) {
         expect(File(picture).existsSync(), isTrue, reason: picture);
       }
     }
+  });
+
+  test('Discover’s feature and band name listed worlds (P16 call 15)', () {
+    final list = parseCatalogue(File('assets/worlds/catalogue.json').readAsStringSync());
+    final ids = {for (final world in list.worlds) world.id};
+    expect(ids, contains(list.feature?.world));
+    expect(ids, contains(list.band));
+  });
+
+  test('Na Love or Juju’s Tall cover is its book cover, upright (P16 call 14)', () {
+    final juju = catalogue.singleWhere((world) => world.id == 'na-love-or-juju').productions.single;
+    expect(juju.tall, 'assets/worlds/na-love-or-juju/cover-tall.jpg');
   });
 
   test('The Undersong is pinned to its published package and its guide alone', () {

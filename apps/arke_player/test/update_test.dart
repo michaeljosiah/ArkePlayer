@@ -86,6 +86,15 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
+/// Scrolls the page until [target] is in its middle, clear of the tabs' pill floating at the foot
+/// (P16 rule 9): under Discover's feature (P16a), Worlds is further down.
+Future<void> _reveal(WidgetTester tester, Finder target) async {
+  final page = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
+  await tester.scrollUntilVisible(target, 300, scrollable: page);
+  await Scrollable.ensureVisible(tester.element(target), alignment: 0.5);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   test('Arke’s address is HTTPS, as a package is (R-31)', () => expect(arkeWorldsList.scheme, 'https'));
 
@@ -97,6 +106,7 @@ void main() {
 
   testWidgets('Discover marks an installed world with a newer edition (P12a, R-32)', (tester) async {
     await _pump(tester, location: Routes.discover, catalogue: [_listed()]);
+    await _reveal(tester, find.text('Update'));
     expect(find.text('Update'), findsOneWidget);
   });
 
@@ -115,6 +125,7 @@ void main() {
       ),
     );
     await _pump(tester, location: Routes.discover, catalogue: [renamed]);
+    await _reveal(tester, find.text('Update'));
     expect(find.text('Update'), findsOneWidget);
     expect(find.text('Available'), findsNothing);
     await tester.tap(find.text('The Undersong'));

@@ -34,9 +34,9 @@ String editionLabel(String edition) {
 /// `1 character`, `5 characters` (P11a).
 String characterCount(int count) => count == 1 ? '1 character' : '$count characters';
 
-/// The one tile of every row in Discover, Home and a world's page (P15 rule 10): 16:9, as wide as
-/// a world's card in a row, 240 on a phone and 300 on a Fold. The owner, 24 October 2026: rows of
-/// different sizes and shapes look unkempt.
+/// A wide tile's width (P16 rule 4): 16:9, as wide as a world's card in a row, 240 on a phone and
+/// 300 on a Fold — New chapters, Home's rows, a world's Watch, Play and Places. The other row sizes
+/// are `RowSizes`'.
 double rowTileWidth(BuildContext context) => MediaQuery.sizeOf(context).width >= WindowBands.fold ? 300 : 240;
 
 /// A row of tiles that scrolls across, 12 apart.
@@ -569,9 +569,9 @@ class GroupRow extends StatelessWidget {
   }
 }
 
-/// The one tile (P1d, P9f, P15 rule 10): 16:9 with its title and kind under it, the width of the
+/// A wide tile (P1d, P9f, P16 rule 4): 16:9 with its title and kind under it, the width of the
 /// row's tile, or the full width when a world has only the one production (P9 rule 6). `New` at its
-/// top left (P15a); a glyph at its middle, a clip's play (P15a's teasers).
+/// top left (P15a); a glyph at its middle, a clip's play.
 class ProductionTile extends StatelessWidget {
   const ProductionTile({
     required this.title,

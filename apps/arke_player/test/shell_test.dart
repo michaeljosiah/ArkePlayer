@@ -2,7 +2,9 @@ import 'package:arke_library/arke_library.dart';
 import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
+import 'package:arke_player/app/shell/adaptive_shell.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
+import 'package:arke_player/app/widgets/shelf.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,19 +41,41 @@ LibraryItem _item(String id, FileFormat format, {Place? place, DateTime? addedAt
 );
 
 void main() {
-  testWidgets('a phone has the tabs as a bar (P1 rule 3)', (tester) async {
+  testWidgets('a phone has the tabs as a pill floating over the page, 358 × 64 (P16h, rule 9)', (tester) async {
     await _pumpAt(tester, const Size(390, 844));
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
     expect(find.byType(NavigationRail), findsNothing);
-    for (final label in ['Home', 'Library', 'Downloads', 'You']) {
-      expect(find.text(label), findsWidgets);
+    final pill = find.byType(TabPill);
+    expect(pill, findsOneWidget);
+    expect(tester.getSize(pill), const Size(358, 64));
+    // 24 above the foot with the phone's 34 for its home indicator; 12 with none, as here.
+    expect(tester.getBottomLeft(pill).dy, 844 - 12);
+    expect(tester.getCenter(pill).dx, 195);
+    for (final label in ['Home', 'Discover', 'Library', 'Downloads', 'You']) {
+      expect(find.descendant(of: pill, matching: find.text(label)), findsOneWidget);
     }
+    expect(find.bySemanticsLabel('Home'), findsWidgets);
   });
 
-  testWidgets('a Fold7 open has them as a rail (P6 rule 5)', (tester) async {
+  testWidgets('a Fold7 open has the pill too, 520 wide, and no rail: the page takes the width (P16j)', (tester) async {
     await _pumpAt(tester, const Size(984, 1092));
-    expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(NavigationRail), findsNothing);
+    expect(tester.getSize(find.byType(TabPill)).width, 520);
+    expect(tester.getTopLeft(find.byType(ShelfHeader)).dx, 0);
+  });
+
+  testWidgets('a press on the pill goes to its tab', (tester) async {
+    await _pumpAt(tester, const Size(390, 844));
+    await tester.tap(find.descendant(of: find.byType(TabPill), matching: find.text('You')));
+    await tester.pumpAndSettle();
+    expect(find.text('Version'), findsOneWidget);
+    expect(tester.widget<TabPill>(find.byType(TabPill)).selected, 4);
+  });
+
+  testWidgets('a page’s last row clears the pill: the page is given its room at the foot (P16 rule 9)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844));
+    final page = tester.element(find.byType(ShelfHeader));
+    expect(MediaQuery.paddingOf(page).bottom, 12 + 64 + 12);
   });
 
   testWidgets('nothing added: the state line and Add a file, no account anywhere (P8b, P8 rule 1)', (tester) async {

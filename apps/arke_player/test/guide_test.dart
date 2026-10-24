@@ -7,6 +7,7 @@ import 'package:arke_library/arke_library.dart';
 import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
+import 'package:arke_player/app/shell/adaptive_shell.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/worlds/application/guides.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
@@ -28,6 +29,11 @@ Map<String, WorldAsset> _assets() => {
 };
 
 final _guide = (readGuide(_fixture('valid.json'), _assets()) as GuideOk).guide;
+
+/// Scrolls the page until [target] is in view: under Discover's feature (P16a), Worlds is further
+/// down.
+Future<void> _down(WidgetTester tester, Finder target) =>
+    tester.scrollUntilVisible(target, 300, scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
 const _ledger = 'the-ledger-of-nights';
 
 final _undersong = CatalogueWorld(
@@ -135,17 +141,18 @@ void main() {
   group('Discover (P11a, as P15 rule 1 amends it)', () {
     testWidgets('is the second of five tabs', (tester) async {
       await _pump(tester, location: Routes.discover, guide: _guide);
-      final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect([for (final destination in bar.destinations) (destination as NavigationDestination).label], ['Home', 'Discover', 'Library', 'Downloads', 'You']);
-      expect(bar.selectedIndex, 1);
+      expect(TabPill.labels, ['Home', 'Discover', 'Library', 'Downloads', 'You']);
+      expect(tester.widget<TabPill>(find.byType(TabPill)).selected, 1);
     });
     testWidgets('an installed world stays, In Library counting the productions and the characters', (tester) async {
       await _pump(tester, location: Routes.discover, guide: _guide);
+      await _down(tester, find.text('In Library · 1 production · 3 characters'));
       expect(find.text('In Library · 1 production · 3 characters'), findsOneWidget);
       expect(find.text('Available'), findsNothing);
     });
     testWidgets('Available adds the size, and the characters once the guide is here', (tester) async {
       await _pump(tester, location: Routes.discover, installed: false, guide: _guide);
+      await _down(tester, find.text('1 production · 3 characters · 386 MB'));
       expect(find.text('1 production · 3 characters · 386 MB'), findsOneWidget);
     });
   });

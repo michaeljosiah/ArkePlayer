@@ -12,10 +12,13 @@ import '../../../app/widgets/shelf.dart';
 import '../application/players.dart';
 
 /// The dock (P1 rule 8): audio that plays while its player is closed sits above the tabs — 60
-/// high, inset 8, a 2-high line of progress on its top edge, the picture, the title over where,
-/// back 15 and play or pause. A press opens the player. Video never docks.
+/// high, a 2-high line of progress on its top edge, the picture, the title over where, back 15 and
+/// play or pause. A press opens the player. Video never docks. Over the tabs' pill it floats as
+/// glass, rounded as the pill's neighbour (P16i); otherwise it is inset 8.
 class Dock extends ConsumerWidget {
-  const Dock({super.key});
+  const Dock({this.floating = false, super.key});
+
+  final bool floating;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,14 +44,15 @@ class Dock extends ConsumerWidget {
             final total = engine.length.inMilliseconds;
             final chapter = item.chapters.length > 1 ? 'Chapter ${engine.chapterAt(now) + 1} · ' : '';
             return Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              padding: floating ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 0, 8, 8),
               child: Material(
+                // Opaque, so its shadow stays outside it: through glass it greyed the light dock.
                 color: surface.card,
                 elevation: 3,
                 shadowColor: Colors.black26,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(ArkeRadius.xl),
-                  side: BorderSide(color: surface.border),
+                  borderRadius: BorderRadius.circular(floating ? ArkeRadius.xxl : ArkeRadius.xl),
+                  side: BorderSide(color: floating ? surface.foreground.withValues(alpha: 0.11) : surface.border),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(

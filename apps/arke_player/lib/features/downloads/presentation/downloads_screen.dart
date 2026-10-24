@@ -58,7 +58,7 @@ class DownloadsScreen extends ConsumerWidget {
             child: empty
                 ? EmptyShelf(onAdd: () => addFiles(context, ref))
                 : ListView(
-                    padding: const EdgeInsets.only(bottom: 24),
+                    padding: EdgeInsets.only(bottom: 24 + footRoom(context)),
                     children: [
                       if (updating.isNotEmpty || arriving.isNotEmpty) const SectionHead('Worlds'),
                       for (final MapEntry(key: worldId, value: arrival) in arriving.entries)

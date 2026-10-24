@@ -1,6 +1,8 @@
 {
   "version": 2,
   "serial": 17,
+  "feature": { "world": "na-love-or-juju" },
+  "band": "the-undersong",
   "worlds": [
     {
       "id": "the-undersong",
@@ -101,7 +103,7 @@
       "logline": "A disciplined Lagos man in his forties falls for a woman who loves him in private and denies him in public, and by the time he learns her hold on him is more than charm, he can no longer tell which of his feelings were ever his own.",
       "keyArt": "assets/worlds/na-love-or-juju/key-art.jpg",
       "productions": [
-        { "title": "Na love or Juju", "kind": "Audiobook · Book · 11 h 55 m", "picture": "assets/worlds/na-love-or-juju/cover.jpg" }
+        { "title": "Na love or Juju", "kind": "Audiobook · Book · 11 h 55 m", "picture": "assets/worlds/na-love-or-juju/cover.jpg", "tall": "assets/worlds/na-love-or-juju/cover-tall.jpg" }
       ],
       "package": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r3/na-love-or-juju-player-2026-10-24.zip",

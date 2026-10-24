@@ -16,18 +16,24 @@ import '../application/discover.dart';
 import '../application/guides.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
+import 'row_widgets.dart';
 import 'world_widgets.dart';
 
-/// Discover (P15a, P15b, P15l), the second tab: what Arke offers, installed or not (P15 rule 1).
-/// Under `All · Listen · Watch · Play · Read`, New chapters, Stories, the worlds' Teasers and the
-/// Worlds, every row in the one tile (rule 10). A production's tile names its kind and its world and
-/// opens the world's page at it (rule 2); Check for updates is in the head (P13, moved here).
+/// Discover (P15a, P15b, P16a – P16g), the second tab: what Arke offers, installed or not (P15
+/// rule 1). Under `All · Listen · Watch · Play · Read`, rows of different sizes, each row one size
+/// (P16 rule 1): under `All` the feature first (rule 2), then New chapters as wide tiles, Stories as
+/// posters (rule 3), the worlds' Teasers as small posters (rule 5), one world's band (rule 6) and the
+/// Worlds. A production opens the world's page at it (P15 rule 2); Check for updates is in the head
+/// (P13, moved here).
 class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
   @override
   ConsumerState<DiscoverScreen> createState() => _DiscoverScreenState();
 }
+
+/// The data words of a kind line, without its lengths and counts: `Audiobook · Book`.
+String kindWords(String kindLine) => kindLine.split(' · ').takeWhile((word) => !word.contains(RegExp(r'\d'))).join(' · ');
 
 class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   TakenAs? _kind;
@@ -36,6 +42,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   Widget build(BuildContext context) {
     final catalogue = (ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[]).where((world) => world.package != null).toList();
     final installed = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
+    final picks = ref.watch(listPicksProvider).value;
     final check = ref.watch(catalogueCheckProvider);
     final status = switch (check) {
       CatalogueCheck.idle => null,
@@ -50,7 +57,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       if (world.guide != null) ref.watch(guideFetchProvider(world.id));
     }
     final now = ref.watch(clockProvider)();
-    final width = rowTileWidth(context);
+    final wideWidth = rowTileWidth(context);
+    final posterWidth = RowSizes.poster(context);
+    final smallWidth = RowSizes.small(context);
     final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
     final kind = _kind;
     bool shown(String kindLine) => kind == null || ProductionKind.ofLine(kindLine).takenAs == kind;
@@ -64,7 +73,14 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       context.push(there ? Routes.production(page, productionId) : page);
     }
 
-    final fresh = freshParts(catalogue, now).where((fresh) => fresh.production == null || shown(fresh.production!.kind)).toList();
+    /// The edition and every part since it (SPEC-058 R-50).
+    String? sizeOf(CatalogueWorld world) => switch (world.package) {
+      final package? => formatBytes(package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength)),
+      null => null,
+    };
+
+    final everyFresh = freshParts(catalogue, now);
+    final fresh = everyFresh.where((fresh) => fresh.production == null || shown(fresh.production!.kind)).toList();
     final stories = [
       for (final world in catalogue)
         for (final production in world.productions)
@@ -77,39 +93,50 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               if (ref.watch(worldGuideProvider(installedAs(world)?.id ?? world.id)).value case final guide?)
                 for (final teaser in guide.guide.teasers) (world, guide, teaser),
           ];
+    // The feature and the band are drawn under All only (P16 rules 2 and 6).
+    final feature = kind == null ? discoverFeature(catalogue, picks?.feature, everyFresh) : null;
+    final band = kind == null ? discoverBand(catalogue, picks?.band, feature?.world) : null;
+    // An install begun from the feature or the band is refused as on the world's page (P9e).
+    for (final world in [?feature?.world, ?band]) {
+      ref.listen(installProvider(world.id), (previous, next) {
+        if (next is InstallFailed && previous is! InstallFailed && context.mounted) showInstallRefusal(context, ref, world, next.refusal);
+      });
+    }
 
-    Widget teaserTile(CatalogueWorld world, WorldGuide guide, GuideTeaser teaser) {
+    // A small poster has room for what a teaser is, not its world's name too (P16c); it opens into
+    // its world all the same (P15 rule 4).
+    Widget teaserPoster(CatalogueWorld world, WorldGuide guide, GuideTeaser teaser) {
       final page = Routes.discoverWorld(installedAs(world)?.id ?? world.id);
       return switch (teaser) {
-        EntryTeaser(entry: final GuideCharacter character) => ProductionTile(
+        EntryTeaser(entry: final GuideCharacter character) => PosterTile(
           title: character.name,
-          kind: 'Character · ${world.name}',
-          picture: guidePicture(guide, character),
+          kind: 'Character',
+          tall: guidePicture(guide, character),
           initials: initials(character.name),
           pictureAlignment: const Alignment(0, -0.6),
-          width: width,
+          width: smallWidth,
           onOpen: () => context.push(Routes.guideEntry(page, character.id)),
         ),
-        EntryTeaser(:final entry) => ProductionTile(
+        EntryTeaser(:final entry) => PosterTile(
           title: entryName(entry),
-          kind: '${entry is GuidePlace ? placeKind(entry) : 'Place'} · ${world.name}',
-          picture: guidePicture(guide, entry),
-          width: width,
+          kind: entry is GuidePlace ? placeKind(entry) : 'Place',
+          wide: guidePicture(guide, entry),
+          width: smallWidth,
           onOpen: () => context.push(Routes.guideEntry(page, entry.id)),
         ),
-        ClipTeaser(:final title, :final picture, :final duration) => ProductionTile(
+        ClipTeaser(:final title, :final picture, :final duration) => PosterTile(
           title: title,
-          kind: 'Clip · ${formatClock(duration)} · ${world.name}',
-          picture: FileImage(File(guide.pathOf(picture))),
+          kind: 'Clip · ${formatClock(duration)}',
+          wide: FileImage(File(guide.pathOf(picture))),
           glyph: Icons.play_arrow_rounded,
-          width: width,
+          width: smallWidth,
           onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
         ),
-        PictureTeaser(:final title, :final picture) => ProductionTile(
+        PictureTeaser(:final title, :final picture) => PosterTile(
           title: title,
-          kind: 'Picture · ${world.name}',
-          picture: FileImage(File(guide.pathOf(picture))),
-          width: width,
+          kind: 'Picture',
+          wide: FileImage(File(guide.pathOf(picture))),
+          width: smallWidth,
           onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
         ),
       };
@@ -118,7 +145,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     Widget worldCard(CatalogueWorld world, {bool mini = false}) {
       final held = installedAs(world);
       if (held == null) {
-        return AvailableCard(world: world, mini: mini, width: mini ? width : null, onOpen: () => context.push(Routes.discoverWorld(world.id)));
+        return AvailableCard(world: world, mini: mini, width: mini ? wideWidth : null, onOpen: () => context.push(Routes.discoverWorld(world.id)));
       }
       // A world updating shows it as an install does (P9 rule 4, P12 rule 4); one with a newer
       // edition carries Update (P12a).
@@ -138,10 +165,91 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         tag: update != null && state is! Installing ? 'Update' : null,
         picture: bundledPicture(world.keyArt) ?? libraryPicture(ref.watch(libraryStoreProvider).value, held.keyArt),
         mini: mini,
-        width: mini ? width : null,
+        width: mini ? wideWidth : null,
         onOpen: () => context.push(Routes.discoverWorld(held.id)),
       );
       return mini ? card : Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: card);
+    }
+
+    /// The feature (rule 2): Install with the size before its world is installed, its progress in
+    /// the press's place while it installs, then Play — at the new chapter, when one came.
+    Widget featureCard(CatalogueWorld world, CatalogueProduction production) {
+      final held = installedAs(world);
+      final state = ref.watch(installProvider(world.id));
+      final arrived = everyFresh.where((item) => item.world.id == world.id && item.production == production).firstOrNull;
+      final chapter = arrived == null ? null : chaptersLabel(arrived.part.chapters, episodes: arrived.episodes);
+      final heldProduction = held?.productions.where((item) => item.id == production.id || item.title == production.title).firstOrNull;
+      final item = heldProduction?.narration ?? heldProduction?.book;
+      return FeatureCard(
+        title: production.title,
+        meta: [kindWords(production.kind), world.name].where((word) => word.isNotEmpty).join(' · '),
+        tall: bundledPicture(production.tall),
+        wide: bundledPicture(production.picture ?? world.keyArt),
+        fresh: arrived != null && releasedThisWeek(arrived.part, now),
+        chapter: chapter,
+        onOpen: () => openProduction(world, production.id ?? heldProduction?.id),
+        press: switch (state) {
+          Installing() when held == null => InstallProgress(state: state, onCancel: () => ref.read(installProvider(world.id).notifier).cancel()),
+          _ when held != null && item != null => HeroPress(
+            icon: Icons.play_arrow_rounded,
+            label: 'Play',
+            detail: chapter,
+            onPressed: () => context.push(Routes.open(item)),
+          ),
+          _ when held != null || world.package == null => null,
+          _ => HeroPress(
+            icon: Icons.download_rounded,
+            label: 'Install',
+            detail: sizeOf(world),
+            onPressed: () => ref.read(installProvider(world.id).notifier).start(world),
+          ),
+        },
+      );
+    }
+
+    /// The band (rule 6): the world's productions and the characters it shows from the start.
+    Widget worldBand(CatalogueWorld world) {
+      final held = installedAs(world);
+      final state = ref.watch(installProvider(world.id));
+      final page = Routes.discoverWorld(held?.id ?? world.id);
+      final guide = ref.watch(worldGuideProvider(held?.id ?? world.id)).value;
+      return WorldBand(
+        name: world.name,
+        meta: [if (held != null) 'In Library', productionCount(world.productions.length), if (held == null) ?sizeOf(world)].join(' · '),
+        keyArt: bundledPicture(world.keyArt) ?? libraryPicture(ref.watch(libraryStoreProvider).value, held?.keyArt),
+        logline: world.logline,
+        onOpen: () => context.push(page),
+        press: switch (state) {
+          _ when held != null || world.package == null => null,
+          Installing() => BandPress(label: '${(state.fraction * 100).round()}%', progress: state.fraction, onPressed: () => context.push(page)),
+          _ => BandPress(label: 'Install', onPressed: () => ref.read(installProvider(world.id).notifier).start(world)),
+        },
+        posters: [
+          for (final production in world.productions)
+            PosterTile(
+              title: production.title,
+              kind: kindWords(production.kind),
+              tall: bundledPicture(production.tall),
+              wide: bundledPicture(production.picture ?? world.keyArt),
+              width: smallWidth,
+              onMedia: true,
+              onOpen: () => openProduction(world, production.id),
+            ),
+          if (guide != null)
+            for (final character in guide.guide.characters)
+              if (character.after == null)
+                PosterTile(
+                  title: character.name,
+                  kind: 'Character',
+                  tall: guidePicture(guide, character),
+                  initials: initials(character.name),
+                  pictureAlignment: const Alignment(0, -0.6),
+                  width: smallWidth,
+                  onMedia: true,
+                  onOpen: () => context.push(Routes.guideEntry(page, character.id)),
+                ),
+        ],
+      );
     }
 
     return SafeArea(
@@ -173,8 +281,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: EdgeInsets.only(bottom: 24 + footRoom(context)),
               children: [
+                if (feature != null) featureCard(feature.world, feature.production),
                 if (fresh.isNotEmpty) ...[
                   const SectionHead('New chapters'),
                   TileRow(
@@ -185,7 +294,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                           kind: '${chaptersLabel(item.part.chapters, episodes: item.episodes)} · ${item.world.name}',
                           picture: bundledPicture(item.production?.picture ?? item.world.keyArt),
                           fresh: releasedThisWeek(item.part, now),
-                          width: width,
+                          width: wideWidth,
                           onOpen: () => openProduction(item.world, item.part.production),
                         ),
                     ],
@@ -196,11 +305,12 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   TileRow(
                     children: [
                       for (final (world, production) in stories)
-                        ProductionTile(
+                        PosterTile(
                           title: production.title,
                           kind: '${ProductionKind.ofLine(production.kind).label} · ${world.name}',
-                          picture: bundledPicture(production.picture ?? world.keyArt),
-                          width: width,
+                          tall: bundledPicture(production.tall),
+                          wide: bundledPicture(production.picture ?? world.keyArt),
+                          width: posterWidth,
                           onOpen: () => openProduction(world, production.id),
                         ),
                     ],
@@ -208,8 +318,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 ],
                 if (teasers.isNotEmpty) ...[
                   const SectionHead('Teasers'),
-                  TileRow(children: [for (final (world, guide, teaser) in teasers) teaserTile(world, guide, teaser)]),
+                  TileRow(children: [for (final (world, guide, teaser) in teasers) teaserPoster(world, guide, teaser)]),
                 ],
+                if (band != null) worldBand(band),
                 if (kind == null && catalogue.isNotEmpty) ...[
                   const SectionHead('Worlds'),
                   if (wide)

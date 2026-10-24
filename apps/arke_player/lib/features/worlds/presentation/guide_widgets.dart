@@ -9,6 +9,7 @@ import '../../../app/router/routes.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../application/guides.dart';
+import 'row_widgets.dart';
 import 'world_widgets.dart';
 
 /// The word a lore entry's kind shows as (P11f): Lore, Rule, Timeline, and canon's other types.
@@ -494,10 +495,11 @@ Future<void> askReveal(BuildContext context, WidgetRef ref, String worldId, Worl
   if (revealed == true) await reveal(ref, worldId, after);
 }
 
-/// A world's guide on its page (P11b, P11c, P11i), after its productions: Characters and Places in
-/// the one tile of every row (P15 rule 10, replacing P11 rule 2's 120-wide cards and 160-wide
-/// tiles), Lore as rows, each head with its count. A section with nothing public is not
-/// drawn; a guide never fetched draws nothing (R-22). [location] is the world page's own path.
+/// A world's guide on its page (P11b, P11c, P11i, P16e), after its productions: Characters as
+/// small posters, each portrait upright and uncut, and Places as wide tiles (P16 rules 4 and 5,
+/// replacing P15 rule 10's one tile), Lore as rows, each head with its count. A section with
+/// nothing public is not drawn; a guide never fetched draws nothing (R-22). [location] is the world
+/// page's own path.
 class GuideSections extends ConsumerWidget {
   const GuideSections({required this.worldId, required this.location, super.key});
 
@@ -540,17 +542,23 @@ class GuideSections extends ConsumerWidget {
             children: [
               for (final character in characters)
                 if (reach.shows(character.after))
-                  ProductionTile(
+                  PosterTile(
                     title: character.name,
                     kind: character.role ?? 'Character',
-                    picture: guidePicture(guide, character),
+                    tall: guidePicture(guide, character),
                     initials: initials(character.name),
                     pictureAlignment: const Alignment(0, -0.6),
-                    width: width,
+                    width: RowSizes.small(context),
                     onOpen: () => open(character),
                   )
                 else
-                  GatedCard(after: character.after!, what: 'Character', width: width, aspectRatio: 16 / 9, onReveal: () => ask(character.after!)),
+                  GatedCard(
+                    after: character.after!,
+                    what: 'Character',
+                    width: RowSizes.small(context),
+                    aspectRatio: 2 / 3,
+                    onReveal: () => ask(character.after!),
+                  ),
             ],
           ),
         ],

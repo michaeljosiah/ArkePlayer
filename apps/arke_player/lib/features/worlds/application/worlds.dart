@@ -26,6 +26,22 @@ final catalogueProvider = FutureProvider<List<CatalogueWorld>>((ref) async {
   return newestCatalogue(shipped, await hosted.keptList()).worlds;
 });
 
+/// Discover's feature and band as Arke's list names them (P16 call 15), from the same newer list
+/// [catalogueProvider] shows; the shipped list's alone when the kept one cannot be read. Discover
+/// falls back to its own choice while this is unread.
+final listPicksProvider = FutureProvider<({CatalogueFeature? feature, String? band})>((ref) async {
+  ref.watch(catalogueProvider);
+  final shipped = parseCatalogue(await rootBundle.loadString('assets/worlds/catalogue.json'));
+  Catalogue? kept;
+  try {
+    kept = await (await ref.watch(hostedCatalogueProvider.future)).keptList();
+  } on Object {
+    kept = null;
+  }
+  final newest = newestCatalogue(shipped, kept);
+  return (feature: newest.feature, band: newest.band);
+});
+
 /// Asks Arke's address for its list once a launch, when Worlds or a world's page opens; the hosted
 /// list itself asks at most once a day. A newer list replaces the one shown. Never under test, which
 /// must not reach the network.
