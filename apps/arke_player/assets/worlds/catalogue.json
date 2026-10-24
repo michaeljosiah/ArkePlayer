@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 23,
+  "serial": 24,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -39,9 +39,10 @@
       "keyArt": "assets/worlds/legend-of-dumah/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/legend-of-dumah-keyArt-20261024.jpg", "byteLength": 206972, "sha256": "7946424399bdcf27cd03a8e752a0c7dd384adb1eb6487c49fced3ce279591aee" } },
       "productions": [
-        { "title": "Whispers from the Void", "kind": "Audiobook · 1 h 44 m", "picture": "assets/worlds/legend-of-dumah/whispers-from-the-void.jpg",
+        { "title": "Whispers from the Void", "kind": "Audiobook · 1 h 44 m", "picture": "assets/worlds/legend-of-dumah/whispers-from-the-void.jpg", "tall": "assets/worlds/legend-of-dumah/cover-tall.jpg",
           "pins": {
-            "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/legend-of-dumah-picture-20261024.jpg", "byteLength": 252781, "sha256": "5e63b2f4e27b70f9bb9afc0fa7eb14f1b41555e48318a3a1528988d48a1ce888" }
+            "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/legend-of-dumah-picture-20261024.jpg", "byteLength": 252781, "sha256": "5e63b2f4e27b70f9bb9afc0fa7eb14f1b41555e48318a3a1528988d48a1ce888" },
+            "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/legend-of-dumah-tall-20261024.jpg", "byteLength": 599305, "sha256": "612938f535be0f3445ccbc0533e0bbef1e3a6b37e096c9c2b9e945276439aec8" }
           } }
       ],
       "package": {

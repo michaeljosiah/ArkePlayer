@@ -63,6 +63,15 @@ void main() {
     expect(quiet.tall, 'assets/worlds/the-red-quiet/cover-tall.jpg');
   });
 
+  test('Legend of Dumah’s Tall cover is its own poster, title at the foot (P16 call 14)', () {
+    // Made upright with Codex Image from Pricilla's, Brackus's, Sora's and Lucien's main photos, the
+    // author's name at the top. Pinned as well as bundled, so a phone with list pictures shows it
+    // without a build.
+    final dumah = catalogue.singleWhere((world) => world.id == 'legend-of-dumah').productions.single;
+    expect(dumah.tall, 'assets/worlds/legend-of-dumah/cover-tall.jpg');
+    expect(dumah.tallPin!.sha256, '612938f535be0f3445ccbc0533e0bbef1e3a6b37e096c9c2b9e945276439aec8');
+  });
+
   test('The Undersong is pinned to its published package and its guide alone', () {
     // The Studio's Export → Arke Player of the 23-chapter edition with its guide, named by the
     // world's own slug, and the guide alone that lets it be explored before install (SPEC-059 R-10).
