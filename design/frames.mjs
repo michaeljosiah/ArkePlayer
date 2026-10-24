@@ -631,9 +631,10 @@ ${sh('Stories')}<div class="hrow">${storyPosters(260)}</div></div><div class="ff
 // (Album, Single, Soundtrack), its own group with square tiles, played by the audio player with a
 // track list, tied to where it is heard and whose theme it is, and a Song teaser. Studio 238 draws
 // the author's half. The tracks, lengths and lyrics are samples; the covers are pictures already here.
-const ALBUM = { img: 'launch-harbour.jpg', pos: '50% 62%', title: 'Songs of the Drowned Quarter' };
-const SINGLE = { img: 'scene4-shot14b.jpg', pos: '50% 50%', title: 'Saltmouth Bells' };
-const SCORE = { img: 'scene4-shot12.jpg', pos: '50% 40%', title: 'The Bell Watch — Soundtrack' };
+// The covers and lyrics are Studio 238's, so the author's page and the listener's show the same album.
+const ALBUM = { img: 'scene4-shot15.jpg', pos: '50% 50%', title: 'Songs of the Drowned Quarter' };
+const SINGLE = { img: 'launch-harbour.jpg', pos: '50% 62%', title: 'Saltmouth Bells' };
+const SCORE = { img: 'scene4-shot14b.jpg', pos: '50% 50%', title: 'The Bell Watch — Soundtrack' };
 const TRACKS = [
   ['The Drowned Verse', '4:12', 'Theme · The Chorister'],
   ['Slack Water', '3:05', ''],
@@ -661,7 +662,11 @@ const nowPlaying = (inner) => `<img class="np" src="${A}${ALBUM.img}" alt=""><di
 const musicBar = (lyricsOn = false) => `<div style="position:absolute;z-index:4;left:20px;right:20px;bottom:40px"><div class="scrub"><i style="width:43%"></i><b style="left:43%"></b></div><div class="times"><span>1:48</span><span>4:12</span></div>
 <div class="trow" style="margin-top:14px"><span class="ib">${ic('shuffle', 20)}</span><span class="ib">${ic('prev', 22)}</span><span class="play">${ic('pause', 24)}</span><span class="ib">${ic('next', 22)}</span><span class="ib">${ic('repeat', 20)}</span></div>
 <div class="trow" style="margin-top:14px;justify-content:center;gap:10px"><span class="ib lab${lyricsOn ? ' on' : ''}">${ic('text', 16)}Lyrics</span><span class="ib lab">${ic('list', 16)}Tracks</span><span class="ib lab">${ic('book', 16)}Chapter 9</span></div></div>`;
-const LYRICS = ['Down where the bells forget their ringing,', 'the harbour keeps a slower song.', 'Count the stones the tide is bringing,', 'count them right and count them long.', 'Slack water, salt and lantern —', 'the ledger is never wrong.'];
+// As written in the Studio, a verse and a chorus; the structure tags the singing model reads are not shown.
+const LYRICS = [
+  'Under the harbour the old bells turn,<br>salt in the ledger, the lamps that burn.<br>Count me the tides that the city forgot,<br>sing me the name that the water has not.',
+  'Hold the verse, hold it low,<br>down where the drowned ones go.',
+];
 
 const P17 = [
   frame('P17a', 'A world with music', 'phone', `${sb()}${scrolledHead('The Undersong')}<div class="body" style="margin-top:-12px">
