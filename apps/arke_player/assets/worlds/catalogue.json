@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 15,
+  "serial": 16,
   "worlds": [
     {
       "id": "the-undersong",
@@ -101,21 +101,21 @@
       "logline": "A disciplined Lagos man in his forties falls for a woman who loves him in private and denies him in public, and by the time he learns her hold on him is more than charm, he can no longer tell which of his feelings were ever his own.",
       "keyArt": "assets/worlds/na-love-or-juju/key-art.jpg",
       "productions": [
-        { "title": "Na love or Juju", "kind": "Audiobook · Book · 11 h 55 m", "picture": "assets/worlds/na-love-or-juju/key-art.jpg" }
+        { "title": "Na love or Juju", "kind": "Audiobook · Book · 11 h 55 m", "picture": "assets/worlds/na-love-or-juju/cover.jpg" }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r1/na-love-or-juju-player-2026-10-24.zip",
-        "byteLength": 767521724,
-        "sha256": "1e608147759cf0a947baf477111dbc0dd3f1d2407fdc9d7fcf2f8d232e404330",
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r2/na-love-or-juju-player-2026-10-24.zip",
+        "byteLength": 807915482,
+        "sha256": "021e161add6e3d8073518863088b8f8cb9453cbe9b58e00d7d63c73882ff9677",
         "edition": "2026-10-24",
-        "fingerprint": "85c14192f4b632dbe19885f3ac24eba31df5fea7f2105bf14d5cfd7d92ab54b8"
+        "fingerprint": "3d0e54265cbc531f4a91e001e866fb8f43cbf20def6cb35bf3e28c21bb13e0af"
       },
       "guide": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r1/na-love-or-juju-guide-2026-10-24.zip",
-        "byteLength": 2048690,
-        "sha256": "c4fa8e6882dd8fd33ba43d9425d1c93d7bf22411bfb23590896901c0ef2eceb6",
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r2/na-love-or-juju-guide-2026-10-24.zip",
+        "byteLength": 3755683,
+        "sha256": "f5153d5b8998366c4bb1cce5e0698d6f0de7c7f9b1845e3baf4f50f492817856",
         "edition": "2026-10-24",
-        "fingerprint": "7da45d5be03e8cc09a95e29c19a5e0514f9fccb9f2034f561f22f58688c3c767"
+        "fingerprint": "77df044f0c074fd28ce3d372a8d937cf20e6a85b9d198bc889cf99fcda688d8c"
       }
     }
   ]
