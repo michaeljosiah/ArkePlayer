@@ -201,6 +201,11 @@ The samples are The Undersong's: Songs of the Drowned Quarter (an album of 9 tra
 (a single), and The Bell Watch — Soundtrack. Their covers are nearly square pictures already in this
 master. The track names, lengths and lyrics are samples, written for this turn.
 
+The owner then asked whether a music production should have a Bench of its own and an editor of
+its own. Studio 238 gained three frames: a track's composer and takes, a light track editor whose
+sections can later time the Player's lyrics, and the album's sequence. The owner approved P17 and
+Studio 238 as drawn on 24 October 2026 ("Approved."), with calls 17–20.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -248,9 +253,9 @@ master. The track names, lengths and lyrics are samples, written for this turn.
 17. **Music is a production** (P17, asked and approved 24 October 2026): Album, Single or
    Soundtrack, with its own group in a world, never a loose take.
 18. **A music cover is square** (P17, approved), 1:1 at 1024 × 1024, the fourth picture shape.
-19. **Lyrics are shown as written** (P17e, drawn so). They are not timed to the song; timing waits
-   for the Studio to keep where each line is sung.
-20. **A song keeps no place** (P17, drawn so). It starts from its beginning and never joins
+19. **Lyrics are shown as written** (P17e, approved). They are not timed to the song; timing waits
+   for the sections a track keeps in the Studio (238 call 8).
+20. **A song keeps no place** (P17, approved). It starts from its beginning and never joins
    Continue, because a song is heard again rather than finished.
 
 ## What this rests on
