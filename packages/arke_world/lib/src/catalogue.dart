@@ -242,10 +242,13 @@ CataloguePackage? _productionPackage(Object? value, String what) {
   throw FormatException('$what package');
 }
 
-/// A listed production's music kind (R-71), one of the three a music document names.
+/// A listed production's music kind (R-71), one of the three a music document names. A kind this
+/// Player does not know reads as none, so the production is simply not placed under Music: refusing
+/// it would make every released Player ignore the whole fetched list, editions and parts included,
+/// the trap R-64 keeps `pins` out of. A value that is not a word at all is still malformed.
 MusicKind? _musicKind(Object? value, String what) => switch (value) {
   null => null,
-  final String kind when MusicKind.values.any((known) => known.name == kind) => MusicKind.values.byName(kind),
+  final String kind => MusicKind.values.where((known) => known.name == kind).firstOrNull,
   _ => throw FormatException('$what music'),
 };
 

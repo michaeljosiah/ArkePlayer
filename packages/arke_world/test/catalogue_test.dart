@@ -99,11 +99,19 @@ void main() {
       expect((plain.package, plain.music), (null, null));
     });
 
-    test('a pin without its edition or fingerprint, over HTTP, or a kind it is not, is not a list', () {
+    test('a pin without its edition or fingerprint, over HTTP, or a kind that is not a word, is not a list', () {
       expect(() => parseCatalogue(withAlbum(serial: 1, package: {...pin}..remove('fingerprint'))), throwsFormatException);
       expect(() => parseCatalogue(withAlbum(serial: 1, package: {...pin}..remove('edition'))), throwsFormatException);
       expect(() => parseCatalogue(withAlbum(serial: 1, package: {...pin, 'url': 'http://example.org/album.zip'})), throwsFormatException);
-      expect(() => parseCatalogue(withAlbum(serial: 1, package: pin, music: 'ep')), throwsFormatException);
+      expect(() => parseCatalogue(withAlbum(serial: 1, package: pin, music: 3)), throwsFormatException);
+    });
+
+    test('a kind this Player does not know is read as no music kind; the rest of the list still reads', () {
+      final list = parseCatalogue(withAlbum(serial: 1, package: pin, music: 'ep'));
+      final production = list.worlds.single.productions.single;
+      expect(production.music, isNull);
+      expect(production.package?.fingerprint, 'c' * 64);
+      expect(list.worlds.single.package?.url.host, 'example.org');
     });
 
     test('they are the newer list’s, as a pin is an address', () {
