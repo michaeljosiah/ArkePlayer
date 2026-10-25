@@ -158,6 +158,28 @@ renders the frames with `SHOOT=1`.
 | P16d, P16e | A world's page: Listen and Read as posters, Watch and Play wide, Characters as small upright posters, Places wide | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart` (`_Groups`), `guide_widgets.dart` (`GuideSections`) |
 | P16h – P16j | The tabs as a pill; the dock floating above it; on a Fold in the rail's place | (every tab) | `app/shell/adaptive_shell.dart` (`TabPill`), `features/players/presentation/dock.dart` |
 
+## Music (P17, built)
+
+Approved on 24 October 2026 with calls 17 – 20 (SPEC-058 rev 11, R-72 – R-78; SPEC-059 R-37,
+R-38). A world's music is a production published alone beside its edition: installed with the
+world, arriving later with the parts check (`addMissingParts`), and its `Update` pressed by hand
+(`productionUpdateProvider`, `productionInstallProvider`). It has its own group, `TakenAs.music`,
+after Listen and never a chip, in square tiles (`SquareTile`, `RowSizes.square`). An album plays in
+the audio engine as one queue on one clock (`AudioEngine.openMusic`, `MusicAlbum`), keeping no
+place; no library item stands for it, so it never joins Continue. `test/shoot_p17_test.dart`
+renders the frames with `SHOOT=1`.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P17a | A world's page: `Listen · Music · Watch · Play · Read`, Music as squares | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart` (`_Groups`), `row_widgets.dart` (`SquareTile`) |
+| P17b | Discover: a Music row after Stories; a song as a teaser | `/discover` | `features/worlds/presentation/discover_screen.dart` (`TeaserScreen` plays a song's excerpt) |
+| P17c, P17h | An album's page; on a Fold the cover beside the title, two columns, More from | `…/world/:worldId/:productionId` | `features/worlds/presentation/album_screen.dart`; `features/players/presentation/music_widgets.dart` (`TrackRow`) |
+| P17c | The dock: the track over its album, Next in place of back 15 | (every tab) | `features/players/presentation/dock.dart` |
+| P17d, P17e | A song playing: shuffle, previous, next, repeat, Lyrics, Tracks, the Heard in chapter | `/music/:worldId/:productionId` | `features/players/presentation/music_player_screen.dart`; `features/players/application/audio_engine.dart`, `music.dart` |
+| P17f | A character's or place's Theme under its Voice | `…/world/:worldId/_guide/:entryId` | `features/worlds/presentation/guide_screens.dart` (`SongRow`) |
+| P17g | A story's Music; a chapter holding a song carries a note | `…/world/:worldId/:productionId` | `features/worlds/presentation/production_screen.dart` |
+| (R-72) | Downloads: a production package arriving or waiting | `/downloads` | `features/parts/application/parts.dart` (`PartArrival.production`) |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.
@@ -173,7 +195,9 @@ SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not buil
 | P16 rule 9, call 16: the tabs a pill, 358 × 64 on a phone and 520 on a Fold, in place of P1 rule 3's bar and P6 rule 5's rail | `app/shell/adaptive_shell.dart` | `test/shell_test.dart` |
 | P11 rule 1, P15 rule 1: five tabs, Discover second | `app/shell/adaptive_shell.dart` | `test/guide_test.dart` |
 | P11 rule 7, SPEC-059 R-20: a chapter is reached once its start is passed, heard or read; Reveal shows a production up to that chapter | `arke_world` `reach.dart`, `arke_library` `store.dart` | `guide_test.dart`, `store_test.dart`, `test/guide_test.dart` |
-| P1 rule 6, P15 rule 3: Listen · Watch · Play · Read, empty groups absent | `features/production/domain/production_kind.dart` | `test/domain_test.dart` |
+| P1 rule 6, P15 rule 3, P17 rule 2: Listen · Music · Watch · Play · Read, empty groups absent; Music under the Listen chip | `features/production/domain/production_kind.dart` | `test/domain_test.dart`, `test/music_test.dart` |
+| P17 calls 19 and 20: lyrics as written, by stanza, without structure tags; a song keeps no place | `features/players/application/music.dart` (`lyricStanzas`, `MusicAlbum.asItem`) | `test/music_test.dart` |
+| SPEC-058 R-72: production packages installed beside the edition, arriving later, updated when pressed, carried to a new edition | `arke_world` `install.dart`, `catalogue.dart`; `arke_library` `store.dart` (`addProduction`) | `production_install_test.dart`, `test/music_test.dart` |
 | P16 rule 1 (replacing P15 rule 10): each row one size — the feature 358 × 476, posters 172, wide 240, small posters 112; on a Fold 424 high, 260, 300, 160 | `features/worlds/presentation/row_widgets.dart` (`RowSizes`), `world_widgets.dart` (`rowTileWidth`) | `test/discover_test.dart` |
 | P16 calls 14 and 15: a production's Tall cover; the list's feature and band | `arke_world` `catalogue.dart`; `features/worlds/application/discover.dart` | `catalogue_test.dart`, `test/catalogue_test.dart`, `test/discover_test.dart` |
 | SPEC-058 R-52: a chapter a part brought after install is New until it plays | `arke_library` `shelves.dart` (`newChapters`, `placeIsNew`, `worldHasNew`) | `part_install_test.dart`, `test/discover_test.dart` |
