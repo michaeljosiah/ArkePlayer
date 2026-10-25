@@ -480,6 +480,25 @@ List<CataloguePart> missingParts(CatalogueWorld listed, LibraryWorld installed) 
   ];
 }
 
+/// The installed production a listed one is: by its id, or by its title in a list from before ids.
+LibraryProduction? installedProduction(CatalogueProduction listed, LibraryWorld installed) =>
+    installed.productions.where((production) => listed.id != null ? production.id == listed.id : production.title == listed.title).firstOrNull;
+
+/// The productions published on their own that an installed world lacks (SPEC-058 R-72): each
+/// arrives as a part does, on its own. One the edition already holds is not missing.
+List<CatalogueProduction> missingProductions(CatalogueWorld listed, LibraryWorld installed) => [
+  for (final production in listed.productions)
+    if (production.package != null && installedProduction(production, installed) == null) production,
+];
+
+/// The productions whose own package in the list is not the one installed (R-72): each is that
+/// production's Update, pressed as an edition's is (P12 call 9).
+List<CatalogueProduction> productionUpdates(CatalogueWorld listed, LibraryWorld installed) => [
+  for (final production in listed.productions)
+    if ((production.package, installedProduction(production, installed)?.package) case (final pin?, final held?) when pin.fingerprint != held.fingerprint)
+      production,
+];
+
 bool hasUpdate(CatalogueWorld listed, LibraryWorld installed) {
   final package = listed.package;
   if (package == null || !listed.covers(installed.id)) return false;

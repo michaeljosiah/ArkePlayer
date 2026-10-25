@@ -22,6 +22,87 @@ abstract final class RowSizes {
 
   /// The feature's height: upright on a phone, wide on a Fold.
   static double feature(BuildContext context) => _fold(context) ? 424 : 476;
+
+  /// A square, 1:1 as album art is everywhere: a world's Music and Discover's (P17 rule 3).
+  static double square(BuildContext context) => _fold(context) ? 200 : 160;
+}
+
+/// A music production's tile (SPEC-058 R-73, P17a): its square cover, its title and kind under it.
+/// One listed but not on the phone yet opens nothing; one with a newer package carries `Update`
+/// (R-72), as a world's card does (P12a).
+class SquareTile extends StatelessWidget {
+  const SquareTile({required this.title, required this.kind, required this.picture, required this.width, required this.onOpen, this.tag, super.key});
+
+  final String title;
+  final String kind;
+  final ImageProvider? picture;
+  final double width;
+  final VoidCallback? onOpen;
+  final String? tag;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final surface = context.surface;
+    return Semantics(
+      button: onOpen != null,
+      label: [title, kind, ?tag].join(', '),
+      child: ExcludeSemantics(
+        child: GestureDetector(
+          onTap: onOpen,
+          child: SizedBox(
+            width: width,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(ArkeRadius.lg),
+                  child: SizedBox.square(
+                    dimension: width,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (picture != null)
+                          Image(image: picture!, fit: BoxFit.cover)
+                        else
+                          ColoredBox(
+                            color: surface.secondary,
+                            child: Icon(Icons.music_note_rounded, size: 32, color: surface.mutedForeground),
+                          ),
+                        if (tag != null)
+                          Positioned(
+                            left: 6,
+                            top: 6,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: _bg.withValues(alpha: 0.62), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                child: Text(
+                                  tag!,
+                                  style: text.labelMedium?.copyWith(color: _fg, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodyMedium),
+                Text(
+                  kind,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelSmall?.copyWith(color: surface.mutedForeground),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// A picture shown whole over a blurred, darkened copy of itself: a poster's or the feature's

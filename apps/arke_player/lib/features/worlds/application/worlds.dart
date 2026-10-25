@@ -269,3 +269,72 @@ class InstallController extends Notifier<InstallState> {
 }
 
 final installProvider = NotifierProvider.family<InstallController, InstallState, String>(InstallController.new);
+
+/// The newer package Arke's list names for an installed production published on its own (SPEC-058
+/// R-72), by world and production id: that production's `Update`.
+final productionUpdateProvider = Provider.family<CatalogueProduction?, (String, String)>((ref, key) {
+  final (worldId, productionId) = key;
+  final installed = ref.watch(installedWorldProvider(worldId));
+  final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], worldId);
+  if (installed == null || listed == null) return null;
+  return productionUpdates(listed, installed).where((production) => installedProduction(production, installed)?.id == productionId).firstOrNull;
+});
+
+/// One production package's Update, by world and production id (R-72): pressed, as an edition's is
+/// (P12 call 9). Like a world's install, it outlives its page.
+class ProductionInstallController extends Notifier<InstallState> {
+  ProductionInstallController(this.key);
+
+  final (String, String) key;
+  InstallCancel? _cancel;
+
+  @override
+  InstallState build() => const NotInstalling();
+
+  Future<void> start(CatalogueWorld world, CatalogueProduction production) async {
+    if (state is Installing) return;
+    final cancel = _cancel = InstallCancel();
+    state = Installing(Downloading(0, production.package?.byteLength ?? 0), updating: true);
+    try {
+      final installer = await ref.read(worldInstallerProvider.future);
+      await installer.installProduction(
+        world,
+        production,
+        cancel: cancel,
+        onStep: (step) {
+          if (!cancel.isCancelled) state = Installing(step, updating: true);
+        },
+        beforeSwap: _released,
+      );
+      state = const NotInstalling();
+    } on InstallCancelled {
+      state = const NotInstalling();
+    } on InstallRefusal catch (refusal) {
+      state = InstallFailed(refusal);
+    } on Object {
+      state = const InstallFailed(DownloadStopped());
+    } finally {
+      if (identical(_cancel, cancel)) _cancel = null;
+    }
+  }
+
+  /// Waits while the album plays, then lets go of it, so its next play opens the new files.
+  Future<void> _released() async {
+    final engine = ref.read(audioEngineProvider);
+    bool held() => engine?.music?.worldId == key.$1 && engine?.music?.production.id == key.$2;
+    if (engine == null || !held()) return;
+    if (engine.playing) await engine.playingStream.firstWhere((playing) => !playing || !held());
+    if (held()) await engine.stop();
+  }
+
+  void cancel() {
+    _cancel?.cancel();
+    state = const NotInstalling();
+  }
+
+  void dismiss() {
+    if (state is InstallFailed) state = const NotInstalling();
+  }
+}
+
+final productionInstallProvider = NotifierProvider.family<ProductionInstallController, InstallState, (String, String)>(ProductionInstallController.new);

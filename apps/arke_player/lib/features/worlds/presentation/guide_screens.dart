@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:arke_library/arke_library.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +9,11 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../players/application/music.dart';
+import '../../players/application/players.dart';
+import '../../players/presentation/music_widgets.dart';
 import '../application/guides.dart';
+import '../application/worlds.dart';
 import 'guide_widgets.dart';
 import 'world_widgets.dart';
 
@@ -48,6 +55,28 @@ class GuideEntryScreen extends ConsumerWidget {
       for (final other in [for (final id in ids) ?guide.guide.entry(id)])
         if (reach.shows(other.after) && other is! GuideLore) other,
     ];
+    final music = ref.watch(worldMusicProvider(worldId)).value ?? const <MusicAlbum>[];
+    final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], worldId);
+    final engine = ref.watch(audioEngineProvider);
+
+    // Its Theme under its Voice (SPEC-058 R-77, SPEC-059 R-38, P17f): it plays once its music is
+    // installed; before that the guide's title and length are all there is.
+    List<Widget> themed(GuideTheme? theme) {
+      if (theme == null) return const [];
+      final album = music.where((album) => album.production.id == theme.production).firstOrNull;
+      final index = album?.tracks.indexWhere((track) => track.id == theme.track) ?? -1;
+      final production = listed?.productions.where((production) => production.id == theme.production).firstOrNull;
+      return [
+        const SectionHead('Theme'),
+        SongRow(
+          title: theme.title,
+          line: [?(album?.title ?? production?.title), formatClock(theme.duration)].join(' · '),
+          cover: album?.cover != null ? FileImage(File(album!.cover!)) : (listed == null || production == null ? null : ref.pictureOf(listed, production)),
+          onPlay: album == null || index < 0 || engine == null ? null : () => engine.openMusic(album, index: index),
+          onOpen: album == null ? null : () => context.push(Routes.production(worldLocation, album.production.id)),
+        ),
+      ];
+    }
 
     return Scaffold(
       body: switch (entry) {
@@ -69,6 +98,7 @@ class GuideEntryScreen extends ConsumerWidget {
                 null => null,
               },
             ),
+            ...themed(entry.theme),
             GuideProse(sections: entry.sections, reach: reach, onReveal: ask),
             if (linked(entry.links) case final withs when withs.isNotEmpty) ...[
               const SectionHead('With'),
@@ -81,6 +111,7 @@ class GuideEntryScreen extends ConsumerWidget {
           padding: EdgeInsets.only(bottom: footRoom(context)),
           children: [
             WorldHero(picture: guidePicture(guide, entry), title: entry.name, meta: [placeKind(entry), ?world].join(' · ')),
+            ...themed(entry.theme),
             GuideProse(sections: entry.sections, reach: reach, onReveal: ask),
             // Here: the characters linked to the place, either way round.
             if ([

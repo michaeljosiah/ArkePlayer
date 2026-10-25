@@ -43,6 +43,11 @@ class Dock extends ConsumerWidget {
             final cover = art == null ? kept : File(art);
             final total = engine.length.inMilliseconds;
             final chapter = item.chapters.length > 1 ? 'Chapter ${engine.chapterAt(now) + 1} · ' : '';
+            // A song's dock names the track over its album and skips to the next track where a
+            // chapter's goes back 15 (SPEC-058 R-75, P17c).
+            final album = engine.music;
+            final title = album == null ? item.title : album.tracks[engine.track].title;
+            final where = album == null ? '$chapter${formatClock(now)}' : album.title;
             return Padding(
               padding: floating ? EdgeInsets.zero : const EdgeInsets.fromLTRB(8, 0, 8, 8),
               child: Material(
@@ -56,7 +61,7 @@ class Dock extends ConsumerWidget {
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
-                  onTap: () => context.push(Routes.open(item.id)),
+                  onTap: () => context.push(album == null ? Routes.open(item.id) : Routes.music(album.worldId, album.production.id)),
                   child: SizedBox(
                     height: ArkeSizes.dock,
                     child: Stack(
@@ -84,12 +89,20 @@ class Dock extends ConsumerWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodyMedium),
-                                    Text('$chapter${formatClock(now)}', style: text.labelSmall?.copyWith(color: surface.mutedForeground)),
+                                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodyMedium),
+                                    Text(
+                                      where,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: text.labelSmall?.copyWith(color: surface.mutedForeground),
+                                    ),
                                   ],
                                 ),
                               ),
-                              IconButton(onPressed: engine.rewind, tooltip: 'Back 15 seconds', icon: const Icon(Icons.replay)),
+                              if (album == null)
+                                IconButton(onPressed: engine.rewind, tooltip: 'Back 15 seconds', icon: const Icon(Icons.replay))
+                              else
+                                IconButton(onPressed: engine.skipToNext, tooltip: 'Next', icon: const Icon(Icons.skip_next_rounded)),
                               IconButton(
                                 onPressed: () => (playing.data ?? false) ? engine.pause() : engine.play(),
                                 tooltip: (playing.data ?? false) ? 'Pause' : 'Play',

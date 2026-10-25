@@ -135,12 +135,37 @@ its length, its words with their sections, and where in the world it is heard.
 
    It prints the production's id, its `package` pin (address, length, SHA-256, edition and
    fingerprint) and, for music, its `music` kind.
-3. **Set them on the listed production:** `package` and `music` beside its `title` and `kind`. The
-   list stays `version: 2`, and a Player from before rev 11 ignores both.
+3. **Set them on the listed production:** `package` and `music` beside its `title` and `kind`, in
+   the world's `productions`, where its tile goes: Music sits after Listen whatever the order. Give
+   it the `id` `pin_world` printed: the phone matches the package to the production by it. Its
+   `kind` is the line its tile shows before install, `Album · 9 tracks`, `Single · 3:42` or
+   `Soundtrack · 14 tracks`; its `picture` (or `picturePin`) is the square cover. The list stays
+   `version: 2`, and a Player from before rev 11 ignores both new keys.
+
+   ```json
+   { "id": "songs-of-the-drowned-quarter", "title": "Songs of the Drowned Quarter", "kind": "Album · 9 tracks",
+     "music": "album",
+     "package": { "url": "https://…/the-undersong-songs-of-the-drowned-quarter-2026-10-24.zip", "byteLength": 36000000,
+                  "sha256": "…", "edition": "2026-10-24", "fingerprint": "…" } }
+   ```
 4. **Raise `serial` and publish the list**, as for an edition.
 
-The formats are read; installing a production package beside its world's edition, and the Music
-group, are P17's build. Until then the installer refuses a production package on its own.
+What phones do with it (R-72, P17):
+
+- **Installing the world** fetches the edition, its parts and every listed production package, and
+  adds them in one write; the package's files live at `worlds/<world>/_productions/<id>`.
+- **Listed after install**, it arrives on its own when the app opens or the list changes, over
+  Wi-Fi while `Wi-Fi only` is on, and shows in Downloads as it comes. The daily background check
+  fetches parts ahead, not production packages.
+- **A new package for it** (a new fingerprint) is that production's `Update`, on its tile and its
+  page, pressed by hand as an edition's is. Publish a changed album under a new name and repin it;
+  never replace the old file.
+- **A new edition of the world** carries its installed production packages across; nothing is
+  fetched again.
+- A production package is never installed as a world of its own, nor beside another world.
+
+Arke's list does not say what a soundtrack is for: Discover names the production only once the
+soundtrack is installed, and its world before that.
 
 ## The Undersong
 

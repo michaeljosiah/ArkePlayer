@@ -29,4 +29,11 @@ abstract final class Routes {
   /// An added file in its player, over the tabs: the audio player (P7d, P5a–P5c), the reader
   /// (P5e), the page viewer (P7c) or the film player (P3a, P3b, P3e).
   static String open(String itemId) => '/open/$itemId';
+
+  /// A world's music in the audio player, over the tabs (P17d, P17e). [track] starts it there,
+  /// [shuffle] in a shuffled order; with neither it shows what plays, as the dock opens it.
+  static String music(String worldId, String productionId, {int? track, bool shuffle = false}) {
+    final query = [if (track != null) 'track=$track', if (shuffle) 'shuffle=1'].join('&');
+    return '/music/$worldId/$productionId${query.isEmpty ? '' : '?$query'}';
+  }
 }

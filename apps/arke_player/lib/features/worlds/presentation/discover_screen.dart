@@ -11,6 +11,7 @@ import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../parts/application/parts.dart';
+import '../../players/application/music.dart';
 import '../../production/domain/production_kind.dart';
 import '../application/discover.dart';
 import '../application/guides.dart';
@@ -62,7 +63,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final smallWidth = RowSizes.small(context);
     final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
     final kind = _kind;
-    bool shown(String kindLine) => kind == null || ProductionKind.ofLine(kindLine).takenAs == kind;
+    // Music is heard: under the chips it is Listen's (P17 rule 2).
+    ProductionKind kindOf(CatalogueProduction production) =>
+        production.music != null ? ProductionKind.ofMusic(production.music!.name) : ProductionKind.ofLine(production.kind);
+    bool shown(CatalogueProduction production) => kind == null || kindOf(production).takenAs.chip == kind;
     LibraryWorld? installedAs(CatalogueWorld world) => installed.where((held) => world.covers(held.id)).firstOrNull;
 
     /// A production's world page, at the production once it is installed (rule 2).
@@ -80,22 +84,35 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     };
 
     final everyFresh = freshParts(catalogue, now);
-    final fresh = everyFresh.where((fresh) => fresh.production == null || shown(fresh.production!.kind)).toList();
+    final fresh = everyFresh.where((fresh) => fresh.production == null || shown(fresh.production!)).toList();
     final stories = [
       for (final world in catalogue)
         for (final production in world.productions)
-          if (shown(production.kind)) (world, production),
+          if (kindOf(production).takenAs != TakenAs.music && shown(production)) (world, production),
+    ];
+    // The worlds' music, its own row after Stories (SPEC-058 R-73, P17b).
+    final music = [
+      for (final world in catalogue)
+        for (final production in world.productions)
+          if (kindOf(production).takenAs == TakenAs.music && shown(production)) (world, production),
     ];
     final teasers = kind != null
         ? const <(CatalogueWorld, WorldGuide, GuideTeaser)>[]
         : [
             for (final world in catalogue)
               if (ref.watch(worldGuideProvider(installedAs(world)?.id ?? world.id)).value case final guide?)
-                // A song teaser (SPEC-059 R-36) waits for the Player's music (P17): until it can be
-                // played, a guide that names one shows the rest.
-                for (final teaser in guide.guide.teasers)
-                  if (teaser is! SongTeaser) (world, guide, teaser),
+                for (final teaser in guide.guide.teasers) (world, guide, teaser),
           ];
+
+    /// `Album · The Undersong`, or what a soundtrack is for: `Soundtrack · The Bell Watch` (P17b).
+    String musicLine(CatalogueWorld world, CatalogueProduction production) {
+      final kind = production.music!;
+      final held = installedAs(world);
+      final heldMusic = held == null ? null : installedProduction(production, held)?.music;
+      final of = kind == MusicKind.soundtrack ? soundtrackFor(heldMusic?.forProduction, world: held, listed: world) : null;
+      return '${musicKindLabel(kind.name)} · ${of ?? world.name}';
+    }
+
     // The feature and the band are drawn under All only (P16 rules 2 and 6).
     final feature = kind == null ? discoverFeature(catalogue, picks?.feature, everyFresh) : null;
     final band = kind == null ? discoverBand(catalogue, picks?.band, feature?.world) : null;
@@ -142,8 +159,15 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           width: smallWidth,
           onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
         ),
-        // Left out of the row above until the Player plays music (P17).
-        SongTeaser() => const SizedBox.shrink(),
+        // Its square cover whole over its blur, with a note; nothing plays in the row (R-78).
+        SongTeaser(:final title, :final picture, :final duration) => PosterTile(
+          title: title,
+          kind: 'Song · ${formatClock(duration)}',
+          wide: FileImage(File(guide.pathOf(picture))),
+          glyph: Icons.music_note_rounded,
+          width: smallWidth,
+          onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
+        ),
       };
     }
 
@@ -280,7 +304,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               ),
             ),
           LabelChips<TakenAs>(
-            options: [for (final taken in TakenAs.values) (taken, taken.label)],
+            options: [for (final taken in TakenAs.chips) (taken, taken.label)],
             selected: kind,
             onSelect: (value) => setState(() => _kind = value),
           ),
@@ -316,6 +340,21 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                           tall: ref.tallOf(production),
                           wide: ref.pictureOf(world, production),
                           width: posterWidth,
+                          onOpen: () => openProduction(world, production.id),
+                        ),
+                    ],
+                  ),
+                ],
+                if (music.isNotEmpty) ...[
+                  const SectionHead('Music'),
+                  TileRow(
+                    children: [
+                      for (final (world, production) in music)
+                        SquareTile(
+                          title: production.title,
+                          kind: musicLine(world, production),
+                          picture: ref.pictureOf(world, production),
+                          width: RowSizes.square(context),
                           onOpen: () => openProduction(world, production.id),
                         ),
                     ],
@@ -371,7 +410,12 @@ class _TeaserScreenState extends ConsumerState<TeaserScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.teaser case ClipTeaser(:final audio)) _audio.play(widget.guide.pathOf(audio)).catchError((Object _) {});
+    // A clip's narration and a song's excerpt play with sound once opened, never in the row (R-78).
+    final audio = switch (widget.teaser) {
+      ClipTeaser(:final audio) || SongTeaser(:final audio) => audio,
+      _ => null,
+    };
+    if (audio != null) _audio.play(widget.guide.pathOf(audio)).catchError((Object _) {});
   }
 
   @override
@@ -384,18 +428,31 @@ class _TeaserScreenState extends ConsumerState<TeaserScreen> {
   Widget build(BuildContext context) {
     const fg = ArkeColors.mediaOverlayForeground;
     final text = Theme.of(context).textTheme;
-    final teaser = widget.teaser as PictureTeaser;
-    final line = [
-      if (teaser is ClipTeaser) 'Clip · ${formatClock(teaser.duration)}' else 'Picture',
-      'Chapter ${teaser.from.number}',
-      widget.world.name,
-    ].join(' · ');
+    final (title, picture, line) = switch (widget.teaser) {
+      // A song's square cover, whole over its blur as its poster shows it (P17b).
+      SongTeaser(:final title, :final picture, :final duration) => (title, picture, ['Song · ${formatClock(duration)}', widget.world.name].join(' · ')),
+      final PictureTeaser teaser => (
+        teaser.title,
+        teaser.picture,
+        [if (teaser is ClipTeaser) 'Clip · ${formatClock(teaser.duration)}' else 'Picture', 'Chapter ${teaser.from.number}', widget.world.name].join(' · '),
+      ),
+      EntryTeaser() => throw StateError('an entry teaser opens its page'),
+    };
+    final image = FileImage(File(widget.guide.pathOf(picture)));
     return Scaffold(
       backgroundColor: ArkeColors.mediaOverlayBackground,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          InteractiveViewer(child: Image.file(File(widget.guide.pathOf(teaser.picture)), fit: BoxFit.contain)),
+          if (widget.teaser is SongTeaser)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 160),
+              child: WholeOverBlur(picture: image),
+            )
+          else
+            InteractiveViewer(
+              child: Image(image: image, fit: BoxFit.contain),
+            ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
@@ -409,7 +466,7 @@ class _TeaserScreenState extends ConsumerState<TeaserScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(teaser.title, style: text.titleLarge?.copyWith(color: fg)),
+                        Text(title, style: text.titleLarge?.copyWith(color: fg)),
                         const SizedBox(height: 2),
                         Text(line, style: text.bodyMedium?.copyWith(color: fg.withValues(alpha: 0.78))),
                         const SizedBox(height: 14),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:arke_library/arke_library.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -8,9 +10,15 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../players/application/music.dart';
 import '../../players/application/players.dart';
+import '../../players/presentation/music_widgets.dart';
 import '../application/discover.dart';
+import '../application/guides.dart';
 import '../application/worlds.dart';
+import 'album_screen.dart';
+import 'guide_widgets.dart';
+import 'world_screen.dart';
 import 'world_widgets.dart';
 
 /// The author's schedule as written (SPEC-058 R-53, P15e, P15f): `Fridays`, `Daily`,
@@ -43,11 +51,18 @@ String shortDate(DateTime day) => '${day.day} ${const ['Jan', 'Feb', 'Mar', 'Apr
 /// part, its day; `New` until it plays (R-52); heard ones ticked; the author's next date as a dashed
 /// last row (R-53). A book released in parts reads as one: Read opens the part being read, or the
 /// first not finished (R-50). What P1e draws for shares (the download and its size) is absent.
+///
+/// The world's music heard in the production follows its chapters as its **Music**, and a chapter
+/// that holds a song carries a note (SPEC-058 R-77, P17g). A music production's page is its album's
+/// (R-74).
 class ProductionScreen extends ConsumerWidget {
-  const ProductionScreen({required this.worldId, required this.productionId, super.key});
+  const ProductionScreen({required this.worldId, required this.productionId, required this.worldLocation, super.key});
 
   final String worldId;
   final String productionId;
+
+  /// The world page's path, which this page is pushed under.
+  final String worldLocation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,6 +77,7 @@ class ProductionScreen extends ConsumerWidget {
         body: const Center(child: Text('Removed')),
       );
     }
+    if (production.music != null) return AlbumScreen(world: world, production: production, worldLocation: worldLocation);
     final narration = items[production.narration];
     // A book released in parts reads as one: the part being read, else the first not finished.
     final books = [?items[production.book], for (final id in production.bookParts) ?items[id]];
@@ -98,79 +114,103 @@ class ProductionScreen extends ConsumerWidget {
     }
 
     void open(LibraryItem item) => context.push(Routes.open(item.id));
+    // The world's music heard here, in album order (R-77), and the chapters that hold a song.
+    final heard = tracksHeardIn(ref.watch(worldMusicProvider(world.id)).value ?? const [], production.id);
+    final songChapters = {for (final song in heard) song.heard.chapter};
+    final engine = ref.watch(audioEngineProvider);
+    final guide = ref.watch(worldGuideProvider(world.id)).value?.guide;
 
     return Scaffold(
-      body: ListView(
-        padding: EdgeInsets.only(bottom: footRoom(context)),
-        children: [
-          WorldHero(
-            picture: libraryPicture(store, production.picture ?? narration?.cover ?? book?.cover ?? world.keyArt),
-            title: production.title,
-            meta: [kind, ?production.author].join(' · '),
-            child: first == null && scheduled == null
-                ? null
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (scheduled != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_outlined, size: 15, color: ArkeColors.mediaOverlayForeground),
-                              const SizedBox(width: 6),
-                              Text(
-                                scheduled,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ArkeColors.mediaOverlayForeground.withValues(alpha: 0.74)),
-                              ),
-                            ],
+      // Its chapters and its music run long: once the hero has gone, a head says whose they are (P17g).
+      body: ScrolledHead(
+        title: production.title,
+        child: ListView(
+          padding: EdgeInsets.only(bottom: footRoom(context)),
+          children: [
+            WorldHero(
+              picture: libraryPicture(store, production.picture ?? narration?.cover ?? book?.cover ?? world.keyArt),
+              title: production.title,
+              meta: [kind, ?production.author].join(' · '),
+              child: first == null && scheduled == null
+                  ? null
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (scheduled != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today_outlined, size: 15, color: ArkeColors.mediaOverlayForeground),
+                                const SizedBox(width: 6),
+                                Text(
+                                  scheduled,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ArkeColors.mediaOverlayForeground.withValues(alpha: 0.74)),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      if (first != null)
-                        HeroPress(
-                          icon: Icons.play_arrow_rounded,
-                          label: first.inProgress ? 'Continue' : (narration != null ? 'Play' : 'Read'),
-                          detail: first.inProgress ? _where(first) : null,
-                          onPressed: () => open(first),
-                        ),
-                      if (narration != null && book != null) HeroSecondPress(icon: Icons.menu_book_rounded, label: 'Read', onPressed: () => open(book)),
-                    ],
-                  ),
-          ),
-          if (narration != null && (narration.chapters.length > 1 || next != null)) ...[
-            const SectionHead('Chapters'),
-            for (final (i, chapter) in narration.chapters.indexed)
-              _ChapterRow(
-                number: i + 1,
-                title: chapter.title,
-                length: _chapterLength(narration, i),
-                day: released[i],
-                fresh: fresh.contains(i),
-                heard: narration.finished || (narration.inProgress && (_chapterAt(narration) ?? 0) > i),
-                current: _chapterAt(narration) == i && narration.inProgress,
-                onOpen: () async {
-                  // A chapter opens the player at its start: the place is the chapter's, by its id
-                  // where the narration keeps one (SPEC-058 R-26).
-                  final total = narration.duration?.inMilliseconds ?? 0;
-                  await ref
-                      .read(placeKeeperProvider)
-                      .call(
-                        narration.id,
-                        Place(
-                          locator: chapter.id,
-                          position: chapter.id == null ? chapter.start : Duration.zero,
-                          progress: total <= 0 ? 0 : chapter.start.inMilliseconds / total,
-                          updatedAt: DateTime.now().toUtc(),
-                        ),
-                      );
-                  if (context.mounted) open(narration);
-                },
-              ),
-            if (next != null)
-              _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
+                        if (first != null)
+                          HeroPress(
+                            icon: Icons.play_arrow_rounded,
+                            label: first.inProgress ? 'Continue' : (narration != null ? 'Play' : 'Read'),
+                            detail: first.inProgress ? _where(first) : null,
+                            onPressed: () => open(first),
+                          ),
+                        if (narration != null && book != null) HeroSecondPress(icon: Icons.menu_book_rounded, label: 'Read', onPressed: () => open(book)),
+                      ],
+                    ),
+            ),
+            if (narration != null && (narration.chapters.length > 1 || next != null)) ...[
+              const SectionHead('Chapters'),
+              for (final (i, chapter) in narration.chapters.indexed)
+                _ChapterRow(
+                  number: i + 1,
+                  title: chapter.title,
+                  length: _chapterLength(narration, i),
+                  day: released[i],
+                  song: songChapters.contains(chapter.id),
+                  fresh: fresh.contains(i),
+                  heard: narration.finished || (narration.inProgress && (_chapterAt(narration) ?? 0) > i),
+                  current: _chapterAt(narration) == i && narration.inProgress,
+                  onOpen: () async {
+                    // A chapter opens the player at its start: the place is the chapter's, by its id
+                    // where the narration keeps one (SPEC-058 R-26).
+                    final total = narration.duration?.inMilliseconds ?? 0;
+                    await ref
+                        .read(placeKeeperProvider)
+                        .call(
+                          narration.id,
+                          Place(
+                            locator: chapter.id,
+                            position: chapter.id == null ? chapter.start : Duration.zero,
+                            progress: total <= 0 ? 0 : chapter.start.inMilliseconds / total,
+                            updatedAt: DateTime.now().toUtc(),
+                          ),
+                        );
+                    if (context.mounted) open(narration);
+                  },
+                ),
+              if (next != null)
+                _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
+            ],
+            if (heard.isNotEmpty) ...[
+              CountHead(title: 'Music', count: heard.length),
+              for (final song in heard)
+                SongRow(
+                  title: song.album.tracks[song.track].title,
+                  line: [
+                    if (heardPlace(song.heard, world: world, items: items, guide: guide)?.number case final number?) 'Chapter $number',
+                    if (song.album.document.kind == MusicKind.single) 'Single' else song.album.title,
+                  ].join(' · '),
+                  cover: song.album.cover == null ? null : FileImage(File(song.album.cover!)),
+                  onPlay: engine == null ? null : () => engine.openMusic(song.album, index: song.track),
+                  onOpen: () => context.push(Routes.production(worldLocation, song.album.production.id)),
+                ),
+            ],
+            const SizedBox(height: 24),
           ],
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }
@@ -213,6 +253,7 @@ class _ChapterRow extends StatelessWidget {
     this.day,
     this.fresh = false,
     this.heard = false,
+    this.song = false,
   }) : soon = false;
 
   const _ChapterRow.soon({required this.number, required int chapter, required this.day})
@@ -222,6 +263,7 @@ class _ChapterRow extends StatelessWidget {
       onOpen = null,
       fresh = false,
       heard = false,
+      song = false,
       soon = true;
 
   final int number;
@@ -232,6 +274,9 @@ class _ChapterRow extends StatelessWidget {
   final bool fresh;
   final bool heard;
   final bool soon;
+
+  /// The chapter holds a song of the world's music: a note after its data (P17g).
+  final bool song;
   final VoidCallback? onOpen;
 
   @override
@@ -263,12 +308,13 @@ class _ChapterRow extends StatelessWidget {
                       color: soon ? muted : null,
                     ),
                   ),
-                  if (fresh || data.isNotEmpty) ...[
+                  if (fresh || data.isNotEmpty || song) ...[
                     const SizedBox(height: 3),
                     Row(
                       children: [
                         if (fresh) ...[const NewTag(), const SizedBox(width: 8)],
                         if (data.isNotEmpty) Text(data, style: text.labelSmall?.copyWith(color: muted)),
+                        if (song) ...[const SizedBox(width: 5), Icon(Icons.music_note_rounded, size: 13, color: muted)],
                       ],
                     ),
                   ],
@@ -302,7 +348,7 @@ class _ChapterRow extends StatelessWidget {
         : row;
     return Semantics(
       button: onOpen != null,
-      label: [title, if (fresh) 'New', ?(data.isEmpty ? null : data), if (heard) 'Heard'].join(', '),
+      label: [title, if (fresh) 'New', ?(data.isEmpty ? null : data), if (song) 'Music', if (heard) 'Heard'].join(', '),
       child: ExcludeSemantics(
         child: onOpen == null ? framed : InkWell(onTap: onOpen, child: framed),
       ),

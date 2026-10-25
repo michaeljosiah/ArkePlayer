@@ -42,6 +42,8 @@ PlayerKind playerForProduction(ProductionKind kind) => switch (kind) {
   ProductionKind.visualNovel => PlayerKind.visualNovel,
   ProductionKind.audiobook => PlayerKind.audiobook,
   ProductionKind.audioDrama => PlayerKind.audioDrama,
+  // A world's music plays in the audio player, the cover where the moment's picture would be (P17d).
+  ProductionKind.album || ProductionKind.single || ProductionKind.soundtrack => PlayerKind.audiobook,
   ProductionKind.book => PlayerKind.reader,
 };
 

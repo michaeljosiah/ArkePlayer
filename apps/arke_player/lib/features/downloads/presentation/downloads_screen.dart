@@ -65,7 +65,7 @@ class DownloadsScreen extends ConsumerWidget {
                         _WorldRow(
                           name: arrival.world.name,
                           line: arrival.line(
-                            episodes: switch (arrival.world.productions.where((production) => production.id == arrival.part.production).firstOrNull) {
+                            episodes: switch (arrival.world.productions.where((production) => production.id == arrival.part?.production).firstOrNull) {
                               final production? => const {ProductionKind.microDrama, ProductionKind.series}.contains(ProductionKind.ofLine(production.kind)),
                               null => false,
                             },

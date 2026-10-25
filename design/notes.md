@@ -206,6 +206,11 @@ its own. Studio 238 gained three frames: a track's composer and takes, a light t
 sections can later time the Player's lyrics, and the album's sequence. The owner approved P17 and
 Studio 238 as drawn on 24 October 2026 ("Approved."), with calls 17–20.
 
+Built on 25 October 2026 in ArkePlayer PR #19 (SPEC-058 R-72 – R-78, slice 13). Not built: the ⋯
+that P17c and P17d draw at the top of the album and the player, for which no rule names a use, and
+a soundtrack's production on Discover before it is installed, because Arke's list does not say
+what a soundtrack is for (`Soundtrack · The Undersong` until then).
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
