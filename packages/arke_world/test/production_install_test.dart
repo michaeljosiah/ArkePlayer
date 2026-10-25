@@ -201,18 +201,9 @@ void main() {
 
     // Bytes that are not the pinned ones are refused, not installed.
     final other = await album('2026-10-25', tracks: 4);
-    final changed = CataloguePackage(
-      url: other.url,
-      byteLength: other.byteLength,
-      sha256: 'f' * 64,
-      edition: other.edition,
-      fingerprint: other.fingerprint,
-    );
+    final changed = CataloguePackage(url: other.url, byteLength: other.byteLength, sha256: 'f' * 64, edition: other.edition, fingerprint: other.fingerprint);
     final file = File('${dir.path}/album-2026-10-25-the-undersong.zip');
-    await expectLater(
-      installer.installProduction(listed(pin, changed), listed(pin, changed).productions.last, from: file),
-      throwsA(isA<FilesDoNotMatch>()),
-    );
+    await expectLater(installer.installProduction(listed(pin, changed), listed(pin, changed).productions.last, from: file), throwsA(isA<FilesDoNotMatch>()));
   });
 
   test('a changed album is its Update, pressed: the new package replaces the old', () async {
