@@ -190,6 +190,31 @@ void main() {
     expect(albumOf(store.worlds.single)!.package!.installedAt, albumOf(world)!.package!.installedAt);
   });
 
+  test('an album already on the phone goes in without a download, checked against its pin', () async {
+    final pin = await edition('2026-10-22');
+    await installer.install(listed(pin));
+    final albumPin = await album('2026-10-24');
+    server.files.removeWhere((name, _) => name.startsWith('album-'));
+    final zip = File('${dir.path}/album-2026-10-24-the-undersong.zip');
+    await installer.installProduction(listed(pin, albumPin), listed(pin, albumPin).productions.last, from: zip);
+    expect(albumOf(store.worlds.single)?.music?.tracks, 3);
+
+    // Bytes that are not the pinned ones are refused, not installed.
+    final other = await album('2026-10-25', tracks: 4);
+    final changed = CataloguePackage(
+      url: other.url,
+      byteLength: other.byteLength,
+      sha256: 'f' * 64,
+      edition: other.edition,
+      fingerprint: other.fingerprint,
+    );
+    final file = File('${dir.path}/album-2026-10-25-the-undersong.zip');
+    await expectLater(
+      installer.installProduction(listed(pin, changed), listed(pin, changed).productions.last, from: file),
+      throwsA(isA<FilesDoNotMatch>()),
+    );
+  });
+
   test('a changed album is its Update, pressed: the new package replaces the old', () async {
     final pin = await edition('2026-10-22');
     final first = await album('2026-10-24');

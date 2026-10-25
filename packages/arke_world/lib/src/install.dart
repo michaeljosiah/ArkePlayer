@@ -236,13 +236,15 @@ class WorldInstaller {
   /// the package its list entry now pins (its Update): the pin's length and SHA-256, every file
   /// checked, then the production beside the edition in one write. A production already installed
   /// from the same package changes nothing. [beforeSwap] is awaited before an earlier package gives
-  /// way, so a caller can wait for it to stop playing.
+  /// way, so a caller can wait for it to stop playing. [from] is the package already on the phone,
+  /// checked against the pin as a part fetched ahead is, so nothing is downloaded again.
   Future<LibraryWorld> installProduction(
     CatalogueWorld world,
     CatalogueProduction listed, {
     void Function(InstallStep step)? onStep,
     InstallCancel? cancel,
     Future<void> Function()? beforeSwap,
+    File? from,
   }) async {
     final pin = listed.package;
     final installed = store.worlds.where((existing) => world.covers(existing.id)).firstOrNull;
@@ -253,7 +255,12 @@ class WorldInstaller {
     final staging = await store.stageWorld();
     try {
       final zip = '${staging.path}${Platform.pathSeparator}production.zip';
-      await _download(pin, zip, onStep, control);
+      if (from != null && await from.exists() && await from.length() == pin.byteLength) {
+        await from.copy(zip);
+        if ((await sha256.bind(File(zip).openRead()).first).toString() != pin.sha256) throw const FilesDoNotMatch(1);
+      } else {
+        await _download(pin, zip, onStep, control);
+      }
       control._check();
       final content = Directory('${staging.path}${Platform.pathSeparator}production');
       final (production, items) = await _describeProduction(zip, content, installed.id, listed, onStep, control);
