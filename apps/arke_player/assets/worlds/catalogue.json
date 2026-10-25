@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 25,
+  "serial": 26,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -47,11 +47,11 @@
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-player-2026-10-24-2.zip",
-        "byteLength": 156800688,
-        "sha256": "47b73ec4d7fdae531c2509de3dfa47c12a1fab28bd0df7110e315491fbf5fdc7",
-        "edition": "2026-10-24-2",
-        "fingerprint": "9bf7aab1b5039b58b2049ef964f40aab781cdb13075d2368d16785291687da90"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-player-2026-10-25.zip",
+        "byteLength": 184588133,
+        "sha256": "81c5f6b8c296753fe21f5c0c4cf93540496d1aac73b50793475dec4dd7a03613",
+        "edition": "2026-10-25",
+        "fingerprint": "f52b50451c79023b86eec5cb2631510c3b14cd020174d7090fd440191e33454e"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/legend-of-dumah-2026-10-22-r1/legend-of-dumah-guide-2026-10-23-2.zip",
