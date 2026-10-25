@@ -17,6 +17,7 @@ import '../application/guides.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
 import 'row_widgets.dart';
+import 'world_screen.dart';
 import 'world_widgets.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
@@ -155,59 +156,62 @@ class AlbumScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      body: ListView(
-        padding: EdgeInsets.only(bottom: footRoom(context)),
-        children: [
-          _Head(
-            cover: cover,
-            title: production.title,
-            meta: meta,
-            fold: fold,
-            presses: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _Press(icon: Icons.play_arrow_rounded, label: 'Play all', primary: true, onPressed: album == null ? null : play),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _Press(icon: Icons.shuffle_rounded, label: 'Shuffle', onPressed: album == null ? null : () => play(shuffle: true)),
-                    ),
-                  ],
-                ),
-                switch (state) {
-                  Installing() => InstallProgress(state: state, onCancel: () => ref.read(productionInstallProvider(key).notifier).cancel()),
-                  _ when update != null && listed != null => HeroSecondPress(
-                    icon: Icons.download_rounded,
-                    label: 'Update',
-                    detail: formatBytes(update.package!.byteLength),
-                    onPressed: () => ref.read(productionInstallProvider(key).notifier).start(listed, update),
+      body: ScrolledHead(
+        title: production.title,
+        child: ListView(
+          padding: EdgeInsets.only(bottom: footRoom(context)),
+          children: [
+            _Head(
+              cover: cover,
+              title: production.title,
+              meta: meta,
+              fold: fold,
+              presses: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _Press(icon: Icons.play_arrow_rounded, label: 'Play all', primary: true, onPressed: album == null ? null : play),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _Press(icon: Icons.shuffle_rounded, label: 'Shuffle', onPressed: album == null ? null : () => play(shuffle: true)),
+                      ),
+                    ],
                   ),
-                  _ => const SizedBox.shrink(),
-                },
-              ],
+                  switch (state) {
+                    Installing() => InstallProgress(state: state, onCancel: () => ref.read(productionInstallProvider(key).notifier).cancel()),
+                    _ when update != null && listed != null => HeroSecondPress(
+                      icon: Icons.download_rounded,
+                      label: 'Update',
+                      detail: formatBytes(update.package!.byteLength),
+                      onPressed: () => ref.read(productionInstallProvider(key).notifier).start(listed, update),
+                    ),
+                    _ => const SizedBox.shrink(),
+                  },
+                ],
+              ),
             ),
-          ),
-          if (album != null) tracks(album),
-          if (others.isNotEmpty) ...[
-            SectionHead('More from ${world.name}'),
-            TileRow(
-              children: [
-                for (final other in others)
-                  SquareTile(
-                    title: other.title,
-                    kind: musicTileKind(other.music!.kind, tracks: other.music!.tracks, length: other.music!.duration),
-                    picture: libraryPicture(store, other.picture ?? world.keyArt),
-                    width: RowSizes.square(context),
-                    onOpen: () => context.push(Routes.production(worldLocation, other.id)),
-                  ),
-              ],
-            ),
+            if (album != null) tracks(album),
+            if (others.isNotEmpty) ...[
+              SectionHead('More from ${world.name}'),
+              TileRow(
+                children: [
+                  for (final other in others)
+                    SquareTile(
+                      title: other.title,
+                      kind: musicTileKind(other.music!.kind, tracks: other.music!.tracks, length: other.music!.duration),
+                      picture: libraryPicture(store, other.picture ?? world.keyArt),
+                      width: RowSizes.square(context),
+                      onOpen: () => context.push(Routes.production(worldLocation, other.id)),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 24),
           ],
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }

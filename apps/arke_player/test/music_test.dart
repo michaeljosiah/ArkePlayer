@@ -255,7 +255,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(engine.opened.last, (albumId, 1, null));
       expect(find.bySemanticsLabel(RegExp(r'^Slack Water, 3:05, Playing$')), findsOneWidget, reason: 'the one playing shows bars');
-      expect(find.byIcon(Icons.equalizer_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.graphic_eq_rounded), findsOneWidget);
       // The dock names the track over its album, with Next where back 15 was (R-75).
       expect(find.byTooltip('Next'), findsOneWidget);
       expect(find.byTooltip('Back 15 seconds'), findsNothing);

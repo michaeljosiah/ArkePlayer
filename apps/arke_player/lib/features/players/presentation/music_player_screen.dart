@@ -147,8 +147,9 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen> {
                         ),
                 ),
                 Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 640),
+                  child: SizedBox(
+                    // As wide as the transport under it, so the words keep to its left edge (P17d).
+                    width: MediaQuery.sizeOf(context).width.clamp(0.0, 640.0),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                       child: Column(
@@ -283,7 +284,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen> {
                     SizedBox(
                       width: 26,
                       child: now
-                          ? const Icon(Icons.equalizer_rounded, size: 18, color: _fg)
+                          ? const Icon(Icons.graphic_eq_rounded, size: 18, color: _fg)
                           : Text(
                               '${index + 1}',
                               style: TextStyle(color: _fg.withValues(alpha: 0.56), fontSize: ArkeType.sizeSm),

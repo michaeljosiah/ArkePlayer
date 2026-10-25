@@ -72,7 +72,7 @@ class TrackRow extends StatelessWidget {
                   width: 22,
                   child: ExcludeSemantics(
                     child: now
-                        ? Icon(Icons.equalizer_rounded, size: 18, color: surface.foreground)
+                        ? Icon(Icons.graphic_eq_rounded, size: 18, color: surface.foreground)
                         : Text(
                             '$number',
                             textAlign: TextAlign.center,

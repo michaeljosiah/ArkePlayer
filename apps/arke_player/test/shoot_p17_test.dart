@@ -124,8 +124,17 @@ void main() {
       final suffix = '$where${brightness == Brightness.dark ? '' : '-light'}';
       testWidgets(
         'P17a a world with music$suffix',
-        (t) => shoot(t, 'P17a-world$suffix', size, world, brightness: brightness, installed: false, act: (tester) => bring(tester, find.text('Listen'))),
+        (t) => shoot(
+          t,
+          'P17a-world$suffix',
+          size,
+          world,
+          brightness: brightness,
+          installed: false,
+          act: (tester) => bring(tester, find.text('Listen'), alignment: 0.15),
+        ),
       );
+      // Stories ending, then Music, then the Teasers with the song first (P17b).
       testWidgets(
         'P17b Discover$suffix',
         (t) => shoot(
@@ -134,7 +143,7 @@ void main() {
           size,
           Routes.discover,
           brightness: brightness,
-          act: (tester) => bring(tester, find.text('Stories'), alignment: 0.02),
+          act: (tester) => bring(tester, find.text('Music'), alignment: where.isEmpty ? 0.3 : 0.2),
         ),
       );
       testWidgets(
@@ -157,16 +166,33 @@ void main() {
           act: (tester) => tester.tap(find.text('Lyrics')),
         ),
       );
-      testWidgets('P17f a theme$suffix', (t) => shoot(t, 'P17f-theme$suffix', size, Routes.guideEntry(world, 'the-chorister'), brightness: brightness));
+      // Nothing playing, so the rows offer play.
       testWidgets(
-        'P17g a story’s music$suffix',
+        'P17f a theme$suffix',
+        (t) => shoot(t, 'P17f-theme$suffix', size, Routes.guideEntry(world, 'the-chorister'), brightness: brightness, engine: MusicEngine(playing: false)),
+      );
+      testWidgets(
+        'P17g a story’s chapters$suffix',
         (t) => shoot(
           t,
           'P17g-story$suffix',
           size,
           Routes.production(world, ledgerId),
           brightness: brightness,
-          act: (tester) => bring(tester, find.text('Chapter 7')),
+          engine: MusicEngine(playing: false),
+          act: (tester) => bring(tester, find.text('Chapter 7'), alignment: 0.15),
+        ),
+      );
+      testWidgets(
+        'P17g a story’s music$suffix',
+        (t) => shoot(
+          t,
+          'P17g-music$suffix',
+          size,
+          Routes.production(world, ledgerId),
+          brightness: brightness,
+          engine: MusicEngine(playing: false),
+          act: (tester) => bring(tester, find.text('Music'), alignment: 0.5),
         ),
       );
     }
