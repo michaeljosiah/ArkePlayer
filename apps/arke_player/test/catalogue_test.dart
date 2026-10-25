@@ -81,11 +81,12 @@ void main() {
   });
 
   test('The Undersong is pinned to its published package and its guide alone', () {
-    // The Studio's Export → Arke Player of the 23-chapter edition with its guide, named by the
-    // world's own slug, and the guide alone that lets it be explored before install (SPEC-059 R-10).
+    // The Studio's Export → Arke Player of the rewritten Chapter 1 alone, a preview of the new
+    // opening while the rest is rewritten, named by the world's own slug; the guide alone stays the
+    // one that lets the world be explored before install (SPEC-059 R-10).
     final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
-    expect(undersong.package!.sha256, 'a1e1e38e967d01490c7fe471d56cb65234c87ed6491ef2091a8ff75899742dcc');
-    expect(undersong.package!.edition, '2026-10-24');
+    expect(undersong.package!.sha256, '3f321a7ab83aa4d4f40506ce25e69b55d07e7a2120f088ab8dc45f89c526b289');
+    expect(undersong.package!.edition, '2026-10-25');
     expect(undersong.guide!.url.scheme, 'https');
     expect(undersong.guide!.sha256, 'ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123');
     // The hand-packed editions were published as `undersong`: a phone holding one is offered Update.

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 26,
+  "serial": 27,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -12,18 +12,18 @@
       "keyArt": "assets/worlds/undersong/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-keyArt-20261024.jpg", "byteLength": 183862, "sha256": "e3b91a196743ac9e9363a74b0655448c3d692438710dd3839c13ccfb31b558e9" } },
       "productions": [
-        { "title": "The Ledger of Nights", "kind": "Audiobook · Book · 4 h 50 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
+        { "title": "The Ledger of Nights", "kind": "Audiobook · Chapter 1 preview · 16 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
           "pins": {
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261024.jpg", "byteLength": 576958, "sha256": "198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776" }
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-player-2026-10-24.zip",
-        "byteLength": 360101640,
-        "sha256": "a1e1e38e967d01490c7fe471d56cb65234c87ed6491ef2091a8ff75899742dcc",
-        "edition": "2026-10-24",
-        "fingerprint": "deab9a797666a65713ca1d93065638be291c38434d14a1bf5d194161c05ea449"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-25-preview/the-undersong-player-2026-10-25.zip",
+        "byteLength": 25574825,
+        "sha256": "3f321a7ab83aa4d4f40506ce25e69b55d07e7a2120f088ab8dc45f89c526b289",
+        "edition": "2026-10-25",
+        "fingerprint": "59c94ba1e9d82d13eb19d4805d8796430c0c0a0866a50e596bd852ac8791c0c7"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-guide-2026-10-22.zip",
