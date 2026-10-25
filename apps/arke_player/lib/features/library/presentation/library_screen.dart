@@ -39,10 +39,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final items = ref.watch(libraryItemsProvider).value ?? const [];
     final store = ref.watch(libraryStoreProvider).value;
     final allWorlds = ref.watch(libraryWorldsProvider).value ?? const [];
-    Set<TakenAs> takenIn(LibraryWorld world) => {for (final production in world.productions) production.narration != null ? TakenAs.listen : TakenAs.read};
+    // A world's music is heard: it is under Listen (P17 rule 2).
+    Set<TakenAs> takenIn(LibraryWorld world) => {
+      for (final production in world.productions) production.narration != null || production.music != null ? TakenAs.listen : TakenAs.read,
+    };
     final present = {for (final kind in kindsPresent(items)) takenAsOf(kind), for (final world in allWorlds) ...takenIn(world)};
     final kinds = [
-      for (final taken in TakenAs.values)
+      for (final taken in TakenAs.chips)
         if (present.contains(taken)) taken,
     ];
     final kind = kinds.length > 1 && kinds.contains(_kind) ? _kind : null;
@@ -66,7 +69,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ),
           if (kinds.length > 1)
             LabelChips<TakenAs>(
-              options: [for (final taken in TakenAs.values) (taken, taken.label)],
+              options: [for (final taken in TakenAs.chips) (taken, taken.label)],
               selected: kind,
               onSelect: (value) => setState(() => _kind = value),
             ),

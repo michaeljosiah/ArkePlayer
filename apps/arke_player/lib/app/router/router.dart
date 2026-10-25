@@ -6,6 +6,7 @@ import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/library/presentation/library_screen.dart';
 import '../../features/onboarding/presentation/first_open_screen.dart';
+import '../../features/players/presentation/music_player_screen.dart';
 import '../../features/players/presentation/open_item_screen.dart';
 import '../../features/settings/presentation/you_screen.dart';
 import '../../features/worlds/presentation/discover_screen.dart';
@@ -55,6 +56,16 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
         parentNavigatorKey: root,
         builder: (context, state) => OpenItemScreen(itemId: state.pathParameters['itemId']!),
       ),
+      GoRoute(
+        path: '/music/:worldId/:productionId',
+        parentNavigatorKey: root,
+        builder: (context, state) => MusicPlayerScreen(
+          worldId: state.pathParameters['worldId']!,
+          productionId: state.pathParameters['productionId']!,
+          track: int.tryParse(state.uri.queryParameters['track'] ?? ''),
+          shuffle: state.uri.queryParameters['shuffle'] == '1',
+        ),
+      ),
     ],
   );
 }
@@ -78,13 +89,20 @@ GoRoute _worldRoute() => GoRoute(
     ),
     GoRoute(
       path: ':productionId',
-      builder: (context, state) => ProductionScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
+      builder: (context, state) => ProductionScreen(
+        worldId: state.pathParameters['worldId']!,
+        productionId: state.pathParameters['productionId']!,
+        worldLocation: _parentOf(state.uri.path),
+      ),
     ),
   ],
 );
 
 /// The world page's own path, from a guide page's.
 String _worldOf(String path) => path.substring(0, path.indexOf('/_guide'));
+
+/// The world page's own path, from a production's.
+String _parentOf(String path) => path.substring(0, path.lastIndexOf('/'));
 
 /// The router; main overrides it with the start the device calls for (first open, or Home).
 final routerProvider = Provider<GoRouter>((ref) => buildRouter());

@@ -692,7 +692,18 @@ class ProductionTile extends StatelessWidget {
 }
 
 /// A refusal (P9e, as P2f): the clause, the world and its size, then Try again and Close.
-Future<void> showInstallRefusal(BuildContext context, WidgetRef ref, CatalogueWorld world, InstallRefusal refusal, {bool updating = false}) async {
+///
+/// With [production], the refusal is that production's Update (SPEC-058 R-72), which Try again
+/// presses again.
+Future<void> showInstallRefusal(
+  BuildContext context,
+  WidgetRef ref,
+  CatalogueWorld world,
+  InstallRefusal refusal, {
+  bool updating = false,
+  CatalogueProduction? production,
+}) async {
+  final package = production?.package ?? world.package;
   final again = await showArkeSheet<bool>(
     context,
     title: null,
@@ -716,11 +727,8 @@ Future<void> showInstallRefusal(BuildContext context, WidgetRef ref, CatalogueWo
             Text(
               // An update names the edition it would have brought (P12f); an install its size.
               [
-                world.name,
-                if (updating && world.package?.edition != null)
-                  editionLabel(world.package!.edition!)
-                else if (world.package != null)
-                  formatBytes(world.package!.byteLength),
+                production?.title ?? world.name,
+                if (updating && package?.edition != null) editionLabel(package!.edition!) else if (package != null) formatBytes(package.byteLength),
               ].join(' · '),
               textAlign: TextAlign.center,
               style: text.bodyMedium?.copyWith(color: context.surface.mutedForeground),
@@ -742,6 +750,12 @@ Future<void> showInstallRefusal(BuildContext context, WidgetRef ref, CatalogueWo
       );
     },
   );
+  if (production != null) {
+    final controller = ref.read(productionInstallProvider((world.id, production.id ?? '')).notifier);
+    controller.dismiss();
+    if (again == true) await controller.start(world, production);
+    return;
+  }
   final controller = ref.read(installProvider(world.id).notifier);
   controller.dismiss();
   if (again == true) await controller.start(world);

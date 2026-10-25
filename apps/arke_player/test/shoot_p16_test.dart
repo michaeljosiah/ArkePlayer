@@ -14,6 +14,7 @@ import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/parts/application/parts.dart';
 import 'package:arke_player/features/players/application/audio_engine.dart';
+import 'package:arke_player/features/players/application/music.dart';
 import 'package:arke_player/features/players/application/players.dart';
 import 'package:arke_player/features/worlds/application/discover.dart';
 import 'package:arke_player/features/worlds/application/guides.dart';
@@ -213,6 +214,8 @@ class _Playing implements AudioEngine {
   Duration get length => item.duration ?? Duration.zero;
   @override
   int chapterAt(Duration position) => item.chapters.lastIndexWhere((chapter) => chapter.start <= position);
+  @override
+  MusicAlbum? get music => null;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

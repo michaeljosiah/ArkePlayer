@@ -34,22 +34,27 @@ Directory partInbox(Directory libraryRoot) => Directory('${libraryRoot.parent.pa
 
 File inboxFile(Directory inbox, String worldId, CataloguePart part) => File('${inbox.path}${Platform.pathSeparator}$worldId-${part.sha256}.zip');
 
-/// A part on its way to an installed world (P15k): coming, or waiting for Wi-Fi.
+/// A part on its way to an installed world (P15k), or a production published on its own (SPEC-058
+/// R-72) — an album listed after the world was installed: coming, or waiting for Wi-Fi.
 class PartArrival {
-  const PartArrival({required this.world, required this.part, this.step});
+  const PartArrival({required this.world, this.part, this.production, this.step}) : assert((part == null) != (production == null));
   final CatalogueWorld world;
-  final CataloguePart part;
+  final CataloguePart? part;
+  final CatalogueProduction? production;
 
   /// Null while it waits.
   final InstallStep? step;
 
   bool get waiting => step == null;
 
-  /// Downloads' line: `Chapter 3 · 9 of 18 MB`, or `Episodes 41–45 · 64 MB · Waiting`.
+  int get byteLength => part?.byteLength ?? production!.package!.byteLength;
+
+  /// Downloads' line: `Chapter 3 · 9 of 18 MB`, `Episodes 41–45 · 64 MB · Waiting`, or an album's
+  /// title in place of the chapters.
   String line({bool episodes = false}) {
-    final what = chaptersLabel(part.chapters, episodes: episodes);
+    final what = part == null ? production!.title : chaptersLabel(part!.chapters, episodes: episodes);
     return switch (step) {
-      null => '$what · ${formatBytes(part.byteLength)} · Waiting',
+      null => '$what · ${formatBytes(byteLength)} · Waiting',
       Downloading(:final received, :final total) => '$what · ${formatBytes(received)} of ${formatBytes(total)}',
       Copying() || Checking() => '$what · Checking',
     };
@@ -66,6 +71,10 @@ class PartArrival {
 /// the daily check fetched ahead from where it waits, the rest downloaded when [mayDownload]. A world
 /// whose next part cannot come waits, and its later parts with it; one refused is tried again at the
 /// next check. [onAdded] hears each part added, and whether it had been fetched ahead.
+///
+/// Then each production published on its own that the list names and the world lacks (R-72), such
+/// as an album listed after the world was installed, on the same terms. Only the app brings these:
+/// the daily check fetches parts ahead, which an album, heard when chosen, does not need.
 Future<void> addMissingParts({
   required List<CatalogueWorld> catalogue,
   required LibraryStore store,
@@ -78,11 +87,13 @@ Future<void> addMissingParts({
   for (final world in store.worlds) {
     final listed = listedFor(catalogue, world.id);
     if (listed == null) continue;
+    var waited = false;
     for (final part in missingParts(listed, world)) {
       final waiting = inboxFile(inbox, world.id, part);
       final ahead = await waiting.exists();
       if (!ahead && !mayDownload) {
         onProgress?.call(world.id, PartArrival(world: listed, part: part));
+        waited = true;
         break;
       }
       try {
@@ -101,6 +112,27 @@ Future<void> addMissingParts({
         if (ahead && await waiting.exists()) await waiting.delete();
         onProgress?.call(world.id, null);
         break;
+      }
+    }
+    if (waited) continue;
+    // The installed world as the parts left it: a production names the edition it is beside.
+    final current = store.worlds.where((held) => held.id == world.id).firstOrNull ?? world;
+    for (final production in missingProductions(listed, current)) {
+      if (!mayDownload) {
+        onProgress?.call(world.id, PartArrival(world: listed, production: production));
+        break;
+      }
+      try {
+        onProgress?.call(world.id, PartArrival(world: listed, production: production, step: Downloading(0, production.package!.byteLength)));
+        await installer.installProduction(
+          listed,
+          production,
+          onStep: (step) => onProgress?.call(world.id, PartArrival(world: listed, production: production, step: step)),
+        );
+        onProgress?.call(world.id, null);
+      } on InstallRefusal {
+        // Tried again at the next check; the rest of the world's music still comes.
+        onProgress?.call(world.id, null);
       }
     }
   }

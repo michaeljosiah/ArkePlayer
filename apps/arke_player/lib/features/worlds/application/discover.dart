@@ -42,15 +42,17 @@ List<FreshPart> freshParts(Iterable<CatalogueWorld> catalogue, DateTime now, {bo
 
 /// What Discover opens on (P16 rule 2, call 15): the production Arke's list names — its world's
 /// first when it names the world alone — else the production of the newest part (P15 rule 7), else
-/// the first listed world's first. A name no listed world answers to is ignored.
+/// the first listed world's first. A name no listed world answers to is ignored. A world's first is
+/// its first story: its music is a square, not a feature (P17 rule 3), unless the list names it.
 ({CatalogueWorld world, CatalogueProduction production})? discoverFeature(List<CatalogueWorld> listed, CatalogueFeature? named, List<FreshPart> fresh) {
+  CatalogueProduction firstOf(CatalogueWorld world) => world.productions.where((production) => production.music == null).firstOrNull ?? world.productions.first;
   if (listed.where((world) => world.id == named?.world).firstOrNull case final world? when world.productions.isNotEmpty) {
     final production = world.productions.where((production) => production.id != null && production.id == named?.production).firstOrNull;
-    return (world: world, production: production ?? world.productions.first);
+    return (world: world, production: production ?? firstOf(world));
   }
   if (fresh.where((item) => item.production != null).firstOrNull case final item?) return (world: item.world, production: item.production!);
   final first = listed.where((world) => world.productions.isNotEmpty).firstOrNull;
-  return first == null ? null : (world: first, production: first.productions.first);
+  return first == null ? null : (world: first, production: firstOf(first));
 }
 
 /// The world of Discover's band (P16 rule 6, call 15): the one Arke's list names, else the last
