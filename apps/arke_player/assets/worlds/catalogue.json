@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 29,
+  "serial": 30,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -19,45 +19,11 @@
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-25-preview/the-undersong-player-2026-10-25.zip",
-        "byteLength": 25574825,
-        "sha256": "3f321a7ab83aa4d4f40506ce25e69b55d07e7a2120f088ab8dc45f89c526b289",
-        "edition": "2026-10-25",
-        "fingerprint": "59c94ba1e9d82d13eb19d4805d8796430c0c0a0866a50e596bd852ac8791c0c7",
-        "parts": [
-          {
-            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-2/the-undersong-part-2026-10-26.zip",
-            "byteLength": 29643502,
-            "sha256": "f63ccd6969d4a9cd242ea9f372f4258d0d5c6b9075169a636a9a7879a4da6cd4",
-            "edition": "2026-10-26",
-            "fingerprint": "b46deddc095629e350540481e31adf75f8bc97fae88ad8d24fcac52358d52b44",
-            "released": "2026-10-26",
-            "production": "the-ledger-of-nights",
-            "chapters": [
-              {
-                "id": "slack-water",
-                "number": 2,
-                "title": "Slack water"
-              }
-            ]
-          },
-          {
-            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-undersong-part-2026-10-26-2.zip",
-            "byteLength": 24648577,
-            "sha256": "88fe58a6d63937def0549d82718582c1a49260d994ab229a4c5356c5682db930",
-            "edition": "2026-10-26-2",
-            "fingerprint": "435f0db469faafe2c635bc93e36e3eb284197d7acfc6879b030af1433bd7a425",
-            "released": "2026-10-26",
-            "production": "the-ledger-of-nights",
-            "chapters": [
-              {
-                "id": "warning-slip",
-                "number": 3,
-                "title": "Warning slip"
-              }
-            ]
-          }
-        ]
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-undersong-player-2026-10-26.zip",
+        "byteLength": 82669497,
+        "sha256": "5cd345dce0f497883c36c6509faf595c178d68c0a613dee7298f885f51117cdb",
+        "edition": "2026-10-26",
+        "fingerprint": "62c188259dee0508619428cee249b2c52fea54fcdabd6ad931eccce689ffbf8f"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-guide-2026-10-22.zip",
