@@ -56,6 +56,13 @@ Domain code does not import Flutter where it can avoid it. Rules that need no wi
 
 A hosted module is the same framework-free `player.html` a package carries. `WebPlayerHost` loads it from the Player's own storage. It talks to the app over the `ArkePlayer` JavaScript channel (events: `place`, `ended`, `close`) and restores a kept place through `window.arkePlayer.restore(place)`. That bridge does not exist in the Studio's modules yet; adding it is the first build task ([ADR 0001](decisions/0001-host-the-studio-players.md)). The app wraps the host in the phone's media session: lock screen, headset, background audio, picture in picture, casting.
 
+Chapter selection in the native audiobook player is an explicit start position carried by
+`/open/:itemId?at=<milliseconds>` (P5b, P15e). The engine seeks even when that title is already
+loaded; opening the dock without `at` resumes its current position. Open items follow library
+changes, and a queue is reused only while its file, length and chapter metadata match, so a
+newly installed chapter is not hidden behind an older queue. Places remain stored by chapter id
+and offset for illustrated narration. Regression coverage: `apps/arke_player/test/chapter_playback_test.dart`.
+
 ## Layout bands
 
 Under 600 wide is a phone: four tabs in a bar, sheets from the foot. From 600 to 1099 is a Fold7 open or a tablet, and from 1100 up is wide: the tabs become an 88-wide rail and the shelves widen (P6 rule 5). `AdaptiveShell` decides by window width, never by device type, so a Fold changes shell when it unfolds.

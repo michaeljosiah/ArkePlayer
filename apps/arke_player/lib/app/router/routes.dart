@@ -28,7 +28,7 @@ abstract final class Routes {
 
   /// An added file in its player, over the tabs: the audio player (P7d, P5a–P5c), the reader
   /// (P5e), the page viewer (P7c) or the film player (P3a, P3b, P3e).
-  static String open(String itemId) => '/open/$itemId';
+  static String open(String itemId, {Duration? startAt}) => '/open/$itemId${startAt == null ? '' : '?at=${startAt.inMilliseconds}'}';
 
   /// A world's music in the audio player, over the tabs (P17d, P17e). [track] starts it there,
   /// [shuffle] in a shuffled order; with neither it shows what plays, as the dock opens it.

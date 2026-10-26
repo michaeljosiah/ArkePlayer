@@ -12,9 +12,10 @@ import 'reader_screen.dart';
 
 /// An added file in the player its format opens in (P7 rule 2).
 class OpenItemScreen extends ConsumerWidget {
-  const OpenItemScreen({required this.itemId, super.key});
+  const OpenItemScreen({required this.itemId, this.startAt, super.key});
 
   final String itemId;
+  final Duration? startAt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,7 +27,7 @@ class OpenItemScreen extends ConsumerWidget {
         if (found == null) return const _Gone();
         final (:item, :store) = found;
         return switch (item.kind) {
-          LibraryKind.listen => AudioPlayerScreen(item: item, store: store),
+          LibraryKind.listen => AudioPlayerScreen(item: item, store: store, startAt: startAt),
           LibraryKind.read when item.format == FileFormat.pdf => PdfScreen(item: item, store: store),
           LibraryKind.read => ReaderScreen(item: item, store: store),
           LibraryKind.watch => FilmScreen(item: item, store: store),

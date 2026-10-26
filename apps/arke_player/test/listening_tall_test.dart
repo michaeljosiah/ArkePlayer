@@ -63,6 +63,7 @@ class _StillEngine implements AudioEngine {
     String? path,
     ListeningPlan? plan,
     String? artPath,
+    Duration? startAt,
     required double speed,
     required void Function(Place place, {bool? finished}) keep,
   }) async {}

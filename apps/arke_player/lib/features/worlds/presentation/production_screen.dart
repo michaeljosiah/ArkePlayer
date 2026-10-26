@@ -173,23 +173,9 @@ class ProductionScreen extends ConsumerWidget {
                   fresh: fresh.contains(i),
                   heard: narration.finished || (narration.inProgress && (_chapterAt(narration) ?? 0) > i),
                   current: _chapterAt(narration) == i && narration.inProgress,
-                  onOpen: () async {
-                    // A chapter opens the player at its start: the place is the chapter's, by its id
-                    // where the narration keeps one (SPEC-058 R-26).
-                    final total = narration.duration?.inMilliseconds ?? 0;
-                    await ref
-                        .read(placeKeeperProvider)
-                        .call(
-                          narration.id,
-                          Place(
-                            locator: chapter.id,
-                            position: chapter.id == null ? chapter.start : Duration.zero,
-                            progress: total <= 0 ? 0 : chapter.start.inMilliseconds / total,
-                            updatedAt: DateTime.now().toUtc(),
-                          ),
-                        );
-                    if (context.mounted) open(narration);
-                  },
+                  // A chapter is an explicit seek, not a saved-place update that an already
+                  // loaded player can ignore. The engine keeps the selected chapter after seeking.
+                  onOpen: () => context.push(Routes.open(narration.id, startAt: chapter.start)),
                 ),
               if (next != null)
                 _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),

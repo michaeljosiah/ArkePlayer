@@ -25,10 +25,11 @@ const _fg = ArkeColors.mediaOverlayForeground;
 /// A world's illustrated narration (SPEC-058 R-22 – R-27) is the same player as P5a draws it: the
 /// picture of the moment over the top 62%, Slow push under the title, Text above the transport.
 class AudioPlayerScreen extends ConsumerStatefulWidget {
-  const AudioPlayerScreen({required this.item, required this.store, super.key});
+  const AudioPlayerScreen({required this.item, required this.store, this.startAt, super.key});
 
   final LibraryItem item;
   final LibraryStore store;
+  final Duration? startAt;
 
   @override
   ConsumerState<AudioPlayerScreen> createState() => _AudioPlayerScreenState();
@@ -51,23 +52,23 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
     final art = item.cover == null ? null : widget.store.resolve(item.cover!);
     void keepPlace(Place place, {bool? finished}) => keep(item.id, place, finished: finished);
     // Back from the dock, the narration playing already has its plan.
-    final playing = _engine.item?.id == item.id ? _engine.plan : null;
+    final playing = sameAudioSource(_engine.item, item) ? _engine.plan : null;
     if (_illustrated && playing != null) {
       _plan = playing;
-      _engine.open(item, plan: playing, artPath: art, speed: settings.speed, keep: keepPlace);
+      _engine.open(item, plan: playing, artPath: art, speed: settings.speed, startAt: widget.startAt, keep: keepPlace);
     } else if (_illustrated) {
       loadListeningPlan(widget.store, item).then(
         (plan) {
           if (!mounted) return;
           setState(() => _plan = plan);
-          _engine.open(item, plan: plan, artPath: art, speed: settings.speed, keep: keepPlace);
+          _engine.open(item, plan: plan, artPath: art, speed: settings.speed, startAt: widget.startAt, keep: keepPlace);
         },
         onError: (Object _) {
           if (mounted) setState(() => _unreadable = true);
         },
       );
     } else {
-      _engine.open(item, path: widget.store.resolve(item.file), artPath: art, speed: settings.speed, keep: keepPlace);
+      _engine.open(item, path: widget.store.resolve(item.file), artPath: art, speed: settings.speed, startAt: widget.startAt, keep: keepPlace);
     }
     if (settings.sleep != SleepTimer.off) _engine.setSleep(settings.sleep);
   }

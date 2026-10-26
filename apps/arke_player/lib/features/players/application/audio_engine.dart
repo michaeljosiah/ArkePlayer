@@ -25,7 +25,7 @@ import 'music.dart';
 /// with shuffle and repeat; previous and next move by tracks, the lock screen names the track and its
 /// album, and a song keeps no place (P17 call 20).
 class AudioEngine extends BaseAudioHandler with SeekHandler {
-  AudioEngine() {
+  AudioEngine({AudioPlayer? player}) : _player = player ?? AudioPlayer() {
     _player.playbackEventStream.listen((_) => _broadcast(), onError: (Object _) => _broadcast());
     _player.playingStream.listen((_) => _broadcast());
     _player.positionStream.listen(_onPosition);
@@ -35,7 +35,7 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  final _player = AudioPlayer();
+  final AudioPlayer _player;
 
   LibraryItem? _item;
   ListeningPlan? _plan;
@@ -160,10 +160,15 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     String? path,
     ListeningPlan? plan,
     String? artPath,
+    Duration? startAt,
     required double speed,
     required void Function(Place place, {bool? finished}) keep,
   }) async {
-    if (_item?.id == item.id) {
+    if (sameAudioSource(_item, item)) {
+      if (startAt != null) {
+        await seek(_clamp(startAt));
+        await _keepPlace();
+      }
       if (!_player.playing) await play();
       return;
     }
@@ -179,7 +184,7 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     await _player.setLoopMode(LoopMode.off);
     final place = item.finished ? null : item.place;
     if (plan != null) {
-      final (index, offset) = plan.locate(plan.timeOf(place?.locator, place?.position ?? Duration.zero));
+      final (index, offset) = plan.locate(startAt ?? plan.timeOf(place?.locator, place?.position ?? Duration.zero));
       final art = plan.shownAt(plan.starts[index] + offset)?.path ?? artPath;
       _announce(item, art);
       await _player.setAudioSources(
@@ -189,9 +194,10 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
       );
     } else {
       _announce(item, artPath);
-      await _player.setFilePath(path!, initialPosition: place?.position ?? Duration.zero);
+      await _player.setFilePath(path!, initialPosition: startAt ?? place?.position ?? Duration.zero);
     }
     await _player.setSpeed(speed);
+    if (startAt != null) await _keepPlace();
     await play();
   }
 
@@ -380,4 +386,23 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
       ),
     );
   }
+}
+
+/// Item ids survive parts and edition updates; an older queue is reusable only while its source
+/// metadata still matches. Saved-place changes alone do not require rebuilding native audio.
+bool sameAudioSource(LibraryItem? loaded, LibraryItem item) {
+  if (loaded == null ||
+      loaded.id != item.id ||
+      loaded.file != item.file ||
+      loaded.format != item.format ||
+      loaded.byteLength != item.byteLength ||
+      loaded.duration != item.duration ||
+      loaded.chapters.length != item.chapters.length) {
+    return false;
+  }
+  for (var i = 0; i < item.chapters.length; i++) {
+    final before = loaded.chapters[i], after = item.chapters[i];
+    if (before.id != after.id || before.start != after.start || before.title != after.title) return false;
+  }
+  return true;
 }

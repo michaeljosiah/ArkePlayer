@@ -15,10 +15,17 @@ Future<void> keepPlace(Ref ref, String itemId, Place place, {bool? finished}) as
 }
 
 /// The item an `/open/:id` route names, with the library's root to resolve its files.
-final openItemProvider = FutureProvider.family<({LibraryItem item, LibraryStore store})?, String>((ref, id) async {
+final openItemProvider = StreamProvider.autoDispose.family<({LibraryItem item, LibraryStore store})?, String>((ref, id) async* {
   final store = await ref.watch(libraryStoreProvider.future);
-  final item = store.items.where((item) => item.id == id).firstOrNull;
-  return item == null ? null : (item: item, store: store);
+  ({LibraryItem item, LibraryStore store})? find(List<LibraryItem> items) {
+    final item = items.where((item) => item.id == id).firstOrNull;
+    return item == null ? null : (item: item, store: store);
+  }
+
+  yield find(store.items);
+  await for (final items in store.changes) {
+    yield find(items);
+  }
 });
 
 /// A function that keeps places, for a player that is not a widget of Riverpod's.
