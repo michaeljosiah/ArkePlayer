@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 27,
+  "serial": 28,
   "feature": { "world": "na-love-or-juju" },
   "band": "the-undersong",
   "worlds": [
@@ -12,7 +12,7 @@
       "keyArt": "assets/worlds/undersong/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-keyArt-20261024.jpg", "byteLength": 183862, "sha256": "e3b91a196743ac9e9363a74b0655448c3d692438710dd3839c13ccfb31b558e9" } },
       "productions": [
-        { "title": "The Ledger of Nights", "kind": "Audiobook · Chapter 1 preview · 16 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
+        { "id": "the-ledger-of-nights", "title": "The Ledger of Nights", "kind": "Audiobook · Chapters 1–2 · 36 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
           "pins": {
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261024.jpg", "byteLength": 576958, "sha256": "198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776" }
@@ -23,7 +23,25 @@
         "byteLength": 25574825,
         "sha256": "3f321a7ab83aa4d4f40506ce25e69b55d07e7a2120f088ab8dc45f89c526b289",
         "edition": "2026-10-25",
-        "fingerprint": "59c94ba1e9d82d13eb19d4805d8796430c0c0a0866a50e596bd852ac8791c0c7"
+        "fingerprint": "59c94ba1e9d82d13eb19d4805d8796430c0c0a0866a50e596bd852ac8791c0c7",
+        "parts": [
+          {
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-2/the-undersong-part-2026-10-26.zip",
+            "byteLength": 29643502,
+            "sha256": "f63ccd6969d4a9cd242ea9f372f4258d0d5c6b9075169a636a9a7879a4da6cd4",
+            "edition": "2026-10-26",
+            "fingerprint": "b46deddc095629e350540481e31adf75f8bc97fae88ad8d24fcac52358d52b44",
+            "released": "2026-10-26",
+            "production": "the-ledger-of-nights",
+            "chapters": [
+              {
+                "id": "slack-water",
+                "number": 2,
+                "title": "Slack water"
+              }
+            ]
+          }
+        ]
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-guide-2026-10-22.zip",
