@@ -87,9 +87,12 @@ void main() {
     final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
     expect(undersong.package!.sha256, '5cd345dce0f497883c36c6509faf595c178d68c0a613dee7298f885f51117cdb');
     expect(undersong.package!.edition, '2026-10-26');
-    expect(undersong.package!.parts, hasLength(1));
-    expect(undersong.package!.parts.single.sha256, '56b408526a384ce34435ca45a52a31f07020314fd7c5df436571fd11d5393f42');
-    expect(undersong.package!.parts.single.chapters.single.id, 'the-same-ink');
+    expect(undersong.package!.parts, hasLength(2));
+    expect(undersong.package!.parts.first.sha256, '56b408526a384ce34435ca45a52a31f07020314fd7c5df436571fd11d5393f42');
+    expect(undersong.package!.parts.first.chapters.single.id, 'the-same-ink');
+    expect(undersong.package!.parts.last.sha256, 'daf83567861183d9e43aad8fe19f93ff4c369f7df614c6f5be99619336dde99c');
+    expect(undersong.package!.parts.last.chapters.single.id, 'independent-record');
+    expect(undersong.package!.parts.last.chapters.single.number, 5);
     expect(undersong.guide!.url.scheme, 'https');
     expect(undersong.guide!.sha256, 'ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123');
     // The hand-packed editions were published as `undersong`: a phone holding one is offered Update.

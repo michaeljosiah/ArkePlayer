@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 32,
+  "serial": 33,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -12,7 +12,7 @@
       "keyArt": "assets/worlds/undersong/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-keyArt-20261024.jpg", "byteLength": 183862, "sha256": "e3b91a196743ac9e9363a74b0655448c3d692438710dd3839c13ccfb31b558e9" } },
       "productions": [
-        { "id": "the-ledger-of-nights", "title": "The Ledger of Nights", "kind": "Audiobook · Chapters 1–4 · 1 h 6 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
+        { "id": "the-ledger-of-nights", "title": "The Ledger of Nights", "kind": "Audiobook · Chapters 1–5 · 1 h 25 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
           "pins": {
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261024.jpg", "byteLength": 576958, "sha256": "198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776" }
@@ -38,6 +38,22 @@
                 "id": "the-same-ink",
                 "number": 4,
                 "title": "The blue door"
+              }
+            ]
+          },
+          {
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-27-chapter-5/the-undersong-part-2026-10-27.zip",
+            "byteLength": 41776288,
+            "sha256": "daf83567861183d9e43aad8fe19f93ff4c369f7df614c6f5be99619336dde99c",
+            "edition": "2026-10-27",
+            "fingerprint": "634802824b02d5d54f5d12b826237b2bfdb964af3f353e506609fee59e9f12d6",
+            "released": "2026-10-27",
+            "production": "the-ledger-of-nights",
+            "chapters": [
+              {
+                "id": "independent-record",
+                "number": 5,
+                "title": "Independent record"
               }
             ]
           }
