@@ -476,6 +476,9 @@ WorldManifestRead readWorldManifest(String text) {
   }
   if (part != null && productions.length != 1) return notAPackage('a part carries one production');
   if (version >= 5 && productions.length != 1) return notAPackage('a production package holds one production');
+  // Schema 6 exists for stories (R-79), as 5 does for production packages: music is still made at 5, so
+  // a Player that reads 5 and not 6 is never kept from a package it could play.
+  if (version >= 6 && productions.single.story == null) return notAPackage('a schema 6 package is a story published alone');
   // Every file is one the world uses: nothing unreferenced rides along (SPEC-048 R-13). The files a
   // listening document, a music document, a story document or a guide names are known only once it is
   // read, so with one the package reader makes this check instead.

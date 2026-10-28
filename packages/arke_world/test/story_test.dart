@@ -26,15 +26,17 @@ StoryDocument _document(String name) => switch (readStory(_read(name), _assets()
 };
 
 /// Every complete route through [document], each a list of choice ids, taking open choices in
-/// authored order: what the Studio's fixtures list when they say they are complete.
+/// authored order: what the Studio's fixtures list when they say they are complete. A route ends at an
+/// ending; a scene that is no ending and offers nothing is a dead end the Studio's export refuses.
 List<List<String>> _completeRoutes(StoryDocument document, {int limit = 100000}) {
   final routes = <List<String>>[];
   void walk(StoryStep step) {
     if (routes.length > limit) throw StateError('more than $limit routes');
-    if (step.open.isEmpty) {
+    if (step.ending != null) {
       routes.add(step.route);
       return;
     }
+    if (step.open.isEmpty) throw StateError('${step.route.join(' → ')} stops at ${step.scene}, which is no ending');
     for (final choice in step.open) {
       walk(chooseStory(document, step, choice.id));
     }
@@ -118,16 +120,23 @@ void main() {
 
       if (fixture['complete'] == true) {
         test('$name: its routes are every complete route through it', () {
-          final ours = {for (final route in _completeRoutes(document)) route.join(' ')};
-          final theirs = {for (final route in routes) (route['choices']! as List<Object?>).join(' ')};
-          expect(ours, theirs);
+          final ours = [for (final route in _completeRoutes(document)) route.join(' ')];
+          final theirs = [for (final route in routes) (route['choices']! as List<Object?>).join(' ')];
+          expect(ours.toSet(), theirs.toSet());
+          expect(theirs, hasLength(theirs.toSet().length), reason: 'no route twice');
+          expect(routes.every((route) => route['ending'] != null), isTrue, reason: 'a complete route ends');
         });
       } else {
+        // A loop is legitimate (SPEC-063 R-6), so a walk may stop at a bound: a route that reaches its
+        // `choices` without ending is kept unended, and the walk stops at `routes` routes.
         test('$name: its routes are within its bound', () {
-          final bound = fixture['bound'];
-          expect(bound, isA<int>());
+          final bound = fixture['bound']! as Map<String, Object?>;
+          final (choices, count) = (bound['choices']! as int, bound['routes']! as int);
+          expect(routes.length, lessThanOrEqualTo(count));
           for (final route in routes) {
-            expect((route['choices']! as List<Object?>).length, lessThanOrEqualTo(bound! as int));
+            final length = (route['choices']! as List<Object?>).length;
+            expect(length, lessThanOrEqualTo(choices));
+            if (route['ending'] == null) expect(length, choices, reason: 'only the bound leaves a route unended');
           }
         });
       }

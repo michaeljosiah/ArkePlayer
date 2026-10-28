@@ -231,6 +231,41 @@
       "expect": "notAPackage"
     },
     {
+      "file": "boolean-with-values.json",
+      "reader": "story",
+      "expect": "newerArke"
+    },
+    {
+      "file": "fact-with-label.json",
+      "reader": "story",
+      "expect": "newerArke"
+    },
+    {
+      "file": "metadata-in-a-condition.json",
+      "reader": "story",
+      "expect": "newerArke"
+    },
+    {
+      "file": "no-facts.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "no-effects.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "scene-without-clips.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "label-too-long.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
       "file": "reason-too-long.json",
       "reader": "story",
       "expect": "notAPackage"
@@ -249,6 +284,16 @@
       "file": "voice-not-audio.json",
       "reader": "story",
       "expect": "notAPackage"
+    },
+    {
+      "file": "beat-without-picture.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "beat-picture-alone.json",
+      "reader": "story",
+      "expect": "ok"
     },
     {
       "file": "clips-in-a-novel.json",
@@ -284,6 +329,11 @@
     },
     {
       "file": "world-story-beside-book.json",
+      "reader": "manifest",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "world-music-in-schema-6.json",
       "reader": "manifest",
       "expect": "notAPackage"
     },

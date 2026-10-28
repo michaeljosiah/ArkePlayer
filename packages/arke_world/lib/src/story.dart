@@ -21,20 +21,26 @@ const supportedStoryVersions = {storyVersion};
 const storyClipMediaTypes = {'video/mp4'};
 const storyVoiceMediaTypes = {'audio/mp4'};
 
-/// SPEC-063's bounds for routing, which a document compiled from it keeps: 32 facts, 16 values an
-/// enum, 64 characters an id or value (R-3); a condition 8 deep and 128 nodes (R-4); 32 effects a
-/// choice; an unavailable label of 256 and a reason of 600 (the R-11 wire detail).
+/// SPEC-063's bounds for routing, which a document compiled from it keeps, so whatever routing can
+/// hold compiles: 32 facts, 16 values an enum, 64 characters a fact id or value (R-3); a condition 8
+/// deep and 128 nodes (R-4); 32 effects a choice; an unavailable label of 256 and a reason of 600 (the
+/// R-11 wire detail).
 const maxStoryFacts = 32;
 const maxStoryFactValues = 16;
-const maxStoryIdLength = 64;
+const maxStoryFactLength = 64;
 const maxStoryConditionDepth = 8;
 const maxStoryConditionNodes = 128;
 const maxStoryEffects = 32;
 
-/// The document's own sizes: a story far past any authored one is not a story to play on a phone.
+/// The document's own sizes, as contracts' `STORY_LIMITS` bound them: a story far past any authored
+/// one is not a story to play on a phone.
 const maxStoryScenes = 1000;
+const maxStorySceneItems = 2000;
 const maxStoryChoices = 4000;
-const maxStorySceneItems = 1000;
+const maxStoryPresentation = 20000;
+const maxStoryEndings = 1000;
+const maxStoryVariants = 64;
+const maxStoryIdLength = 128;
 
 enum StoryKind { movie, novel }
 
@@ -137,12 +143,16 @@ class StoryClip {
 
 /// A visual novel's beat: a picture and its Tall, who speaks, the line, and its voice when voiced.
 class StoryBeat {
-  const StoryBeat({this.picture, this.tall, this.speaker, this.line, this.voice});
+  const StoryBeat({required this.picture, this.tall, this.speaker, this.line, this.voice});
 
-  /// Asset ids.
-  final String? picture;
+  /// An asset id, as [tall] and [voice] are.
+  final String picture;
   final String? tall;
+
+  /// Absent for narration.
   final String? speaker;
+
+  /// Absent for a picture held without a line.
   final String? line;
   final String? voice;
 }
@@ -255,7 +265,7 @@ class StoryDocument {
   Set<String> get assetIds => {
     for (final scene in scenes.values) ...[
       for (final clip in scene.clips) clip.asset,
-      for (final beat in scene.beats) ...[?beat.picture, ?beat.tall, ?beat.voice],
+      for (final beat in scene.beats) ...[beat.picture, ?beat.tall, ?beat.voice],
     ],
   };
 }
@@ -293,7 +303,9 @@ class _Refuse implements Exception {
 /// Arke`. An id that repeats; a choice, presentation row or ending naming a scene that is not there; a
 /// guard or effect naming a fact or value that is not declared; an asset missing or not of its kind;
 /// an ending with an outgoing choice; or a document past SPEC-063's bounds is not an Arke package.
-/// Only `metadata` objects are ignorable.
+/// Only `metadata` objects are ignorable, and not inside a condition or an effect, whose shapes are the
+/// rules' own. The fingerprint is not recomputed: it is the identity a save is checked against, and the
+/// package's hashes cover the bytes.
 StoryRead readStory(String text, Map<String, WorldAsset> assets) {
   try {
     return StoryOk(_read(text, assets));
@@ -305,9 +317,9 @@ StoryRead readStory(String text, Map<String, WorldAsset> assets) {
 Never _notAPackage(String reason) => throw _Refuse(WorldRefusal.notAPackage, reason);
 Never _newer(String reason) => throw _Refuse(WorldRefusal.newerArke, reason);
 
-Map<String, Object?> _object(Object? value, String what, Set<String> keys) {
+Map<String, Object?> _object(Object? value, String what, Set<String> keys, {bool ignorable = true}) {
   if (value is! Map<String, Object?>) _notAPackage('$what is not an object');
-  final unknown = value.keys.where((key) => !keys.contains(key) && key != 'metadata');
+  final unknown = value.keys.where((key) => !keys.contains(key) && !(ignorable && key == 'metadata'));
   if (unknown.isNotEmpty) _newer('$what keys ${unknown.join(', ')}');
   return value;
 }
@@ -318,8 +330,8 @@ List<Object?> _list(Object? value, String what, {int min = 0, required int max})
 String _text(Object? value, String what, {int max = 400, bool empty = false}) =>
     value is String && (empty || value.trim().isNotEmpty) && value.length <= max ? value : _notAPackage(what);
 
-String _match(Object? value, RegExp pattern, String what) =>
-    value is String && value.length <= maxStoryIdLength && pattern.hasMatch(value) ? value : _notAPackage(what);
+String _match(Object? value, RegExp pattern, String what, {int max = maxStoryIdLength}) =>
+    value is String && value.length <= max && pattern.hasMatch(value) ? value : _notAPackage(what);
 
 Duration _ms(Object? value, String what) => value is int && value >= 0 ? Duration(milliseconds: value) : _notAPackage(what);
 
@@ -360,26 +372,28 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
 
   // The facts first: every guard and effect after them is checked against what they declare.
   final facts = <String, StoryFact>{};
-  for (final raw in _list(json['facts'] ?? const <Object?>[], 'facts', max: maxStoryFacts)) {
-    final f = _object(raw, 'a fact', {'id', 'type', 'values', 'default'});
-    final id = _match(f['id'], _factId, 'fact id');
+  for (final raw in _list(json['facts'], 'facts', max: maxStoryFacts)) {
+    if (raw is! Map<String, Object?>) _notAPackage('a fact is not an object');
+    // Its type says its shape: a Boolean names no values, so one that does names a key this reader
+    // does not know. No fact names a label: a listener never sees one (P18 call 23).
+    final type = raw['type'];
+    if (type != 'boolean' && type != 'enum') _notAPackage('a fact type');
+    final f = _object(raw, 'a fact', type == 'boolean' ? {'id', 'type', 'default'} : {'id', 'type', 'values', 'default'});
+    final id = _match(f['id'], _factId, 'fact id', max: maxStoryFactLength);
     if (facts.containsKey(id)) _notAPackage('fact $id repeats');
     final StoryFact fact;
-    switch (f['type']) {
+    switch (type) {
       case 'boolean':
-        if (f.containsKey('values')) _notAPackage('fact $id: a Boolean has no values');
         fact = StoryFact(id: id, type: StoryFactType.boolean, initial: f['default'] is bool ? f['default']! : _notAPackage('fact $id default'));
-      case 'enum':
+      default:
         final values = [
           for (final value in _list(f['values'], 'fact $id values', min: 1, max: maxStoryFactValues))
-            value is String && value.isNotEmpty && value.length <= maxStoryIdLength ? value : _notAPackage('fact $id value'),
+            value is String && value.isNotEmpty && value.length <= maxStoryFactLength ? value : _notAPackage('fact $id value'),
         ];
         if (values.toSet().length != values.length) _notAPackage('fact $id: a value repeats');
         final initial = f['default'];
         if (initial is! String || !values.contains(initial)) _notAPackage('fact $id default');
         fact = StoryFact(id: id, type: StoryFactType.enumeration, values: List.unmodifiable(values), initial: initial);
-      default:
-        _notAPackage('fact $id type');
     }
     facts[id] = fact;
   }
@@ -400,14 +414,14 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
       if (value is! Map<String, Object?>) _notAPackage('$what: a condition is not an object');
       switch (value['op']) {
         case 'eq':
-          final c = _object(value, '$what condition', {'op', 'fact', 'value'});
+          final c = _object(value, '$what condition', {'op', 'fact', 'value'}, ignorable: false);
           final literalValue = literal(c['fact'], c['value'], what);
           return StoryIs(c['fact']! as String, literalValue);
         case 'not':
-          final c = _object(value, '$what condition', {'op', 'arg'});
+          final c = _object(value, '$what condition', {'op', 'arg'}, ignorable: false);
           return StoryNot(visit(c['arg'], depth + 1));
         case final op && ('all' || 'any'):
-          final c = _object(value, '$what condition', {'op', 'args'});
+          final c = _object(value, '$what condition', {'op', 'args'}, ignorable: false);
           final args = [for (final arg in _list(c['args'], '$what: $op', min: 1, max: maxStoryConditionNodes)) visit(arg, depth + 1)];
           return op == 'all' ? StoryAll(List.unmodifiable(args)) : StoryAny(List.unmodifiable(args));
         default:
@@ -432,7 +446,7 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
     // A movie plays clips and a novel reads beats (R-80); a scene of the other kind is not this story's.
     final own = kind == StoryKind.movie ? 'clips' : 'beats';
     if (s.containsKey(kind == StoryKind.movie ? 'beats' : 'clips')) _notAPackage('scene $id: a ${kind.name}\'s scene has $own only');
-    final items = _list(s[own], 'scene $id $own', max: maxStorySceneItems);
+    final items = _list(s[own], 'scene $id $own', min: 1, max: maxStorySceneItems);
     final clips = <StoryClip>[];
     final beats = <StoryBeat>[];
     for (final (index, item) in items.indexed) {
@@ -445,20 +459,19 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
         clips.add(StoryClip(asset: asset(c['asset'], storyClipMediaTypes, '$where asset') ?? _notAPackage('$where asset'), from: from, to: to));
       } else {
         final b = _object(item, where, {'picture', 'tall', 'speaker', 'line', 'voice'});
-        final beat = StoryBeat(
-          picture: asset(b['picture'], pictureMediaTypes, '$where picture'),
-          tall: asset(b['tall'], pictureMediaTypes, '$where tall'),
-          speaker: b['speaker'] == null ? null : _text(b['speaker'], '$where speaker', max: 200),
-          line: b['line'] == null ? null : _text(b['line'], '$where line', max: 20000),
-          voice: asset(b['voice'], storyVoiceMediaTypes, '$where voice'),
+        // Every beat has its picture: one that would keep the last beat's is given its own at export.
+        beats.add(
+          StoryBeat(
+            picture: asset(b['picture'], pictureMediaTypes, '$where picture') ?? _notAPackage('$where picture'),
+            tall: asset(b['tall'], pictureMediaTypes, '$where tall'),
+            speaker: b['speaker'] == null ? null : _text(b['speaker'], '$where speaker', max: 200),
+            line: b['line'] == null ? null : _text(b['line'], '$where line', max: 20000),
+            voice: asset(b['voice'], storyVoiceMediaTypes, '$where voice'),
+          ),
         );
-        if (beat.picture == null && beat.line == null) _notAPackage('$where shows nothing');
-        if (beat.tall != null && beat.picture == null) _notAPackage('$where: a Tall without its picture');
-        if (beat.voice != null && beat.line == null) _notAPackage('$where: a voice without its line');
-        beats.add(beat);
       }
     }
-    scenes[id] = StoryScene(id: id, title: _text(s['title'], 'scene $id title'), clips: List.unmodifiable(clips), beats: List.unmodifiable(beats));
+    scenes[id] = StoryScene(id: id, title: _text(s['title'], 'scene $id title', max: 500), clips: List.unmodifiable(clips), beats: List.unmodifiable(beats));
   }
   String scene(Object? id, String what) => id is String && scenes.containsKey(id) ? id : _notAPackage('$what names a scene that is not there');
 
@@ -466,7 +479,7 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
 
   final presentation = <StoryPresentation>[];
   final guarded = <(String, int)>{};
-  for (final raw in _list(json['presentation'] ?? const <Object?>[], 'presentation', max: maxStoryScenes * maxStorySceneItems)) {
+  for (final raw in _list(json['presentation'], 'presentation', max: maxStoryPresentation)) {
     final p = _object(raw, 'a presentation row', {'scene', 'index', 'when'});
     final at = scene(p['scene'], 'a presentation row');
     final index = p['index'];
@@ -477,16 +490,16 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
 
   final choices = <StoryChoice>[];
   final choiceIds = <String>{};
-  for (final raw in _list(json['choices'] ?? const <Object?>[], 'choices', max: maxStoryChoices)) {
+  for (final raw in _list(json['choices'], 'choices', max: maxStoryChoices)) {
     final c = _object(raw, 'a choice', {'id', 'from', 'to', 'label', 'when', 'effects', 'unavailable'});
     final id = _match(c['id'], _choiceId, 'choice id');
     if (!choiceIds.add(id)) _notAPackage('choice $id repeats');
     final what = 'choice $id';
     final assigned = <String>{};
     final effects = [
-      for (final rawEffect in _list(c['effects'] ?? const <Object?>[], '$what effects', max: maxStoryEffects))
+      for (final rawEffect in _list(c['effects'], '$what effects', max: maxStoryEffects))
         () {
-          final e = _object(rawEffect, 'an effect of $what', {'fact', 'value'});
+          final e = _object(rawEffect, 'an effect of $what', {'fact', 'value'}, ignorable: false);
           final value = literal(e['fact'], e['value'], what);
           // Effects are atomic (SPEC-063 R-5): one choice sets a fact once.
           if (!assigned.add(e['fact']! as String)) _notAPackage('$what sets ${e['fact']} twice');
@@ -506,7 +519,7 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
         id: id,
         from: scene(c['from'], what),
         to: scene(c['to'], what),
-        label: _text(c['label'], '$what label', max: 1000),
+        label: _text(c['label'], '$what label', max: 600),
         when: c['when'] == null ? null : condition(c['when'], what),
         effects: List.unmodifiable(effects),
         unavailable: unavailable,
@@ -516,7 +529,7 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
 
   final endings = <StoryEnding>[];
   final endingScenes = <String>{};
-  for (final raw in _list(json['endings'] ?? const <Object?>[], 'endings', max: maxStoryScenes)) {
+  for (final raw in _list(json['endings'], 'endings', max: maxStoryEndings)) {
     final e = _object(raw, 'an ending', {'scene', 'title', 'variants'});
     final at = scene(e['scene'], 'an ending');
     if (!endingScenes.add(at)) _notAPackage('$at is an ending twice');
@@ -525,9 +538,12 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
     final variants = <StoryEndingVariant>[];
     if (e['variants'] != null) {
       final ids = <String>{};
-      for (final rawVariant in _list(e['variants'], 'the ending at $at variants', min: 1, max: 64)) {
+      for (final rawVariant in _list(e['variants'], 'the ending at $at variants', min: 1, max: maxStoryVariants)) {
         final v = _object(rawVariant, 'a variant of the ending at $at', {'id', 'title', 'text', 'when', 'fallback'});
-        final id = _text(v['id'], 'a variant id at $at', max: maxStoryIdLength);
+        final id = switch (v['id']) {
+          final String id when id.isNotEmpty && id.length <= 64 => id,
+          _ => _notAPackage('a variant id at $at'),
+        };
         if (!ids.add(id)) _notAPackage('variant $id at $at repeats');
         final fallback = v['fallback'];
         if (fallback != null && fallback != true) _notAPackage('variant $id at $at fallback');
@@ -545,7 +561,7 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
       }
       if (variants.where((variant) => variant.fallback).length > 1) _notAPackage('the ending at $at has two fallbacks');
     }
-    endings.add(StoryEnding(scene: at, title: _text(e['title'], 'the ending at $at title'), variants: List.unmodifiable(variants)));
+    endings.add(StoryEnding(scene: at, title: _text(e['title'], 'the ending at $at title', max: 256), variants: List.unmodifiable(variants)));
   }
 
   return StoryDocument(

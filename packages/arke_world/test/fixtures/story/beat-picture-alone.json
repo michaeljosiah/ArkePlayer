@@ -1,0 +1,136 @@
+{
+  "format": "arke-story",
+  "version": 1,
+  "kind": "novel",
+  "shape": "9:16",
+  "start": "sc_road",
+  "fingerprint": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+  "facts": [
+    {
+      "id": "lantern",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "scenes": [
+    {
+      "id": "sc_road",
+      "title": "The road",
+      "beats": [
+        {
+          "picture": "pic-road",
+          "tall": "pic-road-tall"
+        },
+        {
+          "picture": "pic-road",
+          "tall": "pic-road-tall",
+          "speaker": "Ada",
+          "line": "Keep the lantern lit.",
+          "voice": "voice-1"
+        }
+      ]
+    },
+    {
+      "id": "sc_inn",
+      "title": "The inn",
+      "beats": [
+        {
+          "picture": "pic-inn",
+          "line": "The inn was dark."
+        },
+        {
+          "picture": "pic-inn",
+          "speaker": "Ada",
+          "line": "You kept it lit.",
+          "voice": "voice-2"
+        },
+        {
+          "picture": "pic-inn",
+          "line": "Nobody answered."
+        }
+      ]
+    },
+    {
+      "id": "sc_morning",
+      "title": "Morning",
+      "beats": [
+        {
+          "picture": "pic-road",
+          "line": "Morning came."
+        }
+      ]
+    }
+  ],
+  "presentation": [
+    {
+      "scene": "sc_inn",
+      "index": 1,
+      "when": {
+        "op": "eq",
+        "fact": "lantern",
+        "value": true
+      }
+    },
+    {
+      "scene": "sc_inn",
+      "index": 2,
+      "when": {
+        "op": "eq",
+        "fact": "lantern",
+        "value": false
+      }
+    }
+  ],
+  "choices": [
+    {
+      "id": "ch_blow-out",
+      "from": "sc_road",
+      "to": "sc_inn",
+      "label": "Blow it out",
+      "effects": [
+        {
+          "fact": "lantern",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "ch_walk-on",
+      "from": "sc_road",
+      "to": "sc_inn",
+      "label": "Walk on",
+      "effects": []
+    },
+    {
+      "id": "ch_sleep",
+      "from": "sc_inn",
+      "to": "sc_morning",
+      "label": "Sleep",
+      "effects": []
+    }
+  ],
+  "endings": [
+    {
+      "scene": "sc_morning",
+      "title": "Morning",
+      "variants": [
+        {
+          "id": "ev_lit",
+          "title": "Lit",
+          "text": "The lantern still burned.",
+          "when": {
+            "op": "eq",
+            "fact": "lantern",
+            "value": true
+          }
+        },
+        {
+          "id": "ev_dark",
+          "title": "Dark",
+          "text": "The lantern was cold.",
+          "fallback": true
+        }
+      ]
+    }
+  ]
+}
