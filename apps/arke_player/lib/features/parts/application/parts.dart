@@ -47,7 +47,7 @@ class PartArrival {
 
   bool get waiting => step == null;
 
-  int get byteLength => part?.byteLength ?? production!.package!.byteLength;
+  int get byteLength => part?.byteLength ?? production!.alone!.byteLength;
 
   /// Downloads' line: `Chapter 3 · 9 of 18 MB`, `Episodes 41–45 · 64 MB · Waiting`, or an album's
   /// title in place of the chapters.
@@ -123,7 +123,7 @@ Future<void> addMissingParts({
         break;
       }
       try {
-        onProgress?.call(world.id, PartArrival(world: listed, production: production, step: Downloading(0, production.package!.byteLength)));
+        onProgress?.call(world.id, PartArrival(world: listed, production: production, step: Downloading(0, production.alone!.byteLength)));
         await installer.installProduction(
           listed,
           production,

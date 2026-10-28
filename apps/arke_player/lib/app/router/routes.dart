@@ -36,4 +36,8 @@ abstract final class Routes {
     final query = [if (track != null) 'track=$track', if (shuffle) 'shuffle=1'].join('&');
     return '/music/$worldId/$productionId${query.isEmpty ? '' : '?$query'}';
   }
+
+  /// An interactive movie or a visual novel in its player, over the tabs (P18b – P18h), where its save
+  /// says.
+  static String story(String worldId, String productionId) => '/story/$worldId/$productionId';
 }

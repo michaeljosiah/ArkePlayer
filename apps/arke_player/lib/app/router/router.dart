@@ -9,6 +9,7 @@ import '../../features/onboarding/presentation/first_open_screen.dart';
 import '../../features/players/presentation/music_player_screen.dart';
 import '../../features/players/presentation/open_item_screen.dart';
 import '../../features/settings/presentation/you_screen.dart';
+import '../../features/stories/presentation/story_player_screen.dart';
 import '../../features/worlds/presentation/discover_screen.dart';
 import '../../features/worlds/presentation/guide_screens.dart';
 import '../../features/worlds/presentation/production_screen.dart';
@@ -65,6 +66,11 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
           track: int.tryParse(state.uri.queryParameters['track'] ?? ''),
           shuffle: state.uri.queryParameters['shuffle'] == '1',
         ),
+      ),
+      GoRoute(
+        path: '/story/:worldId/:productionId',
+        parentNavigatorKey: root,
+        builder: (context, state) => StoryPlayerScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
       ),
     ],
   );
