@@ -199,10 +199,15 @@ that play in this state, and the resolved ending at an ending scene (exactly one
 else the fallback). A route that is not legal is `StoryRouteBroken` at its first bad step, which is
 how a saved route is replayed after an `Update` (R-88). `evaluateStory`, `startStory`, `chooseStory`
 and `chooseStoryAgain` (cut before a choice and replay what is kept, SPEC-063 R-13) are built on it.
-The Studio's contracts write `test/fixtures/story/`: documents, refused documents in `cases.json`, and
-for each public story every complete route with every step's scene, facts, open and closed choices,
-projection and ending. `test/story_test.dart` reproduces every step exactly (R-81). A change to either
-evaluator lands with regenerated fixtures, or not at all.
+The Studio's contracts write `test/fixtures/story/` (`packages/contracts/scripts/story-fixtures.ts`), and
+it is copied here verbatim, never edited: the public stories (Low Water, a 16:9 movie compiled from
+legacy routing; Ring Once, the synthetic story that exercises every condition, effect, closed choice,
+presentation row and ending variant; Lantern Road, a visual novel), the refused documents and world.json
+files in `cases.json` with the `limits` every reader keeps, and for each story every complete route
+with every step's scene, facts, open and closed choices and projection, and its ending.
+`test/story_test.dart` reproduces every step exactly, and finds the same complete routes (R-81). A
+change to either evaluator lands with regenerated fixtures, or not at all. First Contact's 104 routes
+run through both in the private qualification (SPEC-063 R-25).
 
 1. **Upload it** under its own name to the world's public story release. Never replace one.
 2. **Pin it as a production**, as an album is:

@@ -3,15 +3,16 @@
   "version": 1,
   "kind": "movie",
   "shape": "4:3",
-  "start": "sc_start",
-  "fingerprint": "sha256:abababababababababababababababababababababababababababababababab",
+  "start": "sc_harbour",
+  "fingerprint": "sha256:27f11b0707d6d4da514354f34e40bb4897202fbb18e77f6f34e4d539fd2282c6",
   "facts": [
     {
       "id": "key",
       "type": "enum",
       "values": [
         "held",
-        "left"
+        "left",
+        "lost"
       ],
       "default": "held"
     },
@@ -21,95 +22,107 @@
       "default": false
     },
     {
-      "id": "crew",
-      "type": "enum",
-      "values": [
-        "whole",
-        "short"
-      ],
-      "default": "whole"
+      "id": "ledger",
+      "type": "boolean",
+      "default": false
     }
   ],
   "scenes": [
     {
-      "id": "sc_start",
+      "id": "sc_harbour",
+      "title": "The harbour at dusk",
+      "clips": [
+        {
+          "asset": "ro-harbour",
+          "from": 0,
+          "to": 18000
+        },
+        {
+          "asset": "ro-harbour",
+          "from": 18000,
+          "to": 30000
+        }
+      ]
+    },
+    {
+      "id": "sc_weigh",
       "title": "The weigh house",
       "clips": [
         {
-          "asset": "clip-start",
+          "asset": "ro-weigh",
           "from": 0,
-          "to": 41000
+          "to": 22000
         },
         {
-          "asset": "clip-start-lamp",
-          "from": 0,
-          "to": 9000
+          "asset": "ro-weigh",
+          "from": 22000,
+          "to": 31000
         }
       ]
     },
     {
       "id": "sc_bell",
-      "title": "The bell",
+      "title": "The bell tower",
       "clips": [
         {
-          "asset": "clip-bell",
-          "from": 1200,
-          "to": 30000
+          "asset": "ro-bell",
+          "from": 0,
+          "to": 15000
         },
         {
-          "asset": "clip-bell-lamp",
-          "from": 0,
-          "to": 8000
+          "asset": "ro-bell",
+          "from": 15000,
+          "to": 24000
         },
         {
-          "asset": "clip-bell-empty",
-          "from": 0,
-          "to": 6000
-        }
-      ]
-    },
-    {
-      "id": "sc_vault",
-      "title": "The vault",
-      "clips": [
-        {
-          "asset": "clip-vault",
-          "from": 0,
-          "to": 52000
-        }
-      ]
-    },
-    {
-      "id": "sc_tower",
-      "title": "The tower",
-      "clips": [
-        {
-          "asset": "clip-tower",
-          "from": 0,
-          "to": 20000
+          "asset": "ro-bell",
+          "from": 24000,
+          "to": 33000
         }
       ]
     },
     {
       "id": "sc_end",
-      "title": "Slack water",
+      "title": "The bell",
       "clips": [
         {
-          "asset": "clip-end",
+          "asset": "ro-end",
           "from": 0,
-          "to": 60000
+          "to": 20000
         },
         {
-          "asset": "clip-end-short",
+          "asset": "ro-end",
+          "from": 20000,
+          "to": 36000
+        }
+      ]
+    },
+    {
+      "id": "sc_vault",
+      "title": "The vault under the tower",
+      "clips": [
+        {
+          "asset": "ro-vault",
           "from": 0,
-          "to": 12000
+          "to": 40000
+        }
+      ]
+    },
+    {
+      "id": "sc_drowned",
+      "title": "Under the harbour",
+      "clips": [
+        {
+          "asset": "ro-drowned",
+          "from": 0,
+          "to": 25000
         }
       ]
     }
   ],
   "presentation": [
     {
-      "scene": "sc_start",
+      "scene": "sc_weigh",
       "index": 1,
       "when": {
         "op": "eq",
@@ -122,20 +135,30 @@
       "index": 1,
       "when": {
         "op": "eq",
-        "fact": "lamp",
-        "value": true
+        "fact": "key",
+        "value": "held"
       }
     },
     {
       "scene": "sc_bell",
       "index": 2,
       "when": {
-        "op": "not",
-        "arg": {
-          "op": "eq",
-          "fact": "key",
-          "value": "held"
-        }
+        "op": "all",
+        "args": [
+          {
+            "op": "eq",
+            "fact": "lamp",
+            "value": true
+          },
+          {
+            "op": "not",
+            "arg": {
+              "op": "eq",
+              "fact": "key",
+              "value": "lost"
+            }
+          }
+        ]
       }
     },
     {
@@ -143,15 +166,34 @@
       "index": 1,
       "when": {
         "op": "eq",
-        "fact": "crew",
-        "value": "short"
+        "fact": "ledger",
+        "value": true
       }
     }
   ],
   "choices": [
     {
-      "id": "ch_leave-key",
-      "from": "sc_start",
+      "id": "ch_light",
+      "from": "sc_harbour",
+      "to": "sc_weigh",
+      "label": "Light the lamp",
+      "effects": [
+        {
+          "fact": "lamp",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "ch_dark",
+      "from": "sc_harbour",
+      "to": "sc_weigh",
+      "label": "Go on in the dark",
+      "effects": []
+    },
+    {
+      "id": "ch_leave",
+      "from": "sc_weigh",
       "to": "sc_bell",
       "label": "Leave the key",
       "effects": [
@@ -162,31 +204,35 @@
       ]
     },
     {
-      "id": "ch_keep-key",
-      "from": "sc_start",
+      "id": "ch_keep",
+      "from": "sc_weigh",
       "to": "sc_bell",
       "label": "Keep the key",
       "effects": []
     },
     {
-      "id": "ch_light",
-      "from": "sc_start",
-      "to": "sc_start",
-      "label": "Light the lamp",
+      "id": "ch_drop",
+      "from": "sc_weigh",
+      "to": "sc_bell",
+      "label": "Drop it in the water",
       "when": {
-        "op": "not",
-        "arg": {
-          "op": "eq",
-          "fact": "lamp",
-          "value": true
-        }
+        "op": "eq",
+        "fact": "lamp",
+        "value": false
       },
       "effects": [
         {
-          "fact": "lamp",
-          "value": true
+          "fact": "key",
+          "value": "lost"
         }
       ]
+    },
+    {
+      "id": "ch_ring",
+      "from": "sc_bell",
+      "to": "sc_end",
+      "label": "Ring once",
+      "effects": []
     },
     {
       "id": "ch_key",
@@ -204,169 +250,123 @@
       }
     },
     {
-      "id": "ch_ring",
+      "id": "ch_signal",
       "from": "sc_bell",
-      "to": "sc_tower",
-      "label": "Ring once",
-      "effects": [
-        {
-          "fact": "crew",
-          "value": "short"
-        },
-        {
-          "fact": "lamp",
-          "value": false
-        }
-      ]
-    },
-    {
-      "id": "ch_follow",
-      "from": "sc_bell",
-      "to": "sc_vault",
-      "label": "Follow the lamp's light",
+      "to": "sc_end",
+      "label": "Signal with the lamp",
       "when": {
-        "op": "all",
-        "args": [
-          {
-            "op": "eq",
-            "fact": "lamp",
-            "value": true
-          },
-          {
-            "op": "eq",
-            "fact": "key",
-            "value": "left"
-          }
-        ]
+        "op": "eq",
+        "fact": "lamp",
+        "value": true
       },
-      "effects": []
+      "effects": [],
+      "unavailable": {
+        "label": "Signal the boats",
+        "reason": "No light to signal with"
+      }
     },
     {
       "id": "ch_wait",
       "from": "sc_bell",
-      "to": "sc_tower",
+      "to": "sc_end",
       "label": "Wait for the tide",
+      "effects": []
+    },
+    {
+      "id": "ch_swim",
+      "from": "sc_bell",
+      "to": "sc_drowned",
+      "label": "Swim for the vault",
       "when": {
         "op": "any",
         "args": [
           {
             "op": "eq",
-            "fact": "lamp",
-            "value": true
+            "fact": "key",
+            "value": "lost"
           },
           {
-            "op": "eq",
-            "fact": "key",
-            "value": "held"
+            "op": "not",
+            "arg": {
+              "op": "eq",
+              "fact": "lamp",
+              "value": true
+            }
           }
         ]
       },
-      "effects": [],
-      "unavailable": {
-        "label": "Wait in the dark",
-        "reason": "Too dark to wait"
-      }
+      "effects": []
     },
     {
-      "id": "ch_climb",
-      "from": "sc_tower",
+      "id": "ch_take",
+      "from": "sc_vault",
       "to": "sc_end",
-      "label": "Climb down",
+      "label": "Take the ledger",
+      "effects": [
+        {
+          "fact": "ledger",
+          "value": true
+        },
+        {
+          "fact": "key",
+          "value": "lost"
+        }
+      ]
+    },
+    {
+      "id": "ch_seal",
+      "from": "sc_vault",
+      "to": "sc_end",
+      "label": "Leave it sealed",
       "effects": []
     }
   ],
   "endings": [
     {
-      "scene": "sc_vault",
-      "title": "The vault"
-    },
-    {
       "scene": "sc_end",
-      "title": "Escape",
+      "title": "The bell",
       "variants": [
         {
-          "id": "ev_all",
-          "title": "Together",
-          "text": "Both return.",
+          "id": "ev_ledger",
+          "title": "The ledger, saved",
+          "text": "The weigh house keeps its count.",
           "when": {
-            "op": "all",
-            "args": [
-              {
-                "op": "eq",
-                "fact": "key",
-                "value": "held"
-              },
-              {
-                "op": "any",
-                "args": [
-                  {
-                    "op": "eq",
-                    "fact": "crew",
-                    "value": "whole"
-                  },
-                  {
-                    "op": "eq",
-                    "fact": "lamp",
-                    "value": true
-                  }
-                ]
-              }
-            ]
+            "op": "eq",
+            "fact": "ledger",
+            "value": true
           }
         },
         {
-          "id": "ev_key",
-          "title": "The key kept",
-          "text": "One stayed at the bell.",
+          "id": "ev_boats",
+          "title": "The boats come in",
+          "text": "The lamp brings them home.",
           "when": {
             "op": "all",
             "args": [
-              {
-                "op": "eq",
-                "fact": "key",
-                "value": "held"
-              },
-              {
-                "op": "not",
-                "arg": {
-                  "op": "eq",
-                  "fact": "crew",
-                  "value": "whole"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "id": "ev_lamp",
-          "title": "By lamplight",
-          "text": "",
-          "when": {
-            "op": "all",
-            "args": [
-              {
-                "op": "not",
-                "arg": {
-                  "op": "eq",
-                  "fact": "key",
-                  "value": "held"
-                }
-              },
               {
                 "op": "eq",
                 "fact": "lamp",
                 "value": true
+              },
+              {
+                "op": "eq",
+                "fact": "ledger",
+                "value": false
               }
             ]
           }
         },
         {
-          "id": "ev_loss",
-          "title": "An empty seat",
-          "text": "The rescue has a cost.",
+          "id": "ev_twice",
+          "title": "The Bell Rings Twice",
+          "text": "Someone below answers.",
           "fallback": true
         }
       ]
+    },
+    {
+      "scene": "sc_drowned",
+      "title": "Under the harbour"
     }
   ]
 }

@@ -1,44 +1,125 @@
 {
-  "note": "PROVISIONAL (arke_world): story documents read against assets.json, and world.json files that hold a story. Replaced by contracts' fixtures (SPEC-058 R-81).",
+  "note": "SPEC-058 R-79 – R-81: the story cases both readers run, ArkeStudio contracts (TypeScript), which writes this folder with packages/contracts/scripts/story-fixtures.ts, and Arke Player arke_world (Dart), which copies it. A \"story\" case is a story document read against assets.json: \"kind\", \"shape\", \"start\", \"facts\", \"scenes\" and \"choices\" are what an ok case reads, by id, and \"routes\" names its route fixture. A \"manifest\" case is a world.json: \"alone\", \"story\" and \"tall\" are what an ok one names. \"limits\" are the bounds every reader keeps: a condition's depth counts its root as 1 and its nodes count every op; text bounds are characters. A key a reader does not know is newerArke, anywhere but a condition or an effect, whose shapes are SPEC-063's; the fingerprint is read, never recomputed, so a refused copy keeps its base's.",
+  "limits": {
+    "facts": 32,
+    "values": 16,
+    "effects": 32,
+    "conditionDepth": 8,
+    "conditionNodes": 128,
+    "scenes": 1000,
+    "items": 2000,
+    "choices": 4000,
+    "presentation": 20000,
+    "endings": 1000,
+    "variants": 64,
+    "text": {
+      "sceneId": 128,
+      "choiceId": 128,
+      "factId": 64,
+      "value": 64,
+      "variantId": 64,
+      "sceneTitle": 500,
+      "label": 600,
+      "closedLabel": 256,
+      "reason": 600,
+      "endingTitle": 256,
+      "variantText": 20000,
+      "speaker": 200,
+      "line": 20000
+    }
+  },
   "cases": [
-    {
-      "file": "synthetic.json",
-      "reader": "story",
-      "expect": "ok",
-      "kind": "movie",
-      "scenes": 5,
-      "choices": 8
-    },
     {
       "file": "low-water.json",
       "reader": "story",
       "expect": "ok",
       "kind": "movie",
-      "scenes": 5,
-      "choices": 5
+      "shape": "16:9",
+      "start": "sc_quarter",
+      "facts": [],
+      "scenes": [
+        "sc_quarter",
+        "sc_causeway",
+        "sc_towers",
+        "sc_vigil",
+        "sc_pier",
+        "sc_bell"
+      ],
+      "choices": [
+        "ch_follow",
+        "ch_stay",
+        "ch_cross",
+        "ch_wait",
+        "ch_sleep",
+        "ch_ring",
+        "ch_climb"
+      ],
+      "routes": "low-water.routes.json"
+    },
+    {
+      "file": "synthetic.json",
+      "reader": "story",
+      "expect": "ok",
+      "kind": "movie",
+      "shape": "9:16",
+      "start": "sc_harbour",
+      "facts": [
+        "key",
+        "lamp",
+        "ledger"
+      ],
+      "scenes": [
+        "sc_harbour",
+        "sc_weigh",
+        "sc_bell",
+        "sc_end",
+        "sc_vault",
+        "sc_drowned"
+      ],
+      "choices": [
+        "ch_light",
+        "ch_dark",
+        "ch_leave",
+        "ch_keep",
+        "ch_drop",
+        "ch_ring",
+        "ch_key",
+        "ch_signal",
+        "ch_wait",
+        "ch_swim",
+        "ch_take",
+        "ch_seal"
+      ],
+      "routes": "synthetic.routes.json"
     },
     {
       "file": "lantern-road.json",
       "reader": "story",
       "expect": "ok",
       "kind": "novel",
-      "scenes": 3,
-      "choices": 3
-    },
-    {
-      "file": "unknown-key.json",
-      "reader": "story",
-      "expect": "newerArke"
-    },
-    {
-      "file": "newer-version.json",
-      "reader": "story",
-      "expect": "newerArke"
-    },
-    {
-      "file": "requires.json",
-      "reader": "story",
-      "expect": "newerArke"
+      "shape": "16:9",
+      "start": "sc_market",
+      "facts": [
+        "lantern",
+        "company"
+      ],
+      "scenes": [
+        "sc_market",
+        "sc_road",
+        "sc_ford",
+        "sc_bridge",
+        "sc_home"
+      ],
+      "choices": [
+        "ch_buy",
+        "ch_walk",
+        "ch_ford",
+        "ch_bridge",
+        "ch_part",
+        "ch_together",
+        "ch_cross"
+      ],
+      "routes": "lantern-road.routes.json"
     },
     {
       "file": "metadata.json",
@@ -46,69 +127,9 @@
       "expect": "ok"
     },
     {
-      "file": "guard-undeclared-fact.json",
+      "file": "metadata-novel.json",
       "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "guard-undeclared-value.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "guard-wrong-type.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "effect-undeclared-fact.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "effect-twice.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "choice-to-nowhere.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "start-nowhere.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "presentation-nowhere.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "presentation-past-scene.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "presentation-repeats.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "ending-nowhere.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "ending-twice.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "ending-with-choice.json",
-      "reader": "story",
-      "expect": "notAPackage"
+      "expect": "ok"
     },
     {
       "file": "scene-repeats.json",
@@ -131,7 +152,12 @@
       "expect": "notAPackage"
     },
     {
-      "file": "default-undeclared.json",
+      "file": "presentation-repeats.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "ending-repeats.json",
       "reader": "story",
       "expect": "notAPackage"
     },
@@ -141,42 +167,117 @@
       "expect": "notAPackage"
     },
     {
+      "file": "choice-to-nowhere.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "choice-from-nowhere.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "presentation-nowhere.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "presentation-past-end.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "ending-nowhere.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "start-nowhere.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "ending-with-choice.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "when-unknown-fact.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "when-unknown-value.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "when-wrong-type.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "effect-unknown-fact.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "effect-unknown-value.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "effect-twice.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "presentation-unknown-fact.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "variant-unknown-fact.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "default-not-a-value.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "variant-both.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "variant-neither.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
       "file": "two-fallbacks.json",
       "reader": "story",
       "expect": "notAPackage"
     },
     {
-      "file": "fallback-with-guard.json",
+      "file": "condition-too-deep.json",
       "reader": "story",
       "expect": "notAPackage"
     },
     {
-      "file": "variant-without-guard.json",
+      "file": "condition-too-large.json",
       "reader": "story",
       "expect": "notAPackage"
     },
     {
-      "file": "empty-all.json",
+      "file": "condition-empty.json",
       "reader": "story",
       "expect": "notAPackage"
     },
     {
-      "file": "unknown-op.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "too-deep.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "deep-enough.json",
-      "reader": "story",
-      "expect": "ok"
-    },
-    {
-      "file": "too-many-nodes.json",
+      "file": "condition-unknown-op.json",
       "reader": "story",
       "expect": "notAPackage"
     },
@@ -206,72 +307,17 @@
       "expect": "notAPackage"
     },
     {
-      "file": "beats-in-a-movie.json",
+      "file": "scene-no-clips.json",
       "reader": "story",
       "expect": "notAPackage"
     },
     {
-      "file": "kind-unknown.json",
+      "file": "movie-with-beats.json",
       "reader": "story",
       "expect": "notAPackage"
     },
     {
-      "file": "shape-unknown.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "fingerprint-bad.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "reason-without-text.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "boolean-with-values.json",
-      "reader": "story",
-      "expect": "newerArke"
-    },
-    {
-      "file": "fact-with-label.json",
-      "reader": "story",
-      "expect": "newerArke"
-    },
-    {
-      "file": "metadata-in-a-condition.json",
-      "reader": "story",
-      "expect": "newerArke"
-    },
-    {
-      "file": "no-facts.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "no-effects.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "scene-without-clips.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "label-too-long.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "reason-too-long.json",
-      "reader": "story",
-      "expect": "notAPackage"
-    },
-    {
-      "file": "picture-not-picture.json",
+      "file": "picture-missing.json",
       "reader": "story",
       "expect": "notAPackage"
     },
@@ -286,39 +332,87 @@
       "expect": "notAPackage"
     },
     {
-      "file": "beat-without-picture.json",
+      "file": "kind-unknown.json",
       "reader": "story",
       "expect": "notAPackage"
     },
     {
-      "file": "beat-picture-alone.json",
-      "reader": "story",
-      "expect": "ok"
-    },
-    {
-      "file": "clips-in-a-novel.json",
+      "file": "shape-unknown.json",
       "reader": "story",
       "expect": "notAPackage"
+    },
+    {
+      "file": "fingerprint-malformed.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "wrong-format.json",
+      "reader": "story",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "newer-version.json",
+      "reader": "story",
+      "expect": "newerArke"
+    },
+    {
+      "file": "requires.json",
+      "reader": "story",
+      "expect": "newerArke"
+    },
+    {
+      "file": "unknown-key.json",
+      "reader": "story",
+      "expect": "newerArke"
+    },
+    {
+      "file": "fact-label.json",
+      "reader": "story",
+      "expect": "newerArke"
     },
     {
       "file": "world-story.json",
       "reader": "manifest",
       "expect": "ok",
       "alone": true,
+      "story": "story",
+      "tall": "cover-tall"
+    },
+    {
+      "file": "world-story-no-tall.json",
+      "reader": "manifest",
+      "expect": "ok",
+      "alone": true,
       "story": "story"
     },
     {
-      "file": "world-story-in-schema-5.json",
-      "reader": "manifest",
-      "expect": "newerArke"
-    },
-    {
-      "file": "world-schema-7.json",
-      "reader": "manifest",
-      "expect": "newerArke"
-    },
-    {
       "file": "world-story-not-alone.json",
+      "reader": "manifest",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "world-story-with-key-art.json",
+      "reader": "manifest",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "world-story-with-guide.json",
+      "reader": "manifest",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "world-story-with-part.json",
+      "reader": "manifest",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "world-story-two-productions.json",
+      "reader": "manifest",
+      "expect": "notAPackage"
+    },
+    {
+      "file": "world-story-beside-music.json",
       "reader": "manifest",
       "expect": "notAPackage"
     },
@@ -328,7 +422,7 @@
       "expect": "notAPackage"
     },
     {
-      "file": "world-story-beside-book.json",
+      "file": "world-tall-wrong-media.json",
       "reader": "manifest",
       "expect": "notAPackage"
     },
@@ -338,9 +432,19 @@
       "expect": "notAPackage"
     },
     {
-      "file": "world-tall-not-picture.json",
+      "file": "world-story-in-schema-5.json",
       "reader": "manifest",
-      "expect": "notAPackage"
+      "expect": "newerArke"
+    },
+    {
+      "file": "world-tall-in-schema-5.json",
+      "reader": "manifest",
+      "expect": "newerArke"
+    },
+    {
+      "file": "world-schema-7.json",
+      "reader": "manifest",
+      "expect": "newerArke"
     }
   ]
 }

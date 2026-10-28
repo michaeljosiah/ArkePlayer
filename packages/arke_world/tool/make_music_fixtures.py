@@ -122,6 +122,7 @@ manifest('world-alone-with-part.json', 'notAPackage', lambda x: x.update(part={'
 manifest('world-alone-two-productions.json', 'notAPackage', lambda x: x['productions'].append({'id': 'saltmouth-bells', 'title': 'Saltmouth Bells', 'picture': 'cover', 'music': 'music'}))
 manifest('world-schema-5-not-alone.json', 'notAPackage', lambda x: x.pop('alone'))
 manifest('world-alone-false.json', 'notAPackage', lambda x: x.update(alone=False))
+manifest('world-music-in-schema-6.json', 'notAPackage', lambda x: x.update(schemaVersion=6))
 manifest('world-schema-7.json', 'newerArke', lambda x: x.update(schemaVersion=7))
 # Music and `alone` came with schema 5: an older package naming either was made by a newer Arke.
 manifest('world-music-in-schema-3.json', 'newerArke', lambda x: (x.update(schemaVersion=3), x.pop('alone')))

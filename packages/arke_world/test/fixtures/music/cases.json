@@ -168,6 +168,11 @@
       "expect": "notAPackage"
     },
     {
+      "file": "world-music-in-schema-6.json",
+      "reader": "manifest",
+      "expect": "notAPackage"
+    },
+    {
       "file": "world-schema-7.json",
       "reader": "manifest",
       "expect": "newerArke"

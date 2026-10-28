@@ -1,21 +1,22 @@
 {
-  "note": "PROVISIONAL stand-in for Low Water: a 16:9 movie compiled from legacy routing, no facts.",
+  "note": "SPEC-058 R-81: every complete route through the document, depth first in authored order, as contracts' storyRoutes walks it with SPEC-063's evaluator. Replaying a route's choices from the facts' defaults must give each step exactly: the scene entered; every declared fact and its value; the open choices in authored order; the closed choices that carry unavailable, in authored order, each with unavailable.label or else its own label, and the reason (a closed choice without one is hidden); and the indices of the scene's clips or beats that play, ascending. The ending is the variant resolved at the last scene, or the ending itself, variant and text null, when it has none. complete is false only when a route was stopped at bound, and then that route's ending is null.",
   "document": "low-water.json",
   "complete": true,
   "bound": null,
   "routes": [
     {
       "choices": [
-        "ch_wall",
-        "ch_jump"
+        "ch_follow",
+        "ch_cross",
+        "ch_sleep"
       ],
       "steps": [
         {
-          "scene": "sc_harbour",
+          "scene": "sc_quarter",
           "facts": {},
           "open": [
-            "ch_wall",
-            "ch_boat"
+            "ch_follow",
+            "ch_stay"
           ],
           "closed": [],
           "play": [
@@ -23,11 +24,23 @@
           ]
         },
         {
-          "scene": "sc_wall",
+          "scene": "sc_causeway",
           "facts": {},
           "open": [
-            "ch_jump",
+            "ch_cross",
             "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_towers",
+          "facts": {},
+          "open": [
+            "ch_sleep",
+            "ch_ring"
           ],
           "closed": [],
           "play": [
@@ -36,7 +49,7 @@
           ]
         },
         {
-          "scene": "sc_drowned",
+          "scene": "sc_pier",
           "facts": {},
           "open": [],
           "closed": [],
@@ -46,24 +59,25 @@
         }
       ],
       "ending": {
-        "scene": "sc_drowned",
+        "scene": "sc_pier",
         "variant": null,
-        "title": "Drowned",
+        "title": "The harbour, level",
         "text": null
       }
     },
     {
       "choices": [
-        "ch_wall",
-        "ch_wait"
+        "ch_follow",
+        "ch_cross",
+        "ch_ring"
       ],
       "steps": [
         {
-          "scene": "sc_harbour",
+          "scene": "sc_quarter",
           "facts": {},
           "open": [
-            "ch_wall",
-            "ch_boat"
+            "ch_follow",
+            "ch_stay"
           ],
           "closed": [],
           "play": [
@@ -71,11 +85,23 @@
           ]
         },
         {
-          "scene": "sc_wall",
+          "scene": "sc_causeway",
           "facts": {},
           "open": [
-            "ch_jump",
+            "ch_cross",
             "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_towers",
+          "facts": {},
+          "open": [
+            "ch_sleep",
+            "ch_ring"
           ],
           "closed": [],
           "play": [
@@ -84,7 +110,7 @@
           ]
         },
         {
-          "scene": "sc_dawn",
+          "scene": "sc_bell",
           "facts": {},
           "open": [],
           "closed": [],
@@ -94,24 +120,25 @@
         }
       ],
       "ending": {
-        "scene": "sc_dawn",
+        "scene": "sc_bell",
         "variant": null,
-        "title": "Dawn",
+        "title": "The Bell Rings Twice",
         "text": null
       }
     },
     {
       "choices": [
-        "ch_boat",
-        "ch_row"
+        "ch_follow",
+        "ch_wait",
+        "ch_climb"
       ],
       "steps": [
         {
-          "scene": "sc_harbour",
+          "scene": "sc_quarter",
           "facts": {},
           "open": [
-            "ch_wall",
-            "ch_boat"
+            "ch_follow",
+            "ch_stay"
           ],
           "closed": [],
           "play": [
@@ -119,10 +146,11 @@
           ]
         },
         {
-          "scene": "sc_boat",
+          "scene": "sc_causeway",
           "facts": {},
           "open": [
-            "ch_row"
+            "ch_cross",
+            "ch_wait"
           ],
           "closed": [],
           "play": [
@@ -130,7 +158,18 @@
           ]
         },
         {
-          "scene": "sc_dawn",
+          "scene": "sc_vigil",
+          "facts": {},
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_pier",
           "facts": {},
           "open": [],
           "closed": [],
@@ -140,9 +179,105 @@
         }
       ],
       "ending": {
-        "scene": "sc_dawn",
+        "scene": "sc_pier",
         "variant": null,
-        "title": "Dawn",
+        "title": "The harbour, level",
+        "text": null
+      }
+    },
+    {
+      "choices": [
+        "ch_stay",
+        "ch_sleep"
+      ],
+      "steps": [
+        {
+          "scene": "sc_quarter",
+          "facts": {},
+          "open": [
+            "ch_follow",
+            "ch_stay"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_towers",
+          "facts": {},
+          "open": [
+            "ch_sleep",
+            "ch_ring"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_pier",
+          "facts": {},
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_pier",
+        "variant": null,
+        "title": "The harbour, level",
+        "text": null
+      }
+    },
+    {
+      "choices": [
+        "ch_stay",
+        "ch_ring"
+      ],
+      "steps": [
+        {
+          "scene": "sc_quarter",
+          "facts": {},
+          "open": [
+            "ch_follow",
+            "ch_stay"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_towers",
+          "facts": {},
+          "open": [
+            "ch_sleep",
+            "ch_ring"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {},
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_bell",
+        "variant": null,
+        "title": "The Bell Rings Twice",
         "text": null
       }
     }

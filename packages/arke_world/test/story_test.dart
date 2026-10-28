@@ -61,7 +61,57 @@ Map<String, Object?>? _endingJson(StoryEndingResolved? ending) =>
 
 void main() {
   group('the shared story cases (SPEC-058 R-79, R-80)', () {
-    final cases = (jsonDecode(_read('cases.json')) as Map<String, Object?>)['cases']! as List<Object?>;
+    final shared = jsonDecode(_read('cases.json')) as Map<String, Object?>;
+    final cases = shared['cases']! as List<Object?>;
+
+    // The bounds every reader keeps, as contracts writes them beside the cases.
+    test('the same bounds', () {
+      final limits = shared['limits']! as Map<String, Object?>;
+      expect(
+        {
+          'facts': limits['facts'],
+          'values': limits['values'],
+          'effects': limits['effects'],
+          'conditionDepth': limits['conditionDepth'],
+          'conditionNodes': limits['conditionNodes'],
+          'scenes': limits['scenes'],
+          'items': limits['items'],
+          'choices': limits['choices'],
+          'presentation': limits['presentation'],
+          'endings': limits['endings'],
+          'variants': limits['variants'],
+        },
+        {
+          'facts': maxStoryFacts,
+          'values': maxStoryFactValues,
+          'effects': maxStoryEffects,
+          'conditionDepth': maxStoryConditionDepth,
+          'conditionNodes': maxStoryConditionNodes,
+          'scenes': maxStoryScenes,
+          'items': maxStorySceneItems,
+          'choices': maxStoryChoices,
+          'presentation': maxStoryPresentation,
+          'endings': maxStoryEndings,
+          'variants': maxStoryVariants,
+        },
+      );
+      expect(limits['text'], {
+        'sceneId': maxStoryIdLength,
+        'choiceId': maxStoryIdLength,
+        'factId': maxStoryFactLength,
+        'value': maxStoryFactLength,
+        'variantId': maxStoryVariantIdLength,
+        'sceneTitle': maxStorySceneTitleLength,
+        'label': maxStoryLabelLength,
+        'closedLabel': maxStoryClosedLabelLength,
+        'reason': maxStoryReasonLength,
+        'endingTitle': maxStoryEndingTitleLength,
+        'variantText': maxStoryTextLength,
+        'speaker': maxStorySpeakerLength,
+        'line': maxStoryTextLength,
+      });
+    });
+
     for (final raw in cases.cast<Map<String, Object?>>()) {
       final file = raw['file']! as String;
       test(file, () {
@@ -70,7 +120,8 @@ void main() {
           _verdict(raw['expect']! as String, read is WorldManifestRefused ? read.refusal : null, read is WorldManifestRefused ? read.reason : null);
           if (read case WorldManifestOk(:final manifest)) {
             expect(manifest.alone, raw['alone'] ?? false);
-            if (raw['story'] case final String story) expect(manifest.productions.single.story, story);
+            expect(manifest.productions.single.story, raw['story']);
+            expect(manifest.productions.single.tall, raw['tall']);
           }
           return;
         }
@@ -78,8 +129,12 @@ void main() {
         _verdict(raw['expect']! as String, read is StoryRefused ? read.refusal : null, read is StoryRefused ? read.reason : null);
         if (read case StoryOk(:final document)) {
           if (raw['kind'] case final String kind) expect(document.kind.name, kind);
-          if (raw['scenes'] case final int scenes) expect(document.scenes, hasLength(scenes));
-          if (raw['choices'] case final int choices) expect(document.choices, hasLength(choices));
+          if (raw['shape'] case final String shape) expect(document.shape.label, shape);
+          if (raw['start'] case final String start) expect(document.start, start);
+          if (raw['facts'] case final List<Object?> facts) expect(document.facts.map((fact) => fact.id), facts);
+          if (raw['scenes'] case final List<Object?> scenes) expect(document.scenes.keys, scenes);
+          if (raw['choices'] case final List<Object?> choices) expect(document.choices.map((choice) => choice.id), choices);
+          if (raw['routes'] case final String routes) expect((jsonDecode(_read(routes)) as Map<String, Object?>)['document'], file);
         }
       });
     }
@@ -91,8 +146,11 @@ void main() {
     final routeFiles = Directory(_fixtures).listSync().whereType<File>().where((file) => file.path.endsWith('.routes.json')).toList()
       ..sort((a, b) => a.path.compareTo(b.path));
 
-    test('the fixtures hold the public stories', () {
-      expect(routeFiles.map((file) => file.uri.pathSegments.last), containsAll(['synthetic.routes.json', 'low-water.routes.json', 'lantern-road.routes.json']));
+    test('the fixtures hold the public stories, and every route file a case names', () {
+      final names = routeFiles.map((file) => file.uri.pathSegments.last).toSet();
+      expect(names, containsAll(['synthetic.routes.json', 'low-water.routes.json', 'lantern-road.routes.json']));
+      final cases = (jsonDecode(_read('cases.json')) as Map<String, Object?>)['cases']! as List<Object?>;
+      expect({for (final raw in cases.cast<Map<String, Object?>>()) ?raw['routes']}, names);
     });
 
     for (final file in routeFiles) {
@@ -143,15 +201,18 @@ void main() {
     }
   });
 
+  // On the synthetic story, Ring Once: the lamp is lit or not at the harbour, the key kept, left or
+  // dropped at the weigh house, and at the bell the tenth key and the signal close with their reasons.
   group('the rules for a player (SPEC-063 R-6, R-11, R-13; SPEC-058 R-86, R-88)', () {
     final document = _document('synthetic.json');
 
     test('a route is refused at its first step that is not legal, and where it stood is kept', () {
       for (final (route, at) in [
         (['ch_nothing'], 0), // a choice that is not there
-        (['ch_keep-key', 'ch_climb'], 1), // not from the scene the route is in
-        (['ch_leave-key', 'ch_key'], 1), // its guard fails: the key was left
-        (['ch_light', 'ch_light'], 1), // the lamp is lit once
+        (['ch_light', 'ch_ring'], 1), // not from the scene the route is in
+        (['ch_light', 'ch_drop'], 1), // its guard fails: the lamp is lit
+        (['ch_dark', 'ch_leave', 'ch_key'], 2), // and here the key was left
+        (['ch_dark', 'ch_drop', 'ch_swim', 'ch_ring'], 3), // nothing after an ending
       ]) {
         final broken = replayStory(document, route) as StoryRouteBroken;
         expect((broken.at, broken.choice), (at, route[at]));
@@ -161,33 +222,45 @@ void main() {
     });
 
     test('a closed choice keeps its place in authored order, with its reason; one without a reason is hidden', () {
-      final bell = evaluateStory(document, ['ch_leave-key']);
-      expect([for (final option in bell.options) (option.choice.id, option.open)], [('ch_key', false), ('ch_ring', true), ('ch_wait', false)]);
-      expect((bell.closed.first.label, bell.closed.first.reason), ('Use the tenth key', 'Left at the weigh house'));
-      expect((bell.closed.last.label, bell.closed.last.reason), ('Wait in the dark', 'Too dark to wait'));
-      expect(bell.options.any((option) => option.choice.id == 'ch_follow'), isFalse);
+      final dark = evaluateStory(document, ['ch_dark', 'ch_leave']);
+      expect(
+        [for (final option in dark.options) (option.choice.id, option.open)],
+        [('ch_ring', true), ('ch_key', false), ('ch_signal', false), ('ch_wait', true), ('ch_swim', true)],
+      );
+      expect(
+        [for (final option in dark.closed) (option.label, option.reason)],
+        [('Use the tenth key', 'Left at the weigh house'), ('Signal the boats', 'No light to signal with')],
+      );
+      // With the lamp lit and the key kept, the swim's guard fails and it has no reason: it is hidden.
+      final lit = evaluateStory(document, ['ch_light', 'ch_keep']);
+      expect(lit.open.map((choice) => choice.id), ['ch_ring', 'ch_key', 'ch_signal', 'ch_wait']);
+      expect(lit.closed, isEmpty);
+      expect(lit.play, [0, 1, 2]);
     });
 
     test('Choose again cuts the route before the choice and replays what is kept', () {
-      final route = ['ch_leave-key', 'ch_ring', 'ch_climb'];
-      final again = chooseStoryAgain(document, route, 0);
-      expect((again.scene, again.route.length, again.facts['key']), ('sc_start', 0, 'held'));
-      final atBell = chooseStoryAgain(document, ['ch_keep-key', 'ch_ring', 'ch_climb'], 1);
-      expect((atBell.scene, atBell.facts['crew']), ('sc_bell', 'whole'));
-      expect(atBell.open.map((choice) => choice.id), contains('ch_key'));
-      expect(() => chooseStoryAgain(document, route, 3), throwsRangeError);
+      final route = ['ch_light', 'ch_keep', 'ch_key', 'ch_take'];
+      expect(evaluateStory(document, route).facts, {'key': 'lost', 'lamp': true, 'ledger': true});
+      final vault = chooseStoryAgain(document, route, 3);
+      expect((vault.scene, vault.facts['key'], vault.facts['ledger']), ('sc_vault', 'held', false));
+      expect(vault.open.map((choice) => choice.id), ['ch_take', 'ch_seal']);
+      final weigh = chooseStoryAgain(document, route, 1);
+      expect((weigh.scene, weigh.route.length, weigh.facts['lamp']), ('sc_weigh', 1, true));
+      final harbour = chooseStoryAgain(document, route, 0);
+      expect((harbour.scene, harbour.facts['lamp']), ('sc_harbour', false));
+      expect(() => chooseStoryAgain(document, route, 4), throwsRangeError);
     });
 
     test('a saved route replayed on an updated document reports its first step that is no longer legal', () {
       final updated = jsonDecode(_read('synthetic.json')) as Map<String, Object?>;
-      (updated['choices']! as List<Object?>).removeWhere((choice) => (choice! as Map<String, Object?>)['id'] == 'ch_ring');
+      (updated['choices']! as List<Object?>).removeWhere((choice) => (choice! as Map<String, Object?>)['id'] == 'ch_key');
       final next = (readStory(jsonEncode(updated), _assets()) as StoryOk).document;
-      final broken = replayStory(next, ['ch_leave-key', 'ch_ring', 'ch_climb']) as StoryRouteBroken;
-      expect((broken.at, broken.choice, broken.before.scene), (1, 'ch_ring', 'sc_bell'));
-      expect(replayStory(next, ['ch_keep-key', 'ch_key']), isA<StoryReplayed>());
+      final broken = replayStory(next, ['ch_light', 'ch_keep', 'ch_key', 'ch_take']) as StoryRouteBroken;
+      expect((broken.at, broken.choice, broken.before.scene), (2, 'ch_key', 'sc_bell'));
+      expect(replayStory(next, ['ch_dark', 'ch_keep', 'ch_wait']), isA<StoryReplayed>());
     });
 
-    test('an ending two variants match, or none, is a rule the document breaks', () {
+    test('an ending resolves to the one variant that holds, else its fallback; two, or none, break its rule', () {
       StoryDocument changed(void Function(List<Object?> variants) change) {
         final json = jsonDecode(_read('synthetic.json')) as Map<String, Object?>;
         final ending = (json['endings']! as List<Object?>).cast<Map<String, Object?>>().singleWhere((ending) => ending['variants'] != null);
@@ -195,14 +268,19 @@ void main() {
         return (readStory(jsonEncode(json), _assets()) as StoryOk).document;
       }
 
-      // The fallback covers what no variant does, and is not chosen beside one that holds.
-      expect(evaluateStory(document, ['ch_leave-key', 'ch_ring', 'ch_climb']).ending?.variant, 'ev_loss');
-      expect(evaluateStory(document, ['ch_keep-key', 'ch_wait', 'ch_climb']).ending?.variant, 'ev_all');
-      final overlapping = changed((variants) => (variants[1]! as Map<String, Object?>)['when'] = {'op': 'eq', 'fact': 'key', 'value': 'held'});
-      expect(() => evaluateStory(overlapping, ['ch_keep-key', 'ch_wait', 'ch_climb']), throwsA(isA<StoryRuleError>()));
+      final boats = evaluateStory(document, ['ch_light', 'ch_keep', 'ch_ring']).ending!;
+      expect((boats.scene, boats.variant, boats.title, boats.text), ('sc_end', 'ev_boats', 'The boats come in', 'The lamp brings them home.'));
+      expect(evaluateStory(document, ['ch_dark', 'ch_keep', 'ch_ring']).ending?.variant, 'ev_twice');
+      // An ending with no variants is its title.
+      final drowned = evaluateStory(document, ['ch_dark', 'ch_drop', 'ch_swim']).ending!;
+      expect((drowned.variant, drowned.title, drowned.text), (null, 'Under the harbour', null));
+      expect(evaluateStory(document, ['ch_light', 'ch_keep']).ending, isNull);
+
+      final overlapping = changed((variants) => (variants[0]! as Map<String, Object?>)['when'] = {'op': 'eq', 'fact': 'key', 'value': 'held'});
+      expect(() => evaluateStory(overlapping, ['ch_light', 'ch_keep', 'ch_ring']), throwsA(isA<StoryRuleError>()));
       final uncovered = changed((variants) => variants.removeWhere((variant) => (variant! as Map<String, Object?>)['fallback'] == true));
-      expect(() => evaluateStory(uncovered, ['ch_leave-key', 'ch_ring', 'ch_climb']), throwsA(isA<StoryRuleError>()));
-      expect(evaluateStory(uncovered, ['ch_keep-key', 'ch_ring', 'ch_climb']).ending?.variant, 'ev_key');
+      expect(() => evaluateStory(uncovered, ['ch_dark', 'ch_keep', 'ch_ring']), throwsA(isA<StoryRuleError>()));
+      expect(evaluateStory(uncovered, ['ch_light', 'ch_keep', 'ch_ring']).ending?.variant, 'ev_boats');
     });
   });
 
@@ -229,11 +307,11 @@ void main() {
       return zip;
     }
 
-    // The world.json fixture with every asset the synthetic story names in its inventory.
-    (Map<String, Object?>, Map<String, List<int>>) world(String storyText) {
+    // The world.json fixture, which holds the synthetic story and every file it names, and [extra].
+    (Map<String, Object?>, Map<String, List<int>>) world(String storyText, {Set<String> extra = const {}}) {
       final world = jsonDecode(_read('world-story.json')) as Map<String, Object?>;
       final all = _assets();
-      final named = {...(world['assets']! as Map<String, Object?>).keys, ..._document('synthetic.json').assetIds};
+      final named = {...(world['assets']! as Map<String, Object?>).keys, ...extra};
       world['assets'] = {for (final id in named) id: all[id]!.toJson()};
       return (
         world,
@@ -252,16 +330,17 @@ void main() {
       expect((read.alone, read.schemaVersion), (true, 6));
       final production = read.productions.single;
       expect((production.story, production.tall), ('story', 'cover-tall'));
-      expect(read.stories[production.id]!.scenes, hasLength(5));
+      expect(read.stories[production.id]!.scenes, hasLength(6));
+      expect(read.stories[production.id]!.assetIds, {for (final id in read.assets.keys) id}.difference({'story', 'cover', 'cover-tall'}));
     });
 
     test('a clip nothing names is refused', () {
-      final (manifest, files) = world(_read('low-water.json'));
+      final (manifest, files) = world(_read('synthetic.json'), extra: {'lw-quarter'});
       expect(() => readWorldPackage(pack(manifest, files)), throwsA(isA<WorldPackageRefused>()));
     });
 
     test('a story document that is not one refuses the package', () {
-      final (manifest, files) = world(_read('guard-undeclared-fact.json'));
+      final (manifest, files) = world(_read('when-unknown-fact.json'));
       expect(
         () => readWorldPackage(pack(manifest, files)),
         throwsA(isA<WorldPackageRefused>().having((refused) => refused.refusal, 'refusal', WorldRefusal.notAPackage)),

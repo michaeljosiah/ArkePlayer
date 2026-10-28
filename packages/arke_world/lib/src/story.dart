@@ -40,7 +40,18 @@ const maxStoryChoices = 4000;
 const maxStoryPresentation = 20000;
 const maxStoryEndings = 1000;
 const maxStoryVariants = 64;
+
+/// Text bounds, in characters: a scene's and a choice's id, a variant's id, and the words a listener
+/// reads.
 const maxStoryIdLength = 128;
+const maxStoryVariantIdLength = 64;
+const maxStorySceneTitleLength = 500;
+const maxStoryLabelLength = 600;
+const maxStoryClosedLabelLength = 256;
+const maxStoryReasonLength = 600;
+const maxStoryEndingTitleLength = 256;
+const maxStorySpeakerLength = 200;
+const maxStoryTextLength = 20000;
 
 enum StoryKind { movie, novel }
 
@@ -464,14 +475,19 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
           StoryBeat(
             picture: asset(b['picture'], pictureMediaTypes, '$where picture') ?? _notAPackage('$where picture'),
             tall: asset(b['tall'], pictureMediaTypes, '$where tall'),
-            speaker: b['speaker'] == null ? null : _text(b['speaker'], '$where speaker', max: 200),
-            line: b['line'] == null ? null : _text(b['line'], '$where line', max: 20000),
+            speaker: b['speaker'] == null ? null : _text(b['speaker'], '$where speaker', max: maxStorySpeakerLength),
+            line: b['line'] == null ? null : _text(b['line'], '$where line', max: maxStoryTextLength),
             voice: asset(b['voice'], storyVoiceMediaTypes, '$where voice'),
           ),
         );
       }
     }
-    scenes[id] = StoryScene(id: id, title: _text(s['title'], 'scene $id title', max: 500), clips: List.unmodifiable(clips), beats: List.unmodifiable(beats));
+    scenes[id] = StoryScene(
+      id: id,
+      title: _text(s['title'], 'scene $id title', max: maxStorySceneTitleLength),
+      clips: List.unmodifiable(clips),
+      beats: List.unmodifiable(beats),
+    );
   }
   String scene(Object? id, String what) => id is String && scenes.containsKey(id) ? id : _notAPackage('$what names a scene that is not there');
 
@@ -510,8 +526,8 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
     if (c['unavailable'] != null) {
       final u = _object(c['unavailable'], '$what unavailable', {'label', 'reason'});
       unavailable = StoryUnavailable(
-        label: u['label'] == null ? null : _text(u['label'], '$what unavailable label', max: 256),
-        reason: _text(u['reason'], '$what unavailable reason', max: 600),
+        label: u['label'] == null ? null : _text(u['label'], '$what unavailable label', max: maxStoryClosedLabelLength),
+        reason: _text(u['reason'], '$what unavailable reason', max: maxStoryReasonLength),
       );
     }
     choices.add(
@@ -519,7 +535,7 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
         id: id,
         from: scene(c['from'], what),
         to: scene(c['to'], what),
-        label: _text(c['label'], '$what label', max: 600),
+        label: _text(c['label'], '$what label', max: maxStoryLabelLength),
         when: c['when'] == null ? null : condition(c['when'], what),
         effects: List.unmodifiable(effects),
         unavailable: unavailable,
@@ -541,7 +557,7 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
       for (final rawVariant in _list(e['variants'], 'the ending at $at variants', min: 1, max: maxStoryVariants)) {
         final v = _object(rawVariant, 'a variant of the ending at $at', {'id', 'title', 'text', 'when', 'fallback'});
         final id = switch (v['id']) {
-          final String id when id.isNotEmpty && id.length <= 64 => id,
+          final String id when id.isNotEmpty && id.length <= maxStoryVariantIdLength => id,
           _ => _notAPackage('a variant id at $at'),
         };
         if (!ids.add(id)) _notAPackage('variant $id at $at repeats');
@@ -552,8 +568,8 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
         variants.add(
           StoryEndingVariant(
             id: id,
-            title: _text(v['title'], 'variant $id at $at title', max: 256),
-            text: _text(v['text'], 'variant $id at $at text', max: 20000, empty: true),
+            title: _text(v['title'], 'variant $id at $at title', max: maxStoryEndingTitleLength),
+            text: _text(v['text'], 'variant $id at $at text', max: maxStoryTextLength, empty: true),
             when: fallback == true ? null : condition(v['when'], 'variant $id at $at'),
             fallback: fallback == true,
           ),
@@ -561,7 +577,13 @@ StoryDocument _read(String text, Map<String, WorldAsset> assets) {
       }
       if (variants.where((variant) => variant.fallback).length > 1) _notAPackage('the ending at $at has two fallbacks');
     }
-    endings.add(StoryEnding(scene: at, title: _text(e['title'], 'the ending at $at title', max: 256), variants: List.unmodifiable(variants)));
+    endings.add(
+      StoryEnding(
+        scene: at,
+        title: _text(e['title'], 'the ending at $at title', max: maxStoryEndingTitleLength),
+        variants: List.unmodifiable(variants),
+      ),
+    );
   }
 
   return StoryDocument(

@@ -2,69 +2,117 @@
   "format": "arke-story",
   "version": 1,
   "kind": "novel",
-  "shape": "9:16",
-  "start": "sc_road",
-  "fingerprint": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+  "shape": "16:9",
+  "start": "sc_market",
+  "fingerprint": "sha256:76873c41e1e0d0c0f11fa92f8a3d2c4ec2033b4f3d11e8ecf55ce7f8c125e5d0",
   "facts": [
     {
       "id": "lantern",
       "type": "boolean",
-      "default": true
+      "default": false
+    },
+    {
+      "id": "company",
+      "type": "enum",
+      "values": [
+        "mara",
+        "alone"
+      ],
+      "default": "mara"
     }
   ],
   "scenes": [
     {
+      "id": "sc_market",
+      "title": "The lamp market",
+      "beats": [
+        {
+          "picture": "lr-market",
+          "tall": "lr-market-tall",
+          "line": "The lamp market opens at dusk, a hundred small fires on the water.",
+          "voice": "lr-v-market-1"
+        },
+        {
+          "picture": "lr-market",
+          "tall": "lr-market-tall",
+          "speaker": "Mara",
+          "line": "You came back. I said you would.",
+          "voice": "lr-v-market-2"
+        },
+        {
+          "picture": "lr-stall"
+        }
+      ]
+    },
+    {
       "id": "sc_road",
-      "title": "The road",
+      "title": "The road out",
       "beats": [
         {
-          "picture": "pic-road",
-          "tall": "voice-1",
-          "line": "The road ran on past the last farm."
+          "picture": "lr-road",
+          "tall": "lr-v-home",
+          "line": "The road runs dark between the reeds."
         },
         {
-          "picture": "pic-road",
-          "tall": "pic-road-tall",
-          "speaker": "Ada",
-          "line": "Keep the lantern lit.",
-          "voice": "voice-1"
+          "picture": "lr-road-light",
+          "line": "The lantern throws your shadow long across the water."
+        },
+        {
+          "picture": "lr-road-mara",
+          "speaker": "Mara",
+          "line": "Stay close. I can't see the edge."
         }
       ]
     },
     {
-      "id": "sc_inn",
-      "title": "The inn",
+      "id": "sc_ford",
+      "title": "The ford",
       "beats": [
         {
-          "picture": "pic-inn",
-          "line": "The inn was dark."
+          "picture": "lr-ford",
+          "tall": "lr-ford-tall",
+          "line": "The water is colder than it looks.",
+          "voice": "lr-v-ford"
         },
         {
-          "picture": "pic-inn",
-          "speaker": "Ada",
-          "line": "You kept it lit.",
-          "voice": "voice-2"
-        },
-        {
-          "picture": "pic-inn",
-          "line": "Nobody answered."
+          "picture": "lr-ford",
+          "tall": "lr-ford-tall",
+          "speaker": "Mara",
+          "line": "Go on. I'll find the stones."
         }
       ]
     },
     {
-      "id": "sc_morning",
-      "title": "Morning",
+      "id": "sc_bridge",
+      "title": "The old bridge",
       "beats": [
         {
-          "picture": "pic-road",
-          "line": "Morning came."
+          "picture": "lr-bridge",
+          "line": "Half the boards are gone. The lantern finds the rest."
+        }
+      ]
+    },
+    {
+      "id": "sc_home",
+      "title": "Home",
+      "beats": [
+        {
+          "picture": "lr-home",
+          "tall": "lr-home-tall",
+          "line": "The door is where you left it.",
+          "voice": "lr-v-home"
+        },
+        {
+          "picture": "lr-home-mara",
+          "speaker": "Mara",
+          "line": "We made it, then."
         }
       ]
     }
   ],
   "presentation": [
     {
-      "scene": "sc_inn",
+      "scene": "sc_road",
       "index": 1,
       "when": {
         "op": "eq",
@@ -73,62 +121,122 @@
       }
     },
     {
-      "scene": "sc_inn",
+      "scene": "sc_road",
       "index": 2,
       "when": {
+        "op": "all",
+        "args": [
+          {
+            "op": "eq",
+            "fact": "company",
+            "value": "mara"
+          },
+          {
+            "op": "eq",
+            "fact": "lantern",
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "scene": "sc_home",
+      "index": 1,
+      "when": {
         "op": "eq",
-        "fact": "lantern",
-        "value": false
+        "fact": "company",
+        "value": "mara"
       }
     }
   ],
   "choices": [
     {
-      "id": "ch_blow-out",
-      "from": "sc_road",
-      "to": "sc_inn",
-      "label": "Blow it out",
+      "id": "ch_buy",
+      "from": "sc_market",
+      "to": "sc_road",
+      "label": "Buy a lantern",
       "effects": [
         {
           "fact": "lantern",
-          "value": false
+          "value": true
         }
       ]
     },
     {
-      "id": "ch_walk-on",
-      "from": "sc_road",
-      "to": "sc_inn",
-      "label": "Walk on",
+      "id": "ch_walk",
+      "from": "sc_market",
+      "to": "sc_road",
+      "label": "Walk on without one",
       "effects": []
     },
     {
-      "id": "ch_sleep",
-      "from": "sc_inn",
-      "to": "sc_morning",
-      "label": "Sleep",
+      "id": "ch_ford",
+      "from": "sc_road",
+      "to": "sc_ford",
+      "label": "Wade the ford",
+      "effects": []
+    },
+    {
+      "id": "ch_bridge",
+      "from": "sc_road",
+      "to": "sc_bridge",
+      "label": "Take the old bridge",
+      "when": {
+        "op": "eq",
+        "fact": "lantern",
+        "value": true
+      },
+      "effects": [],
+      "unavailable": {
+        "reason": "Too dark to find it"
+      }
+    },
+    {
+      "id": "ch_part",
+      "from": "sc_ford",
+      "to": "sc_home",
+      "label": "Let Mara go ahead",
+      "effects": [
+        {
+          "fact": "company",
+          "value": "alone"
+        }
+      ]
+    },
+    {
+      "id": "ch_together",
+      "from": "sc_ford",
+      "to": "sc_home",
+      "label": "Go on together",
+      "effects": []
+    },
+    {
+      "id": "ch_cross",
+      "from": "sc_bridge",
+      "to": "sc_home",
+      "label": "Cross the bridge",
       "effects": []
     }
   ],
   "endings": [
     {
-      "scene": "sc_morning",
-      "title": "Morning",
+      "scene": "sc_home",
+      "title": "The lantern road home",
       "variants": [
         {
-          "id": "ev_lit",
-          "title": "Lit",
-          "text": "The lantern still burned.",
+          "id": "ev_together",
+          "title": "Together",
+          "text": "Mara sets the lantern on the sill.",
           "when": {
             "op": "eq",
-            "fact": "lantern",
-            "value": true
+            "fact": "company",
+            "value": "mara"
           }
         },
         {
-          "id": "ev_dark",
-          "title": "Dark",
-          "text": "The lantern was cold.",
+          "id": "ev_alone",
+          "title": "The last lamp",
+          "text": "You walk the last mile alone.",
           "fallback": true
         }
       ]
