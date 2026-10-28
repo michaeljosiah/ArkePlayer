@@ -249,7 +249,7 @@ should not be a need to tap to move forward." The design said the opposite, and 
 it: P4d's tap moved on, P18's `Auto` was a toggle off by default, and nothing kept a lone option off
 the screen, so First Contact showed `1 Several weeks later` as its only button.
 
-P19 is proposed. Its first five rules are shared with a Studio turn drawn the same day, so the
+The owner approved P19 as drawn on 28 October 2026 ("Approve all"), with calls 25–27 and Studio turn 246. Its first five rules are shared with a Studio turn drawn the same day, so the
 author's preview and the Player agree:
 
 1. **A story plays itself.** A visual novel moves from beat to beat on its own: a voiced beat when
@@ -338,15 +338,15 @@ P19 keeps that as part of "when its voice ends".
 23. **A closed choice shows only with the author's reason** (P18d, approved), and a listener is
    never shown the facts.
 24. **Export → Arke Player for stories is a Studio turn** (approved), drawn next.
-25. **A story plays itself** (P19, proposed at the owner's direction, 28 October 2026). It stops only
+25. **A story plays itself** (P19, approved at the owner's direction, 28 October 2026). It stops only
    for a choice of two or more, a closed choice shown with its reason counting as one. A tap shows
    its controls and never moves on. A lone way on plays straight through, with no pause, no label and
    no row in the route. This withdraws P4d's tap and P18's `Auto`.
-26. **Narration stays off for that story** (P19b, proposed). It is on wherever a story has voices;
+26. **Narration stays off for that story** (P19b, approved). It is on wherever a story has voices;
    turned off, it stays off for that story on this device, kept with where you are. The alternative
    is one setting for every story, in You beside Captions; then a story with voices could open
    silent, against rule 5.
-27. **An interactive movie's controls are a film's** (P19f, proposed), P3a's back 10 and forward 10
+27. **An interactive movie's controls are a film's** (P19f, approved), P3a's back 10 and forward 10
    included. Rule 2's list is the visual novel's: a movie has no beats, Log or Narration.
 
 ## What this rests on
