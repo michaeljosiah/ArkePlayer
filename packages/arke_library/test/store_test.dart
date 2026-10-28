@@ -122,6 +122,46 @@ void main() {
     });
   });
 
+  // SPEC-058 R-88: where a person is in a story is kept with the places, as written, until the world goes.
+  test('a story’s save is kept as written, survives a reload, and goes with its world', () async {
+    final store = LibraryStore(root);
+    await store.addWorld(
+      LibraryWorld(
+        id: 'undersong',
+        edition: '2026-10-28',
+        name: 'The Undersong',
+        byteLength: 1,
+        installedAt: DateTime.utc(2026, 10, 28),
+        productions: const [],
+      ),
+      const [],
+      await store.stageWorld(),
+    );
+    final heard = <Map<String, Map<String, Object?>>>[];
+    final listening = store.storyChanges.listen(heard.add);
+    await store.keepStory('undersong', 'low-water', {
+      'version': 1,
+      'route': ['ch_follow'],
+      'scene': 'sc_causeway',
+      'at': 1200,
+    });
+    // A save another build wrote is kept exactly, even one this build could not read.
+    await store.keepStory('undersong', 'ring-once', {'version': 9, 'odd': true});
+    expect(store.stories.keys, unorderedEquals(['undersong/low-water', 'undersong/ring-once']));
+
+    final reloaded = LibraryStore(root);
+    await reloaded.load();
+    expect(reloaded.stories['undersong/low-water']!['route'], ['ch_follow']);
+    expect(reloaded.stories['undersong/ring-once'], {'version': 9, 'odd': true});
+
+    await reloaded.keepStory('undersong', 'ring-once', null);
+    expect(reloaded.stories.keys, ['undersong/low-water']);
+    await reloaded.removeWorld('undersong');
+    expect(reloaded.stories, isEmpty);
+    await listening.cancel();
+    expect(heard, isNotEmpty);
+  });
+
   test('writes queue rather than interleave', () async {
     final store = LibraryStore(root);
     final ids = [for (var i = 0; i < 5; i++) await store.reserve()];

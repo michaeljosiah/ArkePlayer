@@ -15,3 +15,4 @@ export 'src/package.dart';
 export 'src/pictures.dart';
 export 'src/reach.dart';
 export 'src/story.dart';
+export 'src/story_save.dart';
