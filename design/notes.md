@@ -238,6 +238,8 @@ families of ending). The samples stay The Undersong's: Low Water and The Lantern
 Ring Once, a 9:16 movie drawn on Odile's picture. Its scene names, choice labels and the reason are
 samples, written for this turn.
 
+The owner approved P18 as drawn on 28 October 2026 ("Approve"), with calls 21–24.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -289,17 +291,17 @@ samples, written for this turn.
    for the sections a track keeps in the Studio (238 call 8).
 20. **A song keeps no place** (P17, approved). It starts from its beginning and never joins
    Continue, because a song is heard again rather than finished.
-21. **A story is a production package** (P18, proposed). An interactive movie or visual novel comes
+21. **A story is a production package** (P18, approved). An interactive movie or visual novel comes
    as its own package, holding one story document compiled from the Studio's routing with its clips
    or pictures. The Player says which versions of that document it reads, and Arke's list offers a
    story only to a Player that can read it.
-22. **Stories play natively** (P18, proposed), their rules written again in Dart and held to the
+22. **Stories play natively** (P18, approved), their rules written again in Dart and held to the
    Studio's by shared fixtures: every route of First Contact replays through both and must reach
    the same scenes and facts. This revises call 2 for stories. Hosting the Studio's web player is
    the alternative, with one engine but a web page's controls, offline files and lock screen.
-23. **A closed choice shows only with the author's reason** (P18d, proposed), and a listener is
+23. **A closed choice shows only with the author's reason** (P18d, approved), and a listener is
    never shown the facts.
-24. **Export → Arke Player for stories is a Studio turn** (proposed), drawn once P18 is approved.
+24. **Export → Arke Player for stories is a Studio turn** (approved), drawn next.
 
 ## What this rests on
 
