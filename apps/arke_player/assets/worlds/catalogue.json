@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 33,
+  "serial": 34,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -106,6 +106,19 @@
           "pins": {
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-red-quiet-picture-20261024.jpg", "byteLength": 177567, "sha256": "eaa4a1dcda7edde17da2570d34d4e8e91c4cd2da4efd7b66f10f1e1b54fe3acd" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-red-quiet-tall-20261024.jpg", "byteLength": 317512, "sha256": "6ee6a57f83422a238826feb74c69086aea24921d3ed1b837a7df34389eeb2a50" }
+          } },
+        { "id": "first-contact", "title": "First Contact", "kind": "Visual novel · 15 scenes",
+          "story": {
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/first-contact-story-2026-10-28.zip",
+            "byteLength": 18003991,
+            "sha256": "b9c76f8f919ba067666cc2a2ca76ac6373abddf411f5597edf03bdf60c5cc725",
+            "edition": "2026-10-28",
+            "fingerprint": "9330952c7744362963983938156cc37b195231c990e1cfa696da348feffb1215",
+            "version": 1
+          },
+          "pins": {
+            "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-red-quiet-first-contact-picture-20261028.jpg", "byteLength": 205028, "sha256": "093f9561e98cc8f85b392ec390a3b42925497474bda1884a4ce8bf4a6d290e03" },
+            "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-red-quiet-first-contact-tall-20261028.jpg", "byteLength": 306659, "sha256": "95991ce6c0c063a34410b686847d31ff273a9d1307a4adf09f76b4f316542bf7" }
           } }
       ],
       "package": {
