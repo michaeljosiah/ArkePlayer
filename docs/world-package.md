@@ -230,7 +230,22 @@ run through both in the private qualification (SPEC-063 R-25).
    ```
 4. **Raise `serial` and publish the list**, as for an edition.
 
-This revision reads and pins stories; installing and playing them (R-83 – R-88) is slice 16.
+**Installing it** (R-83, slice 16): a listed production's `story` in a version this Player plays is
+its own package (`CatalogueProduction.alone`), so it comes as an album does — with the world's
+Install, on its own over Wi-Fi when listed later (`missingProductions`, the parts check), and again,
+pressed, on a new fingerprint (`productionUpdates`). It lands in `_productions/<id>` with its
+`world.json`, and the library names it as `LibraryProduction.story` (kind, shape, scenes, the
+document's fingerprint, the Tall cover). A `story` in another version is never fetched; its tile says
+`Update app`.
+
+**Where you are** (R-88): the library keeps each story's save in its index beside the places, opaque,
+as written (`LibraryStore.keepStory`, `stories`), so it is written as atomically as a place and goes
+with its world. `arke_world`'s `StorySave` (version 1) holds the route as choice ids, the scene, the
+place (`at` ms into the scene's projected clips, a `beat`, or `choosing`), the save version and the
+document's fingerprint — never the facts. `resumeStory` replays the route on the document installed:
+every step legal is `Continue` (at the saved place when the fingerprint is the save's, else the
+scene's start); a broken route, or a save it cannot read, is `Start again`, with the old save kept until
+it is pressed.
 
 ## The Undersong
 

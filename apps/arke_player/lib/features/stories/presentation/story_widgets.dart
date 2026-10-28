@@ -442,6 +442,8 @@ class _RouteRowsState extends State<RouteRows> {
               style: FilledButton.styleFrom(
                 minimumSize: const Size(0, 32),
                 fixedSize: const Size.fromHeight(32),
+                // 32 as drawn: the row is the press's height, not a padded target's.
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 backgroundColor: widget.onMedia ? _fg.withValues(alpha: 0.16) : context.surface.secondary,
                 foregroundColor: ink,
@@ -514,7 +516,8 @@ Future<void> showRouteSheet(
           },
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          // Clear of the home indicator, as the drawn sheet's foot is.
+          padding: EdgeInsets.fromLTRB(16, 16, 16, math.max(0, MediaQuery.paddingOf(sheet).bottom - 16)),
           child: FilledButton.icon(
             onPressed: () {
               Navigator.of(sheet).pop();

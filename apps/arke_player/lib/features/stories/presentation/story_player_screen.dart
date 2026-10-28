@@ -71,6 +71,9 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   late final StoryVoice _voice = ref.read(storyVoiceProvider);
   bool _opening = false;
   bool _chrome = true;
+
+  /// The route sheet is up: the transport under it goes, as the drawn sheet covers it (P18e).
+  bool _routing = false;
   bool _auto = false;
   Timer? _rest;
   Timer? _autoNext;
@@ -328,7 +331,17 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
 
   // ---- Sheets -------------------------------------------------------------------------------
 
-  void _route() => showRouteSheet(context, story: widget.story, path: storyPath(_document, _step.route), onChooseAgain: _chooseAgain, onStartOver: _startOver);
+  /// The route sheet (P18e). A movie stops under it: what is chosen there replaces what plays.
+  Future<void> _route() async {
+    if (_movie && (_reel?.playing ?? false)) {
+      unawaited(_reel!.pause());
+      _keep(force: true);
+    }
+    _rest?.cancel();
+    setState(() => _routing = true);
+    await showRouteSheet(context, story: widget.story, path: storyPath(_document, _step.route), onChooseAgain: _chooseAgain, onStartOver: _startOver);
+    if (mounted) setState(() => _routing = false);
+  }
 
   /// P4e's log: what this scene has said so far, the line now marked; a voiced line plays again.
   void _log() {
@@ -481,6 +494,8 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     final children = <Widget>[
       stage,
       if (overlays) ...[_Scrim(top: true, height: layout.turned ? 140 : 200), _Scrim(top: false, height: layout.turned ? 210 : (playing ? 320 : 560))],
+      // P4c's foot, under an ending's words wherever the picture sits.
+      if (!overlays && _phase == _Phase.ending) const _Scrim(top: false, height: 560),
     ];
     final chromeShown = !playing || _chrome || !overlays;
     children.add(
@@ -493,7 +508,7 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
             fit: StackFit.expand,
             children: [
               _top(layout, [RoutePress(onPressed: _route)]),
-              if (playing)
+              if (playing && !_routing)
                 Positioned(
                   left: layout.turned ? 40 : 20,
                   right: layout.turned ? 40 : 20,
