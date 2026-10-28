@@ -37,8 +37,8 @@ Every frame of the Arke Player design master (`design/Arke Player.dc.html`), the
 | P3a, P3b | A film, upright and turned | `/play/:productionId` | `features/players/` (hosted module) |
 | P3c, P3d | A micro drama; episodes | `/play/:productionId` | `features/players/` (native feed) |
 | P3e | Captions | `/play/:productionId` | `features/players/` |
-| P4a–P4c | Interactive: choice, route, ending | `/play/:productionId` | `features/players/` (hosted module) |
-| P4d, P4e | Visual novel: a line, the log | `/play/:productionId` | `features/players/` (hosted module) |
+| P4a–P4c | Interactive: choice, route, ending — built as P18 draws them, natively (below) | `/story/:worldId/:productionId` | `features/stories/` |
+| P4d, P4e | Visual novel: a line, the log — built as P18 draws them, natively (below) | `/story/:worldId/:productionId` | `features/stories/` |
 | P5a–P5c | Audiobook, chapters, speed and sleep | `/play/:productionId` | `features/players/` (hosted module) |
 | P5d | Audio drama with its transcript | `/play/:productionId` | `features/players/` (native) |
 | P5e | A book | `/open/:fileId` or `/play/:productionId` | `features/players/` (native reader) |
@@ -180,6 +180,27 @@ renders the frames with `SHOOT=1`.
 | P17g | A story's Music; a chapter holding a song carries a note | `…/world/:worldId/:productionId` | `features/worlds/presentation/production_screen.dart` |
 | (R-72) | Downloads: a production package arriving or waiting | `/downloads` | `features/parts/application/parts.dart` (`PartArrival.production`) |
 
+## Interactive stories (P18, built)
+
+Approved on 28 October 2026 with calls 21 – 24 (SPEC-058 rev 12, R-79 – R-88; SPEC-063 R-11 – R-14,
+R-26). A story is a production package installed beside its world as music is (`CatalogueProduction.alone`,
+`LibraryProduction.story`); one listed in a document version this Player does not read shows `Update app`
+and is never fetched. It plays natively (call 22): `arke_world`'s evaluator gives each step, the player
+draws it. Where you are is a save in the library's index (`LibraryStore.keepStory`), read and replayed by
+`arke_world`'s `StorySave` and `resumeStory`. A clip plays through `StoryReel` (the platform's video player)
+and a novel's voice through `StoryVoice` (just_audio); a movie scene's still is its first frame, taken
+once by the platform's decoder. A story document carries no captions, so the drawn captions press is
+absent. `test/shoot_p18_test.dart` renders the frames with `SHOOT=1`.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P18a | A story's page: Continue (Play, Start again), its size and ⋯ with Start over, Your route with Choose again | `…/world/:worldId/:productionId` | `features/stories/presentation/story_production_screen.dart`, `story_widgets.dart` (`RouteRows`) |
+| P18b – P18d, P18h | A movie at its shape: 16:9 upright whole at 300, turned filling the height, 9:16 filling the phone, on a Fold the width; the choices, a closed one dashed with its reason; Replay scene | `/story/:worldId/:productionId` | `features/stories/presentation/story_player_screen.dart`, `story_widgets.dart` (`StoryChoices`, `ChoiceCard`); `features/stories/application/stories.dart` |
+| P18e | The route sheet: stills at the story's shape, more than five scenes folded, Choose again, Start over | (a sheet over the player) | `features/stories/presentation/story_widgets.dart` (`showRouteSheet`, `RouteRows`) |
+| P18f, P18g; P4d, P4e | A visual novel: a beat's Tall picture filling the phone, else its picture whole at the top and the box under it; tap for the next, Auto, Log, ⋯; at a choice the last line stays | `/story/:worldId/:productionId` | `features/stories/presentation/story_player_screen.dart` |
+| P4c | An ending: its title and text, the route's stills, Start again, Back to last choice | `/story/:worldId/:productionId` | `features/stories/presentation/story_widgets.dart` (`StoryEndingCard`) |
+| P18 rule 7 | `Update app` on a story's tile; a story's tile under Play | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `world_widgets.dart` (`ProductionTile.tag`) |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.
@@ -198,6 +219,8 @@ SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not buil
 | P1 rule 6, P15 rule 3, P17 rule 2: Listen · Music · Watch · Play · Read, empty groups absent; Music under the Listen chip | `features/production/domain/production_kind.dart` | `test/domain_test.dart`, `test/music_test.dart` |
 | P17 calls 19 and 20: lyrics as written, by stanza, without structure tags; a song keeps no place | `features/players/application/music.dart` (`lyricStanzas`, `MusicAlbum.asItem`) | `test/music_test.dart` |
 | SPEC-058 R-72: production packages installed beside the edition, arriving later, updated when pressed, carried to a new edition | `arke_world` `install.dart`, `catalogue.dart`; `arke_library` `store.dart` (`addProduction`) | `production_install_test.dart`, `test/music_test.dart` |
+| SPEC-058 R-82, R-83: a story installed as a production package only in a version this Player plays; `Update app` otherwise | `arke_world` `catalogue.dart` (`alone`, `needsNewerApp`), `install.dart` | `story_install_test.dart`, `story_test.dart`, `test/story_test.dart` |
+| SPEC-058 R-85, R-86, R-88: closed choices, Choose again, where you are replayed, Start again on a broken route | `arke_world` `story.dart`, `story_save.dart`; `arke_library` `store.dart` (`keepStory`) | `story_save_test.dart`, `store_test.dart`, `test/story_test.dart` |
 | P16 rule 1 (replacing P15 rule 10): each row one size — the feature 358 × 476, posters 172, wide 240, small posters 112; on a Fold 424 high, 260, 300, 160 | `features/worlds/presentation/row_widgets.dart` (`RowSizes`), `world_widgets.dart` (`rowTileWidth`) | `test/discover_test.dart` |
 | P16 calls 14 and 15: a production's Tall cover; the list's feature and band | `arke_world` `catalogue.dart`; `features/worlds/application/discover.dart` | `catalogue_test.dart`, `test/catalogue_test.dart`, `test/discover_test.dart` |
 | SPEC-058 R-52: a chapter a part brought after install is New until it plays | `arke_library` `shelves.dart` (`newChapters`, `placeIsNew`, `worldHasNew`) | `part_install_test.dart`, `test/discover_test.dart` |

@@ -29,10 +29,12 @@ class LibraryStore {
   List<LibraryWorld> _worldCache = const [];
   List<LibraryGuide> _guideCache = const [];
   Map<String, Map<String, int>> _revealed = const {};
+  Map<String, Map<String, Object?>> _stories = const {};
   Future<void> _queue = Future.value();
   final _changes = StreamController<List<LibraryItem>>.broadcast();
   final _worldChanges = StreamController<List<LibraryWorld>>.broadcast();
   final _guideChanges = StreamController<void>.broadcast();
+  final _storyChanges = StreamController<Map<String, Map<String, Object?>>>.broadcast();
 
   /// Every change to the library's items, newest state first.
   Stream<List<LibraryItem>> get changes => _changes.stream;
@@ -51,6 +53,18 @@ class LibraryStore {
   /// What a person chose to see before reaching it (SPEC-059 R-20, R-21): by world, then by
   /// production, the chapter number revealed through. Kept here with the places, never sent.
   Map<String, Map<String, int>> get revealed => _revealed;
+
+  /// Where a person is in each interactive story (SPEC-058 R-88, SPEC-063 R-12): by
+  /// [storyKey], the save as its reader wrote it. Kept opaque here — the reader in `arke_world` says
+  /// what a save holds, and one it cannot read is kept as it is, so an update never overwrites a
+  /// route it cannot replay. Kept with the places, in the same atomic write, never sent.
+  Map<String, Map<String, Object?>> get stories => _stories;
+
+  /// Every change to [stories].
+  Stream<Map<String, Map<String, Object?>>> get storyChanges => _storyChanges.stream;
+
+  /// A story's key in [stories]: its world's id and its production's.
+  static String storyKey(String worldId, String productionId) => '$worldId/$productionId';
 
   /// The folder an item's files live in.
   Directory itemDirectory(String id) => Directory('${_items.path}${Platform.pathSeparator}$id');
@@ -78,6 +92,10 @@ class LibraryStore {
         for (final MapEntry(:key, :value) in ((json['revealed'] as Map?)?.cast<String, Object?>() ?? const {}).entries)
           key: Map<String, int>.unmodifiable((value! as Map).cast<String, int>()),
       });
+      _stories = Map.unmodifiable({
+        for (final MapEntry(:key, :value) in ((json['stories'] as Map?)?.cast<String, Object?>() ?? const {}).entries)
+          if (value is Map) key: Map<String, Object?>.unmodifiable(value.cast<String, Object?>()),
+      });
     }
     await _clearUnknown(_items, {for (final item in _cache) item.id});
     await _clearUnknown(_worlds, {for (final world in _worldCache) world.id});
@@ -85,6 +103,7 @@ class LibraryStore {
     _changes.add(_cache);
     _worldChanges.add(_worldCache);
     _guideChanges.add(null);
+    _storyChanges.add(_stories);
     return _cache;
   });
 
@@ -216,6 +235,17 @@ class LibraryStore {
     await _write();
   });
 
+  /// Keeps where a person is in a story (SPEC-058 R-88), or, with null, forgets it.
+  Future<void> keepStory(String worldId, String productionId, Map<String, Object?>? save) => _serial(() async {
+    final key = storyKey(worldId, productionId);
+    _stories = Map.unmodifiable({
+      for (final MapEntry(key: held, :value) in _stories.entries)
+        if (held != key) held: value,
+      if (save != null) key: Map<String, Object?>.unmodifiable(save),
+    });
+    await _write();
+  });
+
   /// Removes an item and deletes its files and its place.
   Future<void> remove(String id) => _serial(() async {
     _cache = List.unmodifiable(_cache.where((item) => item.id != id));
@@ -224,12 +254,16 @@ class LibraryStore {
     if (await folder.exists()) await folder.delete(recursive: true);
   });
 
-  /// Removes an installed world, its items, their places and what was revealed, and deletes its
-  /// files (P9 rule 6).
+  /// Removes an installed world, its items, their places, what was revealed and where its stories
+  /// were, and deletes its files (P9 rule 6).
   Future<void> removeWorld(String id) => _serial(() async {
     _cache = List.unmodifiable(_cache.where((item) => item.worldId != id));
     _worldCache = List.unmodifiable(_worldCache.where((world) => world.id != id));
     _revealed = Map.unmodifiable({..._revealed}..remove(id));
+    _stories = Map.unmodifiable({
+      for (final MapEntry(:key, :value) in _stories.entries)
+        if (!key.startsWith('$id/')) key: value,
+    });
     await _write();
     final folder = worldDirectory(id);
     if (await folder.exists()) await folder.delete(recursive: true);
@@ -258,6 +292,7 @@ class LibraryStore {
         if (_worldCache.isNotEmpty) 'worlds': [for (final world in _worldCache) world.toJson()],
         if (_guideCache.isNotEmpty) 'guides': [for (final guide in _guideCache) guide.toJson()],
         if (_revealed.isNotEmpty) 'revealed': _revealed,
+        if (_stories.isNotEmpty) 'stories': _stories,
       }),
       flush: true,
     );
@@ -265,6 +300,7 @@ class LibraryStore {
     _changes.add(_cache);
     _worldChanges.add(_worldCache);
     _guideChanges.add(null);
+    _storyChanges.add(_stories);
   }
 
   Future<T> _serial<T>(Future<T> Function() task) {
@@ -277,5 +313,6 @@ class LibraryStore {
     await _changes.close();
     await _worldChanges.close();
     await _guideChanges.close();
+    await _storyChanges.close();
   }
 }

@@ -411,9 +411,9 @@ void main() {
       expect(() => parseCatalogue(list(serial: 1, story: {...pin, 'version': 1, 'url': 'http://example.org/low-water.zip'})), throwsFormatException);
     });
 
-    test('it is never the production’s package: nothing installs it as one', () {
-      final listed = parseCatalogue(list(serial: 1, story: {...pin, 'version': 1})).worlds.single;
-      expect(listed.productions.single.package, isNull);
+    // A revision 11 Player installs every `package` it reads, so a story is never one. This Player
+    // installs it under its own key, and only in a version it plays (R-83).
+    test('it is never the production’s package; it is installed as its story, when this Player plays it', () {
       final installed = LibraryWorld(
         id: 'the-undersong',
         edition: '2026-10-22',
@@ -422,8 +422,14 @@ void main() {
         installedAt: DateTime.utc(2026, 10, 28),
         productions: const [],
       );
-      expect(missingProductions(listed, installed), isEmpty);
-      expect(productionUpdates(listed, installed), isEmpty);
+      final listed = parseCatalogue(list(serial: 1, story: {...pin, 'version': 1})).worlds.single;
+      expect(listed.productions.single.package, isNull);
+      expect(listed.productions.single.alone, same(listed.productions.single.story));
+      expect(missingProductions(listed, installed).single.id, 'low-water');
+      final later = parseCatalogue(list(serial: 1, story: {...pin, 'version': 2})).worlds.single;
+      expect((later.productions.single.alone, later.productions.single.needsNewerApp), (null, true));
+      expect(missingProductions(later, installed), isEmpty);
+      expect(productionUpdates(later, installed), isEmpty);
     });
 
     test('a production package beside it reads as before', () {

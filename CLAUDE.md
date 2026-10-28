@@ -48,7 +48,7 @@ CI runs exactly these on ubuntu-latest. `dart format` uses the page width from `
 
 - **The Player never opens a world's source.** It plays publications: frozen editions with their own manifest. Nothing in it edits, generates or spends.
 - **Nothing in a package plays before every asset matches its manifest** (`verifyPublication`). A standard file is opened and read before it is added. A refusal deletes the copy, and nothing is added half-way.
-- **The players are the Studio's own modules wherever one exists**: interactive, visual novel, audiobook. They are hosted in a web view, so a package plays the same here as in a browser (ADR 0001). Don't write a second copy of one in Dart.
+- **The players are the Studio's own modules wherever one exists**: the audiobook. They are hosted in a web view, so a package plays the same here as in a browser (ADR 0001). Don't write a second copy of one in Dart. Stories are the exception P18 call 22 makes: an interactive movie or a visual novel plays natively on `arke_world`'s port of the Studio's rules, held to them by the fixtures the Studio's contracts write (SPEC-058 R-81). Change either evaluator only with regenerated fixtures.
 - **Every setting is this device's.** Nothing is uploaded to an account, and an added file is never uploaded.
 - **Accounts are a seam.** `ArkeCloud` has one implementation today, `NoArkeCloud`. Don't scatter cloud calls through the screens.
 

@@ -605,6 +605,7 @@ class ProductionTile extends StatelessWidget {
     this.fresh = false,
     this.glyph,
     this.initials,
+    this.tag,
     this.pictureAlignment = Alignment.center,
     super.key,
   });
@@ -614,9 +615,13 @@ class ProductionTile extends StatelessWidget {
   final ImageProvider? picture;
   final double width;
 
-  /// Null where nothing opens yet: a production before its world is installed (P15c).
+  /// Null where nothing opens yet: a production before its world is installed (P15c), or a story this
+  /// Player cannot play (P18 rule 7).
   final VoidCallback? onOpen;
   final bool fresh;
+
+  /// A word at its top left in place of `New`: `Update`, or `Update app` (P18 rule 7).
+  final String? tag;
   final IconData? glyph;
 
   /// For a character with no portrait (P15 rule 10).
@@ -629,7 +634,7 @@ class ProductionTile extends StatelessWidget {
     final surface = context.surface;
     return Semantics(
       button: onOpen != null,
-      label: [title, if (fresh) 'New', kind].join(', '),
+      label: [title, if (fresh) 'New', kind, ?tag].join(', '),
       child: ExcludeSemantics(
         child: GestureDetector(
           onTap: onOpen,
@@ -656,7 +661,22 @@ class ProductionTile extends StatelessWidget {
                                     child: Text(initials!, style: text.titleLarge?.copyWith(color: surface.mutedForeground)),
                                   ),
                           ),
-                        if (fresh) const Positioned(left: 6, top: 6, child: NewTag(onMedia: true)),
+                        if (fresh && tag == null) const Positioned(left: 6, top: 6, child: NewTag(onMedia: true)),
+                        if (tag != null)
+                          Positioned(
+                            left: 6,
+                            top: 6,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: _bg.withValues(alpha: 0.62), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                child: Text(
+                                  tag!,
+                                  style: text.labelMedium?.copyWith(color: _fg, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ),
+                          ),
                         if (glyph != null)
                           Center(
                             child: Container(
@@ -703,7 +723,7 @@ Future<void> showInstallRefusal(
   bool updating = false,
   CatalogueProduction? production,
 }) async {
-  final package = production?.package ?? world.package;
+  final package = production?.alone ?? world.package;
   final again = await showArkeSheet<bool>(
     context,
     title: null,

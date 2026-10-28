@@ -12,11 +12,13 @@ enum PlayerKind {
   /// One episode a screen, swiped (P3c). Native: a feed of short videos is the phone's own idiom.
   microDrama(isWebModule: false),
 
-  /// Studio turn 156 (P4a–P4c).
-  interactive(isWebModule: true),
+  /// An interactive movie at its own shape (P18b – P18e, P18h; P4c's ending). Native since P18 call 22,
+  /// which revises call 2 for stories: its rules are `arke_world`'s Dart port of the Studio's, held to
+  /// them by shared fixtures (SPEC-058 R-81).
+  interactive(isWebModule: false),
 
-  /// Studio turn 174 (P4d, P4e).
-  visualNovel(isWebModule: true),
+  /// A visual novel (P18f, P18g; P4d's box, P4e's log). Native, as [interactive] is.
+  visualNovel(isWebModule: false),
 
   /// Studio turns 186, 211 and 212 (P5a–P5c, P7d).
   audiobook(isWebModule: true),

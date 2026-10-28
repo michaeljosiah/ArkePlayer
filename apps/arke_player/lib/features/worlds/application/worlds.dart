@@ -294,7 +294,7 @@ class ProductionInstallController extends Notifier<InstallState> {
   Future<void> start(CatalogueWorld world, CatalogueProduction production) async {
     if (state is Installing) return;
     final cancel = _cancel = InstallCancel();
-    state = Installing(Downloading(0, production.package?.byteLength ?? 0), updating: true);
+    state = Installing(Downloading(0, production.alone?.byteLength ?? 0), updating: true);
     try {
       final installer = await ref.read(worldInstallerProvider.future);
       await installer.installProduction(
