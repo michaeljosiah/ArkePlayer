@@ -759,8 +759,67 @@ ${scene('char-bray.jpg', '50% 20%', 'The weigh house', '1:05', tallStep)}${taken
 <div class="chs two" style="left:150px;right:150px;bottom:250px">${choice('Follow the lantern', 1, { focus: true })}${choice('Stay with the boat', 2)}</div>${replay(190)}${hi()}`),
 ];
 
+// ---- P19 · A story plays itself ----------------------------------------------------------------
+// The owner, 28 October 2026: a story plays like a video, with optional narration, and pauses only
+// when an option is shown; no tap is needed to move on; and an option is never shown alone. The
+// design said the opposite and the build followed it: P4d's tap moves on, P18's Auto was a toggle off
+// by default, and First Contact showed `1 Several weeks later` as its only button. The Lantern Road is voiced; The Red
+// Quiet's First Contact is not (its package holds pictures and no voices), and its lines and choice
+// are the author's own, from scenes 2 and 5. Low Water and The Lantern Road are P4's samples.
+/** A story's line: the speaker's tab and the line. The box is the story, not a control: it never moves when the controls show. */
+const vnLine = (who, line, style = '') => `<div class="vnbox flow"${style ? ` style="${style}"` : ''}>${who ? `<span class="who">${who}</span>` : ''}<div class="vnline">${line}</div></div>`;
+/** The scene's beats, the ones already played filled. */
+const vnBeats = (done, of) => `<div class="beats flow">${Array.from({ length: of }, (_, i) => `<i${i < done ? ' class="done"' : ''}></i>`).join('')}</div>`;
+/** The top of the controls: ⌄, the story and its scene, ⋯ (Route, Start over). */
+const vnTop = (eb, sc, style = '') => `<div class="ptop"${style ? ` style="${style}"` : ''}>${close}<div class="ttl"><div class="eb">${eb}</div><div class="sc">${sc}</div></div><span class="ib">${ic('more', 20)}</span></div>`;
+/** Narration, a labelled switch under the top: only where the story carries voices. */
+const narration = (on = true, style = 'left:14px;top:104px') => `<div style="position:absolute;z-index:5;${style}"><span class="ib lab glass" style="height:44px;gap:10px;padding:0 10px 0 14px">Narration<span class="sw sm${on ? ' on' : ''}"></span></span></div>`;
+/** The transport, P19 rule 2: Back (the previous beat), Play or Pause, Log, Play on the centre line;
+ *  the scene's beats over it, where a film's scrubber sits. */
+const vnControls = (playing, done, of) => `<div class="vnctl">${vnBeats(done, of)}<div class="vnt"><span class="ib lab">${ic('prev', 16)}Back</span><span class="play">${ic(playing ? 'pause' : 'play', 24)}</span><span class="ib lab">${ic('list', 16)}Log</span></div></div>`;
+/** Where the story stops: the choices, Replay scene and Log under them. */
+const atChoice = `<div style="position:absolute;z-index:4;left:0;right:0;bottom:30px;display:flex;justify-content:center;gap:4px"><span class="btn ghost" style="height:40px;color:color-mix(in srgb,var(--media-overlay-fg) 82%,transparent)">${ic('replay', 16)}Replay scene</span><span class="btn ghost" style="height:40px;color:color-mix(in srgb,var(--media-overlay-fg) 82%,transparent)">${ic('list', 16)}Log</span></div>`;
+const LANTERN_LINE = ['Maren', 'The lamp in the quarter is lit again. I wrote it down, so it happened.'];
+// Maren's beat on its Tall picture. The scrims deepen only while the controls show.
+const lanternTall = (controls) => `<img class="pic" src="${A}maren-ledger-tall.jpg" alt="" style="object-position:50% 40%"><div class="st" style="height:${controls ? 220 : 110}px"></div><div class="sbot" style="height:${controls ? 560 : 380}px"></div>${sb(true)}`;
+// First Contact's beats on its 16:9 picture, whole at the top, the box under it (P18g).
+const firstContact = (sc, controls = true) => `<img class="lbx" src="${A}red-quiet-cover.jpg" alt="" style="top:160px;object-position:50% 50%">${sb(true)}${controls ? vnTop('First Contact', sc) : ''}`;
+const fcStill = (pos, origin) => `<span class="still" style="width:96px;height:54px"><img src="${A}red-quiet-cover.jpg" alt="" style="object-position:${pos};transform:scale(2.4);transform-origin:${origin}"></span>`;
+const fcScene = (still, title, now = false) => `<div class="rt">${now ? still.replace('class="still"', 'class="still ring"') : still}<div class="grow"><div class="t">${title}</div>${now ? '<div class="d">now</div>' : ''}</div></div>`;
+
+const P19 = [
+  frame('P19a', 'A visual novel playing: no controls, nothing to tap', media(), `${lanternTall(false)}
+<div class="vnstack" style="bottom:42px">${vnLine(...LANTERN_LINE)}</div>${hi()}`),
+
+  frame('P19b', 'A tap: the controls, playing, with Narration', media(), `${lanternTall(true)}${vnTop('The Lantern Road', 'The lamp market')}${narration(true)}
+<div class="vnstack" style="bottom:42px">${vnControls(true, 4, 6)}${vnLine(...LANTERN_LINE)}</div>${hi()}`),
+
+  frame('P19c', 'Paused, on a wide picture', media(), `<img class="lbx" src="${A}art-direction-illustrated.jpg" alt="" style="top:160px;object-position:34% 40%">${sb(true)}${vnTop('The Lantern Road', 'The lamp market')}${narration(true)}
+<div class="vnstack" style="top:410px">${vnLine('Maren', 'Somebody lit a window down there. Nobody lives in the quarter now.')}</div><div class="vnstack" style="bottom:44px">${vnControls(false, 2, 6)}</div>${hi()}`),
+
+  frame('P19d', 'A story without voices: no Narration', media(), `${firstContact('Open hands')}
+<div class="vnstack" style="top:410px">${vnLine('Imani Okoro', 'Stop. They are not shooting.')}</div><div class="vnstack" style="bottom:44px">${vnControls(true, 6, 9)}</div>${hi()}`),
+
+  frame('P19e', 'It stops for a choice of two', media(), `${firstContact('The first name on the board')}
+<div class="vnstack" style="top:410px">${vnLine('', 'Dev puts his hand on the emergency barrier. Ana waits beside me with the trauma case. The telemetry gives Elsie’s name in full.')}</div>
+<div class="chs" style="bottom:90px">${choice('Return with Ana for Elsie', 1, { focus: true })}${choice('Seal the shaft and leave Elsie', 2)}</div>${atChoice}${hi()}`),
+
+  frame('P19f', 'An interactive movie playing: a film’s controls', media(), `${lowUpright}<div class="st"></div><div class="sbot" style="height:300px"></div>
+<div style="position:absolute;z-index:4;left:20px;right:20px;bottom:44px"><div class="scrub"><i style="width:53%"></i><b style="left:53%"></b></div><div class="times"><span>0:38</span><span>1:12</span></div>
+<div class="trow" style="margin-top:14px;justify-content:center;gap:40px"><span class="ib">${seek(10, true, 24)}</span><span class="play">${ic('pause', 24)}</span><span class="ib">${seek(10, false, 24)}</span></div></div>${hi()}`),
+
+  frame('P19g', 'Turned: the controls over the picture, the box over its foot', 'turned media', `<img src="${A}art-direction-illustrated.jpg" alt="" style="position:absolute;left:75px;top:0;width:694px;height:390px;object-fit:cover;object-position:34% 40%"><div class="st" style="height:150px"></div><div class="sbot" style="height:300px"></div>
+${vnTop('The Lantern Road', 'The lamp market', 'top:14px;left:40px;right:40px')}${narration(true, 'left:40px;top:66px')}
+<div class="vnstack" style="left:170px;right:170px;bottom:30px">${vnControls(true, 3, 6)}${vnLine('Ilo', 'Then somebody lives there.')}</div>`),
+
+  frame('P19h', 'The route: a lone way leaves no row', media(), `${firstContact('The service ladder', false)}<div class="veil" style="background:color-mix(in srgb,var(--media-overlay-bg) 30%,transparent)"></div>${sheet('Route', `${fcScene(fcStill('50% 50%', '20% 30%'), 'Six places at the table')}
+<div class="rmore">${ic('down', 14, 2)}<span>3 more scenes</span></div>
+${fcScene(fcStill('50% 50%', '55% 62%'), 'The first name on the board')}${taken('Return with Ana for Elsie')}${fcScene(fcStill('50% 50%', '82% 30%'), 'The second lift')}${fcScene(fcStill('50% 50%', '86% 70%'), 'The service ladder', true)}
+<div style="padding:16px 16px 0"><span class="btn wide">${ic('replay', 16)}Start over</span></div>`, { glass: true, count: '7 scenes' })}${hi()}`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19) };
