@@ -211,6 +211,33 @@ that P17c and P17d draw at the top of the album and the player, for which no rul
 a soundtrack's production on Discover before it is installed, because Arke's list does not say
 what a soundtrack is for (`Soundtrack · The Undersong` until then).
 
+## Interactive stories (P18)
+
+The owner, on 28 October 2026, asked whether the interface for interactive stories had been
+designed. P4 had, on 20 October, but it was never built. It predates the pill, the rows, the picture
+shapes and the Studio's remembered choices (SPEC-063, Studio 240). It also cropped a 16:9
+interactive movie to fill an upright phone, where P3a letterboxes a film. The owner said "Draw it",
+and P18 brings P4 up to date:
+
+- A story plays at the shape it was made in. Upright, a 16:9 movie sits whole with its choices
+  under it; turned or on a Fold, two choices sit side by side; a 9:16 movie fills the phone.
+- Choices are full width where the thumb is. Three or more are always one list, as in the Studio's
+  player.
+- A choice an earlier choice closed shows only when the author wrote a reason for it, dimmed and
+  with a dash for its number. The facts a story remembers are never shown.
+- `Choose again` takes back everything after that choice, what the story remembers included.
+- A visual novel's beat uses its Tall picture upright when it has one, as an audiobook's moments do.
+
+It also proposes how a story reaches a phone (calls 21 – 24): as its own production package with
+one story document compiled from the Studio's routing, played natively with its rules held to the
+Studio's by shared fixtures. The Studio exports stories only as a web folder today, and SPEC-063
+leaves an Arke Player format out of scope.
+
+The production P18 is for is The Red Quiet: First Contact (202 scene variants, 201 choices, five
+families of ending). The samples stay The Undersong's: Low Water and The Lantern Road from P4, and
+Ring Once, a 9:16 movie drawn on Odile's picture. Its scene names, choice labels and the reason are
+samples, written for this turn.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -262,6 +289,17 @@ what a soundtrack is for (`Soundtrack · The Undersong` until then).
    for the sections a track keeps in the Studio (238 call 8).
 20. **A song keeps no place** (P17, approved). It starts from its beginning and never joins
    Continue, because a song is heard again rather than finished.
+21. **A story is a production package** (P18, proposed). An interactive movie or visual novel comes
+   as its own package, holding one story document compiled from the Studio's routing with its clips
+   or pictures. The Player says which versions of that document it reads, and Arke's list offers a
+   story only to a Player that can read it.
+22. **Stories play natively** (P18, proposed), their rules written again in Dart and held to the
+   Studio's by shared fixtures: every route of First Contact replays through both and must reach
+   the same scenes and facts. This revises call 2 for stories. Hosting the Studio's web player is
+   the alternative, with one engine but a web page's controls, offline files and lock screen.
+23. **A closed choice shows only with the author's reason** (P18d, proposed), and a listener is
+   never shown the facts.
+24. **Export → Arke Player for stories is a Studio turn** (proposed), drawn once P18 is approved.
 
 ## What this rests on
 
