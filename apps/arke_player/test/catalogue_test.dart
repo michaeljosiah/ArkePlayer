@@ -59,7 +59,7 @@ void main() {
   test('The Red Quiet’s Tall cover is its own poster, title at the top (P16 call 14)', () {
     // Made upright rather than cut from the Wide cover: Ines Marr and the Mistress, with the title
     // below the 51 px the phone's feature takes from a poster's top.
-    final quiet = catalogue.singleWhere((world) => world.id == 'the-red-quiet').productions.single;
+    final quiet = catalogue.singleWhere((world) => world.id == 'the-red-quiet').productions.first;
     expect(quiet.tall, 'assets/worlds/the-red-quiet/cover-tall.jpg');
   });
 
@@ -118,7 +118,19 @@ void main() {
     expect(quiet.package!.sha256, '1781cb578e2dd1755020840dd4b39dc11ca926e1436a372e8016218c490ae579');
     expect(quiet.package!.edition, '2026-10-24-2');
     expect(quiet.guide!.sha256, 'bba813092c1180e74c7cea42cb0c8fd1b98afe3b01790c536cfc732e9189fcc0');
-    expect(quiet.productions.single.title, 'The Red Quiet');
+    expect([for (final production in quiet.productions) production.title], ['The Red Quiet', 'First Contact']);
+  });
+
+  test('The Red Quiet’s First Contact is listed as its story, never as a package (SPEC-058 R-82)', () {
+    // The visual novel exported 2026-10-28 with every route walked in preview: 15 scenes, 104 routes,
+    // one ending of 104 variants, which a Player from before PR #25 refuses. A `package` here would be
+    // installed by every Player of rev 11, which cannot play it.
+    final story = catalogue.singleWhere((world) => world.id == 'the-red-quiet').productions.singleWhere((production) => production.id == 'first-contact');
+    expect(story.package, isNull);
+    expect(story.story!.sha256, 'b9c76f8f919ba067666cc2a2ca76ac6373abddf411f5597edf03bdf60c5cc725');
+    expect(story.story!.playable, isTrue);
+    expect(story.picturePin, isNotNull);
+    expect(story.tallPin, isNotNull);
   });
 
   test('Embers of the Fallen is pinned to its published package and its guide alone', () {
