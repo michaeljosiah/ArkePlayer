@@ -86,6 +86,12 @@ package fingerprint>`, its printed `part` appended to the entry's `package.parts
 published. Phones fetch it on their own; a new edition empties `parts`. See
 [docs/world-package.md](docs/world-package.md#releasing-new-chapters-as-a-part-spec-058-r-43--r-56-p15).
 
+**A story** (an interactive movie or a visual novel, schema 6, SPEC-058 R-79 – R-82) is pinned with
+`pin_world <story.zip> <https url> --production`, and its printed `story` (the pin with `version`) goes
+on the listed production as `story`, **never as `package`**: every Player of rev 11 installs each
+production `package` it reads and would fetch a story it cannot play. See
+[docs/world-package.md](docs/world-package.md#an-interactive-story-spec-058-r-79--r-82-p18).
+
 ## Specs
 
 The ArkeStudio specs are a private sibling repository (`arke-studio-specs`). Cite them by id (`SPEC-048`), never by path. If a spec isn't present, say you can't read it rather than reconstructing it.
