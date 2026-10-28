@@ -39,7 +39,8 @@ const maxStorySceneItems = 2000;
 const maxStoryChoices = 4000;
 const maxStoryPresentation = 20000;
 const maxStoryEndings = 1000;
-const maxStoryVariants = 64;
+// Routing bounds no ending's variants, and First Contact's one ending has 104: 64 refused it.
+const maxStoryVariants = 1000;
 
 /// Text bounds, in characters: a scene's and a choice's id, a variant's id, and the words a listener
 /// reads.
