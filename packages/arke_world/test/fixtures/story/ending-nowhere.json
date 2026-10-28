@@ -1,0 +1,372 @@
+{
+  "format": "arke-story",
+  "version": 1,
+  "kind": "movie",
+  "shape": "16:9",
+  "start": "sc_start",
+  "fingerprint": "sha256:abababababababababababababababababababababababababababababababab",
+  "facts": [
+    {
+      "id": "key",
+      "type": "enum",
+      "values": [
+        "held",
+        "left"
+      ],
+      "default": "held"
+    },
+    {
+      "id": "lamp",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "id": "crew",
+      "type": "enum",
+      "values": [
+        "whole",
+        "short"
+      ],
+      "default": "whole"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "sc_start",
+      "title": "The weigh house",
+      "clips": [
+        {
+          "asset": "clip-start",
+          "from": 0,
+          "to": 41000
+        },
+        {
+          "asset": "clip-start-lamp",
+          "from": 0,
+          "to": 9000
+        }
+      ]
+    },
+    {
+      "id": "sc_bell",
+      "title": "The bell",
+      "clips": [
+        {
+          "asset": "clip-bell",
+          "from": 1200,
+          "to": 30000
+        },
+        {
+          "asset": "clip-bell-lamp",
+          "from": 0,
+          "to": 8000
+        },
+        {
+          "asset": "clip-bell-empty",
+          "from": 0,
+          "to": 6000
+        }
+      ]
+    },
+    {
+      "id": "sc_vault",
+      "title": "The vault",
+      "clips": [
+        {
+          "asset": "clip-vault",
+          "from": 0,
+          "to": 52000
+        }
+      ]
+    },
+    {
+      "id": "sc_tower",
+      "title": "The tower",
+      "clips": [
+        {
+          "asset": "clip-tower",
+          "from": 0,
+          "to": 20000
+        }
+      ]
+    },
+    {
+      "id": "sc_end",
+      "title": "Slack water",
+      "clips": [
+        {
+          "asset": "clip-end",
+          "from": 0,
+          "to": 60000
+        },
+        {
+          "asset": "clip-end-short",
+          "from": 0,
+          "to": 12000
+        }
+      ]
+    }
+  ],
+  "presentation": [
+    {
+      "scene": "sc_start",
+      "index": 1,
+      "when": {
+        "op": "eq",
+        "fact": "lamp",
+        "value": true
+      }
+    },
+    {
+      "scene": "sc_bell",
+      "index": 1,
+      "when": {
+        "op": "eq",
+        "fact": "lamp",
+        "value": true
+      }
+    },
+    {
+      "scene": "sc_bell",
+      "index": 2,
+      "when": {
+        "op": "not",
+        "arg": {
+          "op": "eq",
+          "fact": "key",
+          "value": "held"
+        }
+      }
+    },
+    {
+      "scene": "sc_end",
+      "index": 1,
+      "when": {
+        "op": "eq",
+        "fact": "crew",
+        "value": "short"
+      }
+    }
+  ],
+  "choices": [
+    {
+      "id": "ch_leave-key",
+      "from": "sc_start",
+      "to": "sc_bell",
+      "label": "Leave the key",
+      "effects": [
+        {
+          "fact": "key",
+          "value": "left"
+        }
+      ]
+    },
+    {
+      "id": "ch_keep-key",
+      "from": "sc_start",
+      "to": "sc_bell",
+      "label": "Keep the key",
+      "effects": []
+    },
+    {
+      "id": "ch_light",
+      "from": "sc_start",
+      "to": "sc_start",
+      "label": "Light the lamp",
+      "when": {
+        "op": "not",
+        "arg": {
+          "op": "eq",
+          "fact": "lamp",
+          "value": true
+        }
+      },
+      "effects": [
+        {
+          "fact": "lamp",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "ch_key",
+      "from": "sc_bell",
+      "to": "sc_vault",
+      "label": "Use the tenth key",
+      "when": {
+        "op": "eq",
+        "fact": "key",
+        "value": "held"
+      },
+      "effects": [],
+      "unavailable": {
+        "reason": "Left at the weigh house"
+      }
+    },
+    {
+      "id": "ch_ring",
+      "from": "sc_bell",
+      "to": "sc_tower",
+      "label": "Ring once",
+      "effects": [
+        {
+          "fact": "crew",
+          "value": "short"
+        },
+        {
+          "fact": "lamp",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "ch_follow",
+      "from": "sc_bell",
+      "to": "sc_vault",
+      "label": "Follow the lamp's light",
+      "when": {
+        "op": "all",
+        "args": [
+          {
+            "op": "eq",
+            "fact": "lamp",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "fact": "key",
+            "value": "left"
+          }
+        ]
+      },
+      "effects": []
+    },
+    {
+      "id": "ch_wait",
+      "from": "sc_bell",
+      "to": "sc_tower",
+      "label": "Wait for the tide",
+      "when": {
+        "op": "any",
+        "args": [
+          {
+            "op": "eq",
+            "fact": "lamp",
+            "value": true
+          },
+          {
+            "op": "eq",
+            "fact": "key",
+            "value": "held"
+          }
+        ]
+      },
+      "effects": [],
+      "unavailable": {
+        "label": "Wait in the dark",
+        "reason": "Too dark to wait"
+      }
+    },
+    {
+      "id": "ch_climb",
+      "from": "sc_tower",
+      "to": "sc_end",
+      "label": "Climb down",
+      "effects": []
+    }
+  ],
+  "endings": [
+    {
+      "scene": "sc_sea",
+      "title": "The vault"
+    },
+    {
+      "scene": "sc_end",
+      "title": "Escape",
+      "variants": [
+        {
+          "id": "ev_all",
+          "title": "Together",
+          "text": "Both return.",
+          "when": {
+            "op": "all",
+            "args": [
+              {
+                "op": "eq",
+                "fact": "key",
+                "value": "held"
+              },
+              {
+                "op": "any",
+                "args": [
+                  {
+                    "op": "eq",
+                    "fact": "crew",
+                    "value": "whole"
+                  },
+                  {
+                    "op": "eq",
+                    "fact": "lamp",
+                    "value": true
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "ev_key",
+          "title": "The key kept",
+          "text": "One stayed at the bell.",
+          "when": {
+            "op": "all",
+            "args": [
+              {
+                "op": "eq",
+                "fact": "key",
+                "value": "held"
+              },
+              {
+                "op": "not",
+                "arg": {
+                  "op": "eq",
+                  "fact": "crew",
+                  "value": "whole"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "ev_lamp",
+          "title": "By lamplight",
+          "text": "",
+          "when": {
+            "op": "all",
+            "args": [
+              {
+                "op": "not",
+                "arg": {
+                  "op": "eq",
+                  "fact": "key",
+                  "value": "held"
+                }
+              },
+              {
+                "op": "eq",
+                "fact": "lamp",
+                "value": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "ev_loss",
+          "title": "An empty seat",
+          "text": "The rescue has a cost.",
+          "fallback": true
+        }
+      ]
+    }
+  ]
+}

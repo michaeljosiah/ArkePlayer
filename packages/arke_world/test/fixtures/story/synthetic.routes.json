@@ -1,0 +1,879 @@
+{
+  "note": "PROVISIONAL (arke_world, until contracts writes it): every predicate op, effects, closed choices, presentation rows and ending variants.",
+  "document": "synthetic.json",
+  "complete": true,
+  "bound": null,
+  "routes": [
+    {
+      "choices": [
+        "ch_leave-key",
+        "ch_ring",
+        "ch_climb"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "left",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_ring"
+          ],
+          "closed": [
+            {
+              "id": "ch_key",
+              "label": "Use the tenth key",
+              "reason": "Left at the weigh house"
+            },
+            {
+              "id": "ch_wait",
+              "label": "Wait in the dark",
+              "reason": "Too dark to wait"
+            }
+          ],
+          "play": [
+            0,
+            2
+          ]
+        },
+        {
+          "scene": "sc_tower",
+          "facts": {
+            "key": "left",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_end",
+          "facts": {
+            "key": "left",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_end",
+        "variant": "ev_loss",
+        "title": "An empty seat",
+        "text": "The rescue has a cost."
+      }
+    },
+    {
+      "choices": [
+        "ch_keep-key",
+        "ch_key"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_key",
+            "ch_ring",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_vault",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_vault",
+        "variant": null,
+        "title": "The vault",
+        "text": null
+      }
+    },
+    {
+      "choices": [
+        "ch_keep-key",
+        "ch_ring",
+        "ch_climb"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_key",
+            "ch_ring",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_tower",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_end",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_end",
+        "variant": "ev_key",
+        "title": "The key kept",
+        "text": "One stayed at the bell."
+      }
+    },
+    {
+      "choices": [
+        "ch_keep-key",
+        "ch_wait",
+        "ch_climb"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_key",
+            "ch_ring",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_tower",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_end",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_end",
+        "variant": "ev_all",
+        "title": "Together",
+        "text": "Both return."
+      }
+    },
+    {
+      "choices": [
+        "ch_light",
+        "ch_leave-key",
+        "ch_ring",
+        "ch_climb"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "left",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_ring",
+            "ch_follow",
+            "ch_wait"
+          ],
+          "closed": [
+            {
+              "id": "ch_key",
+              "label": "Use the tenth key",
+              "reason": "Left at the weigh house"
+            }
+          ],
+          "play": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "scene": "sc_tower",
+          "facts": {
+            "key": "left",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_end",
+          "facts": {
+            "key": "left",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_end",
+        "variant": "ev_loss",
+        "title": "An empty seat",
+        "text": "The rescue has a cost."
+      }
+    },
+    {
+      "choices": [
+        "ch_light",
+        "ch_leave-key",
+        "ch_follow"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "left",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_ring",
+            "ch_follow",
+            "ch_wait"
+          ],
+          "closed": [
+            {
+              "id": "ch_key",
+              "label": "Use the tenth key",
+              "reason": "Left at the weigh house"
+            }
+          ],
+          "play": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "scene": "sc_vault",
+          "facts": {
+            "key": "left",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_vault",
+        "variant": null,
+        "title": "The vault",
+        "text": null
+      }
+    },
+    {
+      "choices": [
+        "ch_light",
+        "ch_leave-key",
+        "ch_wait",
+        "ch_climb"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "left",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_ring",
+            "ch_follow",
+            "ch_wait"
+          ],
+          "closed": [
+            {
+              "id": "ch_key",
+              "label": "Use the tenth key",
+              "reason": "Left at the weigh house"
+            }
+          ],
+          "play": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "scene": "sc_tower",
+          "facts": {
+            "key": "left",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_end",
+          "facts": {
+            "key": "left",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_end",
+        "variant": "ev_lamp",
+        "title": "By lamplight",
+        "text": ""
+      }
+    },
+    {
+      "choices": [
+        "ch_light",
+        "ch_keep-key",
+        "ch_key"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_key",
+            "ch_ring",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_vault",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_vault",
+        "variant": null,
+        "title": "The vault",
+        "text": null
+      }
+    },
+    {
+      "choices": [
+        "ch_light",
+        "ch_keep-key",
+        "ch_ring",
+        "ch_climb"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_key",
+            "ch_ring",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_tower",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_end",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "short"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_end",
+        "variant": "ev_key",
+        "title": "The key kept",
+        "text": "One stayed at the bell."
+      }
+    },
+    {
+      "choices": [
+        "ch_light",
+        "ch_keep-key",
+        "ch_wait",
+        "ch_climb"
+      ],
+      "steps": [
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": false,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key",
+            "ch_light"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_start",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_leave-key",
+            "ch_keep-key"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_bell",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_key",
+            "ch_ring",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_tower",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [
+            "ch_climb"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_end",
+          "facts": {
+            "key": "held",
+            "lamp": true,
+            "crew": "whole"
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_end",
+        "variant": "ev_all",
+        "title": "Together",
+        "text": "Both return."
+      }
+    }
+  ]
+}

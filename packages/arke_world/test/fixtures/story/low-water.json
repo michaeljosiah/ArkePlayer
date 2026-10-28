@@ -1,0 +1,119 @@
+{
+  "format": "arke-story",
+  "version": 1,
+  "kind": "movie",
+  "shape": "16:9",
+  "start": "sc_harbour",
+  "fingerprint": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "facts": [],
+  "scenes": [
+    {
+      "id": "sc_harbour",
+      "title": "The harbour at dusk",
+      "clips": [
+        {
+          "asset": "clip-start",
+          "from": 0,
+          "to": 72000
+        }
+      ]
+    },
+    {
+      "id": "sc_wall",
+      "title": "The sea wall",
+      "clips": [
+        {
+          "asset": "clip-bell",
+          "from": 0,
+          "to": 30000
+        },
+        {
+          "asset": "clip-tower",
+          "from": 2000,
+          "to": 18000
+        }
+      ]
+    },
+    {
+      "id": "sc_boat",
+      "title": "The boat",
+      "clips": [
+        {
+          "asset": "clip-vault",
+          "from": 0,
+          "to": 40000
+        }
+      ]
+    },
+    {
+      "id": "sc_drowned",
+      "title": "Under",
+      "clips": [
+        {
+          "asset": "clip-end",
+          "from": 0,
+          "to": 25000
+        }
+      ]
+    },
+    {
+      "id": "sc_dawn",
+      "title": "Dawn",
+      "clips": [
+        {
+          "asset": "clip-end-short",
+          "from": 0,
+          "to": 25000
+        }
+      ]
+    }
+  ],
+  "presentation": [],
+  "choices": [
+    {
+      "id": "ch_wall",
+      "from": "sc_harbour",
+      "to": "sc_wall",
+      "label": "Walk the wall",
+      "effects": []
+    },
+    {
+      "id": "ch_boat",
+      "from": "sc_harbour",
+      "to": "sc_boat",
+      "label": "Take the boat",
+      "effects": []
+    },
+    {
+      "id": "ch_jump",
+      "from": "sc_wall",
+      "to": "sc_drowned",
+      "label": "Jump",
+      "effects": []
+    },
+    {
+      "id": "ch_wait",
+      "from": "sc_wall",
+      "to": "sc_dawn",
+      "label": "Wait for dawn",
+      "effects": []
+    },
+    {
+      "id": "ch_row",
+      "from": "sc_boat",
+      "to": "sc_dawn",
+      "label": "Row out",
+      "effects": []
+    }
+  ],
+  "endings": [
+    {
+      "scene": "sc_drowned",
+      "title": "Drowned"
+    },
+    {
+      "scene": "sc_dawn",
+      "title": "Dawn"
+    }
+  ]
+}

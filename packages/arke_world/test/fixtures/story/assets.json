@@ -1,0 +1,104 @@
+{
+  "story": {
+    "path": "story/story.json",
+    "mediaType": "application/vnd.arke.story+json",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "cover": {
+    "path": "story/cover.jpg",
+    "mediaType": "image/jpeg",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "cover-tall": {
+    "path": "story/cover-tall.jpg",
+    "mediaType": "image/jpeg",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-start": {
+    "path": "story/clips/start.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-start-lamp": {
+    "path": "story/clips/start-lamp.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-bell": {
+    "path": "story/clips/bell.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-bell-lamp": {
+    "path": "story/clips/bell-lamp.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-bell-empty": {
+    "path": "story/clips/bell-empty.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-vault": {
+    "path": "story/clips/vault.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-tower": {
+    "path": "story/clips/tower.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-end": {
+    "path": "story/clips/end.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "clip-end-short": {
+    "path": "story/clips/end-short.mp4",
+    "mediaType": "video/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pic-road": {
+    "path": "story/pictures/road.jpg",
+    "mediaType": "image/jpeg",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pic-road-tall": {
+    "path": "story/pictures/road-tall.jpg",
+    "mediaType": "image/jpeg",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "pic-inn": {
+    "path": "story/pictures/inn.png",
+    "mediaType": "image/png",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "voice-1": {
+    "path": "story/voices/1.m4a",
+    "mediaType": "audio/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "voice-2": {
+    "path": "story/voices/2.m4a",
+    "mediaType": "audio/mp4",
+    "byteLength": 1,
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

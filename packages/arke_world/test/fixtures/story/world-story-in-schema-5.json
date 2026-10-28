@@ -1,0 +1,38 @@
+{
+  "format": "arke-world-package",
+  "schemaVersion": 5,
+  "id": "the-undersong",
+  "edition": "2026-10-28",
+  "name": "The Undersong",
+  "logline": "A drowned god still sings beneath the harbour.",
+  "alone": true,
+  "productions": [
+    {
+      "id": "low-water",
+      "title": "Low Water",
+      "picture": "cover",
+      "tall": "cover-tall",
+      "story": "story"
+    }
+  ],
+  "assets": {
+    "story": {
+      "path": "story/story.json",
+      "mediaType": "application/vnd.arke.story+json",
+      "byteLength": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "cover": {
+      "path": "story/cover.jpg",
+      "mediaType": "image/jpeg",
+      "byteLength": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "cover-tall": {
+      "path": "story/cover-tall.jpg",
+      "mediaType": "image/jpeg",
+      "byteLength": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}

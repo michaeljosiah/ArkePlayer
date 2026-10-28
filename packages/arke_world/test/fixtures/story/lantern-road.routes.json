@@ -1,0 +1,116 @@
+{
+  "note": "PROVISIONAL stand-in for Lantern Road: a novel with beats.",
+  "document": "lantern-road.json",
+  "complete": true,
+  "bound": null,
+  "routes": [
+    {
+      "choices": [
+        "ch_blow-out",
+        "ch_sleep"
+      ],
+      "steps": [
+        {
+          "scene": "sc_road",
+          "facts": {
+            "lantern": true
+          },
+          "open": [
+            "ch_blow-out",
+            "ch_walk-on"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_inn",
+          "facts": {
+            "lantern": false
+          },
+          "open": [
+            "ch_sleep"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            2
+          ]
+        },
+        {
+          "scene": "sc_morning",
+          "facts": {
+            "lantern": false
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_morning",
+        "variant": "ev_dark",
+        "title": "Dark",
+        "text": "The lantern was cold."
+      }
+    },
+    {
+      "choices": [
+        "ch_walk-on",
+        "ch_sleep"
+      ],
+      "steps": [
+        {
+          "scene": "sc_road",
+          "facts": {
+            "lantern": true
+          },
+          "open": [
+            "ch_blow-out",
+            "ch_walk-on"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_inn",
+          "facts": {
+            "lantern": true
+          },
+          "open": [
+            "ch_sleep"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_morning",
+          "facts": {
+            "lantern": true
+          },
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_morning",
+        "variant": "ev_lit",
+        "title": "Lit",
+        "text": "The lantern still burned."
+      }
+    }
+  ]
+}

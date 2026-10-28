@@ -1,0 +1,150 @@
+{
+  "note": "PROVISIONAL stand-in for Low Water: a 16:9 movie compiled from legacy routing, no facts.",
+  "document": "low-water.json",
+  "complete": true,
+  "bound": null,
+  "routes": [
+    {
+      "choices": [
+        "ch_wall",
+        "ch_jump"
+      ],
+      "steps": [
+        {
+          "scene": "sc_harbour",
+          "facts": {},
+          "open": [
+            "ch_wall",
+            "ch_boat"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_wall",
+          "facts": {},
+          "open": [
+            "ch_jump",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_drowned",
+          "facts": {},
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_drowned",
+        "variant": null,
+        "title": "Drowned",
+        "text": null
+      }
+    },
+    {
+      "choices": [
+        "ch_wall",
+        "ch_wait"
+      ],
+      "steps": [
+        {
+          "scene": "sc_harbour",
+          "facts": {},
+          "open": [
+            "ch_wall",
+            "ch_boat"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_wall",
+          "facts": {},
+          "open": [
+            "ch_jump",
+            "ch_wait"
+          ],
+          "closed": [],
+          "play": [
+            0,
+            1
+          ]
+        },
+        {
+          "scene": "sc_dawn",
+          "facts": {},
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_dawn",
+        "variant": null,
+        "title": "Dawn",
+        "text": null
+      }
+    },
+    {
+      "choices": [
+        "ch_boat",
+        "ch_row"
+      ],
+      "steps": [
+        {
+          "scene": "sc_harbour",
+          "facts": {},
+          "open": [
+            "ch_wall",
+            "ch_boat"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_boat",
+          "facts": {},
+          "open": [
+            "ch_row"
+          ],
+          "closed": [],
+          "play": [
+            0
+          ]
+        },
+        {
+          "scene": "sc_dawn",
+          "facts": {},
+          "open": [],
+          "closed": [],
+          "play": [
+            0
+          ]
+        }
+      ],
+      "ending": {
+        "scene": "sc_dawn",
+        "variant": null,
+        "title": "Dawn",
+        "text": null
+      }
+    }
+  ]
+}

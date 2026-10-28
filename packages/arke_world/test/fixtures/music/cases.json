@@ -168,7 +168,7 @@
       "expect": "notAPackage"
     },
     {
-      "file": "world-schema-6.json",
+      "file": "world-schema-7.json",
       "reader": "manifest",
       "expect": "newerArke"
     },
