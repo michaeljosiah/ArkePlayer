@@ -167,6 +167,71 @@ What phones do with it (R-72, P17):
 Arke's list does not say what a soundtrack is for: Discover names the production only once the
 soundtrack is installed, and its world before that.
 
+## An interactive story (SPEC-058 R-79 – R-82, P18)
+
+An interactive movie or a visual novel (SPEC-063) is published as a production package too: a world
+package of **schema 6**, `"alone": true`, holding one production that names its `story` document in
+place of a book, a narration, a listening document or music. Its `picture` is the wide cover and its
+`tall`, when it has one, the Tall cover; a `tall` on any other production is not an Arke package. A
+Player from before schema 6 refuses the package as made with a newer Arke, and the list keeps such a
+Player from fetching one (below).
+
+The **story document** (`application/vnd.arke.story+json`, format `arke-story`, version 1) is
+compiled by the Studio's contracts from the production's routing, so the Player never needs the
+world's script. It holds the `kind` (`movie` or `novel`), the `shape` (`16:9` or `9:16`), the `start`
+scene, the `fingerprint` of SPEC-063 R-14 (`sha256:<hex>`), the `facts` with their types, values and
+defaults (never their labels: a listener never sees a fact), the `scenes` with a movie's `clips`
+(an MP4 asset with `from` and `to` in ms) or a novel's `beats` (`picture`, `tall`, `speaker`, `line`,
+`voice`), the `presentation` rows that play a scene's clip or beat only while a guard holds (by its
+`index` in the scene), the `choices` in authored order (`id`, `from`, `to`, `label`, `when`,
+`effects`, and `unavailable` with its `reason` and optional `label` only when the author wrote one),
+and the `endings` with their variants and fallback. `readStory` is as strict as the music reader: an
+unknown key or a newer version is newer; an id that repeats, a scene that is not there, a fact or
+value that is not declared, an asset missing or of the wrong kind, an ending with an outgoing choice,
+or a document past SPEC-063's bounds (32 facts, 16 values, conditions 8 deep and 128 nodes) is not an
+Arke package.
+
+**The rules** are `arke_world`'s port of the Studio's evaluator (SPEC-063 R-6). `replayStory`
+folds the defaults over a route of choice ids, checking each step's scene and guard, and gives the
+`StoryStep` there: the scene, the facts, the `options` in authored order (open, or closed in place with
+the author's reason; a closed choice without one is hidden), the `play` indices of the clips or beats
+that play in this state, and the resolved ending at an ending scene (exactly one variant that holds,
+else the fallback). A route that is not legal is `StoryRouteBroken` at its first bad step, which is
+how a saved route is replayed after an `Update` (R-88). `evaluateStory`, `startStory`, `chooseStory`
+and `chooseStoryAgain` (cut before a choice and replay what is kept, SPEC-063 R-13) are built on it.
+The Studio's contracts write `test/fixtures/story/` (`packages/contracts/scripts/story-fixtures.ts`), and
+it is copied here verbatim, never edited: the public stories (Low Water, a 16:9 movie compiled from
+legacy routing; Ring Once, the synthetic story that exercises every condition, effect, closed choice,
+presentation row and ending variant; Lantern Road, a visual novel), the refused documents and world.json
+files in `cases.json` with the `limits` every reader keeps, and for each story every complete route
+with every step's scene, facts, open and closed choices and projection, and its ending.
+`test/story_test.dart` reproduces every step exactly, and finds the same complete routes (R-81). A
+change to either evaluator lands with regenerated fixtures, or not at all. First Contact's 104 routes
+run through both in the private qualification (SPEC-063 R-25).
+
+1. **Upload it** under its own name to the world's public story release. Never replace one.
+2. **Pin it as a production**, as an album is:
+
+   ```
+   dart run arke_world:pin_world <story.zip> <https url> --production
+   ```
+
+   For a story it prints the production's id and its `story`: the pin (address, length, SHA-256,
+   edition and fingerprint) with `version`, the story document's version.
+3. **Set it on the listed production as `story`, never as `package`.** Every Player of rev 11 installs
+   each production `package` it reads, and would fetch a story it cannot play. A Player that does not
+   know `story` ignores it; one that reads it but not its `version` shows the tile with `Update app`
+   and fetches nothing (P18 rule 7, call 21). This Player plays version 1 (`supportedStoryVersions`).
+
+   ```json
+   { "id": "low-water", "title": "Low Water", "kind": "Interactive · 16:9",
+     "story": { "url": "https://…/the-undersong-story-2026-10-28.zip", "byteLength": 52000000,
+                "sha256": "…", "edition": "2026-10-28", "fingerprint": "…", "version": 1 } }
+   ```
+4. **Raise `serial` and publish the list**, as for an edition.
+
+This revision reads and pins stories; installing and playing them (R-83 – R-88) is slice 16.
+
 ## The Undersong
 
 **Current: Chapters 1–5, 27 October 2026** (list serial 33). Chapter 5, *Independent record*, is part 2 after the unchanged Chapters 1–3 edition and Chapter 4 part. Its immutable package is `the-undersong-part-2026-10-27.zip`, 41,776,288 bytes, SHA-256 `daf83567861183d9e43aad8fe19f93ff4c369f7df614c6f5be99619336dde99c`, on story release `undersong-2026-10-27-chapter-5` (not Latest). It contains the chapter EPUB, 18 m 51 s of narration and 28 illustrations: 19 with Tall versions and nine reviewed Wides used in both orientations. All assets were hash-checked, all 168 EPUB paragraphs matched the manuscript, and the native Player reader accepted the package. Recorded audio lengths set the clock; sentence anchors remain estimated. The longest picture hold is 73.246 seconds. Private world sources and the Guide are absent. Earlier packages, the Guide pin, other worlds and The Red Quiet feature are unchanged.

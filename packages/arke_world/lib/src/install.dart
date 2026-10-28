@@ -365,6 +365,9 @@ class WorldInstaller {
     final manifest = await _check(zip, content, onStep, control);
     final production = manifest.productions.single;
     if (!manifest.alone || manifest.id != worldId || (listed.id != null && production.id != listed.id)) throw const NotAPackage();
+    // A story is never listed as a production's `package` (SPEC-058 R-82), so one there is a mistake in
+    // the list: it is refused, as it was before schema 6, rather than installed with nothing to play.
+    if (production.story != null) throw const NotAPackage();
     final folder = 'worlds/$worldId/_productions/${production.id}';
     final (described, items) = await _describe(manifest, content, under: folder);
     final bytes = manifest.assets.values.fold(0, (sum, asset) => sum + asset.byteLength);

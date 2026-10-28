@@ -8,6 +8,7 @@ import 'guide.dart';
 import 'listening.dart';
 import 'manifest.dart';
 import 'music.dart';
+import 'story.dart';
 
 /// A world package refused before anything in it was used.
 class WorldPackageRefused implements Exception {
@@ -27,6 +28,7 @@ const _stored = 0;
 const _maxListeningBytes = 8 * 1024 * 1024;
 const _maxGuideBytes = 8 * 1024 * 1024;
 const _maxMusicBytes = 4 * 1024 * 1024;
+const _maxStoryBytes = 8 * 1024 * 1024;
 
 /// Reads a downloaded world package's directory and manifest before any file in it is used,
 /// refusing what SPEC-048 R-14 asks a reader to refuse: absolute paths, traversal, backslashes,
@@ -112,6 +114,15 @@ WorldManifest readWorldPackage(String zipPath) {
         MusicRefused(:final refusal, :final reason) => throw WorldPackageRefused(refusal, reason),
       };
     }
+    // And a story's (R-80): its clips, pictures and voices are known once it is read.
+    final stories = <String, StoryDocument>{};
+    for (final production in manifest.productions) {
+      if (production.story == null) continue;
+      stories[production.id] = switch (readStory(document(production.story!, _maxStoryBytes, 'story document'), manifest.assets)) {
+        StoryOk(:final document) => document,
+        StoryRefused(:final refusal, :final reason) => throw WorldPackageRefused(refusal, reason),
+      };
+    }
     // The guide is read now too, so the files it names are known (SPEC-059 R-14).
     final guide = manifest.guide == null
         ? null
@@ -119,17 +130,18 @@ WorldManifest readWorldPackage(String zipPath) {
             GuideOk(:final guide) => guide,
             GuideRefused(:final refusal, :final reason) => throw WorldPackageRefused(refusal, reason),
           };
-    if (listening.isNotEmpty || music.isNotEmpty || guide != null) {
+    if (listening.isNotEmpty || music.isNotEmpty || stories.isNotEmpty || guide != null) {
       final used = {
         ...manifest.namedAssets,
         for (final document in listening.values) ...document.assetIds,
         for (final document in music.values) ...document.assetIds,
+        for (final document in stories.values) ...document.assetIds,
         ...?guide?.assetIds,
       };
       final unused = manifest.assets.keys.where((assetId) => !used.contains(assetId));
       if (unused.isNotEmpty) throw notAPackage('unused assets ${unused.take(3).join(', ')}');
     }
-    return manifest.withDocuments(listening, guide, music: music);
+    return manifest.withDocuments(listening, guide, music: music, stories: stories);
   } finally {
     input.closeSync();
   }
