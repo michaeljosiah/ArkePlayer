@@ -431,3 +431,17 @@
 .ap .alb.fold{display:grid;grid-template-columns:320px 1fr;gap:0 32px;padding:112px 32px 28px;text-align:left;align-items:end}
 .ap .alb.fold .cv{width:320px;height:320px;margin:0}
 .ap .dock.float{position:absolute;z-index:8;left:16px;right:16px;bottom:98px;margin:0;border-radius:18px;background:color-mix(in srgb,var(--card) 84%,transparent);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:var(--shadow-xl)}
+
+/* P18 · interactive stories: a picture at its own shape, the choices where the thumb is, and a
+   choice the story has closed, dimmed with the author's reason. */
+.ap .lbx{position:absolute;left:0;width:100%;aspect-ratio:16/9;object-fit:cover}
+.ap .chs{position:absolute;z-index:4;left:16px;right:16px;display:flex;flex-direction:column;gap:10px}
+.ap .chs.two{flex-direction:row;gap:12px}
+.ap .chs.two>.choice{flex:1;min-width:0}
+.ap .choice>.l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .choice.off{height:auto;min-height:58px;padding-top:11px;padding-bottom:11px;align-items:flex-start;box-shadow:none;background:color-mix(in srgb,var(--media-overlay-bg) 28%,transparent);border-style:dashed;color:color-mix(in srgb,var(--media-overlay-fg) 58%,transparent)}
+.ap .choice.off>.kn{border-color:transparent}
+.ap .choice .why{display:block;margin-top:3px;font:var(--type-meta);letter-spacing:normal;white-space:normal}
+.ap .vnbox.at{bottom:auto}
+.ap .body .still.ring{outline-color:var(--foreground)}
+.ap .rmore{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 16px 0 60px;font:var(--type-meta);opacity:.62}

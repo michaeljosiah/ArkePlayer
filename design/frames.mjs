@@ -703,8 +703,64 @@ ${sh('Music', '<span class="ct num">2</span>')}<div class="trk"><img src="${A}${
 ${sh('More from The Undersong')}<div class="hrow">${square({ ...SINGLE, kind: 'Single · 3:42', w: 200 })}${square({ ...SCORE, kind: 'Soundtrack · 14 tracks', w: 200 })}</div></div><div class="ffoot"></div>${pill('Discover', true)}${hi()}</div>`),
 ];
 
+// ---- P18 · Interactive stories, brought up to date --------------------------------------------
+// The owner, 28 October 2026: have we designed what interactive stories look like on the Player?
+// P4 had, on 20 October, before the pill, the rows, picture shapes and remembered choices, and it
+// cropped a 16:9 movie to fill an upright phone where P3a letterboxes a film. P18 plays a story at
+// the shape it was made in and shows a choice the story has closed (SPEC-063, Studio 240). The Red
+// Quiet: First Contact is the production it is for; the samples stay The Undersong's, as P4's were,
+// with Ring Once a 9:16 movie of its own. Choice labels and reasons are samples of the author's words.
+const RING = { img: 'char-odile.jpg', pos: '50% 30%', title: 'Ring Once' };
+/** A choice: its number and label. A closed one has a dash for its number and the author's reason under its label. */
+const choice = (label, n, { focus = false, why = '' } = {}) => why
+  ? `<div class="choice off"><span class="kn">–</span><span class="l">${label}<span class="why">${why}</span></span></div>`
+  : `<div class="choice${focus ? ' focus' : ''}"><span class="kn">${n}</span><span class="l">${label}</span></div>`;
+const replay = (bottom = 36) => `<div style="position:absolute;z-index:4;left:0;right:0;bottom:${bottom}px;display:flex;justify-content:center"><span class="btn ghost" style="height:40px;color:color-mix(in srgb,var(--media-overlay-fg) 82%,transparent)">${ic('replay', 16)}Replay scene</span></div>`;
+const storyTop = (eb, sc, style = '') => `<div class="ptop"${style ? ` style="${style}"` : ''}>${close}<div class="ttl"><div class="eb">${eb}</div><div class="sc">${sc}</div></div><span class="ib">${ic('captions', 20)}</span><span class="ib">${ic('route', 20)}</span></div>`;
+// Low Water held upright: whole, a little above the middle, where P3a holds a film; never cropped to fill.
+const lowUpright = `<img class="lbx" src="${A}drowned-quarter.jpg" alt="" style="top:300px">${sb(true)}${storyTop('Low Water', 'The drowned quarter')}`;
+const ringFull = `<img class="pic" src="${A}${RING.img}" alt="" style="object-position:${RING.pos}"><div class="st"></div>${sb(true)}${storyTop(RING.title, 'The bell tower')}`;
+const lanternTop = `${sb(true)}<div class="ptop">${close}<div class="ttl"><div class="eb">The Lantern Road</div><div class="sc">The lamp market</div></div><span class="ib">${ic('more', 20)}</span></div><div style="position:absolute;z-index:5;left:14px;top:104px;display:flex;gap:6px"><span class="ib lab on" style="height:40px">${ic('auto', 16)}Auto</span><span class="ib lab" style="height:40px">${ic('list', 16)}Log</span></div>`;
+/** A step of the route: a scene's still at the story's shape, or the choice taken after it. */
+const scene = (img, pos, title, data, { now = false, w = 96, h = 54 } = {}) => `<div class="rt">${still(img, pos, now, w, h)}<div class="grow"><div class="t">${title}</div><div class="d${now ? '' : ' num'}">${now ? 'now' : data}</div></div></div>`;
+const taken = (label, pad = 60) => `<div class="rc" style="padding-left:${pad}px">${ic('right', 14, 2)}<span class="grow">${label}</span><span class="btn">Choose again</span></div>`;
+const lowRoute = `${scene('launch-harbour.jpg', '50% 60%', 'The harbour at dusk', '1:12')}${taken('Take the skiff')}${scene('scene4-shot15.jpg', 'center', 'Under the pier', '0:54')}${taken('Follow the lantern')}${scene('drowned-quarter.jpg', '30% 50%', 'The drowned quarter', '', { now: true })}`;
+const tallStep = { w: 40, h: 72 };
+
+const P18 = [
+  frame('P18a', 'An interactive movie’s page', 'phone', `${sb(true)}<div class="body"><div class="hero" style="padding-top:218px"><img src="${A}drowned-quarter.jpg" alt="" style="height:290px;object-position:30% 50%"><div class="fade" style="top:90px;height:201px"></div><div class="top">${back}${more}</div><div class="in"><h1>Low Water</h1><div class="meta">Interactive movie · The Undersong · 14 scenes</div>
+<div style="margin-top:16px"><span class="btn pri wide">${ic('play', 16)}Continue <em>· The drowned quarter</em></span></div><div class="acts"><span class="btn" style="flex:1">${ic('downloaded', 18)}1.2 GB</span><span class="btn" style="width:44px;padding:0">${ic('more')}</span></div></div></div>
+${sh('Your route')}${lowRoute}
+</div><div class="ffoot"></div>${pill('Library')}${hi()}`),
+
+  frame('P18b', 'A 16:9 movie held upright: whole, the choice under it', media(), `${lowUpright}
+<div class="chs" style="bottom:96px">${choice('Follow the lantern', 1, { focus: true })}${choice('Stay with the boat', 2)}</div>${replay()}${hi()}`),
+
+  frame('P18c', 'The same choice, turned', 'turned media', `<img src="${A}drowned-quarter.jpg" alt="" style="position:absolute;left:75px;top:0;width:694px;height:390px;object-fit:cover"><div class="st" style="height:140px"></div><div class="sbot" style="height:210px"></div>
+${storyTop('Low Water', 'The drowned quarter', 'top:14px;left:40px;right:40px')}
+<div class="chs two" style="left:120px;right:120px;bottom:62px">${choice('Follow the lantern', 1, { focus: true })}${choice('Stay with the boat', 2)}</div>${replay(12)}`),
+
+  frame('P18d', 'A 9:16 movie: three choices, and one an earlier choice closed', media(), `${ringFull}<div class="sbot" style="height:560px"></div>
+<div class="chs" style="bottom:96px">${choice('Ring the bell', 1, { focus: true })}${choice('Wake Maren', 2)}${choice('Use the tenth key', 0, { why: 'Left at the weigh house' })}${choice('Go down alone', 3)}</div>${replay()}${hi()}`),
+
+  frame('P18e', 'The route: Choose again takes back what came after', media(), `${ringFull}<div class="veil" style="background:color-mix(in srgb,var(--media-overlay-bg) 30%,transparent)"></div>${sheet('Route', `${scene('char-maren.jpg', '50% 18%', 'The harbour steps', '0:48', tallStep)}${taken('Take the lamp', 36)}
+<div class="rmore" style="padding-left:36px">${ic('down', 14, 2)}<span>5 more scenes</span></div>
+${scene('char-bray.jpg', '50% 20%', 'The weigh house', '1:05', tallStep)}${taken('Leave the key', 36)}${scene(RING.img, RING.pos, 'The bell tower', '', { ...tallStep, now: true })}
+<div style="padding:16px 16px 0"><span class="btn wide">${ic('replay', 16)}Start over</span></div>`, { glass: true, count: '8 scenes' })}${hi()}`),
+
+  frame('P18f', 'A visual novel upright, on its Tall picture', media(), `<img class="pic" src="${A}maren-ledger-tall.jpg" alt="" style="object-position:50% 40%"><div class="st" style="height:220px"></div><div class="sbot" style="height:400px"></div>${lanternTop}
+<div class="vnbox"><span class="who">Maren</span><div class="vnline">The lamp in the quarter is lit again. I wrote it down, so it happened.</div><span style="position:absolute;right:16px;bottom:10px;color:color-mix(in srgb,var(--media-overlay-fg) 70%,transparent)">${ic('right', 16, 2)}</span></div><div class="beats"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i></div>${hi()}`),
+
+  frame('P18g', 'A visual novel’s choice, on a wide picture', media(), `<img class="lbx" src="${A}art-direction-illustrated.jpg" alt="" style="top:160px;object-position:34% 40%">${lanternTop}
+<div class="vnbox at" style="top:410px"><span class="who">Maren</span><div class="vnline">Two roads out of the market. Only one has a lamp on it.</div></div>
+<div class="chs" style="bottom:96px">${choice('Take the lamp road', 1, { focus: true })}${choice('Go back for Ilo', 2)}${choice('Wait for the bell', 3)}</div>${replay()}${hi()}`),
+
+  frame('P18h', 'A 16:9 movie on a Fold', 'fold media', `<img class="lbx" src="${A}drowned-quarter.jpg" alt="" style="top:170px">${sb(true)}${storyTop('Low Water', 'The drowned quarter', 'left:20px;right:20px')}
+<div class="chs two" style="left:150px;right:150px;bottom:250px">${choice('Follow the lantern', 1, { focus: true })}${choice('Stay with the boat', 2)}</div>${replay(190)}${hi()}`),
+];
+
 // Widths per frame class; a frame's card is drawn at its frame's own size.
 const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17) };
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18) };
