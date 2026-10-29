@@ -29,7 +29,7 @@ enum PlayerKind {
   /// EPUB (P5e).
   reader(isWebModule: false),
 
-  /// PDF and CBZ (P7c).
+  /// PDF and CBZ (P7c), and a world's graphic novel (P20b – P20g).
   pageViewer(isWebModule: false);
 
   const PlayerKind({required this.isWebModule});
@@ -47,6 +47,7 @@ PlayerKind playerForProduction(ProductionKind kind) => switch (kind) {
   // A world's music plays in the audio player, the cover where the moment's picture would be (P17d).
   ProductionKind.album || ProductionKind.single || ProductionKind.soundtrack => PlayerKind.audiobook,
   ProductionKind.book => PlayerKind.reader,
+  ProductionKind.graphicNovel => PlayerKind.pageViewer,
 };
 
 /// The player a standard file opens in (P7 rule 2), or null for what is never opened on its own:

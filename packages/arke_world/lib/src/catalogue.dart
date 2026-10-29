@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:arke_library/arke_library.dart';
 
+import 'comic.dart';
 import 'manifest.dart';
 import 'music.dart';
 import 'story.dart';
@@ -47,6 +48,7 @@ class CatalogueProduction {
     this.package,
     this.music,
     this.story,
+    this.comic,
   });
 
   final String title;
@@ -83,13 +85,19 @@ class CatalogueProduction {
   /// reads and would fetch a story it cannot play. Null when it is not a story.
   final CatalogueStory? story;
 
-  /// The package this Player installs for it on its own (SPEC-058 R-72, R-83): its production package,
-  /// or its story when this Player plays the story's version. A story it does not play is never
-  /// fetched (R-82).
-  CataloguePackage? get alone => package ?? (story != null && story!.playable ? story : null);
+  /// Its graphic novel's package (SPEC-064 R-51, P20 call 28), pinned under a key of its own for the
+  /// same reason as [story]. Null when it is not a graphic novel.
+  final CatalogueStory? comic;
 
-  /// A story listed in a version this Player does not read: its tile says `Update app` (P18 rule 7).
-  bool get needsNewerApp => story != null && !story!.playable;
+  /// The package this Player installs for it on its own (SPEC-058 R-72, R-83): its production package,
+  /// or its story or graphic novel when this Player reads the document's version. One it does not read
+  /// is never fetched (R-82).
+  CataloguePackage? get alone =>
+      package ?? (story != null && story!.playable ? story : null) ?? (comic != null && supportedComicVersions.contains(comic!.version) ? comic : null);
+
+  /// A story or graphic novel listed in a version this Player does not read: its tile says `Update
+  /// app` (P18 rule 7, P20h).
+  bool get needsNewerApp => (story != null && !story!.playable) || (comic != null && !supportedComicVersions.contains(comic!.version));
 }
 
 /// Where a world's package is and the bytes it must have. The digest is pinned by the build, as
@@ -338,6 +346,7 @@ Catalogue parseCatalogue(String text) {
             package: _productionPackage(production['package'], 'catalogue world $id production'),
             music: _musicKind(production['music'], 'catalogue world $id production'),
             story: _story(production['story'], 'catalogue world $id production'),
+            comic: _story(production['comic'], 'catalogue world $id production comic'),
           )
         else
           throw FormatException('catalogue world $id production'),
@@ -490,6 +499,7 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
                 package: production.package,
                 music: production.music,
                 story: production.story,
+                comic: production.comic,
               ),
           ]),
           package: world.package,

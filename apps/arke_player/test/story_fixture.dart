@@ -11,6 +11,7 @@ import 'package:arke_library/arke_library.dart';
 import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
+import 'package:arke_player/features/comics/application/comics.dart';
 import 'package:arke_player/features/parts/application/parts.dart';
 import 'package:arke_player/features/players/application/players.dart';
 import 'package:arke_player/features/settings/application/settings_controller.dart';
@@ -267,6 +268,17 @@ class MemorySaves extends StorySaves {
       story.key: ?json,
     });
   }
+
+  @override
+  Future<void> keepPage(String worldId, String productionId, int page) async {
+    final key = LibraryStore.storyKey(worldId, productionId);
+    kept.add({'comicPage': page});
+    if (!ref.mounted) return;
+    state = AsyncData({
+      ...?state.value,
+      key: {'comicPage': page},
+    });
+  }
 }
 
 /// A novel's voices, heard by a test: a line speaks until the test [end]s it, as a real one speaks
@@ -358,13 +370,14 @@ Future<void> pumpStories(
   PictureReel Function()? reel,
   HeardVoice? voice,
   Map<String, String> stills = const {},
+  List<LoadedComic> comics = const [],
   Key? key,
 }) async {
   tester.view.physicalSize = size * ratio;
   tester.view.devicePixelRatio = ratio;
   if (ratio > 1) tester.view.padding = FakeViewPadding(top: (size.width > size.height ? 0 : 47) * ratio, bottom: (size.width > size.height ? 21 : 34) * ratio);
   addTearDown(tester.view.reset);
-  final world = storyWorld([for (final story in stories) story.production]);
+  final world = storyWorld([for (final story in stories) story.production, for (final comic in comics) comic.production]);
   await tester.pumpWidget(
     ProviderScope(
       // A test may pump twice: each pump is a fresh app, its saves and its route its own.
@@ -400,6 +413,7 @@ Future<void> pumpStories(
         audioEngineProvider.overrideWithValue(null),
         placeKeeperProvider.overrideWithValue((id, place, {finished}) async {}),
         loadedStoryProvider.overrideWith((ref, key) async => stories.where((story) => story.worldId == key.$1 && story.production.id == key.$2).firstOrNull),
+        loadedComicProvider.overrideWith((ref, key) async => comics.where((comic) => comic.worldId == key.$1 && comic.production.id == key.$2).firstOrNull),
         storySavesProvider.overrideWith(() => saves ?? MemorySaves()),
         storyReelProvider.overrideWithValue(reel ?? PictureReel.new),
         storyVoiceProvider.overrideWithValue(voice ?? HeardVoice()),

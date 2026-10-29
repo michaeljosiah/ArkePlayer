@@ -108,6 +108,13 @@ class StorySaves extends AsyncNotifier<Map<String, Map<String, Object?>>> {
     final store = await ref.read(libraryStoreProvider.future);
     await store.keepStory(story.worldId, story.production.id, save?.toJson());
   }
+
+  /// Keeps the page a person is on in a graphic novel, beside the stories' places (P20 rule 8).
+  Future<void> keepPage(String worldId, String productionId, int page) async {
+    if (!ref.mounted) return;
+    final store = await ref.read(libraryStoreProvider.future);
+    await store.keepStory(worldId, productionId, {'comicPage': page});
+  }
 }
 
 final storySavesProvider = AsyncNotifierProvider<StorySaves, Map<String, Map<String, Object?>>>(StorySaves.new);

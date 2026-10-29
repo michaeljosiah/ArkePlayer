@@ -37,6 +37,9 @@ enum ProductionKind {
   single('Single', TakenAs.music),
   soundtrack('Soundtrack', TakenAs.music),
 
+  /// A graphic novel (SPEC-064 R-50, P20): pages turned, read under Read.
+  graphicNovel('Graphic novel', TakenAs.read),
+
   /// A book with no narration. A book with its narration is an [audiobook] whose kind line reads
   /// `Audiobook · Book` and which offers Read beside Continue.
   book('Book', TakenAs.read);

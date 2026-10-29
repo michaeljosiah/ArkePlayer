@@ -75,6 +75,33 @@ class LibraryStory {
   );
 }
 
+/// A graphic novel as installed (SPEC-064 R-50; Player P20): where its comic document is, how it
+/// reads, its page shape, and how many chapters and pages, so a page tile and Continue need not read it.
+class LibraryComic {
+  const LibraryComic({required this.document, required this.reading, required this.aspect, required this.chapters, required this.pages});
+
+  /// The comic document, relative to the library's root.
+  final String document;
+
+  /// `ltr`, `rtl` or `scroll`.
+  final String reading;
+
+  /// The page shape, `2:3`.
+  final String aspect;
+  final int chapters;
+  final int pages;
+
+  Map<String, Object?> toJson() => {'document': document, 'reading': reading, 'aspect': aspect, 'chapters': chapters, 'pages': pages};
+
+  static LibraryComic fromJson(Map<String, Object?> json) => LibraryComic(
+    document: json['document']! as String,
+    reading: json['reading']! as String,
+    aspect: json['aspect']! as String,
+    chapters: json['chapters']! as int,
+    pages: json['pages']! as int,
+  );
+}
+
 /// A production published as a package of its own beside its world's edition (SPEC-058 R-68, R-72):
 /// the edition and fingerprint its pin in Arke's list names, so a changed one is its Update, and the
 /// folder it was installed into, `worlds/<id>/_productions/<production>`.
@@ -121,6 +148,7 @@ class LibraryProduction {
     this.bookParts = const [],
     this.music,
     this.story,
+    this.comic,
     this.package,
   });
 
@@ -145,6 +173,9 @@ class LibraryProduction {
   /// Its story, when it is an interactive movie or a visual novel (SPEC-058 R-79).
   final LibraryStory? story;
 
+  /// Its pages, when it is a graphic novel (SPEC-064 R-50).
+  final LibraryComic? comic;
+
   /// The package it came in on its own (R-68, R-72); null when it came in its world's edition.
   final LibraryProductionPackage? package;
 
@@ -161,6 +192,7 @@ class LibraryProduction {
     bookParts: bookParts ?? this.bookParts,
     music: music,
     story: story,
+    comic: comic,
     package: package,
   );
 
@@ -174,6 +206,7 @@ class LibraryProduction {
     if (bookParts.isNotEmpty) 'bookParts': bookParts,
     if (music != null) 'music': music!.toJson(),
     if (story != null) 'story': story!.toJson(),
+    if (comic != null) 'comic': comic!.toJson(),
     if (package != null) 'package': package!.toJson(),
   };
 
@@ -187,6 +220,7 @@ class LibraryProduction {
     bookParts: [for (final id in (json['bookParts'] as List<Object?>? ?? const [])) id! as String],
     music: json['music'] == null ? null : LibraryMusic.fromJson((json['music']! as Map).cast<String, Object?>()),
     story: json['story'] == null ? null : LibraryStory.fromJson((json['story']! as Map).cast<String, Object?>()),
+    comic: json['comic'] == null ? null : LibraryComic.fromJson((json['comic']! as Map).cast<String, Object?>()),
     package: json['package'] == null ? null : LibraryProductionPackage.fromJson((json['package']! as Map).cast<String, Object?>()),
   );
 }

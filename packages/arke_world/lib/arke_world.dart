@@ -4,6 +4,7 @@
 library;
 
 export 'src/catalogue.dart';
+export 'src/comic.dart';
 export 'src/guide.dart';
 export 'src/hosted.dart';
 export 'src/install.dart';

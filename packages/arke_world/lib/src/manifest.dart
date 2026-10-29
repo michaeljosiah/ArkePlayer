@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:arke_publication/arke_publication.dart';
 
+import 'comic.dart';
 import 'guide.dart';
 import 'listening.dart';
 import 'music.dart';
@@ -18,8 +19,9 @@ const worldPackageFormat = 'arke-world-package';
 /// adds the world's `guide`, and a package with the guide alone; schema 4 (SPEC-058 R-46) is a part,
 /// the chapters released since an edition; schema 5 (R-68 – R-70) is a production package, one
 /// production published alone beside the edition, which may be music; schema 6 (R-79) lets that
-/// production be an interactive story. Schemas 1 to 5 are still read.
-const worldSchemaVersion = 6;
+/// production be an interactive story; schema 7 (SPEC-064 R-50) lets it be a graphic novel. Schemas 1
+/// to 6 are still read.
+const worldSchemaVersion = 7;
 
 /// A world package's media, by the role it plays: the book a reader opens, the narration the
 /// audio player plays, and the pictures shown around them.
@@ -115,6 +117,7 @@ class WorldProduction {
     this.listening,
     this.music,
     this.story,
+    this.comic,
   });
 
   final String id;
@@ -134,6 +137,9 @@ class WorldProduction {
   /// The story document's asset id: an interactive movie or a visual novel (R-80).
   final String? story;
 
+  /// The comic document's asset id: a graphic novel (SPEC-064 R-50, P20), from schema 7.
+  final String? comic;
+
   Map<String, Object?> toJson() => {
     'id': id,
     'title': title,
@@ -145,6 +151,7 @@ class WorldProduction {
     if (listening != null) 'listening': listening,
     if (music != null) 'music': music,
     if (story != null) 'story': story,
+    if (comic != null) 'comic': comic,
   };
 }
 
@@ -165,6 +172,7 @@ class WorldManifest {
     this.listening = const {},
     this.music = const {},
     this.stories = const {},
+    this.comics = const {},
     this.guideDocument,
     this.part,
     this.alone = false,
@@ -209,6 +217,10 @@ class WorldManifest {
   /// empty from `readWorldManifest` alone.
   final Map<String, StoryDocument> stories;
 
+  /// Each graphic novel's document, by production id, once the package reader has read them; empty
+  /// from `readWorldManifest` alone.
+  final Map<String, ComicDocument> comics;
+
   /// The assets `world.json` itself names.
   Set<String> get namedAssets => {
     ?keyArt,
@@ -221,6 +233,7 @@ class WorldManifest {
       ?production.listening,
       ?production.music,
       ?production.story,
+      ?production.comic,
     ],
   };
 
@@ -229,6 +242,7 @@ class WorldManifest {
     Guide? guide, {
     Map<String, MusicDocument> music = const {},
     Map<String, StoryDocument> stories = const {},
+    Map<String, ComicDocument> comics = const {},
   }) => WorldManifest(
     id: id,
     edition: edition,
@@ -242,6 +256,7 @@ class WorldManifest {
     listening: Map.unmodifiable(documents),
     music: Map.unmodifiable(music),
     stories: Map.unmodifiable(stories),
+    comics: Map.unmodifiable(comics),
     guideDocument: guide,
     part: part,
     alone: alone,
@@ -295,6 +310,7 @@ const _productionKeys = {'id', 'title', 'author', 'picture', 'book', 'narration'
 const _productionKeys2 = {..._productionKeys, 'listening'};
 const _productionKeys5 = {..._productionKeys2, 'music'};
 const _productionKeys6 = {..._productionKeys5, 'story', 'tall'};
+const _productionKeys7 = {..._productionKeys6, 'comic'};
 const _assetKeys = {'path', 'mediaType', 'byteLength', 'sha256'};
 const _maxAssets = 4096;
 const _maxAssetBytes = 64 * 1024 * 1024 * 1024;
@@ -417,7 +433,13 @@ WorldManifestRead readWorldManifest(String text) {
   for (final raw in rawProductions) {
     if (raw is! Map<String, Object?>) return notAPackage('production');
     final extra = raw.keys.where(
-      (key) => !(version >= 6 ? _productionKeys6 : (version >= 5 ? _productionKeys5 : (version >= 2 ? _productionKeys2 : _productionKeys))).contains(key),
+      (key) =>
+          !(version >= 7
+                  ? _productionKeys7
+                  : version >= 6
+                  ? _productionKeys6
+                  : (version >= 5 ? _productionKeys5 : (version >= 2 ? _productionKeys2 : _productionKeys)))
+              .contains(key),
     );
     if (extra.isNotEmpty) return newer('production keys ${extra.join(', ')}');
     final productionId = raw['id'];
@@ -434,7 +456,9 @@ WorldManifestRead readWorldManifest(String text) {
     final listening = raw['listening'] == null ? null : role(raw['listening'], const {listeningMediaType});
     final music = raw['music'] == null ? null : role(raw['music'], const {musicMediaType});
     final story = raw['story'] == null ? null : role(raw['story'], const {storyMediaType});
-    if ((raw['picture'] != null && picture == null) ||
+    final comic = raw['comic'] == null ? null : role(raw['comic'], const {comicMediaType});
+    if ((raw['comic'] != null && comic == null) ||
+        (raw['picture'] != null && picture == null) ||
         (raw['tall'] != null && tall == null) ||
         (raw['book'] != null && book == null) ||
         (raw['narration'] != null && narration == null) ||
@@ -452,9 +476,13 @@ WorldManifestRead readWorldManifest(String text) {
     if (story != null && (book != null || narration != null || listening != null || music != null)) {
       return notAPackage('production $productionId names a story beside something else to play');
     }
+    // A graphic novel is read on its own (SPEC-064 R-50): its document in place of everything else.
+    if (comic != null && (book != null || narration != null || listening != null || music != null || story != null)) {
+      return notAPackage('production $productionId names a comic beside something else');
+    }
     // A Tall cover is a story's (R-79); every other production's comes with Arke's list (R-57).
     if (tall != null && story == null) return notAPackage('production $productionId names a Tall cover');
-    if (book == null && narration == null && listening == null && music == null && story == null) {
+    if (book == null && narration == null && listening == null && music == null && story == null && comic == null) {
       return notAPackage('production $productionId has nothing to play');
     }
     // A single narration file cannot be added to: a part's chapters come as a listening document.
@@ -471,6 +499,7 @@ WorldManifestRead readWorldManifest(String text) {
         listening: listening,
         music: music,
         story: story,
+        comic: comic,
       ),
     );
   }
@@ -478,11 +507,14 @@ WorldManifestRead readWorldManifest(String text) {
   if (version >= 5 && productions.length != 1) return notAPackage('a production package holds one production');
   // Schema 6 exists for stories (R-79), as 5 does for production packages: music is still made at 5, so
   // a Player that reads 5 and not 6 is never kept from a package it could play.
-  if (version >= 6 && productions.single.story == null) return notAPackage('a schema 6 package is a story published alone');
+  if (version == 6 && productions.single.story == null) return notAPackage('a schema 6 package is a story published alone');
+  // Schema 7 exists for graphic novels (SPEC-064 R-50), so a Player that reads 6 is never kept from a story.
+  if (version >= 7 && productions.single.comic == null) return notAPackage('a schema 7 package is a comic published alone');
   // Every file is one the world uses: nothing unreferenced rides along (SPEC-048 R-13). The files a
   // listening document, a music document, a story document or a guide names are known only once it is
   // read, so with one the package reader makes this check instead.
-  if (guide == null && productions.every((production) => production.listening == null && production.music == null && production.story == null)) {
+  if (guide == null &&
+      productions.every((production) => production.listening == null && production.music == null && production.story == null && production.comic == null)) {
     final unused = assets.keys.where((assetId) => !used.contains(assetId));
     if (unused.isNotEmpty) return notAPackage('unused assets ${unused.join(', ')}');
   }

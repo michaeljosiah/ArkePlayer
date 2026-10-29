@@ -262,6 +262,31 @@ the fingerprint is the save's, else the scene's start); a broken route, or a sav
 `Start again`, with the old save kept until it is pressed. A save kept at a lone way, as P18 kept one,
 goes straight on through it.
 
+## A graphic novel (SPEC-064 R-50, R-51, P20)
+
+The Studio's Export → Arke Player of a graphic novel makes a production package of **schema 7**,
+`"alone": true`, holding one production that names its `comic` document in the inventory
+(`application/vnd.arke.comic+json`) and its pages as pictures. A Player from before schema 7 refuses
+it as made with a newer Arke. The document (`arke-comic`, version 1, `arke_world` `comic.dart`) holds
+how the book reads (`ltr`, `rtl` or `scroll`), its page shape, its language, and its chapters, each
+page one picture with its lettering drawn in it and its alt text. Nothing in it is run, and it
+carries no panel boundaries: guided view is not in this version (P20 call 29). Its reader is held to
+the Studio's by the shared fixtures in `packages/arke_world/test/fixtures/comic`, which ArkeStudio's
+`scripts/comic-fixtures.ts` writes.
+
+**Listing it**: pin it with `pin_world` as a story is pinned, and set the pin on the listed production
+as `comic`, never `package` or `story`. A Player that does not know `comic` ignores it; this one
+installs a `comic` in a version it reads (`supportedComicVersions`, version 1) and shows `Update app`
+for one it does not, fetching nothing (P20 call 28, P20h). Its kind line is `Graphic novel · N pages`,
+under Read.
+
+**Reading it** (P20b – P20g): a page whole on black and nothing over it; a tap shows the controls and a
+second hides them, and they rest after a moment; a tap never turns the page. A swipe turns the page
+the way the book reads, right to left for manga, its progress filling the same way; a webtoon scrolls
+as one column. Pinch and double-tap zoom. The page a person is on is kept with the stories' places
+under `LibraryStore.keepStory`, as `{"comicPage": n}`, so the production's page offers `Continue ·
+Page n` and goes with its world.
+
 ## The Undersong
 
 **Current: Chapters 1–5, 27 October 2026** (list serial 33). Chapter 5, *Independent record*, is part 2 after the unchanged Chapters 1–3 edition and Chapter 4 part. Its immutable package is `the-undersong-part-2026-10-27.zip`, 41,776,288 bytes, SHA-256 `daf83567861183d9e43aad8fe19f93ff4c369f7df614c6f5be99619336dde99c`, on story release `undersong-2026-10-27-chapter-5` (not Latest). It contains the chapter EPUB, 18 m 51 s of narration and 28 illustrations: 19 with Tall versions and nine reviewed Wides used in both orientations. All assets were hash-checked, all 168 EPUB paragraphs matched the manuscript, and the native Player reader accepted the package. Recorded audio lengths set the clock; sentence anchors remain estimated. The longest picture hold is 73.246 seconds. Private world sources and the Guide are absent. Earlier packages, the Guide pin, other worlds and The Red Quiet feature are unchanged.
