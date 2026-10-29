@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 35,
+  "serial": 36,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -109,11 +109,11 @@
           } },
         { "id": "first-contact", "title": "First Contact", "kind": "Visual novel · 15 scenes",
           "story": {
-            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/first-contact-story-2026-10-29.zip",
-            "byteLength": 17646686,
-            "sha256": "e115aaab3638ce6ccf372a59e495c1d4ddd946f50b350f76247eca2747f1e448",
-            "edition": "2026-10-29",
-            "fingerprint": "14b79c183a622382eb36e9b30bdf7b90db3ad71a3e75dfde35954fb516caa4b4",
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/the-red-quiet-2026-10-23-r1/first-contact-story-2026-10-29-2.zip",
+            "byteLength": 25235634,
+            "sha256": "3d9bf6a53fafff6ba47a1bb306a4b80c9a3db260449503d36aff9288ca2e4d61",
+            "edition": "2026-10-29-2",
+            "fingerprint": "95f41938036e705e9ab006add2b7974ed76d0893c460625fe5799a0801ccf2f7",
             "version": 1
           },
           "pins": {
