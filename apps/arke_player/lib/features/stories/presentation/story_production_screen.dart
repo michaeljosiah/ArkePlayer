@@ -46,9 +46,13 @@ class StoryProductionScreen extends ConsumerWidget {
 
     void open() => context.push(Routes.story(world.id, production.id));
 
+    // Narration turned off stays off for this story (P19 call 26), through a new route as through an
+    // old one, wherever the old save can still be read.
+    bool narration() => loaded == null || (StorySave.read(ref.read(storySavesProvider).value?[loaded.key])?.narration ?? true);
+
     Future<void> startAgain() async {
       if (loaded == null) return;
-      await saves.keep(loaded, StorySave.start(loaded.document, DateTime.now().toUtc()));
+      await saves.keep(loaded, StorySave.start(loaded.document, DateTime.now().toUtc(), narration: narration()));
       open();
     }
 
@@ -57,7 +61,7 @@ class StoryProductionScreen extends ConsumerWidget {
     Future<void> chooseAgain(List<String> route, int index) async {
       if (loaded == null) return;
       final step = chooseStoryAgain(loaded.document, route, index);
-      await saves.keep(loaded, StorySave.at(loaded.document, step, const StoryAtChoice(), DateTime.now().toUtc()));
+      await saves.keep(loaded, StorySave.at(loaded.document, step, const StoryAtChoice(), DateTime.now().toUtc(), narration: narration()));
       open();
     }
 

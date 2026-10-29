@@ -2,7 +2,9 @@
 // a Fold, Ring Once's closed choice and its route sheet, The Lantern Road on a Tall picture and at a
 // choice, and an ending — over The Undersong's stories, and saves PNGs to compare with the design's
 // frames (P18a – P18h, P4c). The samples are the frames' own words, read as story documents; a clip
-// is the frame's picture. Not a gate, like shoot_test.dart, so it runs only when asked:
+// is the frame's picture. P19 replaced P18f's and P18g's `Auto` and the tap that moved on, so those two
+// shots show P19's controls; shoot_p19_test.dart shoots P19's own frames. Not a gate, like
+// shoot_test.dart, so it runs only when asked:
 //
 //   SHOOT=1 flutter test test/shoot_p18_test.dart   (from apps/arke_player; PNGs in build/shots)
 import 'dart:async';
@@ -339,7 +341,6 @@ void main() {
         stories: [lantern(_lanternTall)],
         brightness: brightness,
         saves: at(lantern(_lanternTall), const [], place: const StoryAtBeat(3)),
-        act: (tester) => tester.tap(find.text('Auto')),
       ),
     );
     testWidgets(
@@ -351,7 +352,6 @@ void main() {
         stories: [lantern(_lanternChoice)],
         brightness: brightness,
         saves: at(lantern(_lanternChoice), const []),
-        act: (tester) => tester.tap(find.text('Auto')),
       ),
     );
     testWidgets(

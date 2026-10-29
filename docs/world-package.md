@@ -199,6 +199,12 @@ that play in this state, and the resolved ending at an ending scene (exactly one
 else the fallback). A route that is not legal is `StoryRouteBroken` at its first bad step, which is
 how a saved route is replayed after an `Update` (R-88). `evaluateStory`, `startStory`, `chooseStory`
 and `chooseStoryAgain` (cut before a choice and replay what is kept, SPEC-063 R-13) are built on it.
+Over them sits one presentation rule, shared with the Studio's player (P19 rules 3 and 4, Studio 246):
+a step whose options are exactly one open choice, with no closed choice shown with its reason, is a lone
+way (`StoryStep.loneWay`). It is never shown: `takeLoneWays` takes it, and every lone way after it
+through scenes that play nothing, as steps of the route with their effects, and `storyChoicesMade`
+leaves them out of the route a listener sees. The fixtures pin the rules, not this, so they are
+unchanged.
 The Studio's contracts write `test/fixtures/story/` (`packages/contracts/scripts/story-fixtures.ts`), and
 it is copied here verbatim, never edited: the public stories (Low Water, a 16:9 movie compiled from
 legacy routing; Ring Once, the synthetic story that exercises every condition, effect, closed choice,
@@ -238,14 +244,23 @@ pressed, on a new fingerprint (`productionUpdates`). It lands in `_productions/<
 document's fingerprint, the Tall cover). A `story` in another version is never fetched; its tile says
 `Update app`.
 
+**Playing it** (P19): a story opens playing, and nothing but a choice of two or more stops it. A movie
+plays its scene's clips back to back; a visual novel moves on by itself, a voiced beat 0.6 s after its
+voice ends and any other after 1.5 s and 45 ms a character. A tap shows or hides the controls and never
+moves on. A lone way is taken straight through, with no pause, label or row. Narration — a novel's
+voices — is on wherever the story has any; turned off, it stays off for that story, and each beat holds
+for its reading time.
+
 **Where you are** (R-88): the library keeps each story's save in its index beside the places, opaque,
 as written (`LibraryStore.keepStory`, `stories`), so it is written as atomically as a place and goes
 with its world. `arke_world`'s `StorySave` (version 1) holds the route as choice ids, the scene, the
 place (`at` ms into the scene's projected clips, a `beat`, or `choosing`), the save version and the
-document's fingerprint — never the facts. `resumeStory` replays the route on the document installed:
-every step legal is `Continue` (at the saved place when the fingerprint is the save's, else the
-scene's start); a broken route, or a save it cannot read, is `Start again`, with the old save kept until
-it is pressed.
+document's fingerprint — never the facts — and `"narration": false` when Narration is off (P19 call 26;
+absent when on, so a save with it on is P18's, and a save from before P19 reads as on). `resumeStory`
+replays the route on the document installed: every step legal is `Continue` (at the saved place when
+the fingerprint is the save's, else the scene's start); a broken route, or a save it cannot read, is
+`Start again`, with the old save kept until it is pressed. A save kept at a lone way, as P18 kept one,
+goes straight on through it.
 
 ## The Undersong
 

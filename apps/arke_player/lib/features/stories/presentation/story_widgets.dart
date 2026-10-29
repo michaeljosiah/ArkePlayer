@@ -199,17 +199,19 @@ class StoryChoices extends StatelessWidget {
   }
 }
 
-/// `Replay scene`, quiet, under the choices.
+/// `Replay scene`, quiet, under the choices; a visual novel's `Log` beside it (P19e). A movie has no
+/// log (P19 call 27).
 class ReplayScene extends StatelessWidget {
-  const ReplayScene({required this.onPressed, super.key});
+  const ReplayScene({required this.onPressed, this.onLog, super.key});
   final VoidCallback onPressed;
+  final VoidCallback? onLog;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: TextButton.icon(
+  Widget build(BuildContext context) {
+    Widget press(IconData icon, String label, VoidCallback onPressed) => TextButton.icon(
       onPressed: onPressed,
-      icon: const Icon(Icons.replay_rounded, size: 16),
-      label: const Text('Replay scene'),
+      icon: Icon(icon, size: 16),
+      label: Text(label),
       style: TextButton.styleFrom(
         minimumSize: const Size(0, 40),
         foregroundColor: _fg.withValues(alpha: 0.82),
@@ -217,8 +219,80 @@ class ReplayScene extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18),
         textStyle: const TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
       ),
-    ),
-  );
+    );
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          press(Icons.replay_rounded, 'Replay scene', onPressed),
+          if (onLog case final onLog?) ...[const SizedBox(width: 4), press(Icons.format_list_bulleted_rounded, 'Log', onLog)],
+        ],
+      ),
+    );
+  }
+}
+
+/// Narration, a labelled switch under a visual novel's top where the story has voices (P19b, P19
+/// rule 5): glass, 44 high, the word and a small switch, on in full ink.
+class NarrationSwitch extends StatelessWidget {
+  const NarrationSwitch({required this.on, required this.onPressed, super.key});
+  final bool on;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(ArkeRadius.pill);
+    return Semantics(
+      button: true,
+      toggled: on,
+      label: 'Narration',
+      child: ExcludeSemantics(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: ClipRRect(
+            borderRadius: radius,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+              child: Container(
+                height: ArkeSizes.press,
+                padding: const EdgeInsets.fromLTRB(14, 0, 10, 0),
+                decoration: BoxDecoration(
+                  color: _bg.withValues(alpha: 0.42),
+                  borderRadius: radius,
+                  border: Border.all(color: _fg.withValues(alpha: 0.16)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Narration',
+                      style: TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeSm, fontWeight: FontWeight.w500, height: 1.4, color: _fg),
+                    ),
+                    const SizedBox(width: 10),
+                    // The design's small switch: 38 × 22, its knob 16, in full ink when on.
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: 38,
+                      height: 22,
+                      padding: const EdgeInsets.all(3),
+                      alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+                      decoration: BoxDecoration(color: on ? _fg : _fg.withValues(alpha: 0.26), borderRadius: radius),
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(color: on ? _bg : _fg, shape: BoxShape.circle),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// A rounded rectangle's border drawn in dashes, as a closed choice's is.
@@ -341,9 +415,11 @@ class StoryStill extends ConsumerWidget {
 }
 
 /// A route, scene by scene (P18 rule 4; P18a, P18e): each scene's still, title and length, and the
-/// choice taken after it with `Choose again`; the last scene is `now`. More than five scenes fold
-/// their middle into `N more scenes`, which opens them. [onMedia] draws it on the glass sheet; else on
-/// the page's theme.
+/// choice taken after it with `Choose again`; the last scene is `now`. A lone way taken leaves no row,
+/// so the two scenes it joins sit one after the other (P19h). More than five scenes fold their middle
+/// into `N more scenes`, which opens them; the fold keeps the last two scenes, and the one before them
+/// too when the last choice was made there (P19h). [onMedia] draws it on the glass sheet; else on the
+/// page's theme.
 class RouteRows extends StatefulWidget {
   const RouteRows({required this.story, required this.path, required this.onChooseAgain, this.onMedia = true, super.key});
 
@@ -372,7 +448,10 @@ class _RouteRowsState extends State<RouteRows> {
     final tall = story.tallShape;
     // The taken row and the fold sit under the still's middle.
     final indent = tall ? 36.0 : 60.0;
+    final made = storyChoicesMade(path);
     final folds = path.length > 5 && !_open;
+    // The scene the fold ends at: the second last, or the third last where the last choice was made.
+    final kept = math.max(path.length - 3, math.min(path.length - 2, made.lastOrNull ?? path.length));
     final rows = <Widget>[];
 
     Widget scene(int i) {
@@ -458,7 +537,7 @@ class _RouteRowsState extends State<RouteRows> {
 
     for (var i = 0; i < path.length; i++) {
       if (folds && i == 1) {
-        final hidden = path.length - 3;
+        final hidden = kept - 1;
         rows.add(
           Semantics(
             button: true,
@@ -481,11 +560,11 @@ class _RouteRowsState extends State<RouteRows> {
             ),
           ),
         );
-        i = path.length - 3;
+        i = kept - 1;
         continue;
       }
       rows.add(scene(i));
-      if (i < path.length - 1) rows.add(taken(i));
+      if (made.contains(i)) rows.add(taken(i));
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows);
   }
@@ -539,7 +618,8 @@ Future<void> showRouteSheet(
 );
 
 /// An ending (P4c, upright-safe): `Ending`, the variant's title and text, the route's last stills,
-/// the choices taken, then `Start again` and `Back to last choice`.
+/// the choices made, never a lone way taken (P19 rule 4), then `Start again` and `Back to last
+/// choice`.
 class StoryEndingCard extends StatelessWidget {
   const StoryEndingCard({required this.story, required this.step, required this.onStartAgain, required this.onBack, super.key});
 
@@ -554,9 +634,10 @@ class StoryEndingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ending = step.ending!;
     final document = story.document;
-    final scenes = [for (final s in storyPath(document, step.route)) s.scene];
+    final path = storyPath(document, step.route);
+    final scenes = [for (final s in path) s.scene];
     final shown = scenes.length > 4 ? scenes.sublist(scenes.length - 4) : scenes;
-    final taken = [for (final id in step.route) document.choice(id)!.label];
+    final taken = [for (final index in storyChoicesMade(path)) document.choice(step.route[index])!.label];
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,

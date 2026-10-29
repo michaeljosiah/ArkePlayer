@@ -674,6 +674,13 @@ class StoryStep {
 
   /// Where nothing more can be chosen: an ending, or a scene with no open choice.
   bool get isEnd => ending != null || open.isEmpty;
+
+  /// The one way on, when it is all this step offers (P19 rule 4): exactly one open choice, and no
+  /// closed choice shown with its reason. A story takes it without stopping and shows nothing for it,
+  /// though it is still a step of the route, with its effects. Null at a choice of two or more — a
+  /// closed choice shown with its reason counts as one of them (rule 3) — at an ending, and where
+  /// nothing is open. The Studio's player keeps the same definition (Studio 246).
+  StoryChoice? get loneWay => options.length == 1 && options.single.open ? options.single.choice : null;
 }
 
 /// A route replayed on a document (R-88): every step legal, or the first that is not.
@@ -781,6 +788,24 @@ StoryStep startStory(StoryDocument document) => evaluateStory(document, const []
 
 /// Takes [choice] from [step]; throws [StoryRouteRefused] when it is not open there.
 StoryStep chooseStory(StoryDocument document, StoryStep step, String choice) => evaluateStory(document, [...step.route, choice]);
+
+/// Where a scene played through goes on to by itself (P19 rule 4): [step]'s lone way taken, and the
+/// lone way of every scene after it that plays nothing, so a story stops only where something plays,
+/// at a choice of two or more, or at an end. Each lone way is a step of the route, with its effects,
+/// so the route replays. [step] itself when it has no lone way.
+///
+/// Lone ways round a loop of scenes that play nothing would never reach any of those, and no author
+/// means one; the walk gives up after [maxStoryScenes] of them, at a lone way, which is then shown.
+StoryStep takeLoneWays(StoryDocument document, StoryStep step) {
+  var at = step;
+  for (var taken = 0; taken < maxStoryScenes; taken++) {
+    final way = at.loneWay;
+    if (way == null) return at;
+    at = chooseStory(document, at, way.id);
+    if (at.play.isNotEmpty) return at;
+  }
+  return at;
+}
 
 /// `Choose again` at the route's [index]th choice (SPEC-063 R-13, SPEC-058 R-86): the route is cut
 /// before it and what is kept is replayed, so every later consequence goes with it. The step returned
