@@ -456,3 +456,26 @@
 .ap .vnt{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:22px}
 .ap .vnt>:first-child{justify-self:end}
 .ap .vnt>:last-child{justify-self:start}
+
+/* P20 · A graphic novel: the page whole on black, a tap's controls, Scroll, Chapters. */
+.ap.cm{background:#000}
+.ap .cm-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.ap .cm-stage img{width:100%;height:auto;max-height:100%;object-fit:contain;display:block}
+.ap .cm-stage.turned img{width:auto;height:100%}
+.ap .cm-top{z-index:6}
+.ap .cm-foot{position:absolute;z-index:6;left:20px;right:20px;bottom:44px;display:flex;align-items:center;gap:12px;color:var(--media-ink,#fff)}
+.ap .cm-n{font:var(--type-meta);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ap .cm-bar{flex:1;height:4px;border-radius:2px;background:color-mix(in srgb,#fff 22%,transparent);position:relative;overflow:hidden}
+.ap .cm-bar i{position:absolute;left:0;top:0;bottom:0;background:#fff;border-radius:2px}
+.ap .cm-bar.rtl i{left:auto;right:0}
+.ap .cm-swipe{position:absolute;z-index:6;left:20px;top:50%;display:flex;align-items:center;gap:4px;color:#fff;font:var(--type-meta);transform:translateY(-50%) scaleX(-1)}
+.ap .cm-swipe span{transform:scaleX(-1)}
+.ap .cm-scroll{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column;gap:18px}
+.ap .cm-scroll img{width:100%;height:330px;object-fit:cover;flex:none}
+.ap .cm-rowp{display:flex;gap:12px;padding:0 20px 20px}
+.ap .cm-pg{width:110px;display:flex;flex-direction:column;gap:6px;font:var(--type-meta)}
+.ap .cm-pg img{width:110px;height:165px;object-fit:cover;border-radius:6px}
+.ap .cm-ch{display:flex;align-items:center;gap:12px;min-height:72px;padding:8px 16px;font:var(--type-ui)}
+.ap .cm-ch img{width:40px;height:60px;object-fit:cover;border-radius:4px;flex:none}
+.ap .cm-ch b{display:block;font-weight:600}
+.ap .cm-ch span{font:var(--type-meta);color:var(--muted-foreground)}

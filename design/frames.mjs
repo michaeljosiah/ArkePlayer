@@ -822,4 +822,37 @@ ${fcScene(fcStill('50% 50%', '55% 62%'), 'The first name on the board')}${taken(
 const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19) };
+
+// ---- P20 · A graphic novel (SPEC-064, Studio 247) -------------------------------------------------
+// The sample is The Undersong's Low Water, drawn: 24 pages in two chapters, read left to right, and
+// The Lantern Road as a webtoon for Scroll. Its page is composed in the Studio's design from the
+// master's pictures with its lettering laid over them; it stands for a generated page.
+const PAGE = `${A}comic-low-water-3.jpg`;
+const cmTop = (sub) => `<div class="ptop cm-top">${close}<div class="ttl"><div class="eb">Low Water, drawn</div><div class="sc">${sub}</div></div><span class="ib">${ic('list', 20)}</span><span class="ib">${ic('more', 20)}</span></div>`;
+const cmFoot = (at, of, rtl = false) => `<div class="cm-foot"><span class="cm-n">${at} of ${of}</span><div class="cm-bar${rtl ? ' rtl' : ''}"><i style="width:${Math.round((at / of) * 100)}%"></i></div></div>`;
+const cmChapters = sheet('Chapters', `<div class="cm-ch on"><img src="${PAGE}" alt=""><div class="grow"><b>1 · The tide</b><span>Pages 1 – 12</span></div>${ic('check', 18, 2.2)}</div><div class="cm-ch"><img src="${A}scene4-shot13.jpg" alt=""><div class="grow"><b>2 · Salt</b><span>Pages 13 – 24</span></div></div>`, { count: '24 pages' });
+
+const P20 = [
+  frame('P20a', 'A graphic novel on its world’s page', 'phone', `${sb(true)}<div class="body"><div class="hero" style="padding-top:218px"><img src="${A}saltlight-shot15.jpg" alt="" style="height:290px;object-position:40% 50%"><div class="fade" style="top:90px;height:201px"></div><div class="top">${back}${more}</div><div class="in"><h1>Low Water, drawn</h1><div class="meta">Graphic novel · The Undersong · 24 pages</div>
+<div style="margin-top:16px"><span class="btn pri wide">${ic('play', 16)}Continue <em>· Page 3</em></span></div><div class="acts"><span class="btn" style="flex:1">${ic('downloaded', 18)}96 MB</span><span class="btn" style="width:44px;padding:0">${ic('more')}</span></div></div></div>
+${sh('Chapters')}<div class="cm-rowp"><div class="cm-pg"><img src="${PAGE}" alt=""><span>1 · The tide</span></div><div class="cm-pg"><img src="${A}scene4-shot13.jpg" alt=""><span>2 · Salt</span></div></div>
+</div><div class="ffoot"></div>${pill('Library')}${hi()}`),
+
+  frame('P20b', 'Reading: the page whole, nothing over it', media('cm'), `<div class="cm-stage"><img src="${PAGE}" alt=""></div>${hi()}`),
+
+  frame('P20c', 'A tap: the controls', media('cm'), `${sb(true)}<div class="st"></div><div class="cm-stage"><img src="${PAGE}" alt=""></div>${cmTop('Chapter 1 · The tide')}<div class="sbot" style="height:160px"></div>${cmFoot(3, 24)}${hi()}`),
+
+  frame('P20d', 'Right to left: the book turns the other way', media('cm'), `${sb(true)}<div class="st"></div><div class="cm-stage"><img src="${PAGE}" alt=""></div>${cmTop('Chapter 1 · The tide')}<div class="cm-swipe">${ic('right', 20, 2)}<span>next</span></div><div class="sbot" style="height:160px"></div>${cmFoot(3, 24, true)}${hi()}`),
+
+  frame('P20e', 'Scroll: a webtoon, one column', media('cm'), `<div class="cm-scroll"><img src="${A}drowned-quarter.jpg" alt="" style="object-position:30% 50%"><img src="${A}char-maren.jpg" alt="" style="object-position:50% 25%"><img src="${A}art-direction-illustrated.jpg" alt="" style="object-position:40% 40%"></div>${sb(true)}<div class="st"></div><div class="ptop cm-top">${close}<div class="ttl"><div class="eb">The Lantern Road</div><div class="sc">Episode 2</div></div><span class="ib">${ic('list', 20)}</span><span class="ib">${ic('more', 20)}</span></div>${hi()}`),
+
+  frame('P20f', 'Turned: the page fills the height', 'turned media cm', `<div class="cm-stage turned"><img src="${PAGE}" alt=""></div>`),
+
+  frame('P20g', 'Chapters', media('cm'), `${sb(true)}<div class="cm-stage"><img src="${PAGE}" alt=""></div><div class="veil"></div>${cmChapters}${hi()}`),
+
+  frame('P20h', 'A graphic novel this Player cannot read', 'phone', `${sb(true)}<div class="body"><div class="hero" style="padding-top:218px"><img src="${A}saltlight-shot15.jpg" alt="" style="height:290px;object-position:40% 50%"><div class="fade" style="top:90px;height:201px"></div><div class="top">${back}${more}</div><div class="in"><h1>Low Water, drawn</h1><div class="meta">Graphic novel · The Undersong · 24 pages</div>
+<div style="margin-top:16px"><span class="btn pri wide">${ic('download', 16)}Update app</span></div></div></div>
+</div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
+];
+
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20) };
