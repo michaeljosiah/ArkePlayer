@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 36,
+  "serial": 37,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -19,11 +19,11 @@
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-29-revised-chapter-1/the-undersong-player-2026-10-29.zip",
-        "byteLength": 19846661,
-        "sha256": "35cfc0733942ef1fcff079724c98273680dbbdee178dd6b81be8e18d5738ec8f",
-        "edition": "2026-10-29",
-        "fingerprint": "164fdeaee21474d3996d8e803ba6d628976b84d05f9f868fa389888ff9bfa2ac"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-29-revised-chapter-1-portraits/the-undersong-player-2026-10-29-2.zip",
+        "byteLength": 26508341,
+        "sha256": "6a5ccfb24e844867358254ac2385adf1484448deec57bae1e0c83888b3cb5a0f",
+        "edition": "2026-10-29-2",
+        "fingerprint": "938868d9ee5a7bfe22422f1ddd2042126357a6d260810e4912f035bcbe872615"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-22-r1/the-undersong-guide-2026-10-22.zip",

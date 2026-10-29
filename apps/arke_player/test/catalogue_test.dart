@@ -85,8 +85,8 @@ void main() {
     // scene images. Parts from the earlier manuscript do not follow this new fingerprint.
     // The guide alone remains available before install (SPEC-059 R-10).
     final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
-    expect(undersong.package!.sha256, '35cfc0733942ef1fcff079724c98273680dbbdee178dd6b81be8e18d5738ec8f');
-    expect(undersong.package!.edition, '2026-10-29');
+    expect(undersong.package!.sha256, '6a5ccfb24e844867358254ac2385adf1484448deec57bae1e0c83888b3cb5a0f');
+    expect(undersong.package!.edition, '2026-10-29-2');
     expect(undersong.package!.parts, isEmpty);
     expect(undersong.guide!.url.scheme, 'https');
     expect(undersong.guide!.sha256, 'ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123');
