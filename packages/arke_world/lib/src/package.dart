@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:arke_publication/arke_publication.dart';
 
+import 'comic.dart';
 import 'guide.dart';
 import 'listening.dart';
 import 'manifest.dart';
@@ -123,6 +124,15 @@ WorldManifest readWorldPackage(String zipPath) {
         StoryRefused(:final refusal, :final reason) => throw WorldPackageRefused(refusal, reason),
       };
     }
+    // And a graphic novel's (SPEC-064 R-50): its pages are known once it is read.
+    final comics = <String, ComicDocument>{};
+    for (final production in manifest.productions) {
+      if (production.comic == null) continue;
+      comics[production.id] = switch (readComic(document(production.comic!, _maxStoryBytes, 'comic document'), manifest.assets)) {
+        ComicOk(:final document) => document,
+        ComicRefused(:final refusal, :final reason) => throw WorldPackageRefused(refusal, reason),
+      };
+    }
     // The guide is read now too, so the files it names are known (SPEC-059 R-14).
     final guide = manifest.guide == null
         ? null
@@ -130,18 +140,19 @@ WorldManifest readWorldPackage(String zipPath) {
             GuideOk(:final guide) => guide,
             GuideRefused(:final refusal, :final reason) => throw WorldPackageRefused(refusal, reason),
           };
-    if (listening.isNotEmpty || music.isNotEmpty || stories.isNotEmpty || guide != null) {
+    if (listening.isNotEmpty || music.isNotEmpty || stories.isNotEmpty || comics.isNotEmpty || guide != null) {
       final used = {
         ...manifest.namedAssets,
         for (final document in listening.values) ...document.assetIds,
         for (final document in music.values) ...document.assetIds,
         for (final document in stories.values) ...document.assetIds,
+        for (final document in comics.values) ...document.assetIds,
         ...?guide?.assetIds,
       };
       final unused = manifest.assets.keys.where((assetId) => !used.contains(assetId));
       if (unused.isNotEmpty) throw notAPackage('unused assets ${unused.take(3).join(', ')}');
     }
-    return manifest.withDocuments(listening, guide, music: music, stories: stories);
+    return manifest.withDocuments(listening, guide, music: music, stories: stories, comics: comics);
   } finally {
     input.closeSync();
   }

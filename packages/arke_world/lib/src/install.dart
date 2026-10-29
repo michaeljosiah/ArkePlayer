@@ -370,6 +370,8 @@ class WorldInstaller {
     // the list: it is refused, as it was before schema 6, rather than installed under the wrong key.
     // Nor is what its `story` pins anything but a story.
     if ((production.story != null) != (listed.package == null && listed.story != null)) throw const NotAPackage();
+    // And a comic only ever under its own `comic` (SPEC-064 R-51; P20 call 28).
+    if ((production.comic != null) != (listed.package == null && listed.comic != null)) throw const NotAPackage();
     final folder = 'worlds/$worldId/_productions/${production.id}';
     final (described, items) = await _describe(manifest, content, under: folder);
     final bytes = manifest.assets.values.fold(0, (sum, asset) => sum + asset.byteLength);
@@ -919,6 +921,8 @@ class WorldInstaller {
       final music = manifest.music[production.id];
       // A story becomes no item either: it keeps its place by route, apart from the items' (R-88).
       final story = manifest.stories[production.id];
+      // Nor does a graphic novel: it keeps its place by page (P20 rule 8).
+      final comic = manifest.comics[production.id];
       productions.add(
         LibraryProduction(
           id: production.id,
@@ -945,6 +949,15 @@ class WorldInstaller {
                   scenes: story.scenes.length,
                   fingerprint: story.fingerprint,
                   tall: production.tall == null ? null : stored(manifest.assets[production.tall]!),
+                ),
+          comic: comic == null
+              ? null
+              : LibraryComic(
+                  document: stored(manifest.assets[production.comic]!),
+                  reading: comic.reading.name,
+                  aspect: comic.aspect,
+                  chapters: comic.chapters.length,
+                  pages: comic.pages.length,
                 ),
         ),
       );
