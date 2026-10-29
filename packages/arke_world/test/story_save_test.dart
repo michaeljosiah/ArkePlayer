@@ -40,9 +40,37 @@ void main() {
       }
     });
 
+    // P19 rule 5, call 26: Narration turned off stays off for this story, kept with where you are.
+    test('keeps Narration only when it is off, so a save with it on is the one P18 wrote', () {
+      expect(save(['ch_light'], 'sc_weigh').containsKey('narration'), isFalse);
+      expect(StorySave.read(save(['ch_light'], 'sc_weigh'))!.narration, isTrue);
+      final off = StorySave(
+        route: const ['ch_light'],
+        scene: 'sc_weigh',
+        place: const StoryAtChoice(),
+        fingerprint: ring.fingerprint,
+        updatedAt: now,
+        narration: false,
+      );
+      expect(off.toJson()['narration'], false);
+      expect(StorySave.read(jsonDecode(jsonEncode(off.toJson())))!.narration, isFalse);
+      expect(StorySave.start(ring, now, narration: false).narration, isFalse);
+      expect(StorySave.at(ring, startStory(ring), const StoryAtChoice(), now, narration: false).toJson()['narration'], false);
+      // It goes with the route when the route is replayed.
+      final resumed =
+          resumeStory(ring, {
+                ...save(['ch_light', 'ch_keep'], 'sc_bell'),
+                'narration': false,
+              })
+              as StoryContinue;
+      expect(resumed.save.narration, isFalse);
+    });
+
     test('anything else cannot be read', () {
       final good = save(['ch_light'], 'sc_weigh');
       for (final bad in <Object?>[
+        {...good, 'narration': 'off'},
+        {...good, 'narration': 0},
         'route',
         {...good, 'version': 2},
         {...good}..remove('version'),

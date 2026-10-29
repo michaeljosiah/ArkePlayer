@@ -284,6 +284,144 @@ void main() {
     });
   });
 
+  // P19 rules 3 and 4, presentation over the rules above: a choice is two or more, a closed choice
+  // shown with its reason counting as one, and a lone way on is taken without stopping, yet stays a
+  // step of the route. The fixtures are unchanged: they pin the rules, not this.
+  group('a lone way (P19 rules 3, 4)', () {
+    final low = _document('low-water.json');
+    final lantern = _document('lantern-road.json');
+    final ring = _document('synthetic.json');
+
+    test('is the one open choice where no closed one shows; a choice of two, an ending or nothing open has none', () {
+      // Low Water's vigil has one way on, the climb; its quarter and causeway have two.
+      expect(evaluateStory(low, ['ch_follow', 'ch_wait']).loneWay?.id, 'ch_climb');
+      expect(startStory(low).loneWay, isNull);
+      expect(evaluateStory(low, ['ch_follow']).loneWay, isNull);
+      expect(evaluateStory(low, ['ch_stay', 'ch_ring']).loneWay, isNull, reason: 'an ending');
+      // The Lantern Road's bridge has one; its road without a lantern has one open and one closed
+      // with its reason, which counts as a choice of two.
+      expect(evaluateStory(lantern, ['ch_buy', 'ch_bridge']).loneWay?.id, 'ch_cross');
+      final dark = evaluateStory(lantern, ['ch_walk']);
+      expect((dark.open.length, dark.closed.length, dark.loneWay), (1, 1, null));
+      // A closed choice with no reason is hidden, and does not count: Ring Once's weigh house without
+      // its Keep the key, with the lamp lit, offers only Leave the key, since Drop it is closed.
+      final json = jsonDecode(_read('synthetic.json')) as Map<String, Object?>;
+      (json['choices']! as List<Object?>).removeWhere((choice) => (choice! as Map<String, Object?>)['id'] == 'ch_keep');
+      final keyless = (readStory(jsonEncode(json), _assets()) as StoryOk).document;
+      final weigh = evaluateStory(keyless, ['ch_light']);
+      expect((weigh.options.length, weigh.loneWay?.id), (1, 'ch_leave'));
+      expect(evaluateStory(keyless, ['ch_dark']).loneWay, isNull, reason: 'in the dark Drop it opens too');
+      expect(evaluateStory(ring, ['ch_dark', 'ch_leave']).loneWay, isNull);
+    });
+
+    test('is taken to where something plays, a choice of two or an end; each is a step of the route, with its effects', () {
+      final vigil = evaluateStory(low, ['ch_follow', 'ch_wait']);
+      final pier = takeLoneWays(low, vigil);
+      expect((pier.scene, pier.route.join(' ')), ('sc_pier', 'ch_follow ch_wait ch_climb'));
+      expect(pier.ending?.title, 'The harbour, level');
+      final bridge = evaluateStory(lantern, ['ch_buy', 'ch_bridge']);
+      final home = takeLoneWays(lantern, bridge);
+      expect((home.scene, home.route.last, home.facts['lantern']), ('sc_home', 'ch_cross', true));
+      // A route that took it replays, as any route does.
+      expect(evaluateStory(lantern, home.route).scene, 'sc_home');
+      // Where there is a choice of two, nothing is taken.
+      final quarter = startStory(low);
+      expect(takeLoneWays(low, quarter), same(quarter));
+    });
+
+    // The harbour's lone way into a pier that plays nothing until it has been seen, the pier's on into
+    // the causeway, which plays, and there a choice of two. With [loop], the harbour's lone way leads
+    // instead into two scenes that play nothing, each the other's only way on.
+    StoryDocument lone({bool loop = false}) {
+      Map<String, Object?> scene(String id, String asset) => {
+        'id': id,
+        'title': id,
+        'clips': [
+          {'asset': asset, 'from': 0, 'to': 1000},
+        ],
+      };
+      Map<String, Object?> way(String id, String from, String to, {List<Object?> effects = const []}) => {
+        'id': id,
+        'from': from,
+        'to': to,
+        'label': id,
+        'effects': effects,
+      };
+      final unseen = {'op': 'eq', 'fact': 'seen', 'value': true};
+      final json = {
+        'format': 'arke-story',
+        'version': 1,
+        'kind': 'movie',
+        'shape': '16:9',
+        'start': 'sc_harbour',
+        'fingerprint': 'sha256:${'e' * 64}',
+        'facts': [
+          {'id': 'seen', 'type': 'boolean', 'default': false},
+          {'id': 'passed', 'type': 'boolean', 'default': false},
+        ],
+        'scenes': [
+          scene('sc_harbour', 'lw-quarter'),
+          scene('sc_pier', 'lw-causeway'),
+          scene('sc_causeway', 'lw-towers'),
+          scene('sc_left', 'lw-vigil'),
+          scene('sc_right', 'lw-pier'),
+          scene('sc_round-1', 'lw-bell'),
+          scene('sc_round-2', 'lw-bell'),
+        ],
+        'presentation': [
+          for (final id in ['sc_pier', 'sc_round-1', 'sc_round-2']) {'scene': id, 'index': 0, 'when': unseen},
+        ],
+        'choices': [
+          if (loop)
+            way('ch_round', 'sc_harbour', 'sc_round-1')
+          else
+            way(
+              'ch_pier',
+              'sc_harbour',
+              'sc_pier',
+              effects: [
+                {'fact': 'passed', 'value': true},
+              ],
+            ),
+          way('ch_causeway', 'sc_pier', 'sc_causeway'),
+          way('ch_left', 'sc_causeway', 'sc_left'),
+          way('ch_right', 'sc_causeway', 'sc_right'),
+          way('ch_back', 'sc_round-1', 'sc_round-2'),
+          way('ch_again', 'sc_round-2', 'sc_round-1'),
+        ],
+        'endings': [
+          {'scene': 'sc_left', 'title': 'Left'},
+          {'scene': 'sc_right', 'title': 'Right'},
+        ],
+      };
+      return (readStory(jsonEncode(json), _assets()) as StoryOk).document;
+    }
+
+    test('goes on through a scene that plays nothing, and stops at the first that plays', () {
+      final document = lone();
+      final harbour = startStory(document);
+      final causeway = takeLoneWays(document, harbour);
+      expect((causeway.scene, causeway.route.join(' '), causeway.facts['passed']), ('sc_causeway', 'ch_pier ch_causeway', true));
+      expect(causeway.loneWay, isNull);
+      expect(storyChoicesMade(storyPath(document, [...causeway.route, 'ch_left'])), [2], reason: 'only the choice of two was chosen');
+    });
+
+    test('round a loop of scenes that play nothing, gives up at a lone way after as many steps as a story has scenes', () {
+      final document = lone(loop: true);
+      final stuck = takeLoneWays(document, startStory(document));
+      expect(stuck.route, hasLength(maxStoryScenes));
+      expect(stuck.play, isEmpty);
+      expect(stuck.loneWay, isNotNull);
+    });
+
+    test('a route’s choices made leave out its lone ways', () {
+      expect(storyChoicesMade(storyPath(low, ['ch_follow', 'ch_wait', 'ch_climb'])), [0, 1]);
+      expect(storyChoicesMade(storyPath(lantern, ['ch_buy', 'ch_bridge', 'ch_cross'])), [0, 1]);
+      expect(storyChoicesMade(storyPath(ring, ['ch_light', 'ch_keep', 'ch_ring'])), [0, 1, 2]);
+      expect(storyChoicesMade(storyPath(low, const [])), isEmpty);
+    });
+  });
+
   group('a story package on disk (SPEC-058 R-79, R-80)', () {
     late Directory dir;
     setUp(() => dir = Directory.systemTemp.createTempSync('story-package-'));

@@ -29,23 +29,35 @@ class StoryAtChoice extends StoryPlace {
 
 /// Where a person is in one story (SPEC-058 R-88, SPEC-063 R-12): the route as choice ids, the scene
 /// it reached and the place in it, the save's version and the fingerprint of the document it was made
-/// on. What the story remembers is never kept: it follows from the route, replayed (P18 call 23).
+/// on, and whether Narration is off. What the story remembers is never kept: it follows from the route,
+/// replayed (P18 call 23).
 class StorySave {
-  const StorySave({required this.route, required this.scene, required this.place, required this.fingerprint, required this.updatedAt});
+  const StorySave({required this.route, required this.scene, required this.place, required this.fingerprint, required this.updatedAt, this.narration = true});
 
   /// The save at the start of [document], nothing chosen.
-  factory StorySave.start(StoryDocument document, DateTime now) =>
-      StorySave(route: const [], scene: document.start, place: const StoryAt(Duration.zero), fingerprint: document.fingerprint, updatedAt: now);
+  factory StorySave.start(StoryDocument document, DateTime now, {bool narration = true}) => StorySave(
+    route: const [],
+    scene: document.start,
+    place: const StoryAt(Duration.zero),
+    fingerprint: document.fingerprint,
+    updatedAt: now,
+    narration: narration,
+  );
 
   /// The save at [step] of [document].
-  factory StorySave.at(StoryDocument document, StoryStep step, StoryPlace place, DateTime now) =>
-      StorySave(route: step.route, scene: step.scene, place: place, fingerprint: document.fingerprint, updatedAt: now);
+  factory StorySave.at(StoryDocument document, StoryStep step, StoryPlace place, DateTime now, {bool narration = true}) =>
+      StorySave(route: step.route, scene: step.scene, place: place, fingerprint: document.fingerprint, updatedAt: now, narration: narration);
 
   final List<String> route;
   final String scene;
   final StoryPlace place;
   final String fingerprint;
   final DateTime updatedAt;
+
+  /// Whether a novel's voices are heard (P19 rule 5). Turned off, it stays off for this story on this
+  /// device, kept with where you are (P19 call 26). Written only when off, so a save with Narration on
+  /// is the save P18 wrote.
+  final bool narration;
 
   Map<String, Object?> toJson() => {
     'version': storySaveVersion,
@@ -56,6 +68,7 @@ class StorySave {
       StoryAtBeat(:final beat) => {'beat': beat},
       StoryAtChoice() => {'choosing': true},
     },
+    if (!narration) 'narration': false,
     'fingerprint': fingerprint,
     'updatedAt': updatedAt.toUtc().toIso8601String(),
   };
@@ -68,7 +81,9 @@ class StorySave {
     final scene = json['scene'];
     final fingerprint = json['fingerprint'];
     final updatedAt = json['updatedAt'] is String ? DateTime.tryParse(json['updatedAt']! as String) : null;
+    final narration = json['narration'] ?? true;
     if (route is! List<Object?> || route.any((id) => id is! String) || scene is! String || fingerprint is! String || updatedAt == null) return null;
+    if (narration is! bool) return null;
     final StoryPlace place;
     switch ((json['at'], json['beat'], json['choosing'])) {
       case (final int at, null, null) when at >= 0:
@@ -80,7 +95,14 @@ class StorySave {
       default:
         return null;
     }
-    return StorySave(route: List.unmodifiable(route.cast<String>()), scene: scene, place: place, fingerprint: fingerprint, updatedAt: updatedAt);
+    return StorySave(
+      route: List.unmodifiable(route.cast<String>()),
+      scene: scene,
+      place: place,
+      fingerprint: fingerprint,
+      updatedAt: updatedAt,
+      narration: narration,
+    );
   }
 }
 
@@ -143,6 +165,15 @@ bool _fits(StoryDocument document, StoryStep step, StoryPlace place) => switch (
 /// route can be drawn scene by scene with the choice taken after each. Throws [StoryRouteRefused]
 /// when a step is not legal.
 List<StoryStep> storyPath(StoryDocument document, List<String> route) => [for (var i = 0; i <= route.length; i++) evaluateStory(document, route.sublist(0, i))];
+
+/// The choices a route made, given its [path] ([storyPath]): the index in the route of each choice
+/// taken at a choice of two or more (P19 rule 4). A lone way taken is a step of the route but no
+/// choice, so the route sheet, an ending's choices and a production's `Your route` leave it out, with
+/// no `Choose again` for it.
+List<int> storyChoicesMade(List<StoryStep> path) => [
+  for (var i = 0; i + 1 < path.length; i++)
+    if (path[i].loneWay == null) i,
+];
 
 /// How long a scene plays in [step]: its projected clips, back to back. Zero in a novel.
 Duration sceneLength(StoryDocument document, StoryStep step) {

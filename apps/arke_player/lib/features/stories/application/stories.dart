@@ -192,10 +192,13 @@ class VideoStoryReel extends StoryReel {
 
 final storyReelProvider = Provider<StoryReel Function()>((ref) => VideoStoryReel.new);
 
-/// A visual novel's voices (P18 rule 5): a beat's line, heard as it shows. [play] completes when the
-/// line has been heard, or is stopped.
+/// A visual novel's voices (P18 rule 5, P19 rule 1): a beat's line, heard as it shows. [play] completes
+/// when the line has been heard through, or is stopped or replaced; a line paused mid-way waits for
+/// [resume], so the story moves on only when its voice ends.
 abstract interface class StoryVoice {
   Future<void> play(String path);
+  Future<void> pause();
+  Future<void> resume();
   Future<void> stop();
 }
 
@@ -204,16 +207,37 @@ class _PlayerStoryVoice implements StoryVoice {
   final Ref _ref;
   AudioPlayer? _player;
 
+  /// Raised by every play and stop, so a line stopped or replaced while it loads never starts.
+  int _line = 0;
+
   @override
   Future<void> play(String path) async {
+    final line = ++_line;
     await _ref.read(audioEngineProvider)?.pause();
     final player = _player ??= AudioPlayer();
     await player.setFilePath(path);
-    await player.play();
+    if (line != _line) return;
+    // Not play()'s own future, which completes on a pause too: a paused line has not been heard. It
+    // has when the player completes it, or stops (idle).
+    final heard = player.processingStateStream.firstWhere((state) => state == ProcessingState.completed || state == ProcessingState.idle);
+    unawaited(player.play().catchError((Object _) {}));
+    await heard;
   }
 
   @override
-  Future<void> stop() async => _player?.stop();
+  Future<void> pause() async => _player?.pause();
+
+  @override
+  Future<void> resume() async {
+    final player = _player;
+    if (player != null) unawaited(player.play().catchError((Object _) {}));
+  }
+
+  @override
+  Future<void> stop() async {
+    _line++;
+    await _player?.stop();
+  }
 }
 
 final storyVoiceProvider = Provider<StoryVoice>((ref) {

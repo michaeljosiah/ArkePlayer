@@ -1,7 +1,8 @@
 // The Undersong with its stories, as P18 draws them: Low Water (a 16:9 movie), Ring Once (a 9:16
 // movie) and The Lantern Road (a visual novel), each read from the story fixtures that ArkeStudio's
 // contracts write (SPEC-058 R-81), installed beside the edition; a clip shown as a still picture,
-// since tests never play. Shared by story_test.dart and shoot_p18_test.dart; not a test of its own.
+// since tests never play. Shared by story_test.dart, shoot_p18_test.dart and shoot_p19_test.dart; not a
+// test of its own.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -63,7 +64,16 @@ StoryDocument readStoryJson(Map<String, Object?> json) => switch (readStory(json
 
 /// A movie that runs straight through [scenes], `(id, title, length in ms)`, each taking the next by
 /// the label in [labels]; [extra] more scenes after them, unreached, so the document has its count.
-Map<String, Object?> chainStory(List<(String, String, int)> scenes, List<String> labels, {String shape = '9:16', int extra = 0, String kind = 'movie'}) => {
+/// Every step offers a second way on, `Another way`, so it is a choice of two, except the steps
+/// [lone] names by index, whose one way on is a lone way (P19 rule 4).
+Map<String, Object?> chainStory(
+  List<(String, String, int)> scenes,
+  List<String> labels, {
+  String shape = '9:16',
+  int extra = 0,
+  String kind = 'movie',
+  Set<int> lone = const {},
+}) => {
   'format': 'arke-story',
   'version': 1,
   'kind': kind,
@@ -88,7 +98,10 @@ Map<String, Object?> chainStory(List<(String, String, int)> scenes, List<String>
   ],
   'presentation': <Object?>[],
   'choices': [
-    for (var i = 0; i + 1 < scenes.length; i++) {'id': 'ch_step-$i', 'from': scenes[i].$1, 'to': scenes[i + 1].$1, 'label': labels[i], 'effects': <Object?>[]},
+    for (var i = 0; i + 1 < scenes.length; i++) ...[
+      {'id': 'ch_step-$i', 'from': scenes[i].$1, 'to': scenes[i + 1].$1, 'label': labels[i], 'effects': <Object?>[]},
+      if (!lone.contains(i)) {'id': 'ch_other-$i', 'from': scenes[i].$1, 'to': scenes[i + 1].$1, 'label': 'Another way', 'effects': <Object?>[]},
+    ],
   ],
   'endings': <Object?>[],
 };
@@ -256,15 +269,45 @@ class MemorySaves extends StorySaves {
   }
 }
 
-/// A novel's voices, heard by a test.
+/// A novel's voices, heard by a test: a line speaks until the test [end]s it, as a real one speaks
+/// for as long as it lasts, so nothing moves on behind a test's back.
 class HeardVoice implements StoryVoice {
   final played = <String>[];
+  Completer<void>? _line;
+
+  /// Paused mid-line.
+  bool paused = false;
+
+  /// A line is speaking, or paused mid-line.
+  bool get speaking => _line != null;
+
+  /// The line speaking ends: it has been heard through.
+  void end() {
+    final line = _line;
+    _line = null;
+    line?.complete();
+  }
 
   @override
-  Future<void> play(String path) async => played.add(path);
+  Future<void> play(String path) {
+    end();
+    played.add(path);
+    paused = false;
+    return (_line = Completer<void>()).future;
+  }
 
   @override
-  Future<void> stop() async {}
+  Future<void> pause() async => paused = true;
+
+  @override
+  Future<void> resume() async => paused = false;
+
+  // A stopped line completes, as the platform's does.
+  @override
+  Future<void> stop() async {
+    paused = false;
+    end();
+  }
 }
 
 class _Kept extends KeptPictures {
