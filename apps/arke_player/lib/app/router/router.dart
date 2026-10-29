@@ -56,7 +56,13 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
       GoRoute(
         path: '/open/:itemId',
         parentNavigatorKey: root,
-        builder: (context, state) => OpenItemScreen(itemId: state.pathParameters['itemId']!),
+        builder: (context, state) {
+          final at = int.tryParse(state.uri.queryParameters['at'] ?? '');
+          return OpenItemScreen(
+            itemId: state.pathParameters['itemId']!,
+            startAt: at == null || at < 0 ? null : Duration(milliseconds: at),
+          );
+        },
       ),
       GoRoute(
         path: '/music/:worldId/:productionId',

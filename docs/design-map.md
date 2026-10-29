@@ -39,7 +39,7 @@ Every frame of the Arke Player design master (`design/Arke Player.dc.html`), the
 | P3e | Captions | `/play/:productionId` | `features/players/` |
 | P4a–P4c | Interactive: choice, route, ending — built as P18 draws them, natively (below) | `/story/:worldId/:productionId` | `features/stories/` |
 | P4d, P4e | Visual novel: a line, the log — built as P18 draws them, natively, and playing itself as P19 draws it (below); P4d's tap to move on is replaced | `/story/:worldId/:productionId` | `features/stories/` |
-| P5a–P5c | Audiobook, chapters, speed and sleep | `/play/:productionId` | `features/players/` (hosted module) |
+| P5a–P5c | Audiobook, chapters, speed and sleep | `/open/:itemId` (chapter presses carry `?at=`) | `features/players/` (native audio; ADR 0004) |
 | P5d | Audio drama with its transcript | `/play/:productionId` | `features/players/` (native) |
 | P5e | A book | `/open/:fileId` or `/play/:productionId` | `features/players/` (native reader) |
 | P6a | Downloads | `/downloads` | `features/downloads/presentation/downloads_screen.dart` |
