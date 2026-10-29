@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/comics/presentation/comic_reader_screen.dart';
 import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/library/presentation/library_screen.dart';
@@ -71,6 +72,11 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
         path: '/story/:worldId/:productionId',
         parentNavigatorKey: root,
         builder: (context, state) => StoryPlayerScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
+      ),
+      GoRoute(
+        path: '/comic/:worldId/:productionId',
+        parentNavigatorKey: root,
+        builder: (context, state) => ComicReaderScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
       ),
     ],
   );

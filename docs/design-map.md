@@ -233,6 +233,17 @@ third last scene in view only because the last choice was made there (P18e's fol
 | P19h | The route: a lone way leaves no row and no Choose again; the fold keeps the last choice made in view | (a sheet over the player) | `features/stories/presentation/story_widgets.dart` (`showRouteSheet`, `RouteRows`) |
 | P19 rules 3, 4 | A lone way on is taken without stopping; a closed choice with its reason counts toward two | — | `arke_world` `story.dart` (`loneWay`, `takeLoneWays`), `story_save.dart` (`storyChoicesMade`) |
 
+## Graphic novels (P20, built)
+
+SPEC-064 R-50, R-51 and SPEC-058's schema 7. Calls 28 – 31: a `comic` pin of its own; no guided view;
+the page kept as a story's place is.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P20a | A graphic novel's page: Read or Continue · Page N, its size, Update; Chapters as 2:3 first pages | `…/world/:worldId/:productionId` | `features/comics/presentation/comic_production_screen.dart` |
+| P20b – P20g | The reader: a page whole on black; a tap shows ⌄, the book and chapter, Chapters, and `3 of 24` with its progress; right to left; a webtoon's column; zoom; the Chapters sheet | `/comic/:worldId/:productionId` | `features/comics/presentation/comic_reader_screen.dart`; `features/comics/application/comics.dart` |
+| P20h | `Update app` on a graphic novel in a version this Player does not read; its tile under Read | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`; `arke_world` `catalogue.dart` (`alone`, `needsNewerApp`) |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.
@@ -254,6 +265,7 @@ SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not buil
 | SPEC-058 R-82, R-83: a story installed as a production package only in a version this Player plays; `Update app` otherwise | `arke_world` `catalogue.dart` (`alone`, `needsNewerApp`), `install.dart` | `story_install_test.dart`, `story_test.dart`, `test/story_test.dart` |
 | SPEC-058 R-85, R-86, R-88: closed choices, Choose again, where you are replayed, Start again on a broken route | `arke_world` `story.dart`, `story_save.dart`; `arke_library` `store.dart` (`keepStory`) | `story_save_test.dart`, `store_test.dart`, `test/story_test.dart` |
 | P19 rules 1 – 5, calls 25 – 27: a story plays itself; a tap never moves on; a lone way taken and left out of the route; Narration off kept for the story; a movie's back and forward 10 | `arke_world` `story.dart` (`loneWay`, `takeLoneWays`), `story_save.dart` (`storyChoicesMade`, `StorySave.narration`); `features/stories/presentation/story_player_screen.dart` | `story_test.dart`, `story_save_test.dart`, `test/story_test.dart` |
+| P20 rules 3 – 8: a page never cropped; a tap never turns; a swipe turns the way the book reads; a webtoon scrolls; the page kept | `arke_world` `comic.dart`; `features/comics/` | `comic_test.dart`, `test/comic_reader_test.dart` |
 | P16 rule 1 (replacing P15 rule 10): each row one size — the feature 358 × 476, posters 172, wide 240, small posters 112; on a Fold 424 high, 260, 300, 160 | `features/worlds/presentation/row_widgets.dart` (`RowSizes`), `world_widgets.dart` (`rowTileWidth`) | `test/discover_test.dart` |
 | P16 calls 14 and 15: a production's Tall cover; the list's feature and band | `arke_world` `catalogue.dart`; `features/worlds/application/discover.dart` | `catalogue_test.dart`, `test/catalogue_test.dart`, `test/discover_test.dart` |
 | SPEC-058 R-52: a chapter a part brought after install is New until it plays | `arke_library` `shelves.dart` (`newChapters`, `placeIsNew`, `worldHasNew`) | `part_install_test.dart`, `test/discover_test.dart` |

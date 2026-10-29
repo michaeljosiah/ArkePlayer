@@ -8,6 +8,7 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../comics/application/comics.dart';
 import '../../players/application/music.dart';
 import '../../production/domain/production_kind.dart';
 import '../../stories/application/stories.dart';
@@ -177,6 +178,7 @@ class _Installed extends ConsumerWidget {
         LibraryProduction(:final music?) => ProductionKind.ofMusic(music.kind),
         LibraryProduction(story: LibraryStory(kind: 'novel')) => ProductionKind.visualNovel,
         LibraryProduction(story: _?) => ProductionKind.interactiveMovie,
+        LibraryProduction(comic: _?) => ProductionKind.graphicNovel,
         LibraryProduction(:final narration) => narration != null ? ProductionKind.audiobook : ProductionKind.book,
         _ => ProductionKind.book,
       };
@@ -205,6 +207,17 @@ class _Installed extends ConsumerWidget {
         return ProductionTile(
           title: production.title,
           kind: storyTileKind(story),
+          picture: libraryPicture(store, production.picture ?? world.keyArt),
+          width: width,
+          tag: updating ? 'Update' : null,
+          onOpen: open,
+        );
+      }
+      if (production.comic case final comic?) {
+        final updating = ref.watch(productionUpdateProvider((world.id, production.id))) != null;
+        return ProductionTile(
+          title: production.title,
+          kind: comicTileKind(comic),
           picture: libraryPicture(store, production.picture ?? world.keyArt),
           width: width,
           tag: updating ? 'Update' : null,

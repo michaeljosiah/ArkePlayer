@@ -40,4 +40,7 @@ abstract final class Routes {
   /// An interactive movie or a visual novel in its player, over the tabs (P18b – P18h), where its save
   /// says.
   static String story(String worldId, String productionId) => '/story/$worldId/$productionId';
+
+  /// A graphic novel in its reader, over the tabs (P20b – P20g), at the page it was left on.
+  static String comic(String worldId, String productionId) => '/comic/$worldId/$productionId';
 }
