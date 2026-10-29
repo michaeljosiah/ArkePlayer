@@ -122,12 +122,13 @@ void main() {
   });
 
   test('The Red Quiet’s First Contact is listed as its story, never as a package (SPEC-058 R-82)', () {
-    // The visual novel exported 2026-10-28 with every route walked in preview: 15 scenes, 104 routes,
-    // one ending of 104 variants, which a Player from before PR #25 refuses. A `package` here would be
-    // installed by every Player of rev 11, which cannot play it.
+    // The visual novel's second edition, exported 2026-10-29 after the story editor's minimum set
+    // (its first real choice now in scene 2, the officer's report) with every route walked in preview:
+    // 15 scenes, 208 routes, one ending of 104 variants, which a Player from before PR #25 refuses. A
+    // `package` here would be installed by every Player of rev 11, which cannot play it.
     final story = catalogue.singleWhere((world) => world.id == 'the-red-quiet').productions.singleWhere((production) => production.id == 'first-contact');
     expect(story.package, isNull);
-    expect(story.story!.sha256, 'b9c76f8f919ba067666cc2a2ca76ac6373abddf411f5597edf03bdf60c5cc725');
+    expect(story.story!.sha256, 'e115aaab3638ce6ccf372a59e495c1d4ddd946f50b350f76247eca2747f1e448');
     expect(story.story!.playable, isTrue);
     expect(story.picturePin, isNotNull);
     expect(story.tallPin, isNotNull);
