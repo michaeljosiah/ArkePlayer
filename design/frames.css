@@ -445,3 +445,14 @@
 .ap .vnbox.at{bottom:auto}
 .ap .body .still.ring{outline-color:var(--foreground)}
 .ap .rmore{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 16px 0 60px;font:var(--type-meta);opacity:.62}
+
+/* P19 · a story plays itself: the box and the controls stacked in one column, so the controls appear
+   beside the box without moving it. The scene's beats ride over the transport where a film's
+   scrubber does; Play sits on the centre line, Back and Log either side of it. */
+.ap .vnstack{position:absolute;z-index:4;left:12px;right:12px;display:flex;flex-direction:column;gap:30px}
+.ap .vnbox.flow{position:relative;left:auto;right:auto;bottom:auto}
+.ap .vnctl{display:flex;flex-direction:column;gap:18px}
+.ap .beats.flow{position:static;transform:none;align-self:center}
+.ap .vnt{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:22px}
+.ap .vnt>:first-child{justify-self:end}
+.ap .vnt>:last-child{justify-self:start}

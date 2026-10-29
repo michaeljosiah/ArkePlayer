@@ -201,6 +201,24 @@ absent. `test/shoot_p18_test.dart` renders the frames with `SHOOT=1`.
 | P4c | An ending: its title and text, the route's stills, Start again, Back to last choice | `/story/:worldId/:productionId` | `features/stories/presentation/story_widgets.dart` (`StoryEndingCard`) |
 | P18 rule 7 | `Update app` on a story's tile; a story's tile under Play | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`, `world_widgets.dart` (`ProductionTile.tag`) |
 
+## A story plays itself (P19, proposed, not built)
+
+Drawn on 28 October 2026 at the owner's direction (calls 25 – 27); proposed, not approved, not built.
+It replaces P18f's and P4d's tap to move on and P18's `Auto`, which the P18 rows above still describe
+as built. A story opens playing, a visual novel moves on by itself, a tap shows or hides the controls,
+and only a choice of two or more stops it; a lone way on plays straight through and leaves no row in
+the route.
+
+| Frame | Screen | Route | File |
+|---|---|---|---|
+| P19a | A visual novel playing, its controls resting: the picture and the box only | `/story/:worldId/:productionId` | `features/stories/presentation/story_player_screen.dart` |
+| P19b, P19c, P19g | The controls after a tap: ⌄, the story, ⋯; Narration where it has voices; Back, Play/Pause, Log under the scene's beats; paused; turned | `/story/:worldId/:productionId` | `features/stories/presentation/story_player_screen.dart` |
+| P19d | A story without voices: no Narration | `/story/:worldId/:productionId` | `features/stories/presentation/story_player_screen.dart` |
+| P19e | It stops for a choice of two or more: the last line, the choices, Replay scene and Log | `/story/:worldId/:productionId` | `features/stories/presentation/story_player_screen.dart`, `story_widgets.dart` (`StoryChoices`) |
+| P19f | An interactive movie playing: the scene's scrubber, back 10, Play/Pause, forward 10 | `/story/:worldId/:productionId` | `features/stories/presentation/story_player_screen.dart` |
+| P19h | The route: a lone way leaves no row and no Choose again | (a sheet over the player) | `features/stories/presentation/story_widgets.dart` (`showRouteSheet`, `RouteRows`) |
+| P19 rules 3, 4 | A lone way on is taken without stopping; a closed choice with its reason counts toward two | — | `arke_world` `story.dart` |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.
