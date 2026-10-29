@@ -47,8 +47,8 @@ Domain code does not import Flutter where it can avoid it. Rules that need no wi
 |---|---|---|
 | Film | P3a, P3b (Studio 156's chrome) | Hosted Studio module |
 | Micro drama | P3c, P3d | Native: a vertical feed is the phone's own idiom |
-| Interactive movie | P4a–P4c (Studio 156) | Hosted Studio module |
-| Visual novel | P4d, P4e (Studio 174) | Hosted Studio module |
+| Interactive movie | P18b – P18e, P18h; P4c's ending | Native since P18 call 22: `arke_world`'s evaluator, held to the Studio's by shared fixtures (SPEC-058 R-81) |
+| Visual novel | P18f, P18g; P4d's box, P4e's log | Native, as the interactive movie |
 | Audiobook, audio files | P5a–P5c, P7d (Studio 186, 211, 212) | Hosted Studio module |
 | Audio drama | P5d | Native (the audiobook transport over a transcript) |
 | Book (EPUB) | P5e | Native reader |

@@ -167,9 +167,133 @@ What phones do with it (R-72, P17):
 Arke's list does not say what a soundtrack is for: Discover names the production only once the
 soundtrack is installed, and its world before that.
 
+## An interactive story (SPEC-058 R-79 – R-82, P18)
+
+An interactive movie or a visual novel (SPEC-063) is published as a production package too: a world
+package of **schema 6**, `"alone": true`, holding one production that names its `story` document in
+place of a book, a narration, a listening document or music. Its `picture` is the wide cover and its
+`tall`, when it has one, the Tall cover; a `tall` on any other production is not an Arke package. A
+Player from before schema 6 refuses the package as made with a newer Arke, and the list keeps such a
+Player from fetching one (below).
+
+The **story document** (`application/vnd.arke.story+json`, format `arke-story`, version 1) is
+compiled by the Studio's contracts from the production's routing, so the Player never needs the
+world's script. It holds the `kind` (`movie` or `novel`), the `shape` (`16:9` or `9:16`), the `start`
+scene, the `fingerprint` of SPEC-063 R-14 (`sha256:<hex>`), the `facts` with their types, values and
+defaults (never their labels: a listener never sees a fact), the `scenes` with a movie's `clips`
+(an MP4 asset with `from` and `to` in ms) or a novel's `beats` (`picture`, `tall`, `speaker`, `line`,
+`voice`), the `presentation` rows that play a scene's clip or beat only while a guard holds (by its
+`index` in the scene), the `choices` in authored order (`id`, `from`, `to`, `label`, `when`,
+`effects`, and `unavailable` with its `reason` and optional `label` only when the author wrote one),
+and the `endings` with their variants and fallback. `readStory` is as strict as the music reader: an
+unknown key or a newer version is newer; an id that repeats, a scene that is not there, a fact or
+value that is not declared, an asset missing or of the wrong kind, an ending with an outgoing choice,
+or a document past SPEC-063's bounds (32 facts, 16 values, conditions 8 deep and 128 nodes) is not an
+Arke package.
+
+**The rules** are `arke_world`'s port of the Studio's evaluator (SPEC-063 R-6). `replayStory`
+folds the defaults over a route of choice ids, checking each step's scene and guard, and gives the
+`StoryStep` there: the scene, the facts, the `options` in authored order (open, or closed in place with
+the author's reason; a closed choice without one is hidden), the `play` indices of the clips or beats
+that play in this state, and the resolved ending at an ending scene (exactly one variant that holds,
+else the fallback). A route that is not legal is `StoryRouteBroken` at its first bad step, which is
+how a saved route is replayed after an `Update` (R-88). `evaluateStory`, `startStory`, `chooseStory`
+and `chooseStoryAgain` (cut before a choice and replay what is kept, SPEC-063 R-13) are built on it.
+Over them sits one presentation rule, shared with the Studio's player (P19 rules 3 and 4, Studio 246):
+a step whose options are exactly one open choice, with no closed choice shown with its reason, is a lone
+way (`StoryStep.loneWay`). It is never shown: `takeLoneWays` takes it, and every lone way after it
+through scenes that play nothing, as steps of the route with their effects, and `storyChoicesMade`
+leaves them out of the route a listener sees. The fixtures pin the rules, not this, so they are
+unchanged.
+The Studio's contracts write `test/fixtures/story/` (`packages/contracts/scripts/story-fixtures.ts`), and
+it is copied here verbatim, never edited: the public stories (Low Water, a 16:9 movie compiled from
+legacy routing; Ring Once, the synthetic story that exercises every condition, effect, closed choice,
+presentation row and ending variant; Lantern Road, a visual novel), the refused documents and world.json
+files in `cases.json` with the `limits` every reader keeps, and for each story every complete route
+with every step's scene, facts, open and closed choices and projection, and its ending.
+`test/story_test.dart` reproduces every step exactly, and finds the same complete routes (R-81). A
+change to either evaluator lands with regenerated fixtures, or not at all. First Contact's 104 routes
+run through both in the private qualification (SPEC-063 R-25).
+
+1. **Upload it** under its own name to the world's public story release. Never replace one.
+2. **Pin it as a production**, as an album is:
+
+   ```
+   dart run arke_world:pin_world <story.zip> <https url> --production
+   ```
+
+   For a story it prints the production's id and its `story`: the pin (address, length, SHA-256,
+   edition and fingerprint) with `version`, the story document's version.
+3. **Set it on the listed production as `story`, never as `package`.** Every Player of rev 11 installs
+   each production `package` it reads, and would fetch a story it cannot play. A Player that does not
+   know `story` ignores it; one that reads it but not its `version` shows the tile with `Update app`
+   and fetches nothing (P18 rule 7, call 21). This Player plays version 1 (`supportedStoryVersions`).
+
+   ```json
+   { "id": "low-water", "title": "Low Water", "kind": "Interactive · 16:9",
+     "story": { "url": "https://…/the-undersong-story-2026-10-28.zip", "byteLength": 52000000,
+                "sha256": "…", "edition": "2026-10-28", "fingerprint": "…", "version": 1 } }
+   ```
+4. **Raise `serial` and publish the list**, as for an edition.
+
+**Installing it** (R-83, slice 16): a listed production's `story` in a version this Player plays is
+its own package (`CatalogueProduction.alone`), so it comes as an album does — with the world's
+Install, on its own over Wi-Fi when listed later (`missingProductions`, the parts check), and again,
+pressed, on a new fingerprint (`productionUpdates`). It lands in `_productions/<id>` with its
+`world.json`, and the library names it as `LibraryProduction.story` (kind, shape, scenes, the
+document's fingerprint, the Tall cover). A `story` in another version is never fetched; its tile says
+`Update app`.
+
+**Playing it** (P19): a story opens playing, and nothing but a choice of two or more stops it. A movie
+plays its scene's clips back to back; a visual novel moves on by itself, a voiced beat 0.6 s after its
+voice ends and any other after 1.5 s and 45 ms a character. A tap shows or hides the controls and never
+moves on. A lone way is taken straight through, with no pause, label or row. Narration — a novel's
+voices — is on wherever the story has any; turned off, it stays off for that story, and each beat holds
+for its reading time.
+
+**Where you are** (R-88): the library keeps each story's save in its index beside the places, opaque,
+as written (`LibraryStore.keepStory`, `stories`), so it is written as atomically as a place and goes
+with its world. `arke_world`'s `StorySave` (version 1) holds the route as choice ids, the scene, the
+place (`at` ms into the scene's projected clips, a `beat`, or `choosing`), the save version and the
+document's fingerprint — never the facts — and `"narration": false` when Narration is off (P19 call 26;
+absent when on, so a save with it on is P18's, and a save from before P19 reads as on). `resumeStory`
+replays the route on the document installed: every step legal is `Continue` (at the saved place when
+the fingerprint is the save's, else the scene's start); a broken route, or a save it cannot read, is
+`Start again`, with the old save kept until it is pressed. A save kept at a lone way, as P18 kept one,
+goes straight on through it.
+
+## A graphic novel (SPEC-064 R-50, R-51, P20)
+
+The Studio's Export → Arke Player of a graphic novel makes a production package of **schema 7**,
+`"alone": true`, holding one production that names its `comic` document in the inventory
+(`application/vnd.arke.comic+json`) and its pages as pictures. A Player from before schema 7 refuses
+it as made with a newer Arke. The document (`arke-comic`, version 1, `arke_world` `comic.dart`) holds
+how the book reads (`ltr`, `rtl` or `scroll`), its page shape, its language, and its chapters, each
+page one picture with its lettering drawn in it and its alt text. Nothing in it is run, and it
+carries no panel boundaries: guided view is not in this version (P20 call 29). Its reader is held to
+the Studio's by the shared fixtures in `packages/arke_world/test/fixtures/comic`, which ArkeStudio's
+`scripts/comic-fixtures.ts` writes.
+
+**Listing it**: pin it with `pin_world` as a story is pinned, and set the pin on the listed production
+as `comic`, never `package` or `story`. A Player that does not know `comic` ignores it; this one
+installs a `comic` in a version it reads (`supportedComicVersions`, version 1) and shows `Update app`
+for one it does not, fetching nothing (P20 call 28, P20h). Its kind line is `Graphic novel · N pages`,
+under Read.
+
+**Reading it** (P20b – P20g): a page whole on black and nothing over it; a tap shows the controls and a
+second hides them, and they rest after a moment; a tap never turns the page. A swipe turns the page
+the way the book reads, right to left for manga, its progress filling the same way; a webtoon scrolls
+as one column. Pinch and double-tap zoom. The page a person is on is kept with the stories' places
+under `LibraryStore.keepStory`, as `{"comicPage": n}`, so the production's page offers `Continue ·
+Page n` and goes with its world.
+
 ## The Undersong
 
-**Pinned now: the Chapter 1 preview, 25 October 2026** (list serial 27): `the-undersong-player-2026-10-25.zip`, 25,574,825 bytes, SHA-256 `3f321a7ab83aa4d4f40506ce25e69b55d07e7a2120f088ab8dc45f89c526b289`, on ArkeStudio release `undersong-2026-10-25-preview` (not Latest). One chapter, the rewritten *Neap*, narrated by the book's designed narrator (99 blocks read per paragraph, not yet grouped into beats), with 15 new pictures from the Studio's Illustrate in Wide and Tall, and the book text. No guide inside, so the guide alone below stays pinned. It was exported from a copy of the owner's live world with every other chapter retired through the Studio's authoring service; the live world keeps all 22. Its production picture is the 2:3 poster. The full book returns as the remaining chapters are rewritten. The 24 October editions below are still on their release, and a phone holding one is offered `Update`.
+**Current: Chapters 1–5, 27 October 2026** (list serial 33). Chapter 5, *Independent record*, is part 2 after the unchanged Chapters 1–3 edition and Chapter 4 part. Its immutable package is `the-undersong-part-2026-10-27.zip`, 41,776,288 bytes, SHA-256 `daf83567861183d9e43aad8fe19f93ff4c369f7df614c6f5be99619336dde99c`, on story release `undersong-2026-10-27-chapter-5` (not Latest). It contains the chapter EPUB, 18 m 51 s of narration and 28 illustrations: 19 with Tall versions and nine reviewed Wides used in both orientations. All assets were hash-checked, all 168 EPUB paragraphs matched the manuscript, and the native Player reader accepted the package. Recorded audio lengths set the clock; sentence anchors remain estimated. The longest picture hold is 73.246 seconds. Private world sources and the Guide are absent. Earlier packages, the Guide pin, other worlds and The Red Quiet feature are unchanged.
+
+**Earlier: Chapters 1–4, 26 October 2026** (list serial 32). Chapter 4, *The blue door*, is part 1 after the unchanged Chapters 1–3 edition (`2026-10-26`, fingerprint `62c188259dee0508619428cee249b2c52fea54fcdabd6ad931eccce689ffbf8f`). Its immutable package is `the-undersong-part-2026-10-26.zip`, 26,808,132 bytes, SHA-256 `56b408526a384ce34435ca45a52a31f07020314fd7c5df436571fd11d5393f42`, on story release `undersong-2026-10-26-chapter-4` (not Latest). It holds this chapter's EPUB, 14 m 53 s of narration and 22 illustrations, each with its Tall. All assets were hash-checked, the EPUB compared with the manuscript, and the package read by the native Player reader. Recorded take lengths set the clock; sentence anchors are estimated where local word alignment was unavailable. The longest picture hold is 68.89 seconds. Private world sources and the Guide are absent from the part; the existing guide-alone pin remains. The Red Quiet stays featured.
+
+**Earlier: the Chapter 1 preview, 25 October 2026** (list serial 27): `the-undersong-player-2026-10-25.zip`, 25,574,825 bytes, SHA-256 `3f321a7ab83aa4d4f40506ce25e69b55d07e7a2120f088ab8dc45f89c526b289`, on ArkeStudio release `undersong-2026-10-25-preview` (not Latest). One chapter, the rewritten *Neap*, narrated by the book's designed narrator (99 blocks read per paragraph, not yet grouped into beats), with 15 new pictures from the Studio's Illustrate in Wide and Tall, and the book text. No guide inside, so the guide alone below stays pinned. It was exported from a copy of the owner's live world with every other chapter retired through the Studio's authoring service; the live world keeps all 22. Its production picture is the 2:3 poster. The full book returns as the remaining chapters are rewritten. The 24 October editions below are still on their release, and a phone holding one is offered `Update`.
 
 **Tall cover, list serial 25:** the story's 2:3 poster, made upright on the Studio's Bench with Codex Image from Maren Kest's, Bray Half-Hitch's, Perrin Tallow's and the Chorister's main photos: the four faces over the fogged harbour and its bell tower, *THE UNDERSONG* under *THE LEDGER OF NIGHTS* at the foot with the drowned god's face beneath (world artifact `a-bold-cinematic-streaming-series-key-art-poste-take-2.png` in the owner's world, saved as JPEG). It comes with the list, so the package is unchanged and its production picture stays the sea-wall cover below; a Player from before list pictures shows it from its next build.
 

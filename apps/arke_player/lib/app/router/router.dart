@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/comics/presentation/comic_reader_screen.dart';
 import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/library/presentation/library_screen.dart';
@@ -9,6 +10,7 @@ import '../../features/onboarding/presentation/first_open_screen.dart';
 import '../../features/players/presentation/music_player_screen.dart';
 import '../../features/players/presentation/open_item_screen.dart';
 import '../../features/settings/presentation/you_screen.dart';
+import '../../features/stories/presentation/story_player_screen.dart';
 import '../../features/worlds/presentation/discover_screen.dart';
 import '../../features/worlds/presentation/guide_screens.dart';
 import '../../features/worlds/presentation/production_screen.dart';
@@ -71,6 +73,16 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
           track: int.tryParse(state.uri.queryParameters['track'] ?? ''),
           shuffle: state.uri.queryParameters['shuffle'] == '1',
         ),
+      ),
+      GoRoute(
+        path: '/story/:worldId/:productionId',
+        parentNavigatorKey: root,
+        builder: (context, state) => StoryPlayerScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
+      ),
+      GoRoute(
+        path: '/comic/:worldId/:productionId',
+        parentNavigatorKey: root,
+        builder: (context, state) => ComicReaderScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
       ),
     ],
   );

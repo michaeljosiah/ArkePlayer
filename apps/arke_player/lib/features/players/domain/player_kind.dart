@@ -12,11 +12,13 @@ enum PlayerKind {
   /// One episode a screen, swiped (P3c). Native: a feed of short videos is the phone's own idiom.
   microDrama(isWebModule: false),
 
-  /// Studio turn 156 (P4a–P4c).
-  interactive(isWebModule: true),
+  /// An interactive movie at its own shape (P18b – P18e, P18h; P4c's ending). Native since P18 call 22,
+  /// which revises call 2 for stories: its rules are `arke_world`'s Dart port of the Studio's, held to
+  /// them by shared fixtures (SPEC-058 R-81).
+  interactive(isWebModule: false),
 
-  /// Studio turn 174 (P4d, P4e).
-  visualNovel(isWebModule: true),
+  /// A visual novel (P18f, P18g; P4d's box, P4e's log). Native, as [interactive] is.
+  visualNovel(isWebModule: false),
 
   /// Studio turns 186, 211 and 212 (P5a–P5c, P7d).
   audiobook(isWebModule: true),
@@ -27,7 +29,7 @@ enum PlayerKind {
   /// EPUB (P5e).
   reader(isWebModule: false),
 
-  /// PDF and CBZ (P7c).
+  /// PDF and CBZ (P7c), and a world's graphic novel (P20b – P20g).
   pageViewer(isWebModule: false);
 
   const PlayerKind({required this.isWebModule});
@@ -45,6 +47,7 @@ PlayerKind playerForProduction(ProductionKind kind) => switch (kind) {
   // A world's music plays in the audio player, the cover where the moment's picture would be (P17d).
   ProductionKind.album || ProductionKind.single || ProductionKind.soundtrack => PlayerKind.audiobook,
   ProductionKind.book => PlayerKind.reader,
+  ProductionKind.graphicNovel => PlayerKind.pageViewer,
 };
 
 /// The player a standard file opens in (P7 rule 2), or null for what is never opened on its own:

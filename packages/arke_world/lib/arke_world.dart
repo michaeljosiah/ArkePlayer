@@ -4,6 +4,7 @@
 library;
 
 export 'src/catalogue.dart';
+export 'src/comic.dart';
 export 'src/guide.dart';
 export 'src/hosted.dart';
 export 'src/install.dart';
@@ -14,3 +15,5 @@ export 'src/pack.dart';
 export 'src/package.dart';
 export 'src/pictures.dart';
 export 'src/reach.dart';
+export 'src/story.dart';
+export 'src/story_save.dart';

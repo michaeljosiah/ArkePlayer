@@ -16,6 +16,10 @@ import 'package:crypto/crypto.dart';
 /// A production published alone (R-68, R-71), such as an album, is pinned with `--production`: it
 /// prints the production's id, its `package` pin and, for music, its `music` kind, to set on the
 /// listed production. An edition is never pinned as a production, nor a production as an edition.
+///
+/// A story (R-79, R-82), an interactive movie or a visual novel, is a production package too, pinned
+/// with `--production`: it prints the pin with the story document's `version` as the production's
+/// `story`, never as its `package`, which every Player of rev 11 would fetch and could not play.
 ///   `dart run arke_world:pin_world <package.zip> <https url>`
 ///   `dart run arke_world:pin_world <part.zip> <https url> --follows <edition fingerprint>`
 ///   `dart run arke_world:pin_world <production.zip> <https url> --production`
@@ -59,7 +63,13 @@ Future<void> main(List<String> args) async {
     final production = manifest.productions.single;
     stdout.writeln(
       const JsonEncoder.withIndent('  ').convert({
-        'production': {'id': production.id, 'package': pin, if (manifest.music[production.id] case final music?) 'music': music.kind.name},
+        'production': manifest.stories.containsKey(production.id)
+            // The reader reads only the versions this Player plays, so the document is one of them.
+            ? {
+                'id': production.id,
+                'story': {...pin, 'version': storyVersion},
+              }
+            : {'id': production.id, 'package': pin, if (manifest.music[production.id] case final music?) 'music': music.kind.name},
       }),
     );
     return;

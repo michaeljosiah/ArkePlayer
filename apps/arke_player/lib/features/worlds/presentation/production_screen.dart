@@ -10,9 +10,11 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../comics/presentation/comic_production_screen.dart';
 import '../../players/application/music.dart';
 import '../../players/application/players.dart';
 import '../../players/presentation/music_widgets.dart';
+import '../../stories/presentation/story_production_screen.dart';
 import '../application/discover.dart';
 import '../application/guides.dart';
 import '../application/worlds.dart';
@@ -78,6 +80,8 @@ class ProductionScreen extends ConsumerWidget {
       );
     }
     if (production.music != null) return AlbumScreen(world: world, production: production, worldLocation: worldLocation);
+    if (production.story != null) return StoryProductionScreen(world: world, production: production);
+    if (production.comic != null) return ComicProductionScreen(world: world, production: production);
     final narration = items[production.narration];
     // A book released in parts reads as one: the part being read, else the first not finished.
     final books = [?items[production.book], for (final id in production.bookParts) ?items[id]];

@@ -431,3 +431,51 @@
 .ap .alb.fold{display:grid;grid-template-columns:320px 1fr;gap:0 32px;padding:112px 32px 28px;text-align:left;align-items:end}
 .ap .alb.fold .cv{width:320px;height:320px;margin:0}
 .ap .dock.float{position:absolute;z-index:8;left:16px;right:16px;bottom:98px;margin:0;border-radius:18px;background:color-mix(in srgb,var(--card) 84%,transparent);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:var(--shadow-xl)}
+
+/* P18 · interactive stories: a picture at its own shape, the choices where the thumb is, and a
+   choice the story has closed, dimmed with the author's reason. */
+.ap .lbx{position:absolute;left:0;width:100%;aspect-ratio:16/9;object-fit:cover}
+.ap .chs{position:absolute;z-index:4;left:16px;right:16px;display:flex;flex-direction:column;gap:10px}
+.ap .chs.two{flex-direction:row;gap:12px}
+.ap .chs.two>.choice{flex:1;min-width:0}
+.ap .choice>.l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap .choice.off{height:auto;min-height:58px;padding-top:11px;padding-bottom:11px;align-items:flex-start;box-shadow:none;background:color-mix(in srgb,var(--media-overlay-bg) 28%,transparent);border-style:dashed;color:color-mix(in srgb,var(--media-overlay-fg) 58%,transparent)}
+.ap .choice.off>.kn{border-color:transparent}
+.ap .choice .why{display:block;margin-top:3px;font:var(--type-meta);letter-spacing:normal;white-space:normal}
+.ap .vnbox.at{bottom:auto}
+.ap .body .still.ring{outline-color:var(--foreground)}
+.ap .rmore{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 16px 0 60px;font:var(--type-meta);opacity:.62}
+
+/* P19 · a story plays itself: the box and the controls stacked in one column, so the controls appear
+   beside the box without moving it. The scene's beats ride over the transport where a film's
+   scrubber does; Play sits on the centre line, Back and Log either side of it. */
+.ap .vnstack{position:absolute;z-index:4;left:12px;right:12px;display:flex;flex-direction:column;gap:30px}
+.ap .vnbox.flow{position:relative;left:auto;right:auto;bottom:auto}
+.ap .vnctl{display:flex;flex-direction:column;gap:18px}
+.ap .beats.flow{position:static;transform:none;align-self:center}
+.ap .vnt{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:22px}
+.ap .vnt>:first-child{justify-self:end}
+.ap .vnt>:last-child{justify-self:start}
+
+/* P20 · A graphic novel: the page whole on black, a tap's controls, Scroll, Chapters. */
+.ap.cm{background:#000}
+.ap .cm-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.ap .cm-stage img{width:100%;height:auto;max-height:100%;object-fit:contain;display:block}
+.ap .cm-stage.turned img{width:auto;height:100%}
+.ap .cm-top{z-index:6}
+.ap .cm-foot{position:absolute;z-index:6;left:20px;right:20px;bottom:44px;display:flex;align-items:center;gap:12px;color:var(--media-ink,#fff)}
+.ap .cm-n{font:var(--type-meta);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ap .cm-bar{flex:1;height:4px;border-radius:2px;background:color-mix(in srgb,#fff 22%,transparent);position:relative;overflow:hidden}
+.ap .cm-bar i{position:absolute;left:0;top:0;bottom:0;background:#fff;border-radius:2px}
+.ap .cm-bar.rtl i{left:auto;right:0}
+.ap .cm-swipe{position:absolute;z-index:6;left:20px;top:50%;display:flex;align-items:center;gap:4px;color:#fff;font:var(--type-meta);transform:translateY(-50%) scaleX(-1)}
+.ap .cm-swipe span{transform:scaleX(-1)}
+.ap .cm-scroll{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column;gap:18px}
+.ap .cm-scroll img{width:100%;height:330px;object-fit:cover;flex:none}
+.ap .cm-rowp{display:flex;gap:12px;padding:0 20px 20px}
+.ap .cm-pg{width:110px;display:flex;flex-direction:column;gap:6px;font:var(--type-meta)}
+.ap .cm-pg img{width:110px;height:165px;object-fit:cover;border-radius:6px}
+.ap .cm-ch{display:flex;align-items:center;gap:12px;min-height:72px;padding:8px 16px;font:var(--type-ui)}
+.ap .cm-ch img{width:40px;height:60px;object-fit:cover;border-radius:4px;flex:none}
+.ap .cm-ch b{display:block;font-weight:600}
+.ap .cm-ch span{font:var(--type-meta);color:var(--muted-foreground)}

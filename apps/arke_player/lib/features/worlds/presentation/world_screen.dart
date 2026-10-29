@@ -8,8 +8,10 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../comics/application/comics.dart';
 import '../../players/application/music.dart';
 import '../../production/domain/production_kind.dart';
+import '../../stories/application/stories.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
 import 'row_widgets.dart';
@@ -125,6 +127,8 @@ class _ToInstall extends ConsumerWidget {
                 kind: production.kind,
                 picture: ref.pictureOf(world, production),
                 width: width,
+                // A story this Player cannot play is shown, and never fetched (R-82).
+                tag: production.needsNewerApp ? 'Update app' : null,
                 onOpen: null,
               ),
             },
@@ -160,13 +164,21 @@ class _Installed extends ConsumerWidget {
     final update = ref.watch(worldUpdateProvider(world.id));
     final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], world.id);
     // A production published on its own and not on the phone yet still shows, opening nothing until
-    // it arrives (SPEC-058 R-72, R-73).
-    final coming = listed == null ? const <CatalogueProduction>[] : missingProductions(listed, world);
+    // it arrives (SPEC-058 R-72, R-73, R-83); so does a story this Player cannot play, with `Update
+    // app`, never fetched (R-82).
+    final coming = [
+      if (listed != null) ...missingProductions(listed, world),
+      for (final production in listed?.productions ?? const <CatalogueProduction>[])
+        if (production.needsNewerApp && installedProduction(production, world) == null) production,
+    ];
     final groups = groupByTakenAs<Object>([...world.productions, ...coming], (production) {
       return switch (production) {
         CatalogueProduction(:final music?) => ProductionKind.ofMusic(music.name),
         CatalogueProduction(:final kind) => ProductionKind.ofLine(kind),
         LibraryProduction(:final music?) => ProductionKind.ofMusic(music.kind),
+        LibraryProduction(story: LibraryStory(kind: 'novel')) => ProductionKind.visualNovel,
+        LibraryProduction(story: _?) => ProductionKind.interactiveMovie,
+        LibraryProduction(comic: _?) => ProductionKind.graphicNovel,
         LibraryProduction(:final narration) => narration != null ? ProductionKind.audiobook : ProductionKind.book,
         _ => ProductionKind.book,
       };
@@ -182,10 +194,36 @@ class _Installed extends ConsumerWidget {
 
     Widget tile(Object entry, double width, _Shape shape) {
       if (entry is CatalogueProduction) {
-        return SquareTile(title: entry.title, kind: entry.kind, picture: listed == null ? null : ref.pictureOf(listed, entry), width: width, onOpen: null);
+        final picture = listed == null ? null : ref.pictureOf(listed, entry);
+        final tag = entry.needsNewerApp ? 'Update app' : null;
+        return shape == _Shape.square
+            ? SquareTile(title: entry.title, kind: entry.kind, picture: picture, width: width, tag: tag, onOpen: null)
+            : ProductionTile(title: entry.title, kind: entry.kind, picture: picture, width: width, tag: tag, onOpen: null);
       }
       final production = entry as LibraryProduction;
       void open() => context.push(Routes.production(location, production.id));
+      if (production.story case final story?) {
+        final updating = ref.watch(productionUpdateProvider((world.id, production.id))) != null;
+        return ProductionTile(
+          title: production.title,
+          kind: storyTileKind(story),
+          picture: libraryPicture(store, production.picture ?? world.keyArt),
+          width: width,
+          tag: updating ? 'Update' : null,
+          onOpen: open,
+        );
+      }
+      if (production.comic case final comic?) {
+        final updating = ref.watch(productionUpdateProvider((world.id, production.id))) != null;
+        return ProductionTile(
+          title: production.title,
+          kind: comicTileKind(comic),
+          picture: libraryPicture(store, production.picture ?? world.keyArt),
+          width: width,
+          tag: updating ? 'Update' : null,
+          onOpen: open,
+        );
+      }
       if (production.music case final music?) {
         final updating = ref.watch(productionUpdateProvider((world.id, production.id))) != null;
         return SquareTile(

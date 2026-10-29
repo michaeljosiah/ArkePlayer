@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:arke_library/arke_library.dart';
 
+import 'comic.dart';
 import 'manifest.dart';
 import 'music.dart';
+import 'story.dart';
 
 /// What a production is, as the design writes it (P1 rule 6): `Audiobook · Book · 2 h 3 m` for a
 /// book with its narration, `Audiobook · 6 h 12 m` for narration alone, `Book` for a book alone.
@@ -45,6 +47,8 @@ class CatalogueProduction {
     this.schedule,
     this.package,
     this.music,
+    this.story,
+    this.comic,
   });
 
   final String title;
@@ -75,6 +79,25 @@ class CatalogueProduction {
   /// What kind of music it is (R-71), so its tile is square and it sits under Music; null when it is
   /// not music.
   final MusicKind? music;
+
+  /// Its story package (SPEC-058 R-82), an interactive movie or a visual novel published alone: pinned
+  /// as [package] is, under a key of its own, since every Player of rev 11 installs every `package` it
+  /// reads and would fetch a story it cannot play. Null when it is not a story.
+  final CatalogueStory? story;
+
+  /// Its graphic novel's package (SPEC-064 R-51, P20 call 28), pinned under a key of its own for the
+  /// same reason as [story]. Null when it is not a graphic novel.
+  final CatalogueStory? comic;
+
+  /// The package this Player installs for it on its own (SPEC-058 R-72, R-83): its production package,
+  /// or its story or graphic novel when this Player reads the document's version. One it does not read
+  /// is never fetched (R-82).
+  CataloguePackage? get alone =>
+      package ?? (story != null && story!.playable ? story : null) ?? (comic != null && supportedComicVersions.contains(comic!.version) ? comic : null);
+
+  /// A story or graphic novel listed in a version this Player does not read: its tile says `Update
+  /// app` (P18 rule 7, P20h).
+  bool get needsNewerApp => (story != null && !story!.playable) || (comic != null && !supportedComicVersions.contains(comic!.version));
 }
 
 /// Where a world's package is and the bytes it must have. The digest is pinned by the build, as
@@ -96,6 +119,26 @@ class CataloguePackage {
 
   /// The parts released since this edition, in release order (SPEC-058 R-49). Empty for a guide.
   List<CataloguePart> get parts => const [];
+}
+
+/// A story package's pin (SPEC-058 R-82): a production package's, with the version of the story
+/// document inside, so a later document can be listed without a Player fetching what it cannot play.
+class CatalogueStory extends CataloguePackage {
+  const CatalogueStory({
+    required super.url,
+    required super.byteLength,
+    required super.sha256,
+    required String super.edition,
+    required String super.fingerprint,
+    required this.version,
+  });
+
+  /// The story document's version.
+  final int version;
+
+  /// Whether this Player plays it. One it does not shows `Update app` and is never fetched (P18 rule 7,
+  /// call 21).
+  bool get playable => supportedStoryVersions.contains(version);
 }
 
 /// A chapter a part brings, as Discover, New and a notification name it before it is fetched.
@@ -242,6 +285,17 @@ CataloguePackage? _productionPackage(Object? value, String what) {
   throw FormatException('$what package');
 }
 
+/// A listed production's story (R-82): its package's pin and the document's version. A version this
+/// Player does not play still reads, so its tile can say `Update app`; a pin that is malformed is, as a
+/// production package's is.
+CatalogueStory? _story(Object? value, String what) {
+  if (value == null) return null;
+  final pin = _productionPackage(value, '$what story')!;
+  final version = (value as Map<String, Object?>)['version'];
+  if (version is! int || version < 1) throw FormatException('$what story version');
+  return CatalogueStory(url: pin.url, byteLength: pin.byteLength, sha256: pin.sha256, edition: pin.edition!, fingerprint: pin.fingerprint!, version: version);
+}
+
 /// A listed production's music kind (R-71), one of the three a music document names. A kind this
 /// Player does not know reads as none, so the production is simply not placed under Music: refusing
 /// it would make every released Player ignore the whole fetched list, editions and parts included,
@@ -291,6 +345,8 @@ Catalogue parseCatalogue(String text) {
             schedule: production['schedule'] == null ? null : WorldSchedule.read(production['schedule']),
             package: _productionPackage(production['package'], 'catalogue world $id production'),
             music: _musicKind(production['music'], 'catalogue world $id production'),
+            story: _story(production['story'], 'catalogue world $id production'),
+            comic: _story(production['comic'], 'catalogue world $id production comic'),
           )
         else
           throw FormatException('catalogue world $id production'),
@@ -408,8 +464,8 @@ List<CatalogueWorld> readCatalogue(String text) => parseCatalogue(text).worlds;
 /// from the app: a fetched list names paths it cannot know are in this build, so a world's key art
 /// and its productions' pictures and Tall covers are the shipped list's. Their pins are the newer
 /// list's (SPEC-058 rev 10): a pin is an address, not a path, so a fetched list can bring a picture
-/// this build never shipped, for a world it does not ship too. Discover's feature and band, and a
-/// production's own package and music kind (rev 11), are the newer list's.
+/// this build never shipped, for a world it does not ship too. Discover's feature and band, a
+/// production's own package and music kind (rev 11), and its story (rev 12), are the newer list's.
 Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
   if (kept == null || kept.serial <= shipped.serial) return shipped;
   final bundled = {for (final world in shipped.worlds) world.id: world};
@@ -442,6 +498,8 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
                 schedule: production.schedule,
                 package: production.package,
                 music: production.music,
+                story: production.story,
+                comic: production.comic,
               ),
           ]),
           package: world.package,
@@ -484,18 +542,19 @@ List<CataloguePart> missingParts(CatalogueWorld listed, LibraryWorld installed) 
 LibraryProduction? installedProduction(CatalogueProduction listed, LibraryWorld installed) =>
     installed.productions.where((production) => listed.id != null ? production.id == listed.id : production.title == listed.title).firstOrNull;
 
-/// The productions published on their own that an installed world lacks (SPEC-058 R-72): each
-/// arrives as a part does, on its own. One the edition already holds is not missing.
+/// The productions published on their own that an installed world lacks (SPEC-058 R-72, R-83): each
+/// arrives as a part does, on its own — an album, or a story this Player plays. One the edition
+/// already holds is not missing.
 List<CatalogueProduction> missingProductions(CatalogueWorld listed, LibraryWorld installed) => [
   for (final production in listed.productions)
-    if (production.package != null && installedProduction(production, installed) == null) production,
+    if (production.alone != null && installedProduction(production, installed) == null) production,
 ];
 
-/// The productions whose own package in the list is not the one installed (R-72): each is that
+/// The productions whose own package in the list is not the one installed (R-72, R-83): each is that
 /// production's Update, pressed as an edition's is (P12 call 9).
 List<CatalogueProduction> productionUpdates(CatalogueWorld listed, LibraryWorld installed) => [
   for (final production in listed.productions)
-    if ((production.package, installedProduction(production, installed)?.package) case (final pin?, final held?) when pin.fingerprint != held.fingerprint)
+    if ((production.alone, installedProduction(production, installed)?.package) case (final pin?, final held?) when pin.fingerprint != held.fingerprint)
       production,
 ];
 

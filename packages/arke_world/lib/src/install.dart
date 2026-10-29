@@ -163,9 +163,9 @@ class WorldInstaller {
       if (installed.id == world.id) return installed;
     }
     final control = cancel ?? InstallCancel();
-    // The edition, every part since it and every production published on its own: the world is
-    // installed when all of them are (R-50, R-72).
-    final alone = [for (final production in world.productions) ?production.package];
+    // The edition, every part since it and every production published on its own, a story this Player
+    // plays among them: the world is installed when all of them are (R-50, R-72, R-83).
+    final alone = [for (final production in world.productions) ?production.alone];
     final needed = await _checkSpace(
       package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength) + alone.fold<int>(0, (sum, pin) => sum + pin.byteLength),
     );
@@ -232,12 +232,13 @@ class WorldInstaller {
     }
   }
 
-  /// Adds a production published on its own to an installed world (SPEC-058 R-72), or brings it to
-  /// the package its list entry now pins (its Update): the pin's length and SHA-256, every file
+  /// Adds a production published on its own to an installed world (SPEC-058 R-72, R-83), or brings it
+  /// to the package its list entry now pins (its Update): the pin's length and SHA-256, every file
   /// checked, then the production beside the edition in one write. A production already installed
   /// from the same package changes nothing. [beforeSwap] is awaited before an earlier package gives
   /// way, so a caller can wait for it to stop playing. [from] is the package already on the phone,
-  /// checked against the pin as a part fetched ahead is, so nothing is downloaded again.
+  /// checked against the pin as a part fetched ahead is, so nothing is downloaded again. A story is
+  /// installed so only when this Player plays its version (R-82).
   Future<LibraryWorld> installProduction(
     CatalogueWorld world,
     CatalogueProduction listed, {
@@ -246,7 +247,7 @@ class WorldInstaller {
     Future<void> Function()? beforeSwap,
     File? from,
   }) async {
-    final pin = listed.package;
+    final pin = listed.alone;
     final installed = store.worlds.where((existing) => world.covers(existing.id)).firstOrNull;
     if (pin == null || installed == null) throw const NotAPackage();
     if (installedProduction(listed, installed)?.package?.fingerprint case final held? when held == pin.fingerprint) return installed;
@@ -292,7 +293,7 @@ class WorldInstaller {
   ) async {
     final alone = [
       for (final production in listed)
-        if (production.package != null && installedProduction(production, prepared.world) == null) production,
+        if (production.alone != null && installedProduction(production, prepared.world) == null) production,
     ];
     if (alone.isEmpty) return prepared;
     var world = prepared.world;
@@ -300,13 +301,13 @@ class WorldInstaller {
     final separator = Platform.pathSeparator;
     for (final production in alone) {
       final zip = '${prepared.staging.path}${separator}production.zip';
-      await _download(production.package!, zip, onStep, control);
+      await _download(production.alone!, zip, onStep, control);
       control._check();
       // Checked aside, then moved to the folder its own production id names, which its files' paths
       // are under.
       final checked = Directory('${prepared.staging.path}${separator}production');
       final (added, addedItems) = await _describeProduction(zip, checked, world.id, production, onStep, control);
-      if (added.package!.fingerprint != production.package!.fingerprint) throw const FilesDoNotMatch(1);
+      if (added.package!.fingerprint != production.alone!.fingerprint) throw const FilesDoNotMatch(1);
       final to = Directory('${prepared.content.path}${separator}_productions$separator${added.id}');
       await to.parent.create(recursive: true);
       await checked.rename(to.path);
@@ -365,6 +366,12 @@ class WorldInstaller {
     final manifest = await _check(zip, content, onStep, control);
     final production = manifest.productions.single;
     if (!manifest.alone || manifest.id != worldId || (listed.id != null && production.id != listed.id)) throw const NotAPackage();
+    // A story is never listed as a production's `package` (SPEC-058 R-82), so one there is a mistake in
+    // the list: it is refused, as it was before schema 6, rather than installed under the wrong key.
+    // Nor is what its `story` pins anything but a story.
+    if ((production.story != null) != (listed.package == null && listed.story != null)) throw const NotAPackage();
+    // And a comic only ever under its own `comic` (SPEC-064 R-51; P20 call 28).
+    if ((production.comic != null) != (listed.package == null && listed.comic != null)) throw const NotAPackage();
     final folder = 'worlds/$worldId/_productions/${production.id}';
     final (described, items) = await _describe(manifest, content, under: folder);
     final bytes = manifest.assets.values.fold(0, (sum, asset) => sum + asset.byteLength);
@@ -377,6 +384,7 @@ class WorldInstaller {
         book: described.productions.single.book,
         narration: described.productions.single.narration,
         music: described.productions.single.music,
+        story: described.productions.single.story,
         package: LibraryProductionPackage(
           edition: manifest.edition,
           fingerprint: editionFingerprint(manifest),
@@ -911,6 +919,10 @@ class WorldInstaller {
         }
       }
       final music = manifest.music[production.id];
+      // A story becomes no item either: it keeps its place by route, apart from the items' (R-88).
+      final story = manifest.stories[production.id];
+      // Nor does a graphic novel: it keeps its place by page (P20 rule 8).
+      final comic = manifest.comics[production.id];
       productions.add(
         LibraryProduction(
           id: production.id,
@@ -927,6 +939,25 @@ class WorldInstaller {
                   forProduction: music.forProduction,
                   tracks: music.tracks.length,
                   duration: music.duration,
+                ),
+          story: story == null
+              ? null
+              : LibraryStory(
+                  document: stored(manifest.assets[production.story]!),
+                  kind: story.kind.name,
+                  shape: story.shape.label,
+                  scenes: story.scenes.length,
+                  fingerprint: story.fingerprint,
+                  tall: production.tall == null ? null : stored(manifest.assets[production.tall]!),
+                ),
+          comic: comic == null
+              ? null
+              : LibraryComic(
+                  document: stored(manifest.assets[production.comic]!),
+                  reading: comic.reading.name,
+                  aspect: comic.aspect,
+                  chapters: comic.chapters.length,
+                  pages: comic.pages.length,
                 ),
         ),
       );
