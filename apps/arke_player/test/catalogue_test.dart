@@ -87,7 +87,13 @@ void main() {
     final undersong = catalogue.singleWhere((world) => world.id == 'the-undersong');
     expect(undersong.package!.sha256, '6a5ccfb24e844867358254ac2385adf1484448deec57bae1e0c83888b3cb5a0f');
     expect(undersong.package!.edition, '2026-10-29-2');
-    expect(undersong.package!.parts, isEmpty);
+    final slackWater = undersong.package!.parts.single;
+    expect(slackWater.sha256, 'f98c11ecbafcb65537bc9b095c7081c7d64c26410ffa2a94c366606091f21db3');
+    expect(slackWater.byteLength, 38246282);
+    expect(slackWater.production, 'the-ledger-of-nights');
+    expect(slackWater.chapters.single.id, 'slack-water');
+    expect(slackWater.chapters.single.number, 2);
+    expect(slackWater.url.pathSegments.last, 'the-undersong-part-2026-10-29.zip');
     expect(undersong.guide!.url.scheme, 'https');
     expect(undersong.guide!.sha256, 'ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123');
     // The hand-packed editions were published as `undersong`: a phone holding one is offered Update.
