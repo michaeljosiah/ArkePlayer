@@ -122,13 +122,14 @@ void main() {
   });
 
   test('The Red Quiet’s First Contact is listed as its story, never as a package (SPEC-058 R-82)', () {
-    // The visual novel's second edition, exported 2026-10-29 after the story editor's minimum set
-    // (its first real choice now in scene 2, the officer's report) with every route walked in preview:
-    // 15 scenes, 208 routes, one ending of 104 variants, which a Player from before PR #25 refuses. A
-    // `package` here would be installed by every Player of rev 11, which cannot play it.
+    // The visual novel's third edition, exported 2026-10-29: the second's story, now part-narrated —
+    // scenes 1 to 8 in Ines Marr's voice and the six miners' own, 71 lines; 9 to 15 still read by
+    // their reading time until their narration is made. 15 scenes, 208 routes, one ending of 104
+    // variants, which a Player from before PR #25 refuses. A `package` here would be installed by
+    // every Player of rev 11, which cannot play it.
     final story = catalogue.singleWhere((world) => world.id == 'the-red-quiet').productions.singleWhere((production) => production.id == 'first-contact');
     expect(story.package, isNull);
-    expect(story.story!.sha256, 'e115aaab3638ce6ccf372a59e495c1d4ddd946f50b350f76247eca2747f1e448');
+    expect(story.story!.sha256, '3d9bf6a53fafff6ba47a1bb306a4b80c9a3db260449503d36aff9288ca2e4d61');
     expect(story.story!.playable, isTrue);
     expect(story.picturePin, isNotNull);
     expect(story.tallPin, isNotNull);
