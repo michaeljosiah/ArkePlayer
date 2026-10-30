@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 37,
+  "serial": 39,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -12,7 +12,7 @@
       "keyArt": "assets/worlds/undersong/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-keyArt-20261024.jpg", "byteLength": 183862, "sha256": "e3b91a196743ac9e9363a74b0655448c3d692438710dd3839c13ccfb31b558e9" } },
       "productions": [
-        { "id": "the-ledger-of-nights", "title": "The Ledger of Nights", "kind": "Audiobook · Chapters 1–5 · 1 h 25 m", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
+        { "id": "the-ledger-of-nights", "title": "The Ledger of Nights", "kind": "Audiobook · Revised Chapters 1–2 · 34 m 55 s", "picture": "assets/worlds/undersong/ledger-of-nights.jpg", "tall": "assets/worlds/undersong/cover-tall.jpg",
           "pins": {
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261024.jpg", "byteLength": 576958, "sha256": "198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776" }
@@ -28,41 +28,25 @@
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-undersong-player-2026-10-26.zip",
-        "byteLength": 82669497,
-        "sha256": "5cd345dce0f497883c36c6509faf595c178d68c0a613dee7298f885f51117cdb",
-        "edition": "2026-10-26",
-        "fingerprint": "62c188259dee0508619428cee249b2c52fea54fcdabd6ad931eccce689ffbf8f",
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-29-revised-chapter-1-portraits/the-undersong-player-2026-10-29-2.zip",
+        "byteLength": 26508341,
+        "sha256": "6a5ccfb24e844867358254ac2385adf1484448deec57bae1e0c83888b3cb5a0f",
+        "edition": "2026-10-29-2",
+        "fingerprint": "938868d9ee5a7bfe22422f1ddd2042126357a6d260810e4912f035bcbe872615",
         "parts": [
           {
-            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-4/the-undersong-part-2026-10-26.zip",
-            "byteLength": 26808132,
-            "sha256": "56b408526a384ce34435ca45a52a31f07020314fd7c5df436571fd11d5393f42",
-            "edition": "2026-10-26",
-            "fingerprint": "a8850c25a1779bd3a946c9c2378ec729181441f2c315fb79841de9a15a15db5b",
-            "released": "2026-10-26",
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-29-revised-chapter-2/the-undersong-part-2026-10-29.zip",
+            "byteLength": 38246282,
+            "sha256": "f98c11ecbafcb65537bc9b095c7081c7d64c26410ffa2a94c366606091f21db3",
+            "edition": "2026-10-29",
+            "fingerprint": "d92e9c17e4b5dc5df5ebb162b8830467582ef430442a604b7b82e5c98557e539",
+            "released": "2026-10-29",
             "production": "the-ledger-of-nights",
             "chapters": [
               {
-                "id": "the-same-ink",
-                "number": 4,
-                "title": "The blue door"
-              }
-            ]
-          },
-          {
-            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-27-chapter-5/the-undersong-part-2026-10-27.zip",
-            "byteLength": 41776288,
-            "sha256": "daf83567861183d9e43aad8fe19f93ff4c369f7df614c6f5be99619336dde99c",
-            "edition": "2026-10-27",
-            "fingerprint": "634802824b02d5d54f5d12b826237b2bfdb964af3f353e506609fee59e9f12d6",
-            "released": "2026-10-27",
-            "production": "the-ledger-of-nights",
-            "chapters": [
-              {
-                "id": "independent-record",
-                "number": 5,
-                "title": "Independent record"
+                "id": "slack-water",
+                "number": 2,
+                "title": "Slack water"
               }
             ]
           }
