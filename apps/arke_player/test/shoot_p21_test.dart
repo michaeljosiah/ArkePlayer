@@ -89,11 +89,16 @@ void main() {
 
   Future<void> preload(WidgetTester tester) => tester.runAsync(() async {
     for (final page in document.pages) {
-      for (final provider in <ImageProvider>[FileImage(File(pathOf(page.picture))), for (final width in [168, 312, 400]) ResizeImage(FileImage(File(pathOf(page.picture))), width: width)]) {
+      for (final provider in <ImageProvider>[
+        FileImage(File(pathOf(page.picture))),
+        for (final width in [168, 312, 400]) ResizeImage(FileImage(File(pathOf(page.picture))), width: width),
+      ]) {
         final loaded = Completer<void>();
-        provider.resolve(ImageConfiguration.empty).addListener(
-          ImageStreamListener((_, _) => loaded.isCompleted ? null : loaded.complete(), onError: (_, _) => loaded.isCompleted ? null : loaded.complete()),
-        );
+        provider
+            .resolve(ImageConfiguration.empty)
+            .addListener(
+              ImageStreamListener((_, _) => loaded.isCompleted ? null : loaded.complete(), onError: (_, _) => loaded.isCompleted ? null : loaded.complete()),
+            );
         await loaded.future;
       }
     }
@@ -128,9 +133,6 @@ void main() {
       'P21f the reader at rest$where',
       (t) => shoot(t, 'P21f-rest$where', size, reader, act: (tester) async => tester.pump(const Duration(seconds: 3))),
     );
-    testWidgets(
-      'P21g Pages$where',
-      (t) => shoot(t, 'P21g-pages$where', size, reader, act: (tester) async => tester.tap(find.byTooltip('Pages'))),
-    );
+    testWidgets('P21g Pages$where', (t) => shoot(t, 'P21g-pages$where', size, reader, act: (tester) async => tester.tap(find.byTooltip('Pages'))));
   }
 }
