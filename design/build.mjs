@@ -319,7 +319,7 @@ const TURNS = [
     next: `Try next: “two pages side by side on a Fold” · “a comic file added from the phone” · “the next chapter, released”`,
   },
   {
-    id: 'p21', date: '30 October 2026', status: 'For approval', name: 'A graphic novel, read with its own controls — a cover, Get, and a way to turn',
+    id: 'p21', date: '30 October 2026', status: 'Approved', name: 'A graphic novel, read with its own controls — a cover, Get, and a way to turn',
     lead: `The owner, on 30 October 2026, reading the published Ledger of Nights, drawn on a Fold7: “Graphic novel UI is broken. We need to revisit the UX thoroughly”, “We need a designed cover for this story”, and the reader “only shows the top half with no way to control the navigation of the story.” The blank book was a fault, mended in ArkePlayer PR 39; this turn is the rest. A graphic novel had no cover, so Discover showed the world’s key art and its page cropped page 1 to a strip. Before it was on the phone a tap did nothing. The reader opened on a page with nothing to say a tap brings the controls, the tap waited for a double-tap, a swipe was the only way on, and a Fold open showed one page between two black bands. Calls 32 – 36. The pages are that package’s own; the cover stands for the one to be made in the Studio.`,
     rules: [
       ['A cover', `A graphic novel has a cover: its production’s Tall picture, 2:3, made in the Studio with its title lettered and pinned with Arke’s list as any production’s cover is (${F('P16')}, call 14). Discover, Read and the book’s page show it whole (${F('P21a')}). A book with no cover shows its first page whole in its place, never a crop of it and never the world’s key art (call 32).`],

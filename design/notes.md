@@ -370,14 +370,14 @@ stand-in, page 8's harbour with the title set over it, for the one to be made in
    silent, against rule 5.
 27. **An interactive movie's controls are a film's** (P19f, approved), P3a's back 10 and forward 10
    included. Rule 2's list is the visual novel's: a movie has no beats, Log or Narration.
-32. **A graphic novel's cover is its Tall cover** (P21a, asked 30 October 2026): 2:3, made in the
+32. **A graphic novel's cover is its Tall cover** (P21a, approved 30 October 2026): 2:3, made in the
    Studio with its title lettered, pinned with the list. Until it has one, its first page whole.
-33. **A tap at an edge turns** (P21f). The outer 30 % each side turns, the middle shows the controls,
+33. **A tap at an edge turns** (P21f, approved). The outer 30 % each side turns, the middle shows the controls,
    and double-tap zoom goes so a tap answers at once; pinch zooms. This revises P20 rule 4.
-34. **A Fold open shows two facing pages** (P21h), 1 and 2 first. The alternative is page 1 alone,
+34. **A Fold open shows two facing pages** (P21h, approved), 1 and 2 first. The alternative is page 1 alone,
    as a printed book's first right-hand page.
-35. **Discover opens the book's own page** (P21b), with Get, before it is on the phone.
-36. **The reader opens with its controls showing** (P21e), rather than a one-time hint.
+35. **Discover opens the book's own page** (P21b, approved), with Get, before it is on the phone.
+36. **The reader opens with its controls showing** (P21e, approved), rather than a one-time hint.
 
 ## What this rests on
 
