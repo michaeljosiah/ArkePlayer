@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 36,
+  "serial": 37,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -16,6 +16,15 @@
           "pins": {
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261024.jpg", "byteLength": 576958, "sha256": "198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776" }
+          } },
+        { "id": "the-ledger-of-nights-drawn", "title": "The Ledger of Nights, drawn", "kind": "Graphic novel · 11 pages",
+          "comic": {
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-ledger-of-nights-drawn-comic-2026-10-30.zip",
+            "byteLength": 4348498,
+            "sha256": "99a2eaea800a4dcf56772eefd4e6303387ffe8e6a9e0f469b3242f78755f024f",
+            "edition": "2026-10-30",
+            "fingerprint": "f3ca9d2045391f6328bf2f78da09475b374b17a5b14449912476e5fe283cfe42",
+            "version": 1
           } }
       ],
       "package": {

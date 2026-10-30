@@ -75,7 +75,7 @@ void main() {
   test('The Undersong’s Tall cover is its own poster, title at the foot (P16 call 14)', () {
     // Made upright with Codex Image from Maren's, Bray's, Perrin's and the Chorister's main photos,
     // the drowned god's face under the title. Pinned as well as bundled, like Dumah's.
-    final ledger = catalogue.singleWhere((world) => world.id == 'the-undersong').productions.single;
+    final ledger = catalogue.singleWhere((world) => world.id == 'the-undersong').productions.first;
     expect(ledger.tall, 'assets/worlds/undersong/cover-tall.jpg');
     expect(ledger.tallPin!.sha256, '198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776');
   });
@@ -97,7 +97,20 @@ void main() {
     expect(undersong.guide!.sha256, 'ff02694633fa49e2a742e69a42dc5f87ae5f66dddd41e18c64f1b4e6a0115123');
     // The hand-packed editions were published as `undersong`: a phone holding one is offered Update.
     expect(undersong.replaces, ['undersong']);
-    expect(undersong.productions.single.title, 'The Ledger of Nights');
+    expect([for (final production in undersong.productions) production.title], ['The Ledger of Nights', 'The Ledger of Nights, drawn']);
+  });
+
+  test('The Undersong’s graphic novel is listed as its comic, never as a package (SPEC-064 R-50, P20)', () {
+    // The Ledger of Nights, drawn: chapters 1 and 2 (Neap, Slack water), 11 pages in ink and grey
+    // wash, made in the Studio on 2026-10-30 and exported from its Pages. Schema 7, alone; a
+    // `package` here would be installed by every Player before schema 7, which cannot read it.
+    final drawn = catalogue.singleWhere((world) => world.id == 'the-undersong').productions.last;
+    expect(drawn.id, 'the-ledger-of-nights-drawn');
+    expect(drawn.kind, 'Graphic novel · 11 pages');
+    expect(drawn.package, isNull);
+    expect(drawn.comic!.sha256, '99a2eaea800a4dcf56772eefd4e6303387ffe8e6a9e0f469b3242f78755f024f');
+    expect(drawn.comic!.version, 1);
+    expect(drawn.comic!.edition, '2026-10-30');
   });
 
   test('Legend of Dumah is pinned to its published package and its guide alone', () {
