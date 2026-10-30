@@ -167,7 +167,7 @@ class _Installed extends ConsumerWidget {
     // it arrives (SPEC-058 R-72, R-73, R-83); so does a story this Player cannot play, with `Update
     // app`, never fetched (R-82).
     final coming = [
-      if (listed != null) ...missingProductions(listed, world),
+      if (listed != null) ...missingProductions(listed, world).where((production) => installedProduction(production, world) == null),
       for (final production in listed?.productions ?? const <CatalogueProduction>[])
         if (production.needsNewerApp && installedProduction(production, world) == null) production,
     ];

@@ -250,7 +250,8 @@ class WorldInstaller {
     final pin = listed.alone;
     final installed = store.worlds.where((existing) => world.covers(existing.id)).firstOrNull;
     if (pin == null || installed == null) throw const NotAPackage();
-    if (installedProduction(listed, installed)?.package?.fingerprint case final held? when held == pin.fingerprint) return installed;
+    final present = installedProduction(listed, installed);
+    if (present?.package?.fingerprint case final held? when held == pin.fingerprint && !incomplete(listed, present!)) return installed;
     final control = cancel ?? InstallCancel();
     final needed = await _checkSpace(pin.byteLength);
     final staging = await store.stageWorld();
@@ -385,6 +386,10 @@ class WorldInstaller {
         narration: described.productions.single.narration,
         music: described.productions.single.music,
         story: described.productions.single.story,
+        // Without it a graphic novel published alone arrived as a production with nothing to open: its
+        // page showed the title over its first page and nothing else (2026-10-30, The Ledger of Nights,
+        // drawn, on the owner's Fold).
+        comic: described.productions.single.comic,
         package: LibraryProductionPackage(
           edition: manifest.edition,
           fingerprint: editionFingerprint(manifest),

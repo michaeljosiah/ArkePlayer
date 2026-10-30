@@ -146,6 +146,87 @@ void main() {
 
   LibraryProduction? ringOf(LibraryWorld world) => world.productions.where((production) => production.id == 'ring-once').firstOrNull;
 
+  /// Low Water, drawn, published alone as the Studio writes it: the shared comic fixtures, every
+  /// file they name given bytes of its own.
+  Future<CatalogueStory> comic(String label) async {
+    final comics = '${Directory.current.path}/test/fixtures/comic';
+    final manifest = jsonDecode(File('$comics/world-comic.json').readAsStringSync()) as Map<String, Object?>;
+    final document = File('$comics/low-water-drawn.json').readAsStringSync();
+    // Only what the package names: its comic, its cover and each page's picture.
+    final pictures = {for (final match in RegExp(r'"picture":\s*"([^"]+)"').allMatches(document)) match.group(1)!};
+    final named = <String, Object?>{
+      ...(manifest['assets']! as Map<String, Object?>),
+      for (final MapEntry(:key, :value) in (jsonDecode(File('$comics/assets.json').readAsStringSync()) as Map<String, Object?>).entries)
+        if (pictures.contains(key)) key: value,
+    };
+    final files = <String, List<int>>{
+      for (final MapEntry(:key, :value) in named.entries)
+        (value! as Map<String, Object?>)['path']! as String: key == 'comic' ? utf8.encode(document) : [key.length, 7, 2],
+    };
+    final assets = <String, Object?>{
+      for (final MapEntry(:key, :value) in named.entries)
+        key: {
+          ...value! as Map<String, Object?>,
+          'byteLength': files[(value as Map<String, Object?>)['path']]!.length,
+          'sha256': sha256.convert(files[value['path']]!).toString(),
+        },
+    };
+    final archive = Archive()
+      ..add(ArchiveFile.bytes(worldManifestFile, utf8.encode(jsonEncode({...manifest, 'edition': label, 'assets': assets})))..compression = CompressionType.none);
+    for (final MapEntry(:key, :value) in files.entries) {
+      archive.add(ArchiveFile.bytes(key, value)..compression = CompressionType.none);
+    }
+    final zip = '${dir.path}/low-water-drawn-$label.zip';
+    File(zip).writeAsBytesSync(ZipEncoder().encode(archive));
+    final bytes = File(zip).readAsBytesSync();
+    server.files['low-water-drawn-$label.zip'] = bytes;
+    return CatalogueStory(url: server.url('low-water-drawn-$label.zip'), byteLength: bytes.length, sha256: sha256.convert(bytes).toString(),
+      edition: label, fingerprint: editionFingerprint(readWorldPackage(zip)), version: 1);
+  }
+
+  CatalogueWorld drawn(CataloguePackage edition, CatalogueStory pin) => CatalogueWorld(
+    id: 'the-undersong',
+    name: 'The Undersong',
+    productions: [
+      const CatalogueProduction(title: 'The Ledger of Nights', kind: 'Audiobook', id: 'the-ledger-of-nights'),
+      CatalogueProduction(title: 'Low Water, drawn', kind: 'Graphic novel · 4 pages', id: 'low-water-drawn', comic: pin),
+    ],
+    package: edition,
+  );
+
+  test('a graphic novel published alone installs as one, with its comic (SPEC-064 R-51)', () async {
+    final pin = await edition();
+    await installer.install(listed(pin));
+    final low = await comic('2026-10-30');
+    expect(missingProductions(drawn(pin, low), store.worlds.single).map((production) => production.id), ['low-water-drawn']);
+    await installer.installProduction(drawn(pin, low), drawn(pin, low).productions.last);
+    final held = store.worlds.single.productions.singleWhere((production) => production.id == 'low-water-drawn');
+    // Installed without it, a graphic novel had nothing to open: its page was its title alone.
+    expect(held.comic, isNotNull);
+    expect((held.comic!.pages, held.comic!.chapters), (4, 2));
+    expect(File(store.resolve(held.comic!.document)).existsSync(), isTrue);
+    expect(missingProductions(drawn(pin, low), store.worlds.single), isEmpty);
+  });
+
+  test('one installed without its comic, by a Player before the fix, is fetched again and mended', () async {
+    final pin = await edition();
+    await installer.install(listed(pin));
+    final low = await comic('2026-10-30');
+    await installer.installProduction(drawn(pin, low), drawn(pin, low).productions.last);
+    // As the owner's Fold held it: the same package, its comic missing from the record.
+    final world = store.worlds.single;
+    final broken = world.copyWith(productions: [
+      for (final production in world.productions)
+        if (production.id == 'low-water-drawn')
+          LibraryProduction(id: production.id, title: production.title, picture: production.picture, package: production.package)
+        else
+          production,
+    ]);
+    final mended = await installer.installProduction(drawn(pin, low), drawn(pin, low).productions.last, from: null);
+    expect(missingProductions(drawn(pin, low), broken).map((production) => production.id), ['low-water-drawn']);
+    expect(mended.productions.singleWhere((production) => production.id == 'low-water-drawn').comic, isNotNull);
+  });
+
   test('a world installed with its story has both, the story beside the edition (R-83)', () async {
     final pin = await edition();
     final ring = await story('2026-10-28');
