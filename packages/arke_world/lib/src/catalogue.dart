@@ -542,12 +542,18 @@ List<CataloguePart> missingParts(CatalogueWorld listed, LibraryWorld installed) 
 LibraryProduction? installedProduction(CatalogueProduction listed, LibraryWorld installed) =>
     installed.productions.where((production) => listed.id != null ? production.id == listed.id : production.title == listed.title).firstOrNull;
 
+/// Whether an installed production lacks what its list entry says it is: a graphic novel installed
+/// without its comic. Players before the fix to `installProduction` installed one that way, with
+/// nothing to open; it is fetched again as if missing, and replaces itself.
+bool incomplete(CatalogueProduction listed, LibraryProduction installed) => listed.comic != null && installed.comic == null;
+
 /// The productions published on their own that an installed world lacks (SPEC-058 R-72, R-83): each
 /// arrives as a part does, on its own — an album, or a story this Player plays. One the edition
-/// already holds is not missing.
+/// already holds is not missing, unless it came without what makes it what it is ([incomplete]).
 List<CatalogueProduction> missingProductions(CatalogueWorld listed, LibraryWorld installed) => [
   for (final production in listed.productions)
-    if (production.alone != null && installedProduction(production, installed) == null) production,
+    if (production.alone != null && (installedProduction(production, installed) == null || incomplete(production, installedProduction(production, installed)!)))
+      production,
 ];
 
 /// The productions whose own package in the list is not the one installed (R-72, R-83): each is that
