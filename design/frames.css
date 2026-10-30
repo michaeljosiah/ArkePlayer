@@ -479,3 +479,43 @@
 .ap .cm-ch img{width:40px;height:60px;object-fit:cover;border-radius:4px;flex:none}
 .ap .cm-ch b{display:block;font-weight:600}
 .ap .cm-ch span{font:var(--type-meta);color:var(--muted-foreground)}
+
+/* P21 · A graphic novel, read with its own controls: the book's head, the foot that turns, Pages, a spread. */
+.ap .gn-hd{position:relative;overflow:hidden;background:var(--media-overlay-bg);color:var(--media-overlay-fg);padding:104px 16px 20px;text-align:center}
+.ap .gn-hd>img.bg{position:absolute;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);object-fit:cover;filter:blur(28px) brightness(.5) saturate(120%)}
+.ap .gn-hd .dk{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,var(--media-overlay-bg))}
+.ap .gn-hd .top{position:absolute;z-index:3;left:12px;right:12px;top:52px;display:flex;justify-content:space-between}
+.ap .gn-hd>*:not(.bg):not(.dk):not(.top){position:relative;z-index:2}
+.ap .gn-hd .cv{display:block;width:168px;height:252px;margin:0 auto;object-fit:cover;border-radius:6px;box-shadow:var(--shadow-xl)}
+.ap .gn-hd h1{margin-top:18px;font:var(--weight-bold) var(--text-2xl)/1.15 var(--font-sans);letter-spacing:var(--tracking-tighter)}
+.ap .gn-hd .meta{margin:6px 0 16px;font:var(--type-ui);color:color-mix(in srgb,var(--media-overlay-fg) 74%,transparent)}
+.ap .gn-hd .btn{background:color-mix(in srgb,var(--media-overlay-fg) 16%,transparent);color:var(--media-overlay-fg)}
+.ap .gn-hd .btn.pri{background:var(--media-overlay-fg);color:var(--media-overlay-bg)}
+.ap .gn-hd .acts{display:flex;gap:8px;margin-top:10px}
+.ap .gn-hd .mute{color:color-mix(in srgb,var(--media-overlay-fg) 72%,transparent)}
+.ap .gn-hd .bar{background:color-mix(in srgb,var(--media-overlay-fg) 22%,transparent)}
+.ap .gn-hd .bar>i{background:var(--media-overlay-fg)}
+.ap .gn-prog{text-align:left;padding-top:4px}
+.ap .gn-ch{display:flex;align-items:center;gap:14px;padding:8px 16px;font:var(--type-ui)}
+.ap .gn-ch img{width:56px;height:84px;object-fit:cover;border-radius:5px;flex:none}
+.ap .gn-ch b{display:block;font:var(--weight-semibold) var(--text-lg)/1.25 var(--font-sans);letter-spacing:var(--tracking-tight)}
+.ap .gn-ch span{display:block;margin-top:3px;font:var(--type-meta);color:var(--muted-foreground)}
+.ap .gn-ch .gn-at{margin:0;font:var(--type-ui);color:var(--foreground)}
+.ap .gn-ch.on img{outline:2px solid var(--foreground);outline-offset:2px}
+.ap .gn-foot{position:absolute;z-index:6;left:12px;right:12px;bottom:40px;display:flex;align-items:center;gap:10px;color:var(--media-overlay-fg)}
+.ap .gn-b{width:48px;height:48px;flex:none;border-radius:999px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--media-overlay-fg) 16%,transparent)}
+.ap .gn-n{text-align:center;font:var(--type-ui);margin-bottom:10px}
+.ap .gn-bar{position:relative;height:4px;border-radius:2px;background:color-mix(in srgb,var(--media-overlay-fg) 24%,transparent)}
+.ap .gn-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--media-overlay-fg)}
+.ap .gn-bar b{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--media-overlay-fg)}
+.ap .gn-zones{position:absolute;z-index:6;inset:0;display:grid;grid-template-columns:30% 40% 30%}
+.ap .gn-zones span{display:flex;align-items:center;justify-content:center;gap:4px;font:var(--type-ui);color:var(--media-overlay-fg);background:color-mix(in srgb,var(--media-overlay-bg) 34%,transparent);border:1.5px dashed color-mix(in srgb,var(--media-overlay-fg) 60%,transparent)}
+.ap .gn-zones span:nth-child(2){background:transparent}
+.ap .gn-pgh{padding:10px 16px 8px;font:var(--type-label);letter-spacing:var(--tracking-label);color:var(--muted-foreground)}
+.ap .gn-grid{display:grid;gap:12px;padding:0 16px 8px;justify-content:center}
+.ap .gn-pg{position:relative}
+.ap .gn-pg img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:5px}
+.ap .gn-pg span{position:absolute;left:6px;bottom:6px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;display:flex;align-items:center;justify-content:center;font:var(--type-meta);background:color-mix(in srgb,var(--media-overlay-bg) 72%,transparent);color:var(--media-overlay-fg)}
+.ap .gn-pg.on img{outline:2.5px solid var(--foreground);outline-offset:2px}
+.ap .gn-spread{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.ap .gn-spread img{height:738px;width:492px;display:block}

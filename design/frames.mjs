@@ -855,4 +855,53 @@ ${sh('Chapters')}<div class="cm-rowp"><div class="cm-pg"><img src="${PAGE}" alt=
 </div><div class="ffoot"></div>${pill('Discover')}${hi()}`),
 ];
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20) };
+// ---- P21 · A graphic novel, read with its own controls -------------------------------------------
+// The owner, 30 October 2026, with the Fold7's screenshots of the published Ledger of Nights, drawn:
+// "Graphic novel UI is broken", "We need a designed cover", and the reader "only shows the top half
+// with no way to control the navigation". The pages are that package's own, eleven in two chapters.
+// The cover stands for the one to be made in the Studio: page 8's harbour with the title set over it.
+const GN = { title: 'The Ledger of Nights, drawn', cover: `${A}ledger-drawn-cover.jpg`, size: '4.3 MB', pages: 11 };
+const gp = (n) => `${A}ledger-drawn-p${String(n).padStart(4, '0')}.jpg`;
+const GN_CH = [['Neap', 1, 4], ['Slack water', 5, 11]];
+/** The book's head: its cover whole, 2:3, over its own blur, the press under it. */
+const gnHead = (press, meta = `Graphic novel · The Undersong · ${GN.pages} pages`) => `<div class="gn-hd on-media"><img class="bg" src="${GN.cover}" alt=""><div class="dk"></div><div class="top">${back}${more}</div><img class="cv" src="${GN.cover}" alt=""><h1>${GN.title}</h1><div class="meta">${meta}</div>${press}</div>`;
+const gnGet = `<span class="btn pri wide">${ic('download', 18)}Get <em>· ${GN.size}</em></span>`;
+const gnGetting = `<div class="gn-prog"><div class="bar"><i style="width:37%"></i></div><div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span class="grow mute num" style="font:var(--type-ui)">Downloading · 1.6 of ${GN.size}</span><span class="btn" style="height:40px">Cancel</span></div></div>`;
+const gnRead = (page) => `<span class="btn pri wide">${ic('book', 18)}${page ? `Continue <em>· Page ${page}</em>` : 'Read'}</span><div class="acts"><span class="btn" style="flex:1">${ic('downloaded', 18)}${GN.size}</span><span class="btn" style="width:44px;padding:0">${ic('more')}</span></div>`;
+/** A chapter as a row: its first page, its title and pages, and where you are. */
+const gnChapter = ([title, from, to], i, at) => `<div class="gn-ch${at >= from && at <= to ? ' on' : ''}"><img src="${gp(from)}" alt=""><div class="grow"><b>${i + 1} · ${title}</b><span class="num">Pages ${from} – ${to}</span></div>${at >= from && at <= to ? `<span class="num gn-at">Page ${at}</span>` : at > to ? ic('downloaded', 20, 1.7) : ''}</div>`;
+const gnChapters = (at = 0) => `${sh('Chapters', `<span class="ct num">${GN_CH.length}</span>`)}${GN_CH.map((c, i) => gnChapter(c, i, at)).join('')}`;
+/** The reader's top and foot. The foot turns: back, the page you are on over a bar you can drag, next. */
+const gnTop = (sub = 'Chapter 1 · Neap') => `<div class="ptop cm-top">${close}<div class="ttl"><div class="eb">${GN.title}</div><div class="sc">${sub}</div></div><span class="ib">${ic('grid', 20)}</span><span class="ib">${ic('more', 20)}</span></div>`;
+const gnFoot = (at, label = `${at} of ${GN.pages}`, style = '') => `<div class="gn-foot"${style ? ` style="${style}"` : ''}><span class="gn-b">${ic('left', 22, 2)}</span><div class="grow"><div class="gn-n num">${label}</div><div class="gn-bar"><i style="width:${Math.round((at / GN.pages) * 100)}%"></i><b style="left:${Math.round((at / GN.pages) * 100)}%"></b></div></div><span class="gn-b">${ic('right', 22, 2)}</span></div>`;
+const gnPage = (n) => `<div class="cm-stage"><img src="${gp(n)}" alt=""></div>`;
+/** Where a tap lands, drawn over the page for the turn only: back, the controls, next. */
+const gnZones = (rtl = false) => `<div class="gn-zones"><span>${ic('left', 22, 2)}${rtl ? 'Next' : 'Back'}</span><span>${ic('grid', 20)}Controls</span><span>${rtl ? 'Back' : 'Next'}${ic('right', 22, 2)}</span></div>`;
+const gnSpread = (a, b) => `<div class="gn-spread"><img src="${gp(a)}" alt=""><img src="${gp(b)}" alt=""></div>`;
+/** Pages: every page of the book by chapter, the one you are on ringed. */
+const gnPages = (at, cols = 3, w = 104) => GN_CH.map(([title, from, to], i) => `<div class="gn-pgh">${i + 1} · ${title}</div><div class="gn-grid" style="grid-template-columns:repeat(${cols},${w}px)">${Array.from({ length: to - from + 1 }, (_, k) => from + k).map((n) => `<div class="gn-pg${n === at ? ' on' : ''}"><img src="${gp(n)}" alt=""><span class="num">${n}</span></div>`).join('')}</div>`).join('');
+
+const P21 = [
+  frame('P21a', 'Discover: the book on its cover', 'phone', `${sb()}${discoverHead()}${discoverChips().replace('<span class="chip on">All</span>', '<span class="chip">All</span>').replace('<span class="chip">Read</span>', '<span class="chip on">Read</span>')}<div class="body">
+<div class="ft on-media"><img src="${GN.cover}" alt="" style="object-position:50% 30%"><div class="shade"></div><div class="in"><div class="fk">${NEWTAG}<span>Graphic novel</span></div><h1>${GN.title}</h1><div class="meta num">The Undersong · 2 chapters · ${GN.pages} pages</div>${gnGet.replace('<span class="btn pri wide">', '<span class="btn pri wide" style="margin-top:16px">')}</div></div>
+${sh('Read')}<div class="hrow">${poster({ tall: 'ledger-drawn-cover.jpg', pos: '50% 30%', title: GN.title, kind: 'Graphic novel · 11 pages', w: 132 })}${poster({ tall: TALL.ledger, pos: '50% 30%', title: STORY.ledger.title, kind: 'Book · 23 chapters', w: 132 })}${poster({ tall: TALL.juju, title: 'Na love or Juju', kind: 'Book · 24 chapters', w: 132 })}</div>
+</div>${pill('Discover')}${hi()}`),
+
+  frame('P21b', 'Its page, not on the phone yet', 'phone', `${sb(true)}<div class="body">${gnHead(gnGet)}${gnChapters()}</div>${pill('Discover')}${hi()}`),
+
+  frame('P21c', 'Getting it: progress in place of the press', 'phone', `${sb(true)}<div class="body">${gnHead(gnGetting)}${gnChapters()}</div>${pill('Discover')}${hi()}`),
+
+  frame('P21d', 'On the phone: Continue, and the chapters as rows', 'phone', `${sb(true)}<div class="body">${gnHead(gnRead(3))}${gnChapters(3)}</div>${pill('Library')}${hi()}`),
+
+  frame('P21e', 'Opening: the controls show, then rest', media('cm'), `${sb(true)}<div class="st"></div>${gnPage(3)}${gnTop()}<div class="sbot" style="height:200px"></div>${gnFoot(3)}${hi()}`),
+
+  frame('P21f', 'Resting: the page whole, a tap at an edge turns it', media('cm'), `${gnPage(3)}${gnZones()}${hi()}`),
+
+  frame('P21g', 'Pages: any page, by chapter', media('cm'), `${sb(true)}${gnPage(3)}<div class="veil"></div>${sheet('Pages', gnPages(3), { count: `${GN.pages} pages`, style: 'top:112px' })}${hi()}`),
+
+  frame('P21h', 'A Fold open: two pages, as a book opens', 'fold media cm', `${sb(true)}${gnSpread(2, 3)}${hi()}`),
+
+  frame('P21i', 'A Fold open, with its controls', 'fold media cm', `${sb(true)}<div class="st"></div>${gnSpread(2, 3)}${gnTop('Chapter 1 · Neap · Pages 2 – 3').replace('class="ptop cm-top"', 'class="ptop cm-top" style="left:24px;right:24px"')}<div class="sbot" style="height:200px"></div>${gnFoot(3, '2 – 3 of 11', 'left:160px;right:160px')}${hi()}`),
+];
+
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20), p21: withSize(P21) };
