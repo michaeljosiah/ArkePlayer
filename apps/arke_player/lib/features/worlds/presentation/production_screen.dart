@@ -73,6 +73,13 @@ class ProductionScreen extends ConsumerWidget {
     final production = world?.productions.where((production) => production.id == productionId).firstOrNull;
     final store = ref.watch(libraryStoreProvider).value;
     final items = {for (final item in ref.watch(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
+    // A graphic novel opens its own page before it is on the phone, with Get (P21 call 35); one an
+    // older Player installed without its comic is as good as not here.
+    if (production == null || (production.comic == null && production.music == null && production.story == null)) {
+      final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], world?.id ?? worldId);
+      final comic = listed?.productions.where((listed) => listed.id == productionId && listed.comic != null).firstOrNull;
+      if (listed != null && comic != null) return ComicProductionScreen(world: world, listed: listed, listedProduction: comic);
+    }
     if (world == null || production == null) {
       return Scaffold(
         appBar: AppBar(),
