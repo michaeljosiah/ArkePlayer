@@ -172,7 +172,9 @@ void main() {
         },
     };
     final archive = Archive()
-      ..add(ArchiveFile.bytes(worldManifestFile, utf8.encode(jsonEncode({...manifest, 'edition': label, 'assets': assets})))..compression = CompressionType.none);
+      ..add(
+        ArchiveFile.bytes(worldManifestFile, utf8.encode(jsonEncode({...manifest, 'edition': label, 'assets': assets})))..compression = CompressionType.none,
+      );
     for (final MapEntry(:key, :value) in files.entries) {
       archive.add(ArchiveFile.bytes(key, value)..compression = CompressionType.none);
     }
@@ -180,8 +182,14 @@ void main() {
     File(zip).writeAsBytesSync(ZipEncoder().encode(archive));
     final bytes = File(zip).readAsBytesSync();
     server.files['low-water-drawn-$label.zip'] = bytes;
-    return CatalogueStory(url: server.url('low-water-drawn-$label.zip'), byteLength: bytes.length, sha256: sha256.convert(bytes).toString(),
-      edition: label, fingerprint: editionFingerprint(readWorldPackage(zip)), version: 1);
+    return CatalogueStory(
+      url: server.url('low-water-drawn-$label.zip'),
+      byteLength: bytes.length,
+      sha256: sha256.convert(bytes).toString(),
+      edition: label,
+      fingerprint: editionFingerprint(readWorldPackage(zip)),
+      version: 1,
+    );
   }
 
   CatalogueWorld drawn(CataloguePackage edition, CatalogueStory pin) => CatalogueWorld(
@@ -215,13 +223,15 @@ void main() {
     await installer.installProduction(drawn(pin, low), drawn(pin, low).productions.last);
     // As the owner's Fold held it: the same package, its comic missing from the record.
     final world = store.worlds.single;
-    final broken = world.copyWith(productions: [
-      for (final production in world.productions)
-        if (production.id == 'low-water-drawn')
-          LibraryProduction(id: production.id, title: production.title, picture: production.picture, package: production.package)
-        else
-          production,
-    ]);
+    final broken = world.copyWith(
+      productions: [
+        for (final production in world.productions)
+          if (production.id == 'low-water-drawn')
+            LibraryProduction(id: production.id, title: production.title, picture: production.picture, package: production.package)
+          else
+            production,
+      ],
+    );
     final mended = await installer.installProduction(drawn(pin, low), drawn(pin, low).productions.last, from: null);
     expect(missingProductions(drawn(pin, low), broken).map((production) => production.id), ['low-water-drawn']);
     expect(mended.productions.singleWhere((production) => production.id == 'low-water-drawn').comic, isNotNull);
