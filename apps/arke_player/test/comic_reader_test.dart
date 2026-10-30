@@ -108,42 +108,118 @@ void main() {
     expect(find.bySemanticsLabel('The empty water. Hsssh.'), findsOneWidget);
   });
 
-  testWidgets('a tap shows the controls and never turns the page; a swipe turns it and keeps it', (tester) async {
+  double chrome(WidgetTester tester) => tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity;
+
+  testWidgets('it opens with its controls showing, and they rest (P21 rule 5)', (tester) async {
+    await pumpStories(tester, reader, stories: const [], comics: [ltr]);
+    // The page has the whole screen, not the controls' height.
+    expect(tester.getSize(find.byType(PageView)), const Size(390, 844));
+    // The top bar's buttons are at the top, not over the page.
+    expect(tester.getCenter(find.byTooltip('Close')).dy, lessThan(80));
+    expect(chrome(tester), 1);
+    expect(find.text('Chapter 1 · The tide'), findsOneWidget);
+    expect(find.text('1 of 4'), findsOneWidget);
+    expect(find.byTooltip('Next page'), findsOneWidget);
+    expect(find.byTooltip('Pages'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(chrome(tester), 0, reason: 'resting, nothing over the page');
+  });
+
+  testWidgets('a tap at an edge turns at once; the middle shows the controls; a swipe turns (rules 6, 7)', (tester) async {
     final saves = MemorySaves();
     await pumpStories(tester, reader, stories: const [], comics: [ltr], saves: saves);
-    expect(find.text('1 of 4'), findsOneWidget);
-    expect(tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity, 0, reason: 'nothing over the page');
-    await tester.tapAt(const Offset(195, 422));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity, 1);
-    expect(find.text('Chapter 1 · The tide'), findsOneWidget);
-    expect(find.text('1 of 4'), findsOneWidget, reason: 'a tap never turns');
-    // The controls rest on their own.
     await tester.pump(const Duration(seconds: 3));
-    expect(tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity, 0);
-
-    await tester.fling(find.byType(PageView), const Offset(-300, 0), 1000);
+    await tester.pumpAndSettle();
+    // The middle: the controls, and never a turn.
+    await tester.tapAt(const Offset(195, 422));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(chrome(tester), 1);
+    expect(find.text('1 of 4'), findsOneWidget, reason: 'the middle never turns');
+    // The right edge: the next page, with no wait for a second tap.
+    await tester.tapAt(const Offset(370, 422));
     await tester.pumpAndSettle();
     expect(find.text('2 of 4'), findsOneWidget);
     expect(saves.kept.last, {'comicPage': 1});
+    // The left edge: back.
+    await tester.tapAt(const Offset(20, 422));
+    await tester.pumpAndSettle();
+    expect(find.text('1 of 4'), findsOneWidget);
+    // A swipe still turns.
+    await tester.fling(find.byType(PageView), const Offset(-300, 0), 1000);
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 4'), findsOneWidget);
   });
 
-  testWidgets('right to left: the next page comes from the left', (tester) async {
+  testWidgets('back and next at the foot turn the page', (tester) async {
+    await pumpStories(tester, reader, stories: const [], comics: [ltr]);
+    await tester.tap(find.byTooltip('Next page'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 4'), findsOneWidget);
+    await tester.tap(find.byTooltip('Previous page'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 of 4'), findsOneWidget);
+  });
+
+  testWidgets('right to left: the next page comes from the left, and the left edge turns on', (tester) async {
     await pumpStories(tester, reader, stories: const [], comics: [rtl]);
     expect(tester.widget<PageView>(find.byType(PageView)).reverse, isTrue);
     await tester.fling(find.byType(PageView), const Offset(300, 0), 1000);
     await tester.pumpAndSettle();
     expect(find.text('2 of 4'), findsOneWidget);
+    await tester.tapAt(const Offset(20, 422));
+    await tester.pumpAndSettle();
+    expect(find.text('3 of 4'), findsOneWidget);
   });
 
-  testWidgets('Chapters goes to a chapter', (tester) async {
+  testWidgets('Pages opens a page; Chapters goes to a chapter (rule 8)', (tester) async {
     await pumpStories(tester, reader, stories: const [], comics: [ltr]);
-    await tester.tapAt(const Offset(195, 422));
-    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byTooltip('Pages'));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Page 4'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Page 4'));
+    await tester.pumpAndSettle();
+    expect(find.text('4 of 4'), findsOneWidget);
     await tester.tap(find.byTooltip('Chapters'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('2 · Salt'));
     await tester.pumpAndSettle();
     expect(find.text('3 of 4'), findsOneWidget);
+  });
+
+  testWidgets('a Fold open shows two facing pages, and a turn moves two (rule 9)', (tester) async {
+    final saves = MemorySaves();
+    await pumpStories(tester, reader, stories: const [], comics: [ltr], saves: saves, size: const Size(984, 1092));
+    expect(find.text('1 – 2 of 4'), findsOneWidget);
+    expect(find.byType(Image), findsNWidgets(2));
+    await tester.tap(find.byTooltip('Next page'));
+    await tester.pumpAndSettle();
+    expect(find.text('3 – 4 of 4'), findsOneWidget);
+    expect(saves.kept.last, {'comicPage': 2});
+  });
+
+  test('spreads pair pages as a book opens, an odd last page alone', () {
+    expect(comicSpreads(5), [(0, 1), (2, 3), (4, null)]);
+    expect(pageOf(1, 2, 11), '2 – 3 of 11');
+    expect(pageOf(2, null, 11), '3 of 11');
+    expect(listedPages('Graphic novel · 11 pages'), 11);
+  });
+
+  testWidgets('not on the phone, its page opens with Get and its size (rule 3, call 35)', (tester) async {
+    final listed = listedStoryWorld(const []);
+    final withComic = CatalogueWorld(
+      id: listed.id,
+      name: listed.name,
+      logline: listed.logline,
+      keyArt: listed.keyArt,
+      package: listed.package,
+      productions: [
+        ...listed.productions,
+        CatalogueProduction(id: id, title: 'Low Water', kind: 'Graphic novel · 4 pages', comic: storyPin(id)),
+      ],
+    );
+    await pumpStories(tester, page, stories: const [], listed: withComic);
+    expect(find.text('Graphic novel · The Undersong · 4 pages'), findsOneWidget);
+    expect(find.text('Get · 1.2 GB', findRichText: true), findsOneWidget, reason: 'a Get with its size, not a page that says Removed');
   });
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:arke_library/arke_library.dart';
 import 'package:arke_world/arke_world.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/services.dart';
@@ -10,6 +11,17 @@ import '../../worlds/application/worlds.dart';
 
 /// `24 pages`.
 String pageCount(int count) => count == 1 ? '1 page' : '$count pages';
+
+/// A Fold open's spreads (P21 rule 9), as book pages face: 1 and 2, then 3 and 4, an odd last page
+/// alone. Each is its first page's index and its second's.
+List<(int, int?)> comicSpreads(int count) => [for (var at = 0; at < count; at += 2) (at, at + 1 < count ? at + 1 : null)];
+
+/// The reader's count: `3 of 11`, or a spread's `2 – 3 of 11` (P21e, P21i).
+String pageOf(int first, int? second, int count) => second == null ? '${first + 1} of $count' : '${first + 1} – ${second + 1} of $count';
+
+/// The page count in a listed graphic novel's kind line, `Graphic novel · 11 pages`, before its
+/// document is on the phone.
+int? listedPages(String kind) => int.tryParse(RegExp(r'(\d+) pages?').firstMatch(kind)?.group(1) ?? '');
 
 /// A tile's kind line, `Graphic novel · 24 pages` (P20a).
 String comicTileKind(LibraryComic comic) => 'Graphic novel · ${pageCount(comic.pages)}';
@@ -78,6 +90,14 @@ final loadedComicProvider = FutureProvider.family<LoadedComic?, (String, String)
   } on FileSystemException {
     return null;
   }
+});
+
+/// A graphic novel's first page, shown whole in its cover's place until it has one (P21 rule 1):
+/// never a crop of it, and never the world's key art. Null until it is on the phone.
+final comicFirstPageProvider = Provider.family<ImageProvider?, (String, String)>((ref, key) {
+  final comic = ref.watch(loadedComicProvider(key)).value;
+  final first = comic?.pages.firstOrNull;
+  return comic == null || first == null ? null : FileImage(File(comic.pathOf(first.page.picture)));
 });
 
 /// The page a person is on in a graphic novel (P20 rule 8), kept with the stories' places in the

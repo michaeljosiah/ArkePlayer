@@ -10,6 +10,7 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../comics/application/comics.dart';
 import '../../parts/application/parts.dart';
 import '../../players/application/music.dart';
 import '../../production/domain/production_kind.dart';
@@ -69,13 +70,23 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     bool shown(CatalogueProduction production) => kind == null || kindOf(production).takenAs.chip == kind;
     LibraryWorld? installedAs(CatalogueWorld world) => installed.where((held) => world.covers(held.id)).firstOrNull;
 
-    /// A production's world page, at the production once it is installed (rule 2).
+    /// A production's world page, at the production once it is installed (rule 2). A graphic novel
+    /// opens its own page whether or not it is here, with Get (P21 call 35).
     void openProduction(CatalogueWorld world, String? productionId) {
       final held = installedAs(world);
       final page = Routes.discoverWorld(held?.id ?? world.id);
-      final there = productionId != null && (held?.productions.any((production) => production.id == productionId) ?? false);
+      final there =
+          productionId != null &&
+          ((held?.productions.any((production) => production.id == productionId) ?? false) ||
+              world.productions.any((production) => production.id == productionId && production.comic != null && production.alone != null));
       context.push(there ? Routes.production(page, productionId) : page);
     }
+
+    /// A production's upright cover; a graphic novel without one shows its first page whole, once it
+    /// is here, rather than its world's key art (P21 rule 1).
+    ImageProvider? tallFor(CatalogueWorld world, CatalogueProduction production) =>
+        ref.tallOf(production) ??
+        (production.comic == null ? null : ref.watch(comicFirstPageProvider((installedAs(world)?.id ?? world.id, production.id ?? ''))));
 
     /// The edition and every part since it (SPEC-058 R-50).
     String? sizeOf(CatalogueWorld world) => switch (world.package) {
@@ -212,7 +223,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       return FeatureCard(
         title: production.title,
         meta: [kindWords(production.kind), world.name].where((word) => word.isNotEmpty).join(' · '),
-        tall: ref.tallOf(production),
+        tall: tallFor(world, production),
         wide: ref.pictureOf(world, production),
         fresh: arrived != null && releasedThisWeek(arrived.part, now),
         chapter: chapter,
@@ -258,7 +269,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             PosterTile(
               title: production.title,
               kind: kindWords(production.kind),
-              tall: ref.tallOf(production),
+              tall: tallFor(world, production),
               wide: ref.pictureOf(world, production),
               width: smallWidth,
               onMedia: true,
@@ -337,7 +348,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                         PosterTile(
                           title: production.title,
                           kind: '${ProductionKind.ofLine(production.kind).label} · ${world.name}',
-                          tall: ref.tallOf(production),
+                          tall: tallFor(world, production),
                           wide: ref.pictureOf(world, production),
                           width: posterWidth,
                           onOpen: () => openProduction(world, production.id),
