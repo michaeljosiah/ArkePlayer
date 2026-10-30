@@ -276,6 +276,28 @@ In First Contact, scene 3's first line already reads "Several weeks later.", so 
 lone way loses nothing there. The shipped player waits 0.6 s after a voice ends before the next beat;
 P19 keeps that as part of "when its voice ends".
 
+## A graphic novel, read with its own controls (P21)
+
+The owner, on 30 October 2026, reading the published Ledger of Nights, drawn on a Fold7: "Graphic
+novel UI is broken. We need to revisit the UX thoroughly", then "We need a designed cover for this
+story. Also the player only shows the top half with no way to control the navigation of the story."
+
+What was wrong, against P20 as built:
+
+- The book opened blank: the Player's installer dropped the production's `comic`, so the page had a
+  title and nothing to open. A fault, mended in ArkePlayer PR 39, not a design question.
+- No cover. Discover's poster showed the world's key art; the book's page used P20a's wide hero,
+  which cut page 1 to a band through the middle panels.
+- Before it was on the phone, pressing the book did nothing, and Discover opened its world.
+- The reader opened on a page with nothing on it, a tap waited ~300 ms for a possible double-tap,
+  only a swipe turned, and the controls had no back or next.
+- A Fold open showed one 2:3 page with black either side.
+- Chapters were 110-wide page tiles whose lettering could not be read.
+
+P21 answers each (rules 1 – 9) and asks calls 32 – 36. Its pages are the published package's own,
+scaled to 512 × 768 (`ledger-drawn-p0001.jpg` …). The cover, `ledger-drawn-cover.jpg`, is a
+stand-in, page 8's harbour with the title set over it, for the one to be made in the Studio.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -348,6 +370,14 @@ P19 keeps that as part of "when its voice ends".
    silent, against rule 5.
 27. **An interactive movie's controls are a film's** (P19f, approved), P3a's back 10 and forward 10
    included. Rule 2's list is the visual novel's: a movie has no beats, Log or Narration.
+32. **A graphic novel's cover is its Tall cover** (P21a, asked 30 October 2026): 2:3, made in the
+   Studio with its title lettered, pinned with the list. Until it has one, its first page whole.
+33. **A tap at an edge turns** (P21f). The outer 30 % each side turns, the middle shows the controls,
+   and double-tap zoom goes so a tap answers at once; pinch zooms. This revises P20 rule 4.
+34. **A Fold open shows two facing pages** (P21h), 1 and 2 first. The alternative is page 1 alone,
+   as a printed book's first right-hand page.
+35. **Discover opens the book's own page** (P21b), with Get, before it is on the phone.
+36. **The reader opens with its controls showing** (P21e), rather than a one-time hint.
 
 ## What this rests on
 
