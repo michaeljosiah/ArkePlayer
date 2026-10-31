@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 40,
+  "serial": 41,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -167,25 +167,25 @@
       "keyArt": "assets/worlds/na-love-or-juju/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-keyArt-20261024.jpg", "byteLength": 150816, "sha256": "8e72beaac6a4aab1a7b8e77e510efd3ad8293abc7f2c6d6a63ef9a15ef67448b" } },
       "productions": [
-        { "title": "Na love or Juju", "kind": "Audiobook · Book · 11 h 55 m", "picture": "assets/worlds/na-love-or-juju/cover.jpg", "tall": "assets/worlds/na-love-or-juju/cover-tall.jpg",
+        { "title": "Na love or Juju", "kind": "Audiobook · Book · 12 h 9 m", "picture": "assets/worlds/na-love-or-juju/cover.jpg", "tall": "assets/worlds/na-love-or-juju/cover-tall.jpg",
           "pins": {
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-picture-20261024.jpg", "byteLength": 81769, "sha256": "692d1bbedd6efde00082514b550a5606b80c778d149adac5cf8b81ed207b348c" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-tall-20261024.jpg", "byteLength": 65139, "sha256": "cab68e66022c97d7230c53b9fbc1dbde4867f1033c7f642eb163bb28defec1f6" }
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r3/na-love-or-juju-player-2026-10-24.zip",
-        "byteLength": 859155524,
-        "sha256": "83c120b93095ea0cb1a05e5c709af0d40d0a3b209eb65bcb80f472e69c9af7ff",
-        "edition": "2026-10-24",
-        "fingerprint": "244e4ef2ef0f206b37221e64131a87450bce448ae39120e90e67d517b7439976"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-31-r1/na-love-or-juju-player-2026-10-31.zip",
+        "byteLength": 893357810,
+        "sha256": "7e98dafc2fbd014e3e5444541206d05c347468bd2b9c16eb5b373d84c162a22f",
+        "edition": "2026-10-31",
+        "fingerprint": "a9c8ca439fea6b1adeb30604ad8f5e136f045ab214625e12eb4c00e27e871039"
       },
       "guide": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-24-r3/na-love-or-juju-guide-2026-10-24.zip",
-        "byteLength": 3755683,
-        "sha256": "3c4e5df3a6389f66824ebdd4b56c59736242f6b13a0ecb3006fa8961bde6e1e8",
-        "edition": "2026-10-24",
-        "fingerprint": "77df044f0c074fd28ce3d372a8d937cf20e6a85b9d198bc889cf99fcda688d8c"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-31-r1/na-love-or-juju-guide-2026-10-31.zip",
+        "byteLength": 3758191,
+        "sha256": "111012d9ffb79ac7d1949ba9c189f62565659975cd6d310503d6fbeec331c4e9",
+        "edition": "2026-10-31",
+        "fingerprint": "3357362272ddc279fff8bf7f75220a8cdd08483d8ad31ea9e236ab3d8722c801"
       }
     }
   ]
