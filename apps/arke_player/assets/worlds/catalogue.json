@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 41,
+  "serial": 42,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -163,29 +163,29 @@
     {
       "id": "na-love-or-juju",
       "name": "Na Love or Juju",
-      "logline": "A disciplined Lagos man in his forties falls for a woman who loves him in private and denies him in public, and by the time he learns her hold on him is more than charm, he can no longer tell which of his feelings were ever his own.",
+      "logline": "Ife cannot make a man want her. She can only make wanting her cost him everything. Now the most disciplined man in Lagos is buying her a car she never asked for, and his best friend has found a trail of ruined men behind her. Is Ade truly in love? Or has his heart been twisted by something far darker?",
       "keyArt": "assets/worlds/na-love-or-juju/key-art.jpg",
-      "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-keyArt-20261024.jpg", "byteLength": 150816, "sha256": "8e72beaac6a4aab1a7b8e77e510efd3ad8293abc7f2c6d6a63ef9a15ef67448b" } },
+      "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-keyArt-20261031.jpg", "byteLength": 639117, "sha256": "bf0730e39e861b32ff920c8cae750bf220381220c9f49edd1a98b6aae5ed29e5" } },
       "productions": [
-        { "title": "Na love or Juju", "kind": "Audiobook · Book · 12 h 9 m", "picture": "assets/worlds/na-love-or-juju/cover.jpg", "tall": "assets/worlds/na-love-or-juju/cover-tall.jpg",
+        { "title": "Na love or Juju", "kind": "Audiobook · Book · 12 h 21 m", "picture": "assets/worlds/na-love-or-juju/cover.jpg", "tall": "assets/worlds/na-love-or-juju/cover-tall.jpg",
           "pins": {
-            "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-picture-20261024.jpg", "byteLength": 81769, "sha256": "692d1bbedd6efde00082514b550a5606b80c778d149adac5cf8b81ed207b348c" },
-            "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-tall-20261024.jpg", "byteLength": 65139, "sha256": "cab68e66022c97d7230c53b9fbc1dbde4867f1033c7f642eb163bb28defec1f6" }
+            "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-picture-20261031.jpg", "byteLength": 136759, "sha256": "620d7632e6624bbebdce0f0ed884d9d7a96f8f8f9629fcf64817aafad9bf45dd" },
+            "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-tall-20261031.jpg", "byteLength": 162116, "sha256": "7c91f350409faeb5bac3cd273eb5a2be921b629dd1c499e97edd3d06379394a9" }
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-31-r1/na-love-or-juju-player-2026-10-31.zip",
-        "byteLength": 893357810,
-        "sha256": "7e98dafc2fbd014e3e5444541206d05c347468bd2b9c16eb5b373d84c162a22f",
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-31-r2/na-love-or-juju-player-2026-10-31.zip",
+        "byteLength": 942255745,
+        "sha256": "1688b1f011649519fc7d95df60ca03911643bff7ec923ce712ebbac4abc667d0",
         "edition": "2026-10-31",
-        "fingerprint": "a9c8ca439fea6b1adeb30604ad8f5e136f045ab214625e12eb4c00e27e871039"
+        "fingerprint": "206580d8c9a0abd6370fe8fa0c684e5ebc98b5fbe3d7c72df66c6ec19a89aba7"
       },
       "guide": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-31-r1/na-love-or-juju-guide-2026-10-31.zip",
-        "byteLength": 3758191,
-        "sha256": "111012d9ffb79ac7d1949ba9c189f62565659975cd6d310503d6fbeec331c4e9",
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-31-r2/na-love-or-juju-guide-2026-10-31.zip",
+        "byteLength": 4134837,
+        "sha256": "c18fcfbacc2eca18eed8d5663254eb354016bcbc528f45e32bbb1c40d5f2bb73",
         "edition": "2026-10-31",
-        "fingerprint": "3357362272ddc279fff8bf7f75220a8cdd08483d8ad31ea9e236ab3d8722c801"
+        "fingerprint": "a5fd548c0558fbb7102841492dbb2d79b64b1d92f7128e8f1c7feb676fc130a1"
       }
     }
   ]
