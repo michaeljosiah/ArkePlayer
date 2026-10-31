@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 42,
+  "serial": 43,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -22,11 +22,11 @@
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261030.jpg", "byteLength": 524097, "sha256": "02d20fdf110a8d8d8f9ec2a68039f8d4cd4859d30b461eab36d6a6fa97167068" }
           },
           "comic": {
-            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-ledger-of-nights-drawn-comic-2026-10-30.zip",
-            "byteLength": 4348498,
-            "sha256": "99a2eaea800a4dcf56772eefd4e6303387ffe8e6a9e0f469b3242f78755f024f",
-            "edition": "2026-10-30",
-            "fingerprint": "f3ca9d2045391f6328bf2f78da09475b374b17a5b14449912476e5fe283cfe42",
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-ledger-of-nights-drawn-comic-2026-10-31.zip",
+            "byteLength": 4378771,
+            "sha256": "4a3e4f55e4236b99e57d2ffa2a5869180f9f7f5d06393dcaf802fa7bf3341238",
+            "edition": "2026-10-31",
+            "fingerprint": "32588a80a7094c9f63aa3e4bd1ec9199216ad24ae22dcd9754cf534d3edac8b1",
             "version": 1
           } }
       ],
