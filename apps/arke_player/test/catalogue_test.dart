@@ -103,15 +103,17 @@ void main() {
 
   test('The Undersong’s graphic novel is listed as its comic, never as a package (SPEC-064 R-50, P20)', () {
     // The Ledger of Nights, drawn: chapters 1 and 2 (Neap, Slack water), 11 pages in ink and grey
-    // wash, made in the Studio on 2026-10-30 and exported from its Pages. Schema 7, alone; a
+    // wash, made in the Studio on 2026-10-30 and exported from its Pages. The 2026-10-31 edition
+    // redraws pages 3, 5, 6, 7, 9, 10 and 11 from a script rewritten for a reader who has only the
+    // pages (SPEC-064 R-13a). Schema 7, alone; a
     // `package` here would be installed by every Player before schema 7, which cannot read it.
     final drawn = catalogue.singleWhere((world) => world.id == 'the-undersong').productions.last;
     expect(drawn.id, 'the-ledger-of-nights-drawn');
     expect(drawn.kind, 'Graphic novel · 11 pages');
     expect(drawn.package, isNull);
-    expect(drawn.comic!.sha256, '99a2eaea800a4dcf56772eefd4e6303387ffe8e6a9e0f469b3242f78755f024f');
+    expect(drawn.comic!.sha256, '4a3e4f55e4236b99e57d2ffa2a5869180f9f7f5d06393dcaf802fa7bf3341238');
     expect(drawn.comic!.version, 1);
-    expect(drawn.comic!.edition, '2026-10-30');
+    expect(drawn.comic!.edition, '2026-10-31');
   });
 
   test('Legend of Dumah is pinned to its published package and its guide alone', () {
