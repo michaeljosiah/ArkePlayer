@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 44,
+  "serial": 45,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -17,16 +17,16 @@
             "picture": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-picture-20261024.jpg", "byteLength": 223676, "sha256": "e3154e34ad1e87d12154d7731266507892e797ebb5acae528e7d638eb80c9fa8" },
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261024.jpg", "byteLength": 576958, "sha256": "198bf9b2f21fab778401622397efae22a57615a775ccd479736bc5e0004f6776" }
           } },
-        { "id": "the-ledger-of-nights-drawn", "title": "The Ledger of Nights, drawn", "kind": "Graphic novel · 11 pages", "tall": "assets/worlds/undersong/ledger-drawn-tall.jpg",
+        { "id": "the-ledger-of-nights-redrawn", "title": "The Ledger of Nights, drawn", "kind": "Graphic novel · 16 pages", "tall": "assets/worlds/undersong/ledger-drawn-tall.jpg",
           "pins": {
             "tall": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-undersong-tall-20261030.jpg", "byteLength": 524097, "sha256": "02d20fdf110a8d8d8f9ec2a68039f8d4cd4859d30b461eab36d6a6fa97167068" }
           },
           "comic": {
-            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-ledger-of-nights-drawn-comic-2026-10-31.zip",
-            "byteLength": 4378771,
-            "sha256": "4a3e4f55e4236b99e57d2ffa2a5869180f9f7f5d06393dcaf802fa7bf3341238",
-            "edition": "2026-10-31",
-            "fingerprint": "32588a80a7094c9f63aa3e4bd1ec9199216ad24ae22dcd9754cf534d3edac8b1",
+            "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/undersong-2026-10-26-chapter-3/the-ledger-of-nights-redrawn-comic-2026-11-01.zip",
+            "byteLength": 6753206,
+            "sha256": "3b728ab247a94a65cd7efb924be01c10de06a49e648907aa437c98b624f96884",
+            "edition": "2026-11-01",
+            "fingerprint": "5ec0bd1fdc5e4b372d83ff165611d8e6ce219706b59673d532bf8f2d0d7dbe2a",
             "version": 1
           } }
       ],
