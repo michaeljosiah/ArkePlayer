@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "serial": 45,
+  "serial": 46,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
@@ -174,11 +174,11 @@
           } }
       ],
       "package": {
-        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-11-01-r1/na-love-or-juju-player-2026-11-01.zip",
-        "byteLength": 950295912,
-        "sha256": "9e68da7fe3c7f61812cc908824cea86545ad56247e18254e491eabd2045b3e05",
-        "edition": "2026-11-01",
-        "fingerprint": "a67bd335fd0407ec7c504fb0ca7d2bdaabaa24ef6c385cb1e47dc3dbb869cf3f"
+        "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-11-01-r2/na-love-or-juju-player-2026-11-01-2.zip",
+        "byteLength": 989813765,
+        "sha256": "9ae653c72a918a0f2739d71f2ab5ec968756d758cae6076f682568f88f05d219",
+        "edition": "2026-11-01-2",
+        "fingerprint": "44180385d7b34e83b7eb86cc299844218dc23e57cdd3dda24fdf0574855dd7d4"
       },
       "guide": {
         "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/na-love-or-juju-2026-10-31-r2/na-love-or-juju-guide-2026-10-31.zip",
