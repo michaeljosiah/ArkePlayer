@@ -169,8 +169,8 @@ void main() {
     // narrated between opening and closing credits, chapter 23's lagoon night told in full, and the
     // guide alone beside it with its teasers (SPEC-059 R-10, R-24).
     final juju = catalogue.singleWhere((world) => world.id == 'na-love-or-juju');
-    expect(juju.package!.sha256, '0b5b5aa3b195deece3da16615f28b84ed2c11d395dda26c236545131ff785c94');
-    expect(juju.package!.edition, '2026-11-02');
+    expect(juju.package!.sha256, 'e0da1fd746eb1410b9a4d01b928f12f2e150243b9ce9819d602b09ad2e3b1bc1');
+    expect(juju.package!.edition, '2026-11-03');
     expect(juju.guide!.sha256, 'c18fcfbacc2eca18eed8d5663254eb354016bcbc528f45e32bbb1c40d5f2bb73');
     expect(juju.productions.single.title, 'Na love or Juju');
   });
