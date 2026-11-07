@@ -440,6 +440,9 @@ class HeardTeaser implements TeaserAudio {
 
   @override
   Future<void> stop() async => stopped++;
+
+  @override
+  Stream<Duration> get position => const Stream.empty();
 }
 
 class _Kept extends KeptPictures {

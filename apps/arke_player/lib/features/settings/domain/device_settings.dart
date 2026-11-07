@@ -59,6 +59,7 @@ class DeviceSettings {
     this.wifiOnly = true,
     this.adultContent = false,
     this.notify = const {},
+    this.opened = const {},
   });
 
   /// Captions for films that carry them (a sidecar SRT or VTT). Off until turned on.
@@ -92,6 +93,9 @@ class DeviceSettings {
   /// The worlds whose new chapters the phone tells of (SPEC-058 R-54, P15j): off until turned on.
   final Set<String> notify;
 
+  /// The guide entries opened since they were found, as `world/entry`: the rest keep `New` (P23 rule 7).
+  final Set<String> opened;
+
   DeviceSettings copyWith({
     bool? captions,
     CaptionSize? captionSize,
@@ -106,6 +110,7 @@ class DeviceSettings {
     bool? wifiOnly,
     bool? adultContent,
     Set<String>? notify,
+    Set<String>? opened,
   }) => DeviceSettings(
     captions: captions ?? this.captions,
     captionSize: captionSize ?? this.captionSize,
@@ -120,6 +125,7 @@ class DeviceSettings {
     wifiOnly: wifiOnly ?? this.wifiOnly,
     adultContent: adultContent ?? this.adultContent,
     notify: notify ?? this.notify,
+    opened: opened ?? this.opened,
   );
 
   /// Slow push as it plays: the saved choice, unless the system asks for reduced motion.
@@ -140,6 +146,7 @@ class DeviceSettings {
     'adultContent': adultContent,
     // World ids are slugs, so a comma never falls inside one.
     'notify': (notify.toList()..sort()).join(','),
+    'opened': (opened.toList()..sort()).join(','),
   };
 
   static DeviceSettings fromPrefs(Object? Function(String key) read) {
@@ -161,6 +168,10 @@ class DeviceSettings {
       adultContent: read('adultContent') == true,
       notify: {
         for (final id in '${read('notify') ?? ''}'.split(','))
+          if (id.isNotEmpty) id,
+      },
+      opened: {
+        for (final id in '${read('opened') ?? ''}'.split(','))
           if (id.isNotEmpty) id,
       },
     );

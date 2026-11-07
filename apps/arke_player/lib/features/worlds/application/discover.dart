@@ -57,6 +57,9 @@ bool releasedThisWeek(CataloguePart part, DateTime now) =>
 abstract interface class TeaserAudio {
   Future<void> play(String path);
   Future<void> stop();
+
+  /// How far in it is, for a teaser's thin line.
+  Stream<Duration> get position;
 }
 
 class _PlayerTeaserAudio implements TeaserAudio {
@@ -74,6 +77,9 @@ class _PlayerTeaserAudio implements TeaserAudio {
 
   @override
   Future<void> stop() async => _player?.stop();
+
+  @override
+  Stream<Duration> get position => (_player ??= AudioPlayer()).positionStream;
 }
 
 final teaserAudioProvider = Provider<TeaserAudio>((ref) {

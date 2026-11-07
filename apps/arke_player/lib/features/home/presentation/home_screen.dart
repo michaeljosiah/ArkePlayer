@@ -16,8 +16,11 @@ import '../../library/presentation/item_menu.dart';
 import '../../parts/application/parts.dart';
 import '../../players/application/music.dart';
 import '../../production/domain/production_kind.dart';
+import '../../settings/application/settings_controller.dart';
 import '../../worlds/application/discover.dart';
+import '../../worlds/application/found.dart';
 import '../../worlds/application/guides.dart';
+import '../../worlds/application/teaser_feed.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/guide_widgets.dart';
 import '../../worlds/presentation/row_widgets.dart';
@@ -118,7 +121,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final teasers = [
       for (final world in catalogue)
         if (ref.watch(worldGuideProvider(installedAs(world)?.id ?? world.id)).value case final guide?)
-          for (final teaser in guide.guide.teasers) (world, guide, teaser),
+          for (final teaser in guide.guide.teasers) (guide, teaser),
+    ];
+    // The feed behind Home's Teasers (P23 rule 1): each world's chosen, then its open people and places.
+    final feed = teaserFeed([
+      for (final world in catalogue)
+        if (ref.watch(worldGuideProvider(installedAs(world)?.id ?? world.id)).value case final guide?)
+          (world: world, worldId: installedAs(world)?.id ?? world.id, worldPage: pageOf(world), guide: guide),
+    ]);
+    void openAt(GuideTeaser teaser) {
+      final at = feed.indexWhere((page) => identical(page.teaser, teaser));
+      if (at >= 0) openFeed(context, feed, at);
+    }
+
+    // What the reader has found and not yet opened (P23 rule 7, P23h).
+    final opened = ref.watch(settingsProvider).value?.opened ?? const <String>{};
+    final found = [
+      for (final held in installed)
+        if (ref.watch(worldGuideProvider(held.id)).value case final guide? when hasWaiting(guide.guide))
+          if (ref.watch(guideReachProvider(held.id)).value case final reach?)
+            for (final entry in [...guide.guide.characters, ...guide.guide.places])
+              if (isNewEntry(held.id, entry, reach, opened)) (held, guide, entry),
     ];
     final band = discoverBand(catalogue, picks?.band, covers.firstOrNull);
     final wideWidth = rowTileWidth(context);
@@ -149,8 +172,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return '${musicKindLabel(kind.name)} · ${of ?? world.name}';
     }
 
-    Widget teaserPoster(CatalogueWorld world, WorldGuide guide, GuideTeaser teaser) {
-      final page = pageOf(world);
+    Widget teaserPoster(WorldGuide guide, GuideTeaser teaser) {
       return switch (teaser) {
         EntryTeaser(entry: final GuideCharacter character) => PosterTile(
           title: character.name,
@@ -159,14 +181,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           initials: initials(character.name),
           pictureAlignment: const Alignment(0, -0.6),
           width: smallWidth,
-          onOpen: () => context.push(Routes.guideEntry(page, character.id)),
+          onOpen: () => openAt(teaser),
         ),
         EntryTeaser(:final entry) => PosterTile(
           title: entryName(entry),
           kind: entry is GuidePlace ? placeKind(entry) : 'Place',
           wide: guidePicture(guide, entry),
           width: smallWidth,
-          onOpen: () => context.push(Routes.guideEntry(page, entry.id)),
+          onOpen: () => openAt(teaser),
         ),
         ClipTeaser(:final title, :final picture, :final duration) => PosterTile(
           title: title,
@@ -174,14 +196,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           wide: FileImage(File(guide.pathOf(picture))),
           glyph: Icons.play_arrow_rounded,
           width: smallWidth,
-          onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
+          onOpen: () => openAt(teaser),
         ),
         PictureTeaser(:final title, :final picture) => PosterTile(
           title: title,
           kind: 'Picture',
           wide: FileImage(File(guide.pathOf(picture))),
           width: smallWidth,
-          onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
+          onOpen: () => openAt(teaser),
         ),
         SongTeaser(:final title, :final picture, :final duration) => PosterTile(
           title: title,
@@ -189,7 +211,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           wide: FileImage(File(guide.pathOf(picture))),
           glyph: Icons.music_note_rounded,
           width: smallWidth,
-          onOpen: () => openTeaser(context, world, guide, teaser, worldPage: page),
+          onOpen: () => openAt(teaser),
         ),
       };
     }
@@ -260,6 +282,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
     );
+    final newInWorlds = found.isEmpty
+        ? null
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SectionHead('New in your worlds'),
+              TileRow(
+                children: [
+                  for (final (held, guide, entry) in found)
+                    PosterTile(
+                      title: entryName(entry),
+                      kind: held.name,
+                      tall: entry is GuideCharacter ? guidePicture(guide, entry) : null,
+                      wide: entry is GuideCharacter ? null : guidePicture(guide, entry),
+                      initials: initials(entryName(entry)),
+                      pictureAlignment: const Alignment(0, -0.6),
+                      width: smallWidth,
+                      fresh: true,
+                      onOpen: () => context.push(Routes.guideEntry(Routes.world(held.id), entry.id)),
+                    ),
+                ],
+              ),
+            ],
+          );
     final newChapters = fresh.isEmpty
         ? null
         : Column(
@@ -336,11 +382,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
+              ?newInWorlds,
               ?newChapters,
               if (covers.isNotEmpty) const SectionHead('Worlds'),
               coverRow,
             ] else ...[
               coverRow,
+              ?newInWorlds,
               ?newChapters,
             ],
             if (stories.isNotEmpty) ...[
@@ -376,7 +424,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
             if (teasers.isNotEmpty) ...[
               const SectionHead('Teasers'),
-              TileRow(children: [for (final (world, guide, teaser) in teasers) teaserPoster(world, guide, teaser)]),
+              TileRow(children: [for (final (guide, teaser) in teasers) teaserPoster(guide, teaser)]),
             ],
             if (band != null) worldBand(band),
           ],

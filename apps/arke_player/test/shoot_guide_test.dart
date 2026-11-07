@@ -11,8 +11,12 @@ import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
+import 'package:arke_player/features/worlds/application/discover.dart';
 import 'package:arke_player/features/worlds/application/guides.dart';
+import 'package:arke_player/features/worlds/application/teaser_feed.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
+import 'package:arke_player/features/worlds/presentation/someone_new.dart';
+import 'package:arke_player/features/worlds/presentation/teaser_screen.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +26,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _shoot = Platform.environment['SHOOT'] == '1';
+
+/// A voice part way through, with nothing to hear.
+class _Silent implements TeaserAudio {
+  @override
+  Future<void> play(String path) async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Stream<Duration> get position => Stream.value(const Duration(seconds: 3));
+}
+
 const _ledger = 'the-ledger-of-nights';
 
 GuideAfter _after(int number) => GuideAfter(production: _ledger, chapter: 'ch$number', number: number);
@@ -242,7 +259,15 @@ void main() {
       const AssetImage('assets/worlds/undersong/ledger-of-nights.jpg'),
       FileImage(File(store.resolve(installed.keyArt!))),
       FileImage(File(store.resolve(installed.productions.single.picture!))),
-      for (final name in ['char-maren.jpg', 'char-bray.jpg', 'char-chorister.jpg', 'scene4-shot13.jpg', 'launch-harbour.jpg', 'drowned-quarter.jpg'])
+      for (final name in [
+        'char-maren.jpg',
+        'char-bray.jpg',
+        'char-chorister.jpg',
+        'scene4-shot13.jpg',
+        'launch-harbour.jpg',
+        'drowned-quarter.jpg',
+        'under-bell-house.jpg',
+      ])
         FileImage(File(pathOf(name))),
     ]) {
       final loaded = Completer<void>();
@@ -263,6 +288,8 @@ void main() {
     bool isInstalled = true,
     Brightness brightness = Brightness.dark,
     Future<void> Function(WidgetTester tester)? act,
+    bool settle = true,
+    int through = 3,
   }) async {
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2;
@@ -286,7 +313,8 @@ void main() {
             },
           ),
           guideFetchProvider.overrideWith((ref, worldId) async {}),
-          guideReachProvider.overrideWith((ref, worldId) async => GuideReach(reached: isInstalled ? const {_ledger: (at: 3, through: 3)} : const {})),
+          teaserAudioProvider.overrideWithValue(_Silent()),
+          guideReachProvider.overrideWith((ref, worldId) async => GuideReach(reached: isInstalled ? {_ledger: (at: through, through: through)} : const {})),
         ],
         child: RepaintBoundary(
           key: key,
@@ -301,7 +329,7 @@ void main() {
     await tester.pumpAndSettle();
     if (act != null) {
       await act(tester);
-      await tester.pumpAndSettle();
+      if (settle) await tester.pumpAndSettle();
     }
     final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final png = await tester.runAsync(() async {
@@ -318,6 +346,52 @@ void main() {
   Future<void> Function(WidgetTester tester) tab(String label) =>
       (tester) => tester.tap(find.text(label).first);
 
+  // P23: the feed as Home's Teasers open it.
+  Future<void> Function(WidgetTester tester) feedAt(int start) => (tester) async {
+    final pages = teaserFeed([
+      (world: undersong, worldId: 'undersong', worldPage: Routes.world('undersong'), guide: WorldGuide(guide: _guide, pathOf: pathOf)),
+    ]);
+    unawaited(openFeed(tester.element(find.byType(Scaffold).first), pages, start));
+    await tester.pumpAndSettle();
+  };
+  testWidgets('P23a a character', (t) => shoot(t, 'P23a-character', phone, Routes.home, act: feedAt(0)));
+  testWidgets('P23c a place', (t) => shoot(t, 'P23c-place', phone, Routes.home, act: feedAt(3)));
+  testWidgets('P23d on a Fold', (t) => shoot(t, 'P23d-fold', const Size(984, 1092), Routes.home, act: feedAt(0)));
+  testWidgets(
+    'P23e someone new',
+    (t) => shoot(
+      t,
+      'P23e-someone-new',
+      phone,
+      Routes.home,
+      act: (tester) async {
+        unawaited(
+          Navigator.of(tester.element(find.byType(Scaffold).first), rootNavigator: true).push(
+            MaterialPageRoute<void>(
+              builder: (_) => Scaffold(
+                body: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.file(File(pathOf('scene4-shot13.jpg')), fit: BoxFit.cover),
+                    SomeoneNew(
+                      item: worldItems.first,
+                      chapter: const ListeningChapter(id: 'ch12', order: 12, title: 'Twelve', duration: Duration(minutes: 3), audio: 'ch12.m4a'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump(const Duration(milliseconds: 300));
+      },
+      settle: false,
+    ),
+  );
+  testWidgets('P23f found', (t) => shoot(t, 'P23f-found', phone, world));
+  testWidgets('P23g people found', (t) => shoot(t, 'P23g-people', phone, world, act: tab('People'), through: 12));
+  testWidgets('P23h home, new in your worlds', (t) => shoot(t, 'P23h-home', phone, Routes.home, through: 12));
   testWidgets('P22d worlds', (t) => shoot(t, 'P22d-worlds-guide', phone, Routes.worlds));
   testWidgets('P22d worlds, light', (t) => shoot(t, 'P22d-worlds-guide-light', phone, Routes.worlds, brightness: Brightness.light));
   testWidgets('P22h before it is here', (t) => shoot(t, 'P22h-before', phone, world, isInstalled: false));

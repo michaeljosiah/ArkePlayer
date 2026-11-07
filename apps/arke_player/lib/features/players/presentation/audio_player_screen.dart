@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/tokens.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../settings/domain/device_settings.dart';
+import '../../worlds/presentation/someone_new.dart';
 import '../application/audio_engine.dart';
 import '../application/captions.dart';
 import '../application/listening_plan.dart';
@@ -230,6 +231,7 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
                   ],
                 ),
               ),
+              SomeoneNew(item: item, chapter: plan.document.chapters.elementAtOrNull(index)),
             ],
           );
         },

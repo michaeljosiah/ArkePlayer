@@ -169,6 +169,9 @@ class _Audio implements TeaserAudio {
 
   @override
   Future<void> stop() async => stopped++;
+
+  @override
+  Stream<Duration> get position => const Stream.empty();
 }
 
 class _Notices implements Notices {
@@ -441,12 +444,13 @@ void main() {
       await _reveal(tester, find.text('Saltmouth bells'));
       await tester.tap(find.text('Saltmouth bells'));
       await tester.pumpAndSettle();
-      expect(find.byType(TeaserScreen), findsOneWidget);
-      expect(find.text('Clip · 0:24 · Chapter 1 · The Undersong'), findsOneWidget);
+      expect(find.byType(TeaserFeedScreen), findsOneWidget);
+      expect(find.text('Clip · 0:24'), findsOneWidget);
+      expect(find.text('Chapter 1'), findsOneWidget);
       expect(audio.played, [_pathOf('bells.m4a')]);
       await tester.tap(find.bySemanticsLabel('Close'));
       await tester.pumpAndSettle();
-      expect(find.byType(TeaserScreen), findsNothing);
+      expect(find.byType(TeaserFeedScreen), findsNothing);
       expect(audio.stopped, 1);
     });
   });

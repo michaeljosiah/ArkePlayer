@@ -171,9 +171,10 @@ void main() {
     testWidgets('Story, People, Places and Lore, each counted; nothing of them shows until its tab is pressed', (tester) async {
       await _pump(tester, location: world, guide: _guide);
       expect(find.bySemanticsLabel('Story'), findsOneWidget);
-      expect(find.bySemanticsLabel('People 3'), findsOneWidget);
-      expect(find.bySemanticsLabel('Places 1'), findsOneWidget);
-      expect(find.bySemanticsLabel('Lore 2'), findsOneWidget);
+      // This world is here and something in it waits, so each says how much of it is found (P23 rule 6).
+      expect(find.bySemanticsLabel(RegExp(r'^People \d of 3$')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'^Places \d of 1$')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'^Lore \d of 2$')), findsOneWidget);
       expect(find.text('Maren Kest'), findsNothing);
       expect(find.text('The Vigil'), findsNothing);
       expect(find.byType(LoreRow), findsNothing);
