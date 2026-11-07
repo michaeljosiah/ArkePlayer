@@ -25,6 +25,11 @@ the existing pinned length/hash readers; unavailable, malformed, equal and older
 feeds cannot replace a newer cached list. Forced refresh keeps its cache-busting
 query and no-cache request.
 
+First open also starts the shared catalogue refresh. This lets a fresh dev install
+with an empty bundled baseline reach the existing P9a **Install a world** action
+once the hosted channel publishes a world. An unavailable list leaves **Add a file**
+usable; the screen does not require a local import before discovering hosted worlds.
+
 For AONIK #403, record the exact APK commit/application ID, feed serial and package
 pins, then discover, install, open the book, restart offline, publish an approved
 part/update, force refresh and withdraw from discovery. Check background notification

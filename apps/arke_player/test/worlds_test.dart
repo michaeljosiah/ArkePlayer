@@ -103,6 +103,7 @@ Future<void> _pump(
   List<LibraryWorld> worlds = const [],
   List<LibraryItem> items = const [],
   WorldInstaller? installer,
+  Future<void> Function(Ref)? refresh,
   Size size = const Size(390, 844),
   double textScale = 1,
 }) async {
@@ -115,6 +116,7 @@ Future<void> _pump(
         libraryItemsProvider.overrideWith((ref) => Stream.value(items)),
         libraryWorldsProvider.overrideWith((ref) => Stream.value(worlds)),
         catalogueProvider.overrideWith((ref) async => catalogue),
+        if (refresh != null) catalogueRefreshProvider.overrideWith(refresh),
         volumeProvider.overrideWith((ref) async => (free: 41000000000, total: 128000000000)),
         if (installer != null) worldInstallerProvider.overrideWith((ref) async => installer),
       ],
@@ -142,6 +144,36 @@ Future<void> _reveal(WidgetTester tester, Finder target) async {
 
 void main() {
   group('first open (P9a)', () {
+    testWidgets('an empty first install discovers a hosted world without importing a file', (tester) async {
+      final fetched = Completer<void>();
+      final catalogue = <CatalogueWorld>[];
+      await _pump(
+        tester,
+        location: Routes.welcome,
+        catalogue: catalogue,
+        refresh: (ref) async {
+          await fetched.future;
+          catalogue.add(_undersong);
+          ref.invalidate(catalogueProvider);
+        },
+      );
+      expect(find.text('Add a file'), findsOneWidget);
+      expect(find.text('Install a world'), findsNothing);
+      fetched.complete();
+      await tester.pumpAndSettle();
+      expect(find.text('Install a world'), findsOneWidget);
+      await tester.tap(find.text('Install a world'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DiscoverScreen), findsOneWidget);
+    });
+
+    testWidgets('an unavailable hosted list preserves local import on first open', (tester) async {
+      await _pump(tester, location: Routes.welcome, refresh: (ref) async => throw const SocketException('offline'));
+      expect(find.text('Add a file'), findsOneWidget);
+      expect(find.text('Install a world'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('offers Install a world when one is published', (tester) async {
       await _pump(tester, location: Routes.welcome, catalogue: [_undersong]);
       expect(find.text('Add a file'), findsOneWidget);
