@@ -12,6 +12,8 @@ import '../../../app/widgets/shelf.dart';
 import '../../players/application/music.dart';
 import '../../players/application/players.dart';
 import '../../players/presentation/music_widgets.dart';
+import '../../settings/application/settings_controller.dart';
+import '../application/found.dart';
 import '../application/guides.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
@@ -46,6 +48,12 @@ class GuideEntryScreen extends ConsumerWidget {
           ),
         ),
       );
+    }
+    // Seen once it has been opened: its New goes (P23 rule 7).
+    if (isNewEntry(worldId, entry, reach, ref.watch(settingsProvider).value?.opened ?? const {})) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) markEntryOpened(ref, worldId, entry.id);
+      });
     }
     final world = ref.watch(worldNameProvider(worldId));
     void open(GuideEntry other) => context.push(Routes.guideEntry(worldLocation, other.id));

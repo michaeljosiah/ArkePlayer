@@ -232,7 +232,8 @@ void main() {
       await tester.tap(find.text('Song · 0:24'));
       await tester.pumpAndSettle();
       expect(teaser.played, [designAsset('verse-excerpt.m4a')]);
-      expect(find.text('Song · 0:24 · The Undersong'), findsOneWidget);
+      expect(find.text('Song · 0:24'), findsOneWidget);
+      expect(find.text('Sound'), findsOneWidget);
       await tester.tap(find.bySemanticsLabel('Close'));
       await tester.pumpAndSettle();
       expect(teaser.stopped, 1);

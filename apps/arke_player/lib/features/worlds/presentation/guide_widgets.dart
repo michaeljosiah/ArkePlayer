@@ -8,7 +8,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/routes.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../settings/application/settings_controller.dart';
+import '../application/found.dart';
 import '../application/guides.dart';
+import '../application/worlds.dart';
 import 'row_widgets.dart';
 import 'world_widgets.dart';
 
@@ -234,10 +237,11 @@ class CardRow extends StatelessWidget {
 
 /// A lore row (P11f): the kind over the title, and the way in.
 class LoreRow extends StatelessWidget {
-  const LoreRow({required this.lore, required this.onOpen, super.key});
+  const LoreRow({required this.lore, required this.onOpen, this.fresh = false, super.key});
 
   final GuideLore lore;
   final VoidCallback onOpen;
+  final bool fresh;
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +250,7 @@ class LoreRow extends StatelessWidget {
     return _Ruled(
       child: Semantics(
         button: true,
-        label: '${loreKindLabel(lore.kind)}, ${lore.title}',
+        label: ['${loreKindLabel(lore.kind)}, ${lore.title}', if (fresh) 'New'].join(', '),
         child: ExcludeSemantics(
           child: InkWell(
             onTap: onOpen,
@@ -269,6 +273,7 @@ class LoreRow extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (fresh) ...[const NewTag(), const SizedBox(width: 6)],
                   Icon(Icons.chevron_right_rounded, size: 18, color: surface.mutedForeground),
                 ],
               ),
@@ -510,34 +515,88 @@ class PeoplePanel extends ConsumerWidget {
     final reach = ref.watch(guideReachProvider(worldId)).value ?? GuideReach.none;
     final characters = guide.guide.characters;
     final width = RowSizes.small(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-      child: Wrap(
-        spacing: 11,
-        runSpacing: 14,
-        children: [
-          for (final character in characters.where((entry) => reach.shows(entry.after)))
-            PosterTile(
-              title: character.name,
-              kind: character.role ?? 'Character',
-              tall: guidePicture(guide, character),
-              initials: initials(character.name),
-              pictureAlignment: const Alignment(0, -0.6),
-              width: width,
-              onOpen: () => context.push(Routes.guideEntry(location, character.id)),
-            ),
-          for (final character in characters.where((entry) => !reach.shows(entry.after)))
-            GatedCard(
-              after: character.after!,
-              what: 'Character',
-              width: width,
-              aspectRatio: 2 / 3,
-              onReveal: () => askReveal(context, ref, worldId, guide, reach, character.after!),
-            ),
-        ],
-      ),
+    final opened = _openedIn(ref);
+    bool fresh(GuideEntry entry) => isNewEntry(worldId, entry, reach, opened);
+    final here = ref.watch(installedWorldProvider(worldId)) != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (here && hasWaiting(guide.guide))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: FoundLine(found: foundIn(characters, reach), ink: context.surface.mutedForeground),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          child: Wrap(
+            spacing: 11,
+            runSpacing: 14,
+            children: [
+              // New comes first (P23 rule 7), then the rest as the guide has them.
+              for (final character in [
+                ...characters.where((entry) => reach.shows(entry.after) && fresh(entry)),
+                ...characters.where((entry) => reach.shows(entry.after) && !fresh(entry)),
+              ])
+                PosterTile(
+                  title: character.name,
+                  kind: character.role ?? 'Character',
+                  tall: guidePicture(guide, character),
+                  initials: initials(character.name),
+                  pictureAlignment: const Alignment(0, -0.6),
+                  width: width,
+                  fresh: fresh(character),
+                  onOpen: () => context.push(Routes.guideEntry(location, character.id)),
+                ),
+              for (final character in characters.where((entry) => !reach.shows(entry.after)))
+                GatedCard(
+                  after: character.after!,
+                  what: 'Character',
+                  width: width,
+                  aspectRatio: 2 / 3,
+                  onReveal: () => askReveal(context, ref, worldId, guide, reach, character.after!),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
+}
+
+Set<String> _openedIn(WidgetRef ref) => ref.watch(settingsProvider).value?.opened ?? const {};
+
+/// `8 of 14 found` and its bar (P23f, P23g): a measure of the world, never a score (call 47).
+class FoundLine extends StatelessWidget {
+  const FoundLine({required this.found, required this.ink, this.top = 0, super.key});
+
+  final ({int got, int of}) found;
+  final Color ink;
+  final double top;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(top: top),
+    child: Row(
+      children: [
+        Text(
+          '${found.got} of ${found.of} found',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ink, fontFeatures: const [FontFeature.tabularFigures()]),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(ArkeRadius.pill),
+            child: LinearProgressIndicator(
+              value: found.of == 0 ? 0 : found.got / found.of,
+              minHeight: 3,
+              color: ink,
+              backgroundColor: ink.withValues(alpha: 0.2),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// A world's Places (P22k, P26l): wide tiles, one across on a phone, two from a Fold up.
@@ -569,6 +628,7 @@ class PlacesPanel extends ConsumerWidget {
                   kind: placeKind(place),
                   picture: guidePicture(guide, place),
                   width: width,
+                  fresh: isNewEntry(worldId, place, reach, _openedIn(ref)),
                   onOpen: () => context.push(Routes.guideEntry(location, place.id)),
                 ),
               for (final place in places.where((entry) => !reach.shows(entry.after)))
@@ -621,7 +681,11 @@ class _LorePanelState extends ConsumerState<LorePanel> {
         if (kinds.isNotEmpty) LabelChips<LoreKind>(options: kinds, selected: _kind, onSelect: (kind) => setState(() => _kind = kind)),
         const SizedBox(height: 8),
         for (final entry in chosen.where((entry) => reach.shows(entry.after)))
-          LoreRow(lore: entry, onOpen: () => context.push(Routes.guideEntry(widget.location, entry.id))),
+          LoreRow(
+            lore: entry,
+            fresh: isNewEntry(widget.worldId, entry, reach, _openedIn(ref)),
+            onOpen: () => context.push(Routes.guideEntry(widget.location, entry.id)),
+          ),
         for (final entry in chosen.where((entry) => !reach.shows(entry.after)))
           GateRow(after: entry.after!, onReveal: () => askReveal(context, ref, widget.worldId, guide, reach, entry.after!)),
         const SizedBox(height: 24),

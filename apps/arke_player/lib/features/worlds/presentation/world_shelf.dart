@@ -265,11 +265,14 @@ void openStart(BuildContext context, LibraryWorld world, WorldStart start) {
 /// `Continue · Chapter 3` once begun, with Read beside a narration's book. With no connection, it says
 /// so and asks nothing (P25h). The bell sits at its end.
 class WorldPress extends ConsumerWidget {
-  const WorldPress({required this.worldId, this.top = 10, this.bell = true, super.key});
+  const WorldPress({required this.worldId, this.top = 10, this.bell = true, this.hug = false, super.key});
 
   final String worldId;
   final double top;
   final bool bell;
+
+  /// In a teaser's strip (P23 rule 3): as wide as its words and lower, the verb alone once it is here.
+  final bool hug;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -300,37 +303,42 @@ class WorldPress extends ConsumerWidget {
         }
       }
 
+      final press = _Press(
+        primary: true,
+        icon: Icons.play_arrow_rounded,
+        label: verb,
+        detail: hug ? null : start.where,
+        height: hug ? _hugHeight : ArkeSizes.widePress,
+        onPressed: () => open(start.first, verb),
+      );
       presses = [
-        Expanded(
-          child: _Press(primary: true, icon: Icons.play_arrow_rounded, label: verb, detail: start.where, onPressed: () => open(start.first, verb)),
-        ),
-        if (start.book case final book?) ...[
+        if (hug) press else Expanded(child: press),
+        if (start.book case final book? when !hug) ...[
           const SizedBox(width: 8),
           _Press(icon: Icons.menu_book_rounded, label: 'Read', onPressed: () => open(book, 'Read')),
         ],
       ];
     } else {
       if (listed == null || listed.package == null) return const SizedBox.shrink();
-      presses = [
-        Expanded(
-          child: online
-              ? _Press(
-                  primary: true,
-                  icon: Icons.play_arrow_rounded,
-                  label: 'Start',
-                  detail: formatBytes(worldBytes(listed)),
-                  onPressed: () async {
-                    if (!await mayOpen(context, ref, listed, press: 'Start') || !context.mounted) return;
-                    await ref.read(installProvider(listed.id).notifier).start(listed);
-                  },
-                )
-              : const _Press(primary: true, label: 'Start', detail: 'No connection'),
-        ),
-      ];
+      final press = online
+          ? _Press(
+              primary: true,
+              icon: hug ? null : Icons.play_arrow_rounded,
+              label: 'Start',
+              detail: formatBytes(worldBytes(listed)),
+              height: hug ? _hugHeight : ArkeSizes.widePress,
+              onPressed: () async {
+                if (!await mayOpen(context, ref, listed, press: 'Start') || !context.mounted) return;
+                await ref.read(installProvider(listed.id).notifier).start(listed);
+              },
+            )
+          : _Press(primary: true, label: 'Start', detail: 'No connection', height: hug ? _hugHeight : ArkeSizes.widePress);
+      presses = [if (hug) press else Expanded(child: press)];
     }
     return Padding(
       padding: EdgeInsets.only(top: top),
       child: Row(
+        mainAxisSize: hug ? MainAxisSize.min : MainAxisSize.max,
         children: [
           ...presses,
           if (bell) ...[const SizedBox(width: 8), NotifyBell(worldId: held?.id ?? worldId)],
@@ -340,8 +348,12 @@ class WorldPress extends ConsumerWidget {
   }
 }
 
+const _hugHeight = 40.0;
+
 class _Press extends StatelessWidget {
-  const _Press({required this.label, this.icon, this.detail, this.onPressed, this.primary = false});
+  const _Press({required this.label, this.icon, this.detail, this.onPressed, this.primary = false, this.height = ArkeSizes.widePress});
+
+  final double height;
 
   final String label;
   final IconData? icon;
@@ -366,7 +378,7 @@ class _Press extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
     );
     final style = FilledButton.styleFrom(
-      minimumSize: const Size(0, ArkeSizes.widePress),
+      minimumSize: Size(0, height),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       backgroundColor: primary ? _fg : _fg.withValues(alpha: 0.16),
       foregroundColor: primary ? _bg : _fg,

@@ -14,6 +14,7 @@ import '../../comics/application/comics.dart';
 import '../../players/application/music.dart';
 import '../../production/domain/production_kind.dart';
 import '../../stories/application/stories.dart';
+import '../application/found.dart';
 import '../application/guides.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
@@ -85,11 +86,13 @@ class _WorldScreenState extends ConsumerState<WorldScreen> {
     final titles = max(installed?.productions.length ?? 0, listed?.productions.length ?? 0);
     final picture = installed != null ? libraryPicture(store, installed.keyArt) : ref.keyArtOf(listed!);
     final guide = ref.watch(worldGuideProvider(id)).value?.guide;
+    // What the reader has found, once the world is here and something in it waits (P23 rule 6).
+    final reach = installed != null && guide != null && hasWaiting(guide) ? ref.watch(guideReachProvider(id)).value ?? GuideReach.none : null;
     final tabs = [
       (WorldTab.story, null),
-      if (guide != null && guide.characters.isNotEmpty) (WorldTab.people, guide.characters.length),
-      if (guide != null && guide.places.isNotEmpty) (WorldTab.places, guide.places.length),
-      if (guide != null && guide.lore.isNotEmpty) (WorldTab.lore, guide.lore.length),
+      if (guide != null && guide.characters.isNotEmpty) (WorldTab.people, _countOf(guide.characters, reach)),
+      if (guide != null && guide.places.isNotEmpty) (WorldTab.places, _countOf(guide.places, reach)),
+      if (guide != null && guide.lore.isNotEmpty) (WorldTab.lore, _countOf(guide.lore, reach)),
     ];
     final tab = tabs.any((entry) => entry.$1 == _tab) ? _tab : WorldTab.story;
     final update = installed == null ? null : ref.watch(worldUpdateProvider(installed.id));
@@ -133,6 +136,7 @@ class _WorldScreenState extends ConsumerState<WorldScreen> {
                 ),
                 _ => WorldPress(worldId: id, top: 12),
               },
+              found: reach == null ? null : FoundLine(found: foundIn(entriesOf(guide!), reach), ink: _fg, top: 12),
               tabs: _WorldTabs(tabs: tabs, selected: tab, onSelect: (value) => setState(() => _tab = value)),
             ),
             if (installed != null && newer != null) ...[const SizedBox(height: 16), _NewEdition(world: installed, newer: newer)],
@@ -147,6 +151,13 @@ class _WorldScreenState extends ConsumerState<WorldScreen> {
       ),
     );
   }
+}
+
+/// A tab's count: `14`, or `8 of 14` once there is something to find.
+String _countOf(Iterable<GuideEntry> entries, GuideReach? reach) {
+  if (reach == null) return '${entries.length}';
+  final found = foundIn(entries, reach);
+  return '${found.got} of ${found.of}';
 }
 
 /// Space and what it needs, in ⋯ before a world is here (P22 rule 11).
@@ -206,6 +217,7 @@ class _WorldHeader extends StatelessWidget {
     required this.onMore,
     this.age,
     this.logline,
+    this.found,
   });
 
   final String worldId;
@@ -217,6 +229,7 @@ class _WorldHeader extends StatelessWidget {
   final Widget press;
   final Widget tabs;
   final VoidCallback onMore;
+  final Widget? found;
 
   @override
   Widget build(BuildContext context) {
@@ -292,6 +305,7 @@ class _WorldHeader extends StatelessWidget {
                           ),
                         ],
                         press,
+                        ?found,
                       ],
                     ),
                   ),
@@ -322,7 +336,7 @@ class _WorldHeader extends StatelessWidget {
 class _WorldTabs extends StatelessWidget {
   const _WorldTabs({required this.tabs, required this.selected, required this.onSelect});
 
-  final List<(WorldTab, int?)> tabs;
+  final List<(WorldTab, String?)> tabs;
   final WorldTab selected;
   final ValueChanged<WorldTab> onSelect;
 
@@ -366,7 +380,7 @@ class _WorldTabs extends StatelessWidget {
                           if (count != null) ...[
                             const SizedBox(width: 6),
                             Text(
-                              '$count',
+                              count,
                               style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.6), fontFeatures: const [FontFeature.tabularFigures()]),
                             ),
                           ],
