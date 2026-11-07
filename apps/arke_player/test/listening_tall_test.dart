@@ -197,11 +197,20 @@ void main() {
     expect(tester.getSize(find.byType(PictureOfTheMoment)).height, closeTo(phone.height * 0.62, 0.01));
   });
 
-  testWidgets('a tablet shows the Wide picture (R-39)', (tester) async {
+  testWidgets('a tablet held upright takes the Tall picture (P27o, call 53)', (tester) async {
     await open(tester, const Size(820, 1180), withTall);
     final shown = picture(tester);
-    expect(shown.fill, isFalse);
-    expect(shown.shown!.path, plan.shownAt(withTall)!.path);
+    expect(shown.fill, isTrue);
+    expect(shown.shown!.path, plan.shownAt(withTall)!.tallPath);
+  });
+
+  testWidgets('a Fold open and a tablet sideways keep the Wide picture (P24j, P27c)', (tester) async {
+    for (final size in const [Size(984, 1092), Size(1280, 800)]) {
+      await open(tester, size, withTall);
+      final shown = picture(tester);
+      expect(shown.fill, isFalse);
+      expect(shown.shown!.path, plan.shownAt(withTall)!.path);
+    }
   });
 
   testWidgets('a phone turned shows the Wide picture, at the same place in the hold (P14 rule 4)', (tester) async {

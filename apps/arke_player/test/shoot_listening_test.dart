@@ -17,6 +17,8 @@ import 'package:arke_player/features/players/application/listening_plan.dart';
 import 'package:arke_player/features/players/application/players.dart';
 import 'package:arke_player/features/settings/application/settings_controller.dart';
 import 'package:arke_player/features/settings/domain/device_settings.dart';
+import 'package:arke_player/features/worlds/application/guides.dart';
+import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -25,6 +27,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final _shoot = Platform.environment['SHOOT'] == '1';
+
+/// Who Here shows.
+const _cast = Guide(
+  productions: [],
+  characters: [
+    GuideCharacter(
+      id: 'maren',
+      name: 'Maren Kest',
+      role: 'Tide-caller',
+      portrait: 'char-maren.jpg',
+      sections: [GuideSection(heading: 'Essence', text: '.')],
+    ),
+    GuideCharacter(
+      id: 'bray',
+      name: 'Bray Half-Hitch',
+      role: 'Rigger',
+      portrait: 'char-bray.jpg',
+      sections: [GuideSection(heading: 'Essence', text: '.')],
+    ),
+    GuideCharacter(
+      id: 'chorister',
+      name: 'The Chorister',
+      role: 'Keeper of the drowned verse',
+      portrait: 'char-chorister.jpg',
+      sections: [GuideSection(heading: 'Essence', text: '.')],
+    ),
+  ],
+  places: [],
+  lore: [],
+);
 const _design = '../../design/assets';
 const _media = '../../packages/arke_media/test/fixtures';
 
@@ -75,6 +107,12 @@ class _StillEngine implements AudioEngine {
   }) async {}
 
   @override
+  Future<void> pause() async {}
+
+  @override
+  Future<void> play() async {}
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -97,6 +135,13 @@ Future<void> _loadFonts() async {
       loader.addFont(Future.value(ByteData.sublistView(File('assets/fonts/$file.ttf').readAsBytesSync())));
     }
     await loader.load();
+  }
+  final icons = FontLoader('MaterialIcons');
+  final artifacts = File(Platform.resolvedExecutable).parent.parent.parent.path;
+  final iconFont = File('$artifacts/material_fonts/MaterialIcons-Regular.otf');
+  if (iconFont.existsSync()) {
+    icons.addFont(Future.value(ByteData.sublistView(iconFont.readAsBytesSync())));
+    await icons.load();
   }
 }
 
@@ -186,7 +231,7 @@ void main() {
     plan = await loadListeningPlan(store, item);
   });
 
-  Future<void> shoot(WidgetTester tester, String name, Size size, Duration at, {bool text = false}) async {
+  Future<void> shoot(WidgetTester tester, String name, Size size, Duration at, {bool text = false, Future<void> Function(WidgetTester tester)? act}) async {
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2;
     tester.view.padding = const FakeViewPadding(top: 47 * 2, bottom: 34 * 2);
@@ -212,6 +257,10 @@ void main() {
         overrides: [
           libraryItemsProvider.overrideWith((ref) => Stream.value(store.items)),
           libraryStoreProvider.overrideWith((ref) async => store),
+          libraryWorldsProvider.overrideWith((ref) => Stream.value(store.worlds)),
+          catalogueProvider.overrideWith((ref) async => const []),
+          worldGuideProvider.overrideWith((ref, worldId) async => WorldGuide(guide: _cast, pathOf: (asset) => '$_design/$asset')),
+          guideReachProvider.overrideWith((ref, worldId) async => GuideReach.none),
           audioEngineProvider.overrideWithValue(_StillEngine(item, plan, at)),
           settingsProvider.overrideWith(() => _Settings(DeviceSettings(text: text))),
         ],
@@ -226,6 +275,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    if (act != null) {
+      await act(tester);
+      await tester.pumpAndSettle();
+    }
     final boundary = key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final png = await tester.runAsync(() async {
       final image = await boundary.toImage(pixelRatio: 1);
@@ -237,6 +290,17 @@ void main() {
 
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
+  // P24: the upright player at rest, a tap, its two sheets, turned, on a Fold and upright on a tablet.
+  Duration tallAt() => plan.starts[1] + const Duration(seconds: 1);
+  testWidgets('P24c at rest', (t) => shoot(t, 'P24c-rest', phone, tallAt()));
+  testWidgets('P24c with Text', (t) => shoot(t, 'P24c-rest-text', phone, tallAt(), text: true));
+  testWidgets('P24d a tap', (t) => shoot(t, 'P24d-tap', phone, tallAt(), act: (tester) => tester.tapAt(const Offset(195, 300))));
+  testWidgets('P24e here', (t) => shoot(t, 'P24e-here', phone, tallAt(), act: (tester) => tester.tap(find.text('Here'))));
+  testWidgets('P24f episodes', (t) => shoot(t, 'P24f-episodes', phone, tallAt(), act: (tester) => tester.tap(find.text('Episodes'))));
+  testWidgets('P24i turned', (t) => shoot(t, 'P24i-turned', const Size(844, 390), tallAt()));
+  testWidgets('P24j on a fold', (t) => shoot(t, 'P24j-fold', fold, tallAt(), text: true));
+  testWidgets('P27o upright on a tablet', (t) => shoot(t, 'P27o-tablet', const Size(800, 1280), tallAt()));
+  testWidgets('P27c sideways on a tablet', (t) => shoot(t, 'P27c-tablet', const Size(1280, 800), tallAt()));
   testWidgets('P5a the picture of the moment', (t) => shoot(t, 'P5a-listening', phone, const Duration(milliseconds: 2000)));
   testWidgets('P5a with Text', (t) => shoot(t, 'P5a-listening-text', phone, const Duration(milliseconds: 1500), text: true));
   testWidgets('P5a a tall picture', (t) => shoot(t, 'P5a-listening-tall', phone, const Duration(milliseconds: 4000)));
