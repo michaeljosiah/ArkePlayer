@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'catalogue_channel.dart';
+
 /// Where the library lives: the app's own support directory, never shared storage, so a file
 /// added is the Player's copy and Remove deletes only that copy.
 final libraryRootProvider = FutureProvider<Directory>((ref) async {
-  final support = await getApplicationSupportDirectory();
+  final support = channelSupportDirectory(await getApplicationSupportDirectory());
   return Directory('${support.path}${Platform.pathSeparator}library');
 });
 

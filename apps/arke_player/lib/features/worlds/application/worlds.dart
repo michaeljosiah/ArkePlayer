@@ -5,12 +5,13 @@ import 'package:arke_world/arke_world.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/catalogue_channel.dart';
 import '../../../app/services.dart';
 import '../../players/application/players.dart';
 import '../../settings/application/settings_controller.dart';
 
 /// Arke's address for its list of worlds (SPEC-058 R-31, P12 rule 1): HTTPS, as a package is.
-final arkeWorldsList = Uri.parse('https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/catalogue.json');
+final arkeWorldsList = catalogueChannel.url;
 
 /// The list fetched from [arkeWorldsList], kept beside the library.
 final hostedCatalogueProvider = FutureProvider<HostedCatalogue>((ref) async {
@@ -21,7 +22,7 @@ final hostedCatalogueProvider = FutureProvider<HostedCatalogue>((ref) async {
 /// Arke's worlds (P9 rule 1, SPEC-058 R-31): of the list that ships with the app and the one last
 /// fetched, the newer. A world whose package is not published yet is in the list but never offered.
 final catalogueProvider = FutureProvider<List<CatalogueWorld>>((ref) async {
-  final shipped = parseCatalogue(await rootBundle.loadString('assets/worlds/catalogue.json'));
+  final shipped = parseCatalogue(await rootBundle.loadString(catalogueChannel.bundledCatalogue));
   final hosted = await ref.watch(hostedCatalogueProvider.future);
   return newestCatalogue(shipped, await hosted.keptList()).worlds;
 });
@@ -31,7 +32,7 @@ final catalogueProvider = FutureProvider<List<CatalogueWorld>>((ref) async {
 /// falls back to its own choice while this is unread.
 final listPicksProvider = FutureProvider<({CatalogueFeature? feature, String? band})>((ref) async {
   ref.watch(catalogueProvider);
-  final shipped = parseCatalogue(await rootBundle.loadString('assets/worlds/catalogue.json'));
+  final shipped = parseCatalogue(await rootBundle.loadString(catalogueChannel.bundledCatalogue));
   Catalogue? kept;
   try {
     kept = await (await ref.watch(hostedCatalogueProvider.future)).keptList();
