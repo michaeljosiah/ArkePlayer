@@ -1,7 +1,7 @@
 // Arke Player · the frames, turn by turn. The sample is The Undersong, shared by Helen Marsh with
 // Jonah Pike, beside Copper Saints (shared by Ama Mensah) and Meridian Dust (added from a file).
 // Every picture is in design/assets, recompressed from ArkeStudio's design-system/assets; nothing here is generated.
-import { A, ic, seek, sb, hi, tabs, pill, dock, frame, cc, tile, wc, sh, row, sheet, gb } from './view.mjs';
+import { A, ic, seek, sb, hi, tabs, pill, pill4, dock, frame, cc, tile, wc, sh, row, sheet, gb } from './view.mjs';
 
 // ---- the sample ------------------------------------------------------------------------------
 const W = {
@@ -819,7 +819,7 @@ ${fcScene(fcStill('50% 50%', '55% 62%'), 'The first name on the board')}${taken(
 ];
 
 // Widths per frame class; a frame's card is drawn at its frame's own size.
-const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : [390, 844];
+const size = (f) => f.markup.includes('class="ap desktop') ? [1440, 900] : f.markup.includes('class="ap fold') ? [984, 1092] : f.markup.includes('class="ap turned') ? [844, 390] : f.markup.includes('class="ap tabletup') ? [800, 1280] : f.markup.includes('class="ap tablet') ? [1280, 800] : [390, 844];
 const withSize = (list) => list.map((f) => ({ ...f, w: size(f)[0], h: size(f)[1] }));
 
 
@@ -904,4 +904,351 @@ ${sh('Read')}<div class="hrow">${poster({ tall: 'ledger-drawn-cover.jpg', pos: '
   frame('P21i', 'A Fold open, with its controls', 'fold media cm', `${sb(true)}<div class="st"></div>${gnSpread(2, 3)}${gnTop('Chapter 1 · Neap · Pages 2 – 3').replace('class="ptop cm-top"', 'class="ptop cm-top" style="left:24px;right:24px"')}<div class="sbot" style="height:200px"></div>${gnFoot(3, '2 – 3 of 11', 'left:160px;right:160px')}${hi()}`),
 ];
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20), p21: withSize(P21) };
+// ---- P22 · worlds first --------------------------------------------------------------------------
+// The owner, 7 November 2026: like Pocket Saga, with an emphasis on worlds, delivery left for later. It
+// takes the pace and leaves the look. Everything here is Arke's list as published (serial 49): covers,
+// names, loglines, sizes, and the people and counts of each world's guide. Genres and ages are samples.
+const WD = {
+  undersong: { name: 'The Undersong', logline: 'A drowned god still sings beneath the harbour.', art: 'world-undersong.jpg', pos: '60% 50%', tall: 'undersong-tall.jpg', genre: 'Fantasy', age: '16+', size: '72 MB', titles: '2 titles', people: 15, places: 12, lore: 10, faces: ['char-maren.jpg', 'under-dena.jpg', 'under-hadrin.jpg'] },
+  dumah: { name: 'Legend of Dumah', logline: DUMAH.logline, art: DUMAH.img, pos: DUMAH.pos, tall: 'dumah-tall.jpg', genre: 'Fantasy', age: '16+', size: '185 MB', titles: '1 title', people: 6, places: 8, lore: 4, faces: ['dumah-lucien.jpg', 'dumah-pricilla.jpg', 'dumah-nkechi.jpg'] },
+  quiet: { name: 'The Red Quiet', logline: 'A colony crash-lands on a moon its survey called dead. The moon is not empty, and the Mistress was here first.', art: 'red-quiet-key-art.jpg', pos: '50% 62%', tall: 'quiet-tall.jpg', genre: 'Sci-fi', age: '16+', size: '48 MB', titles: '2 titles', people: 7, places: 2, lore: 0, faces: ['quiet-ines.jpg', 'quiet-tobias.jpg', 'quiet-lark.jpg'] },
+  embers: { name: 'Embers of the Fallen', logline: 'A covert team in the Swiss Alps retrieves a living organism from beyond known reality, and something beneath the mountain answers.', art: 'embers-key-art.jpg', pos: '62% 40%', tall: 'embers-tall.jpg', genre: 'Thriller', age: '16+', size: '127 MB', titles: '1 title', people: 8, places: 0, lore: 0, faces: ['embers-reina.jpg', 'embers-jace.jpg', 'embers-jono.jpg'] },
+  juju: { name: 'Na Love or Juju', logline: 'Ife cannot make a man want her. She can only make wanting her cost him everything.', art: 'juju-key-art.jpg', pos: '50% 28%', tall: 'juju-cover-tall.jpg', genre: 'Romance', age: '18+', size: '1.1 GB', titles: '1 title', people: 14, places: 3, lore: 0, faces: ['juju-ife.jpg', 'juju-ade.jpg', 'juju-tunde.jpg'] },
+};
+const faces = (w) => `<span class="faces">${w.faces.map((f) => `<img src="${A}${f}" alt="">`).join('')}</span>`;
+const ageOf = (w) => `<span class="age">${w.age}</span>`;
+/** The world's Notify (P15j), brought forward: round beside the press, filled when on. */
+const bell = (on = false) => `<span class="rb${on ? ' on' : ''}" title="Notify">${ic('bell', 20)}</span>`;
+const startPress = (w, on = false) => `<div class="ca"><span class="btn pri">${ic('play', 18)}Start <em>· ${w.size}</em></span>${bell(on)}</div>`;
+const goPress = (where, { read = true, on = true, word = 'Continue' } = {}) => `<div class="ca"><span class="btn pri">${ic('play', 18)}${word} <em>· ${where}</em></span>${read ? `<span class="btn">${ic('book', 18)}Read</span>` : ''}${bell(on)}</div>`;
+/** A world on Home: its cover whole, lettered with its name, and under it its people and one press. */
+const coverHero = (w) => `<div class="cvh"><img class="cv" src="${A}${w.tall}" alt=""><div class="cd">${faces(w)}<span class="grow">${w.genre}</span>${ageOf(w)}</div>${startPress(w)}</div>`;
+/** A page's colour: its own picture's blur, fading into the page's ground. */
+const glow = (img, pos = 'center', h = 720) => `<div class="glow" style="height:${h}px"><img src="${A}${img}" alt="" style="object-position:${pos}"></div>`;
+const homeHead = (pad = '') => `<div class="hd over-glow on-media"${pad ? ` style="${pad}"` : ''}><span class="wmk">Arke</span><span class="grow"></span><span class="icb">${ic('search', 20)}</span></div>`;
+const homePlain = `<div class="hd"><span class="wmk">Arke</span><span class="grow"></span><span class="icb">${ic('search', 20)}</span></div>`;
+const newRow = (w = TW) => `${tile({ ...STORY.ledger, kind: 'Chapter 2 · The Undersong', w, tag: NEWTAG })}${tile({ ...STORY.whispers, kind: 'Chapter 3 · Legend of Dumah', w, tag: NEWTAG })}`;
+const titleRow = (w = 172) => `${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · The Undersong', w })}${poster({ tall: 'quiet-tall.jpg', title: 'The Red Quiet', kind: 'Audiobook · The Red Quiet', w })}${poster({ tall: 'embers-tall.jpg', title: STORY.threshold.title, kind: 'Audiobook · Embers of the Fallen', w })}${poster({ tall: 'dumah-tall.jpg', title: STORY.whispers.title, kind: 'Audiobook · Legend of Dumah', w })}`;
+const clipGlyph = `<span class="ib glass">${ic('play', 16)}</span>`;
+const teaserRow = (w = 112) => `${poster({ tall: 'juju-ife.jpg', pos: '50% 22%', title: 'Ife', kind: 'Character', w })}${poster({ tall: 'juju-m-look.jpg', pos: '50% 40%', title: 'Gold on Gold', kind: 'Clip · 0:30', w, mid: clipGlyph })}${poster({ tall: 'char-maren.jpg', pos: '50% 18%', title: 'Maren Kest', kind: 'Character', w })}${poster({ tall: 'dumah-lucien.jpg', pos: '50% 18%', title: 'Lucien', kind: 'Character', w })}`;
+const worldBand = (w, posters, size = 112, style = '') => `<div class="band on-media"${style ? ` style="${style}"` : ''}><img class="bg" src="${A}${w.art}" alt=""><div class="dk"></div><div class="bh"><img src="${A}${w.art}" alt="" style="object-position:${w.pos}"><div class="grow"><h3>${w.name}</h3><div class="m num">${w.titles} · ${w.people} characters</div></div><span class="bi"><span>${ic('play', 20)}</span>Start</span></div><div class="lg">${w.logline}</div><div class="hrow">${posters(size)}</div></div>`;
+const wk = (w, { line = `${w.genre} · ${w.titles} · ${w.people} characters`, tag = '' } = {}) => `<div class="wk"><img class="a" src="${A}${w.art}" alt="" style="object-position:${w.pos}"><div class="shade"></div>${tag ? `<div class="tg">${tag}</div>` : ''}<span class="ag">${ageOf(w)}</span><div class="tx"><div class="grow"><h3>${w.name}</h3><div class="m">${line}</div></div>${faces(w)}</div></div>`;
+const genreChips = (on = 'All') => `<div class="chips">${['All', 'Fantasy', 'Romance', 'Sci-fi', 'Thriller'].map((g) => `<span class="chip${g === on ? ' on' : ''}">${g}</span>`).join('')}</div>`;
+const worldsHead = `<div class="hd"><h1>Worlds</h1><span class="icb">${ic('search', 20)}</span></div>`;
+const searchHead = (q = '') => `<div class="hd"><span class="icb">${ic('left', 20, 2)}</span><div class="sf">${ic('search', 18)}<span class="grow${q ? '' : ' mute'}">${q || 'Search'}</span>${q ? `<span class="sx">${ic('x', 14, 2)}</span>` : ''}</div></div>`;
+const gc = (name, w, count) => `<div class="gc"><img src="${A}${w.art}" alt="" style="object-position:${w.pos}"><div class="shade"></div><div class="tx"><b>${name}</b><span>${count}</span></div></div>`;
+const sr = (img, title, line) => `<div class="sr"><img src="${A}${img}" alt=""><div class="grow"><div class="t">${title}</div><div class="m">${line}</div></div><span class="end">${ic('right', 16)}</span></div>`;
+/** A world's tabs: an empty one is absent. */
+const wTabs = (w, on, { people } = {}) => `<div class="wtabs">${[['Story', null], ['People', people ?? w.people], ['Places', w.places], ['Lore', w.lore]].filter(([, n]) => n !== 0).map(([l, n]) => `<span class="wt${l === on ? ' on' : ''}">${l}${n ? `<i>${n}</i>` : ''}</span>`).join('')}</div>`;
+/** A world's page: the key art melting into its own blur, then the world, one press and its tabs. */
+const wHero = (w, press, { on = 'Story', data = `${w.genre} · ${w.titles}`, extra = '', people, cls = '' } = {}) => `<div class="wh on-media${cls ? ' ' + cls : ''}"><img class="tint" src="${A}${w.art}" alt=""><img class="art" src="${A}${w.art}" alt="" style="object-position:${w.pos}"><div class="top">${back}${more}</div><div class="in"><h1>${w.name}</h1><div class="cd">${faces(w)}<span class="grow">${data}</span>${ageOf(w)}</div><div class="lg">${w.logline}</div>${press}${extra}</div>${wTabs(w, on, { people })}</div>`;
+const foot4 = (on, wide = false) => `<div class="ffoot"></div>${pill4(on, wide)}${hi()}`;
+const person = (img, name, role, opts = {}) => poster({ tall: img, pos: '50% 20%', title: name, kind: role, w: 112, ...opts });
+const JUJU_CH = [['1 · Gold on Gold', '20 m', heard], ['2 · Suya at Midnight', '29 m', heard], ['3 · Ofada for Two', '25 m', '<span class="mute num" style="font:var(--type-ui)">8 m left</span>'], ['4 · My Friend Ade', '29 m', ''], ['5 · Awolowo Road', '29 m', '']];
+
+const P22 = [
+  frame('P22a', 'Home, first open: a world’s cover and Start', 'phone glowed', `${glow(WD.undersong.tall)}${sb(true)}${homeHead()}<div class="body"><div class="covers on-media">${coverHero(WD.undersong)}${coverHero(WD.juju)}</div>
+${sh('New chapters')}<div class="hrow">${newRow()}</div></div>${foot4('Home')}`),
+
+  frame('P22b', 'Home, further down: titles, teasers, one world’s band', 'phone', `${sb()}${homePlain}<div class="body">${sh('Stories')}<div class="hrow">${titleRow()}</div>
+${sh('Teasers')}<div class="hrow">${teaserRow()}</div>
+${worldBand(WD.juju, (s) => `${poster({ tall: WD.juju.tall, title: 'Na love or Juju', kind: 'Audiobook', w: s })}${person('juju-ife.jpg', 'Ife', 'Character', { w: s })}${person('juju-ade.jpg', 'Ade', 'Character', { w: s })}`)}</div>${foot4('Home')}`),
+
+  frame('P22c', 'Home, coming back: Continue first, in the colour of the world you are in', 'phone glowed', `${glow(WD.juju.art, '50% 28%', 372)}${sb(true)}${homeHead()}<div class="body"><div class="on-media">${sh('Continue')}<div class="hrow">${cc({ img: WD.juju.art, pos: WD.juju.pos, kind: 'Audiobook', title: 'Na love or Juju', where: 'Chapter 3 · 8 m left', at: 68 })}${cc({ img: STORY.ledger.img, pos: STORY.ledger.pos, kind: 'Audiobook', title: STORY.ledger.title, where: `${NEWTAG}Chapter 2`, at: 100 })}</div></div>
+${sh('New chapters')}<div class="hrow">${newRow()}</div>
+${sh('Worlds')}<div class="covers">${coverHero(WD.quiet)}${coverHero(WD.embers)}</div></div>${foot4('Home')}`),
+
+  frame('P22d', 'Worlds: every world, by genre', 'phone', `${sb()}${worldsHead}${genreChips()}<div class="body" style="padding-top:12px">${wk(WD.undersong)}${wk(WD.juju)}${wk(WD.dumah)}${wk(WD.quiet)}</div>${foot4('Worlds')}`),
+
+  frame('P22e', 'An 18+ world in plain view; only Start asks', 'phone glowed', `${glow(WD.juju.tall)}${sb(true)}${homeHead()}<div class="body"><div class="covers on-media">${coverHero(WD.juju)}${coverHero(WD.dumah)}</div></div>${foot4('Home')}<div class="veil"></div>${sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="age big">18+</span><div style="margin-top:6px;font:var(--type-h3)">Na Love or Juju</div><div class="mute num" style="font:var(--type-ui)">Romance · 1.1 GB</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">I am 18 or older · Start</span><span class="btn ghost wide">Not now</span></div>`)}${hi()}`),
+
+  frame('P22f', 'Search', 'phone', `${sb()}${searchHead()}<div class="body">${sh('Genres')}<div class="gcs">${gc('Fantasy', WD.dumah, '2 worlds')}${gc('Romance', WD.juju, '1 world')}${gc('Sci-fi', WD.quiet, '1 world')}${gc('Thriller', WD.embers, '1 world')}</div>
+${sh('Characters')}<div class="hrow">${person('char-maren.jpg', 'Maren Kest', 'The Undersong')}${person('dumah-lucien.jpg', 'Lucien', 'Legend of Dumah')}${person('juju-ife.jpg', 'Ife', 'Na Love or Juju')}${person('quiet-ines.jpg', 'Ines Marr', 'The Red Quiet')}</div></div>${foot4('Worlds')}`),
+
+  frame('P22g', 'Search: across worlds, never a spoiler', 'phone', `${sb()}${searchHead('Ade')}<div class="body">${sh('Characters')}${sr('juju-ade.jpg', 'Adeyemi “Ade” Akinola', 'Self-made Lagos man · Na Love or Juju')}
+${sh('Places')}${sr('juju-ade-house.jpg', 'Ade’s House, Ikoyi', 'Place · Na Love or Juju')}
+${sh('Chapters')}${sr('juju-m-tunde.jpg', 'My Friend Ade', 'Chapter 4 · Na love or Juju')}</div>${foot4('Worlds')}`),
+
+  frame('P22h', 'A world: Start, its people, its tabs', 'phone', `${sb(true)}<div class="body">${wHero(WD.undersong, startPress(WD.undersong))}<div class="hrow" style="padding-top:16px">${poster({ tall: WD.undersong.tall, title: STORY.ledger.title, kind: 'Audiobook · 35 m' })}${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · 16 pages' })}</div></div>${foot4('Worlds')}`),
+
+  frame('P22i', 'A world of one title: its chapters, at once', 'phone', `${sb(true)}<div class="body">${wHero(WD.juju, goPress('Chapter 3'))}${JUJU_CH.map(([name, data, end]) => chr(name, data, end)).join('')}</div>${foot4('Worlds')}`),
+
+  frame('P22j', 'A world’s People', 'phone', `${sb()}${scrolledHead(WD.undersong.name)}${wTabs(WD.undersong, 'People')}<div class="body"><div class="pgrid">${person('char-maren.jpg', 'Maren Kest', 'Tide-caller')}${person('under-dena.jpg', 'Dena Mott', 'North-stairs cart carrier')}${person('under-hadrin.jpg', 'Hadrin Vale', 'Character')}${person('under-iven.jpg', 'Iven Darrig', 'Sail-loft worker')}${person('under-nall.jpg', 'Mrs Nall', 'East Chain resident')}${gatedPoster('After Chapter 2', 112)}${gatedPoster('After Chapter 4', 112)}${gatedPoster('After Chapter 6', 112)}${gatedPoster('After Chapter 9', 112)}</div></div>${foot4('Worlds')}`),
+
+  frame('P22k', 'A world’s Places', 'phone', `${sb()}${scrolledHead(WD.undersong.name)}${wTabs(WD.undersong, 'Places')}<div class="body"><div class="plist">${tile({ img: 'under-bell-house.jpg', title: 'Bell House', kind: 'Place', w: 358 })}${tile({ img: 'under-east-lock.jpg', title: 'East Lock', kind: 'Place', w: 358 })}${tile({ ...PLACES.saltmarket, kind: 'Place', w: 358 })}</div></div>${foot4('Worlds')}`),
+
+  frame('P22l', 'Library: what is on the phone', 'phone', `${sb()}<div class="hd"><h1>Library</h1><span class="icb">${ic('plus', 20, 2)}</span></div><div class="chips"><span class="chip on">Worlds</span><span class="chip">Files</span><span class="chip">Downloads</span></div><div class="body" style="padding-top:12px">${wk(WD.juju, { line: 'Chapter 3 · 1.1 GB' })}${wk(WD.undersong, { line: 'Chapter 2 · 72 MB', tag: NEWTAG })}${wk(WD.quiet, { line: '48 MB' })}</div>${foot4('Library')}`),
+
+  frame('P22m', 'Library: Add a file lives here now', 'phone', `${sb()}<div class="hd"><h1>Library</h1><span class="icb">${ic('plus', 20, 2)}</span></div><div class="chips"><span class="chip">Worlds</span><span class="chip on">Files</span><span class="chip">Downloads</span></div><div class="body"><div class="empty"><div class="state">Nothing added</div><span class="btn pri">${ic('plus', 18, 2)}Add a file</span></div></div>${foot4('Library')}`),
+
+  frame('P22n', 'Home on a Fold', 'fold glowed', `${glow(WD.undersong.tall, 'center', 720)}<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb(true)}${homeHead('padding:6px 28px 6px 24px')}<div class="body" style="padding:0 8px"><div class="covers on-media">${coverHero(WD.undersong)}${coverHero(WD.juju)}${coverHero(WD.dumah)}${coverHero(WD.quiet)}</div>
+${sh('New chapters')}<div class="hrow">${newRow(300)}</div></div>${foot4('Home', true)}</div>`),
+
+  frame('P22o', 'A world on a Fold', 'fold', `<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative">${sb(true)}<div class="body">${wHero(WD.undersong, startPress(WD.undersong), { cls: 'fold-h' })}<div class="hrow" style="padding:20px 28px 0">${poster({ tall: WD.undersong.tall, title: STORY.ledger.title, kind: 'Audiobook · 35 m', w: 260 })}${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · 16 pages', w: 260 })}</div></div>${foot4('Worlds', true)}</div>`),
+];
+
+// ---- P23 · a world's rewards: teasers to swipe, and what you find -------------------------------------
+// Pocket Saga's reward is a coin. Arke's is the world itself: a reader who reaches a chapter is handed
+// someone new. The reach is already counted on the phone (arke_world reach.dart), so none of this needs
+// an account or a server. Who waits for which chapter is Na Love or Juju's guide as published.
+const tzRail = (items, style = '') => `<div class="frail"${style ? ` style="${style}"` : ''}>${items.map(([i, l, on]) => `<span class="ib col"><i${on ? ' class="on"' : ''}>${ic(i, 21)}</i>${l}</span>`).join('')}</div>`;
+const tzWorld = (w, style = '') => `<div class="tzw"${style ? ` style="${style}"` : ''}><img src="${A}${w.art}" alt="" style="object-position:${w.pos}"><div class="grow"><b>${w.name}</b><div class="s">${w.genre}${ageOf(w)}</div></div><span class="btn pri">Start <em>· ${w.size}</em></span></div>`;
+const tzClose = `<div class="ptop"><span class="ib glass">${ic('x', 20, 2)}</span></div>`;
+const tzText = (kind, title, line = '', quote = '') => `<div class="tzt"><div class="eb">${kind}</div><h2>${title}</h2>${line ? `<div class="m">${line}</div>` : ''}${quote ? `<div class="q">${quote}</div>` : ''}</div>`;
+const tzLine = (at) => `<div class="tzs"><div class="scrub" style="height:3px"><i style="width:${at}%"></i></div></div>`;
+const FOUND = [['juju-ife.jpg', 'Ife', 'Kept woman, keeper of men'], ['juju-ade.jpg', 'Adeyemi “Ade” Akinola', 'Self-made Lagos man'], ['juju-tunde.jpg', 'Tunde', 'The friend who was right'], ['juju-musa.jpg', 'Musa', 'Ade’s gateman'], ['juju-nkechi.jpg', 'Nkechi Obi', 'Ade’s operations manager'], ['juju-abosede.jpg', 'Mrs. Abosede Akinola', 'Ade’s mother']];
+const NEWLY = [['juju-kemi.jpg', 'Kemi', 'Ife’s friend, insurance'], ['juju-zee.jpg', 'Zee', 'Ife’s friend from the club']];
+
+const P23 = [
+  frame('P23a', 'A teaser: a character, her voice playing', media(), `<img class="pic" src="${A}char-maren.jpg" alt="" style="object-position:50% 16%"><div class="st" style="height:150px"></div><div class="sbot" style="height:520px"></div>${sb(true)}${tzClose}
+${tzText('Character', 'Maren Kest', 'Tide-caller', '“The tide is lower than it has ever been.”')}${tzRail([['volume', 'Voice', true], ['bell', 'Notify'], ['globe', 'World']])}${tzLine(38)}${tzWorld(WD.undersong)}${hi()}`),
+
+  frame('P23b', 'A teaser: a clip, with sound', media(), `<img class="pic" src="${A}juju-m-look.jpg" alt="" style="object-position:50% 40%"><div class="st" style="height:150px"></div><div class="sbot" style="height:480px"></div>${sb(true)}${tzClose}
+${tzText('Clip · 0:30', 'Gold on Gold', 'Chapter 1', '“She looked at him.”')}${tzRail([['volume', 'Sound', true], ['bell', 'Notify'], ['globe', 'World']])}${tzLine(62)}${tzWorld(WD.juju)}${hi()}`),
+
+  frame('P23c', 'A teaser: a place, Wide over its own blur', media(), `<img class="wob" src="${A}under-bell-house.jpg" alt=""><img class="wob-w" src="${A}under-bell-house.jpg" alt="" style="top:228px"><div class="sbot" style="height:400px"></div>${sb(true)}${tzClose}
+${tzText('Place', 'Bell House')}${tzRail([['bell', 'Notify'], ['globe', 'World']])}${tzWorld(WD.undersong)}${hi()}`),
+
+  frame('P23d', 'A teaser on a Fold: upright, over its own blur', 'fold media', `<img class="wob" src="${A}char-maren.jpg" alt="">${sb(true)}<div style="position:absolute;left:185px;top:0;bottom:0;width:614px;overflow:hidden"><img class="pic" src="${A}char-maren.jpg" alt="" style="object-position:50% 16%"><div class="sbot" style="height:520px"></div>${tzText('Character', 'Maren Kest', 'Tide-caller', '“The tide is lower than it has ever been.”')}${tzRail([['volume', 'Voice', true], ['bell', 'Notify'], ['globe', 'World']])}${tzLine(38)}${tzWorld(WD.undersong)}</div><div class="ptop" style="left:24px"><span class="ib glass">${ic('x', 20, 2)}</span></div>${hi()}`),
+
+  frame('P23e', 'Someone new, while it plays', media(), `<img class="pic" src="${A}juju-m-car.jpg" alt="" style="object-position:50% 40%"><div class="st" style="height:190px"></div><div class="sbot" style="height:320px"></div>${sb(true)}<div class="fnd" style="top:58px"><img src="${A}juju-kemi.jpg" alt=""><div class="grow"><div class="k1"><span class="tag new">New</span><span class="lk">Character</span></div><div class="t">Kemi</div></div><span class="mute">${ic('right', 18)}</span></div>
+<div class="eft"><div class="t">31 · My friend Ade</div><div class="w">Na love or Juju${ic('right', 14, 2)}</div></div>${tzRail([['users', 'Here'], ['list', 'Episodes'], ['bell', 'Notify', true]], 'bottom:64px')}<div class="escrub"><div class="scrub" style="height:3px"><i style="width:24%"></i></div></div>${hi()}`),
+
+  frame('P23f', 'A world with what you have found', 'phone', `${sb(true)}<div class="body">${wHero(WD.juju, goPress('Chapter 4'), { people: '8 of 14', extra: `<div class="fbar num"><span>10 of 17 found</span><div class="bar"><i style="width:59%"></i></div></div>` })}${chr('4 · My Friend Ade', '29 m', '<span class="mute num" style="font:var(--type-ui)">22 m left</span>')}${chr('5 · Awolowo Road', '29 m', '')}${chr('6 · When the Light Went', '35 m', '')}</div>${foot4('Worlds')}`),
+
+  frame('P23g', 'People: found, new, still to come', 'phone', `${sb()}${scrolledHead(WD.juju.name)}${wTabs(WD.juju, 'People', { people: '8 of 14' })}<div class="body"><div class="fgh num"><span>8 of 14 found</span><div class="bar"><i style="width:57%"></i></div></div><div class="pgrid">${NEWLY.map(([img, name, role]) => person(img, name, role, { tag: NEWTAG })).join('')}${FOUND.map(([img, name, role]) => person(img, name, role)).join('')}${gatedPoster('After Chapter 8', 112)}</div></div>${foot4('Worlds')}`),
+
+  frame('P23h', 'Home: new in your worlds', 'phone glowed', `${glow(WD.juju.art, '50% 28%', 372)}${sb(true)}${homeHead()}<div class="body"><div class="on-media">${sh('Continue')}<div class="hrow">${cc({ img: WD.juju.art, pos: WD.juju.pos, kind: 'Audiobook', title: 'Na love or Juju', where: 'Chapter 4 · 22 m left', at: 26 })}${cc({ img: STORY.ledger.img, pos: STORY.ledger.pos, kind: 'Audiobook', title: STORY.ledger.title, where: 'Chapter 2', at: 100 })}</div></div>
+${sh('New in your worlds')}<div class="hrow">${person('juju-kemi.jpg', 'Kemi', 'Na Love or Juju', { tag: NEWTAG })}${person('juju-zee.jpg', 'Zee', 'Na Love or Juju', { tag: NEWTAG })}${person('under-iven.jpg', 'Iven Darrig', 'The Undersong', { tag: NEWTAG })}${person('under-nall.jpg', 'Mrs Nall', 'The Undersong', { tag: NEWTAG })}</div>
+${sh('New chapters')}<div class="hrow">${newRow()}</div></div>${foot4('Home')}`),
+];
+
+// ---- P24 · episodes and the upright player -------------------------------------------------------------
+// A chapter runs 20 to 35 minutes and Pocket Saga's episode a few. Arke's narration is already cut for
+// this: in Na Love or Juju's first six chapters, 129 of 130 pictures have a Tall, one every 51 to 100
+// seconds. An episode is a stretch of a chapter's take, cut on a turn in the Studio, with no new audio.
+// These cuts are samples, on chapter 1's real pictures and words; the Ledger's date is a sample too.
+const EP = [['1', 'The goat story', '3:25', 'juju-m-tunde.jpg'], ['2', 'He heard her', '4:17', 'juju-m-walk.jpg'], ['3', 'Good evening', '5:06', 'juju-m-table.jpg'], ['4', 'Palm up', '2:01', 'juju-m-hand.jpg'], ['5', 'Ade drove', '5:41', 'juju-m-car.jpg'], ['6', 'The gate', '3:12', 'juju-m-gate.jpg']];
+const er = ([n, title, length, img], { seen = false, now = false, left = '' } = {}) => `<div class="er${now ? ' now' : ''}${seen ? ' seen' : ''}"><span class="th"><img src="${A}${img}" alt=""></span><div class="grow"><div class="t">${n} · ${title}</div><div class="m"><span>${length}</span>${left ? `<span>${left}</span>` : ''}</div>${now ? '<div class="bar"><i style="width:72%"></i></div>' : ''}</div>${now ? '<span class="btn">Resume</span>' : seen ? `<span class="end">${heard}</span>` : ''}</div>`;
+const RANGES = ['1–50', '51–100', '101–150', '151–200', '201–248'];
+const rangeChips = (style = '') => `<div class="chips"${style ? ` style="${style}"` : ''}>${RANGES.map((r, i) => `<span class="chip${i ? '' : ' on'}">${r}</span>`).join('')}</div>`;
+const look = `<img class="pic" src="${A}juju-m-look.jpg" alt="" style="object-position:50% 40%">`;
+const epFoot = (title, where, words = '') => `<div class="eft">${words ? `<div class="wd">${words}</div>` : ''}<div class="t">${title}</div><div class="w">${where}${ic('right', 14, 2)}</div></div>`;
+const epRail = (style = 'bottom:64px') => tzRail([['users', 'Here'], ['list', 'Episodes'], ['bell', 'Notify', true]], style);
+const epLine = (at, style = '') => `<div class="escrub"${style ? ` style="${style}"` : ''}><div class="scrub" style="height:3px"><i style="width:${at}%"></i></div></div>`;
+const epRest = (rest = '') => `${look}<div class="st" style="height:110px"></div><div class="sbot" style="height:380px"></div>${sb(true)}${rest}`;
+const hr = (img, title, line) => `<div class="hr"><img src="${A}${img}" alt=""><div class="grow"><div class="t">${title}</div><div class="m">${line}</div></div><span class="end">${ic('right', 16)}</span></div>`;
+const HERE = `${hr('juju-ife.jpg', 'Ife', 'Kept woman, keeper of men')}${hr('juju-ade.jpg', 'Adeyemi “Ade” Akinola', 'Self-made Lagos man')}${hr('juju-tunde.jpg', 'Tunde', 'The friend who was right')}`;
+
+const P24 = [
+  frame('P24a', 'A world in episodes: where you are, and what is next', 'phone', `${sb(true)}<div class="body">${wHero(WD.juju, goPress('Episode 2'), { data: 'Romance · 248 episodes' })}${rangeChips('padding-top:12px')}<div class="egl">Chapter 1 · Gold on Gold</div>${er(EP[0], { seen: true })}${er(EP[1], { now: true, left: '1:12 left' })}${er(EP[2])}</div>${foot4('Worlds')}`),
+
+  frame('P24b', 'Episodes, further down', 'phone', `${sb()}${scrolledHead(WD.juju.name)}${wTabs(WD.juju, 'Story')}${rangeChips('padding-top:12px')}<div class="body"><div class="egl">Chapter 1 · Gold on Gold</div>${er(EP[0], { seen: true })}${er(EP[1], { now: true, left: '1:12 left' })}${er(EP[2])}${er(EP[3])}${er(EP[4])}<div class="egl">Chapter 2 · Suya at Midnight</div>${er(EP[5])}</div>${foot4('Worlds')}`),
+
+  frame('P24c', 'An episode playing, at rest', media(), `${epRest()}${epFoot('2 · He heard her', 'Na love or Juju', 'She looked at him.')}${epRail()}${epLine(72)}${hi()}`),
+
+  frame('P24d', 'A tap: paused, with its controls', media(), `${epRest()}<div class="dim"></div><div class="ptop">${close}<div class="ttl"><div class="eb">Na love or Juju</div><div class="sc">2 · He heard her</div></div><span class="ib">${ic('more', 20)}</span></div>${epRail('bottom:150px')}
+<div class="emid"><span class="ib">${seek(15, true, 28)}</span><span class="play">${ic('play', 26)}</span><span class="ib">${seek(15, false, 28)}</span></div>
+<div style="position:absolute;z-index:4;left:20px;right:20px;bottom:40px"><div class="scrub"><i style="width:72%"></i><b style="left:72%"></b></div><div class="times"><span>3:05</span><span>4:17</span></div><div class="trow" style="margin-top:10px">${bookRow2.replace('End of chapter', 'Sleep')}</div></div>${hi()}`),
+
+  frame('P24e', 'Here: who is in this moment', media(), `${epRest()}<div class="veil" style="background:color-mix(in srgb,var(--media-overlay-bg) 30%,transparent)"></div>${sheet('Here', `${HERE}<div style="padding:12px 16px 0"><span class="btn wide">${ic('globe', 18)}Na Love or Juju</span></div>`, { glass: true, count: '3' })}${hi()}`),
+
+  frame('P24f', 'Episodes, over what plays', media(), `${epRest()}<div class="veil" style="background:color-mix(in srgb,var(--media-overlay-bg) 30%,transparent)"></div>${sheet('Episodes', `<div class="eps">${rangeChips()}<div class="egl">Chapter 1 · Gold on Gold</div>${er(EP[0], { seen: true })}${er(EP[1], { now: true, left: '1:12 left' }).replace('<span class="btn">Resume</span>', `<span class="end">${ic('bars', 18)}</span>`)}${er(EP[2])}${er(EP[3])}${er(EP[4])}</div>`, { glass: true, count: '248', style: 'top:190px' })}${hi()}`),
+
+  frame('P24g', 'A swipe: the next one comes up', media(), `<div class="swp" style="top:0;height:268px"><img src="${A}juju-m-walk.jpg" alt="" style="bottom:0"></div><div class="swp" style="top:268px;bottom:0"><img src="${A}juju-m-table.jpg" alt="" style="top:0"><div class="sbot" style="height:280px"></div></div>${sb(true)}${epFoot('3 · Good evening', 'Na love or Juju')}${epRail()}${epLine(2)}${hi()}`),
+
+  frame('P24h', 'Caught up: the next date, and the world while you wait', media(), `<img class="wob" src="${A}${WD.undersong.tall}" alt="">${sb(true)}<div class="ptop">${close}<span class="grow"></span></div><div class="cu"><img src="${A}${WD.undersong.tall}" alt="" style="width:132px;height:198px;margin:0 auto 18px;border-radius:9px;object-fit:cover;box-shadow:var(--shadow-xl)"><h2>Caught up</h2><div class="m num">Episode 97 · Thu 12 Nov</div><span class="btn pri">${ic('bell', 18)}Notify on</span></div>
+<div class="on-media" style="position:absolute;z-index:4;left:0;right:0;bottom:30px">${sh('In this world')}<div class="hrow">${person('char-maren.jpg', 'Maren Kest', 'Tide-caller')}${person('under-dena.jpg', 'Dena Mott', 'North-stairs cart carrier')}${poster({ img: 'under-bell-house.jpg', title: 'Bell House', kind: 'Place', w: 112 })}${person('under-iven.jpg', 'Iven Darrig', 'Sail-loft worker')}</div></div>${hi()}`),
+
+  frame('P24i', 'Turned: the Wide picture', 'turned media', `<img class="wob" src="${A}juju-w-look.jpg" alt=""><img src="${A}juju-w-look.jpg" alt="" style="position:absolute;left:129px;top:0;width:586px;height:390px;object-fit:cover"><div class="sbot" style="height:230px"></div>${epFoot('2 · He heard her', 'Na love or Juju', 'She looked at him.').replace('class="eft"', 'class="eft" style="left:40px;right:130px;bottom:34px"')}${epRail('right:32px;bottom:26px')}${epLine(72, 'left:40px;right:40px;bottom:16px')}`),
+
+  frame('P24j', 'On a Fold: the Wide picture, Here beside it', 'fold media', `<img class="wob" src="${A}juju-w-look.jpg" alt="">${sb(true)}<div style="position:absolute;left:0;top:0;bottom:0;right:320px"><img src="${A}juju-w-look.jpg" alt="" style="position:absolute;left:0;top:236px;width:664px;height:443px;object-fit:cover"><div style="position:absolute;z-index:4;left:28px;right:28px;top:712px"><div class="wd" style="font:var(--weight-semibold) var(--text-2xl)/1.35 var(--font-sans);letter-spacing:var(--tracking-tight)">She looked at him.</div><div style="margin-top:18px;font:var(--type-h3)">2 · He heard her</div><div class="mute" style="margin-top:2px;font:var(--type-ui)">Na love or Juju</div><div class="scrub" style="height:3px;margin-top:22px"><i style="width:72%"></i></div></div></div><div class="ptop" style="left:16px;right:336px">${close}</div>
+<div class="fp"><div class="wtabs"><span class="wt on">Here<i>3</i></span><span class="wt">Episodes<i>248</i></span><span class="grow"></span><span style="display:inline-flex;align-items:center;margin-right:-4px">${ic('bell', 20)}</span></div><div style="padding-top:8px">${HERE}</div><div style="padding:12px 16px 0"><span class="btn wide">${ic('globe', 18)}Na Love or Juju</span></div></div>${hi()}`),
+];
+
+// ---- P25 · a brand-new install --------------------------------------------------------------------
+// The owner, 7 November 2026: "Keep both themes but leave dark as default" and "show a brand new install
+// state". What ships with the app is there at once: the list, its covers and key art. Each world's guide
+// comes over the network, 1 to 4 MB, so its people, its counts and the teasers arrive a moment later.
+const coverWith = (w, press, people = true) => `<div class="cvh"><img class="cv" src="${A}${w.tall}" alt=""><div class="cd">${people ? faces(w) : ''}<span class="grow">${w.genre}</span>${ageOf(w)}</div>${press}</div>`;
+const startBare = (w) => coverWith(w, startPress(w), false);
+const downloading = (done, of, at) => `<div class="dl"><div class="bar"><i style="width:${at}%"></i></div><div class="dlr num"><span>Downloading · ${done} of ${of}</span><span>Cancel</span></div></div>`;
+const playPress = `<div class="ca"><span class="btn pri">${ic('play', 18)}Play</span>${bell()}</div>`;
+const noConnection = `<div class="ca"><span class="btn pri off">Start <em>· No connection</em></span>${bell()}</div>`;
+const offlineHead = `<div class="hd over-glow on-media"><span class="wmk">Arke</span><span class="grow"></span><span class="tag glass" style="height:28px;padding:0 10px;font-size:var(--text-xs)">${ic('wifioff', 14, 2)}Offline</span><span class="icb">${ic('search', 20)}</span></div>`;
+const themeRow = `<div class="r"><span class="l">Theme</span><span class="seg thm"><span class="on">Dark</span><span>Light</span></span></div>`;
+const YOU = {
+  look: `<div class="gl">Appearance</div><div class="grp">${themeRow}</div>`,
+  play: `<div class="gl">Playback</div><div class="grp">${row('Captions', 'Off')}${row('Text', '', 'off')}${row('Slow push', '', 'on')}${row('Autoplay next', '', 'on')}</div>`,
+  down: `<div class="gl">Downloads</div><div class="grp">${row('Wi-Fi only', '', 'on')}${row('On this phone', '0 MB', '')}</div>`,
+  adult: `<div class="gl">Content</div><div class="grp">${row('Adult content', 'Off')}</div>`,
+  about: `<div class="gl">About</div><div class="grp">${row('Check for updates', '')}${row('Version', '1.0', '')}${row('Licences')}</div>`,
+};
+const libChips = (on, style = '') => `<div class="chips"${style ? ` style="${style}"` : ''}>${['Worlds', 'Files', 'Downloads'].map((c) => `<span class="chip${c === on ? ' on' : ''}">${c}</span>`).join('')}</div>`;
+const noWorlds = `<div class="empty"><div class="state">No worlds yet</div><span class="btn pri">${ic('globe', 18)}Worlds</span></div>`;
+const bandJuju = worldBand(WD.juju, (s) => `${poster({ tall: WD.juju.tall, title: 'Na love or Juju', kind: 'Audiobook', w: s })}${person('juju-ife.jpg', 'Ife', 'Character', { w: s })}${person('juju-ade.jpg', 'Ade', 'Character', { w: s })}`);
+
+const P25 = [
+  frame('P25a', 'Opening: the wordmark, for a moment', media(), `${sb(true)}<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="wm">Arke</div><div class="wm2">Player</div></div>${hi()}`),
+
+  frame('P25b', 'Home, the first moment: what ships with the app', 'phone glowed', `${glow(WD.undersong.tall)}${sb(true)}${homeHead()}<div class="body"><div class="covers on-media">${startBare(WD.undersong)}${startBare(WD.juju)}</div>
+${sh('New chapters')}<div class="hrow">${newRow()}</div></div>${foot4('Home')}`),
+
+  frame('P25c', 'Home, brand new, all of it: its people arrived', 'phone glowed', `${glow(WD.undersong.tall)}${sb(true)}${homeHead()}<div class="body"><div class="covers on-media">${coverHero(WD.undersong)}${coverHero(WD.juju)}</div>
+${sh('New chapters')}<div class="hrow">${newRow()}</div>
+${sh('Stories')}<div class="hrow">${titleRow()}</div>
+${sh('Teasers')}<div class="hrow">${teaserRow()}</div>
+${bandJuju}</div>${foot4('Home')}`, 'height:2010px'),
+
+  frame('P25d', 'Start pressed: the download in its place', 'phone glowed', `${glow(WD.dumah.tall)}${sb(true)}${homeHead()}<div class="body"><div class="covers on-media">${coverWith(WD.dumah, downloading('74', '185 MB', 40))}${coverHero(WD.quiet)}</div>
+${sh('New chapters')}<div class="hrow">${newRow()}</div></div>${foot4('Home')}`),
+
+  frame('P25e', 'Arrived: Play', 'phone glowed', `${glow(WD.dumah.tall)}${sb(true)}${homeHead()}<div class="body"><div class="covers on-media">${coverWith(WD.dumah, playPress)}${coverHero(WD.quiet)}</div>
+${sh('New chapters')}<div class="hrow">${newRow()}</div></div>${foot4('Home')}`),
+
+  frame('P25f', 'Library, brand new', 'phone', `${sb()}<div class="hd"><h1>Library</h1><span class="icb">${ic('plus', 20, 2)}</span></div>${libChips('Worlds')}<div class="body">${noWorlds}</div>${foot4('Library')}`),
+
+  frame('P25g', 'You, brand new: dark, with Light a press away', 'phone', `${sb()}<div class="hd"><h1>You</h1></div><div class="body">${YOU.look}${YOU.play}${YOU.down}${YOU.adult}${YOU.about}</div>${foot4('You')}`),
+
+  frame('P25h', 'First opened with no connection', 'phone glowed', `${glow(WD.undersong.tall)}${sb(true, true)}${offlineHead}<div class="body"><div class="covers on-media">${coverWith(WD.undersong, noConnection, false)}${coverWith(WD.juju, noConnection, false)}</div>
+${sh('Stories')}<div class="hrow">${titleRow()}</div></div>${foot4('Home')}`),
+];
+
+// ---- P26 · a tablet: the shelves -------------------------------------------------------------------
+// The owner, 7 November 2026: "show me the designs for the tablet view for all the pages". Until now a
+// tablet has taken the Fold's layout. Upright (800 × 1280) it still does; held sideways (1280 × 800) it is
+// in WindowBands.wide, which the app defines and has never used, and most of the drawing is there.
+const tcol = (inner, style = '') => `<div class="grow" style="display:flex;flex-direction:column;min-width:0;position:relative;${style}">${inner}</div>`;
+const TPAD = 'padding:6px 28px 6px 24px';
+const tPlain = `<div class="hd" style="${TPAD}"><span class="wmk">Arke</span><span class="grow"></span><span class="icb">${ic('search', 20)}</span></div>`;
+const tHead = (title, end = `<span class="icb">${ic('search', 20)}</span>`) => `<div class="hd" style="${TPAD}"><h1>${title}</h1>${end}</div>`;
+const tChips = genreChips().replace('<div class="chips">', '<div class="chips" style="padding:2px 24px 0">');
+const ALL5 = [WD.undersong, WD.juju, WD.dumah, WD.quiet, WD.embers];
+const wkGrid = (cols, cards) => `<div class="wkg" style="grid-template-columns:repeat(${cols},1fr)">${cards}</div>`;
+const tPosters = (w = 260) => `${poster({ tall: WD.undersong.tall, title: STORY.ledger.title, kind: 'Audiobook · The Undersong', w })}${titleRow(w)}`;
+const tTeasers = (s = 160) => `${poster({ tall: 'juju-ife.jpg', pos: '50% 22%', title: 'Ife', kind: 'Character', w: s })}${poster({ tall: 'juju-m-look.jpg', pos: '50% 40%', title: 'Gold on Gold', kind: 'Clip · 0:30', w: s, mid: clipGlyph })}${poster({ tall: 'char-maren.jpg', pos: '50% 18%', title: 'Maren Kest', kind: 'Character', w: s })}${poster({ tall: 'dumah-lucien.jpg', pos: '50% 18%', title: 'Lucien', kind: 'Character', w: s })}${poster({ tall: 'quiet-ines.jpg', pos: '50% 18%', title: 'Ines Marr', kind: 'Character', w: s })}${poster({ tall: 'embers-reina.jpg', pos: '50% 18%', title: 'Dr. Reina Okafor', kind: 'Character', w: s })}${poster({ tall: 'juju-m-table.jpg', pos: '50% 60%', title: 'Suya at Midnight', kind: 'Clip · 0:30', w: s, mid: clipGlyph })}`;
+const ask18 = sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="age big">18+</span><div style="margin-top:6px;font:var(--type-h3)">Na Love or Juju</div><div class="mute num" style="font:var(--type-ui)">Romance · 1.1 GB</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">I am 18 or older · Start</span><span class="btn ghost wide">Not now</span></div>`);
+const tSearch = (q = '') => searchHead(q).replace('<div class="hd">', `<div class="hd" style="${TPAD}">`);
+const tCharacters = `${person('char-maren.jpg', 'Maren Kest', 'The Undersong', { w: 160 })}${person('dumah-lucien.jpg', 'Lucien', 'Legend of Dumah', { w: 160 })}${person('juju-ife.jpg', 'Ife', 'Na Love or Juju', { w: 160 })}${person('quiet-ines.jpg', 'Ines Marr', 'The Red Quiet', { w: 160 })}${person('embers-reina.jpg', 'Dr. Reina Okafor', 'Embers of the Fallen', { w: 160 })}${person('under-dena.jpg', 'Dena Mott', 'The Undersong', { w: 160 })}${person('dumah-pricilla.jpg', 'Pricilla', 'Legend of Dumah', { w: 160 })}`;
+const genreCards = (cols) => `<div class="gcs" style="grid-template-columns:repeat(${cols},1fr);padding:0 16px">${gc('Fantasy', WD.dumah, '2 worlds')}${gc('Romance', WD.juju, '1 world')}${gc('Sci-fi', WD.quiet, '1 world')}${gc('Thriller', WD.embers, '1 world')}</div>`;
+/** A world sideways: the world stays at the left, its tabs and what they hold at the right. */
+const wPane = (w, press, { data = `${w.genre} · ${w.titles}`, extra = '' } = {}) => `<div class="wh on-media pane"><img class="tint" src="${A}${w.art}" alt=""><img class="art" src="${A}${w.art}" alt="" style="object-position:${w.pos}">${sb(true)}<div class="top">${back}${more}</div><div class="in"><h1>${w.name}</h1><div class="cd">${faces(w)}<span class="grow">${data}</span>${ageOf(w)}</div><div class="lg">${w.logline}</div>${press}${extra}</div></div>`;
+const wRight = (tabs, inner) => `<div class="wr">${sb()}${tabs}<div class="body">${inner}</div></div>`;
+const JUJU_ALL = [['1 · Gold on Gold', '20 m', heard], ['2 · Suya at Midnight', '29 m', heard], ['3 · Ofada for Two', '25 m', '<span class="mute num" style="font:var(--type-ui)">8 m left</span>'], ['4 · My Friend Ade', '29 m', ''], ['5 · Awolowo Road', '29 m', ''], ['6 · When the Light Went', '35 m', ''], ['7 · Obudu', '32 m', ''], ['8 · Grey, Automatic', '33 m', ''], ['9 · The Balcony', '25 m', ''], ['10 · Rent', '41 m', '']];
+const peopleGrid = (cols, w) => `<div class="pgrid" style="grid-template-columns:repeat(${cols},${w}px)">${NEWLY.map(([img, name, role]) => person(img, name, role, { tag: NEWTAG, w })).join('')}${FOUND.map(([img, name, role]) => person(img, name, role, { w })).join('')}${gatedPoster('After Chapter 8', w)}${gatedPoster('After Chapter 10', w)}</div>`;
+const placeTiles = (w) => `${tile({ img: 'under-bell-house.jpg', title: 'Bell House', kind: 'Place', w })}${tile({ img: 'under-east-lock.jpg', title: 'East Lock', kind: 'Place', w })}${tile({ ...PLACES.saltmarket, kind: 'Place', w })}${tile({ ...PLACES.vigil, kind: 'Place', w })}`;
+const loreChips = `<div class="chips" style="padding:14px 16px 8px"><span class="chip on">All</span><span class="chip">Lore</span><span class="chip">Rules</span><span class="chip">Timeline</span></div>`;
+const youTwo = `<div class="cols2g" style="gap:0 8px;padding:0 8px"><div>${YOU.look}${YOU.play}</div><div>${YOU.down}${YOU.adult}${YOU.about}</div></div>`;
+const libDownloads = `<div style="padding:12px 24px 4px"><div class="sbar"><i class="me" style="width:7%"></i><i class="other" style="width:58%"></i></div><div class="leg"><span><i></i>Arke Player 1.2 GB</span><span><i class="other"></i>Other 29 GB</span><span><i class="free"></i>41 GB free</span></div></div>${sh('Worlds')}${dlRow(WD.juju.art, WD.juju.pos, WD.juju.name, '<span class="num">1.1 GB</span>', ic('more', 18))}${dlRow(WD.undersong.art, WD.undersong.pos, WD.undersong.name, '<span class="num">Chapter 3 · 9 of 18 MB</span>', ic('pausec', 22), 50)}${dlRow(WD.quiet.art, WD.quiet.pos, WD.quiet.name, '<span class="num">48 MB</span>', ic('more', 18))}`;
+
+const P26 = [
+  frame('P26a', 'Home, brand new: four covers and an edge', 'tablet glowed', `${glow(WD.undersong.tall)}${tcol(`${sb(true)}${homeHead(TPAD)}<div class="body" style="padding:0 8px"><div class="covers on-media">${ALL5.map(coverHero).join('')}</div>
+${sh('New chapters')}<div class="hrow">${newRow(300)}</div></div>${foot4('Home', true)}`)}`),
+
+  frame('P26b', 'Home, further down', 'tablet', tcol(`${sb()}${tPlain}<div class="body" style="padding:0 8px">${sh('Stories')}<div class="hrow">${tPosters()}</div>
+${sh('Teasers')}<div class="hrow">${tTeasers()}</div></div>${foot4('Home', true)}`)),
+
+  frame('P26c', 'Home, coming back: Continue first', 'tablet glowed', `${glow(WD.juju.art, '50% 28%', 430)}${tcol(`${sb(true)}${homeHead(TPAD)}<div class="body" style="padding:0 8px"><div class="on-media">${sh('Continue')}<div class="hrow">${cc({ img: WD.juju.art, pos: WD.juju.pos, kind: 'Audiobook', title: 'Na love or Juju', where: 'Chapter 3 · 8 m left', at: 68, w: 420 })}${cc({ img: STORY.ledger.img, pos: STORY.ledger.pos, kind: 'Audiobook', title: STORY.ledger.title, where: `${NEWTAG}Chapter 2`, at: 100, w: 420 })}${cc({ img: STORY.whispers.img, pos: STORY.whispers.pos, kind: 'Audiobook', title: STORY.whispers.title, where: 'Chapter 1 · 31 m left', at: 12, w: 420 })}</div></div>
+${sh('New chapters')}<div class="hrow">${newRow(300)}</div>
+${sh('Worlds')}<div class="covers">${[WD.quiet, WD.embers, WD.dumah, WD.undersong].map(coverHero).join('')}</div></div>${foot4('Home', true)}`)}`),
+
+  frame('P26d', 'Worlds: three across', 'tablet', tcol(`${sb()}${tHead('Worlds')}${tChips}<div class="body" style="padding-top:14px">${wkGrid(3, ALL5.map((w) => wk(w)).join(''))}</div>${foot4('Worlds', true)}`)),
+
+  frame('P26e', 'An 18+ world: the question, centred', 'tablet glowed', `${glow(WD.juju.tall)}${tcol(`${sb(true)}${homeHead(TPAD)}<div class="body" style="padding:0 8px"><div class="covers on-media">${[WD.juju, WD.undersong, WD.dumah, WD.quiet, WD.embers].map(coverHero).join('')}</div></div>${foot4('Home', true)}`)}<div class="veil"></div>${ask18}${hi()}`),
+
+  frame('P26f', 'Search', 'tablet', tcol(`${sb()}${tSearch()}<div class="body" style="padding:0 8px">${sh('Genres')}${genreCards(4)}${sh('Characters')}<div class="hrow">${tCharacters}</div></div>${foot4('Worlds', true)}`)),
+
+  frame('P26g', 'Search: a column for each kind', 'tablet', tcol(`${sb()}${tSearch('Ade')}<div class="body" style="padding:0 8px"><div class="scols"><div>${sh('Characters')}${sr('juju-ade.jpg', 'Adeyemi “Ade” Akinola', 'Self-made Lagos man · Na Love or Juju')}</div><div>${sh('Places')}${sr('juju-ade-house.jpg', 'Ade’s House, Ikoyi', 'Place · Na Love or Juju')}</div><div>${sh('Chapters')}${sr('juju-m-tunde.jpg', 'My Friend Ade', 'Chapter 4 · Na love or Juju')}</div></div></div>${foot4('Worlds', true)}`)),
+
+  frame('P26h', 'A world: the world at the left, its tabs at the right', 'tablet', `${wPane(WD.undersong, startPress(WD.undersong))}${wRight(wTabs(WD.undersong, 'Story'), `<div class="hrow" style="padding-top:18px">${poster({ tall: WD.undersong.tall, title: STORY.ledger.title, kind: 'Audiobook · 35 m', w: 260 })}${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · 16 pages', w: 260 })}</div>`)}${foot4('Worlds', true)}`),
+
+  frame('P26i', 'A world of one title: its chapters', 'tablet', `${wPane(WD.juju, goPress('Chapter 3'))}${wRight(wTabs(WD.juju, 'Story'), JUJU_ALL.map(([name, data, end]) => chr(name, data, end)).join(''))}${foot4('Worlds', true)}`),
+
+  frame('P26j', 'A world in episodes: two across', 'tablet', `${wPane(WD.juju, goPress('Episode 2'), { data: 'Romance · 248 episodes' })}${wRight(wTabs(WD.juju, 'Story'), `${rangeChips('padding-top:12px')}<div class="egl">Chapter 1 · Gold on Gold</div><div class="ergrid">${er(EP[0], { seen: true })}${er(EP[1], { now: true, left: '1:12 left' })}${er(EP[2])}${er(EP[3])}${er(EP[4])}</div><div class="egl">Chapter 2 · Suya at Midnight</div><div class="ergrid">${er(EP[5])}</div>`)}${foot4('Worlds', true)}`),
+
+  frame('P26k', 'A world’s People: found, new, still to come', 'tablet', `${wPane(WD.juju, goPress('Chapter 4'), { extra: `<div class="fbar num"><span>10 of 17 found</span><div class="bar"><i style="width:59%"></i></div></div>` })}${wRight(wTabs(WD.juju, 'People', { people: '8 of 14' }), peopleGrid(5, 148))}${foot4('Worlds', true)}`),
+
+  frame('P26l', 'A world’s Places', 'tablet', `${wPane(WD.undersong, startPress(WD.undersong))}${wRight(wTabs(WD.undersong, 'Places'), `<div class="pl2">${placeTiles(390)}</div>`)}${foot4('Worlds', true)}`),
+
+  frame('P26m', 'A world’s Lore', 'tablet', `${wPane(WD.undersong, startPress(WD.undersong))}${wRight(wTabs(WD.undersong, 'Lore'), `${loreChips}${LORE.map(lr).join('')}${gate('After Chapter 6')}`)}${foot4('Worlds', true)}`),
+
+  frame('P26n', 'A character', 'tablet', `<div class="wh on-media pane portrait"><img class="tint" src="${A}${CAST.maren.img}" alt=""><img class="art" src="${A}${CAST.maren.img}" alt="" style="object-position:50% 16%">${sb(true)}<div class="top">${back}</div><div class="in"><h1>Maren Kest</h1><div class="cd"><span class="grow">Tide-caller · The Undersong</span></div><div class="ca"><span class="btn" style="flex:1">${ic('volume', 18)}Voice <em class="num">· 0:08</em></span></div></div></div>
+<div class="wr">${sb()}<div class="body"><div class="prose" style="padding:6px 28px 0;max-width:720px"><div class="lk">Essence</div><p>Tide-caller. She hears the verse under the harbour and pulls the water where it needs to go. She has paid for it: her left ear is done, and she knows the right is next.</p><div class="lk">Appearance</div><p>Salt-crusted braids, pale grey eyes, oilskin coat with a bioluminescent thread at the collar.</p></div><div style="height:14px"></div>${gate('After Chapter 6')}${sh('With')}${withChips([['Dena Mott', 'under-dena.jpg'], ['Hadrin Vale', 'under-hadrin.jpg'], ['The Vigil', PLACES.vigil.img]])}</div></div>${foot4('Worlds', true)}`),
+
+  frame('P26o', 'Library: what is on the tablet', 'tablet', tcol(`${sb()}${tHead('Library', `<span class="icb">${ic('plus', 20, 2)}</span>`)}${libChips('Worlds', 'padding:2px 24px 0')}<div class="body" style="padding-top:14px">${wkGrid(3, `${wk(WD.juju, { line: 'Chapter 3 · 1.1 GB' })}${wk(WD.undersong, { line: 'Chapter 2 · 72 MB', tag: NEWTAG })}${wk(WD.quiet, { line: '48 MB' })}`)}</div>${foot4('Library', true)}`)),
+
+  frame('P26p', 'Library, brand new', 'tablet', tcol(`${sb()}${tHead('Library', `<span class="icb">${ic('plus', 20, 2)}</span>`)}${libChips('Worlds', 'padding:2px 24px 0')}<div class="body">${noWorlds}</div>${foot4('Library', true)}`)),
+
+  frame('P26q', 'Library: Downloads', 'tablet', tcol(`${sb()}${tHead('Library', `<span class="icb">${ic('plus', 20, 2)}</span>`)}${libChips('Downloads', 'padding:2px 24px 0')}<div class="body" style="padding:0 8px">${libDownloads}</div>${foot4('Library', true)}`)),
+
+  frame('P26r', 'You: two columns', 'tablet', tcol(`${sb()}${tHead('You', '')}<div class="body">${youTwo}</div>${foot4('You', true)}`)),
+
+  frame('P26s', 'Upright: Home', 'tabletup glowed', `${glow(WD.undersong.tall)}${tcol(`${sb(true)}${homeHead(TPAD)}<div class="body" style="padding:0 8px"><div class="covers on-media">${ALL5.map(coverHero).join('')}</div>
+${sh('New chapters')}<div class="hrow">${newRow(300)}</div>
+${sh('Stories')}<div class="hrow">${tPosters()}</div></div>${foot4('Home', true)}`)}`),
+
+  frame('P26t', 'Upright: Worlds, two across', 'tabletup', tcol(`${sb()}${tHead('Worlds')}${tChips}<div class="body" style="padding-top:14px">${wkGrid(2, ALL5.map((w) => wk(w)).join(''))}</div>${foot4('Worlds', true)}`)),
+
+  frame('P26u', 'Upright: a world, as a Fold shows it', 'tabletup', tcol(`${sb(true)}<div class="body">${wHero(WD.undersong, startPress(WD.undersong), { cls: 'fold-h' })}<div class="hrow" style="padding:20px 28px 0">${poster({ tall: WD.undersong.tall, title: STORY.ledger.title, kind: 'Audiobook · 35 m', w: 260 })}${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · 16 pages', w: 260 })}</div></div>${foot4('Worlds', true)}`)),
+
+  frame('P26v', 'Upright: People', 'tabletup', tcol(`${sb()}${scrolledHead(WD.juju.name)}${wTabs(WD.juju, 'People', { people: '8 of 14' })}<div class="body"><div class="fgh num"><span>8 of 14 found</span><div class="bar"><i style="width:57%"></i></div></div>${peopleGrid(5, 140)}</div>${foot4('Worlds', true)}`)),
+
+  frame('P26w', 'Upright: Library', 'tabletup', tcol(`${sb()}${tHead('Library', `<span class="icb">${ic('plus', 20, 2)}</span>`)}${libChips('Worlds', 'padding:2px 24px 0')}<div class="body" style="padding-top:14px">${wkGrid(2, `${wk(WD.juju, { line: 'Chapter 3 · 1.1 GB' })}${wk(WD.undersong, { line: 'Chapter 2 · 72 MB', tag: NEWTAG })}${wk(WD.quiet, { line: '48 MB' })}`)}</div>${foot4('Library', true)}`)),
+
+  frame('P26x', 'Upright: You', 'tabletup', tcol(`${sb()}${tHead('You', '')}<div class="body" style="padding:0 8px">${YOU.look}${YOU.play}${YOU.down}${YOU.adult}${YOU.about}</div>${foot4('You', true)}`)),
+];
+
+// ---- P27 · a tablet: everything that plays -----------------------------------------------------------
+// Sideways, a Wide picture fills the screen and what was a sheet on a phone sits beside it, so the picture
+// never stops being seen. Upright, a tablet is tall enough for the Tall picture, which P14 kept for phones.
+const tWide = (rest = '', img = 'juju-w-table.jpg', pos = '50% 50%') => `<img class="pic" src="${A}${img}" alt="" style="object-position:${pos}"><div class="st" style="height:120px"></div><div class="sbot" style="height:340px"></div>${sb(true)}${rest}`;
+const tFoot = (words = '“I am Ade.”') => epFoot('3 · Good evening', 'Na love or Juju', words).replace('class="eft"', 'class="eft" style="left:40px;right:160px;bottom:52px"');
+const tRail = (style = 'right:32px;bottom:44px') => epRail(style);
+const tLine = epLine(24, 'left:40px;right:120px;bottom:30px');
+const tClose = `<div class="ptop" style="left:24px">${close}</div>`;
+const sidePanel = (on, inner, width = 380) => `<div class="fp glass${on === 'Episodes' ? ' eps' : ''}" style="width:${width}px"><div class="wtabs"><span class="wt${on === 'Here' ? ' on' : ''}">Here<i>2</i></span><span class="wt${on === 'Episodes' ? ' on' : ''}">Episodes<i>248</i></span><span class="grow"></span><span style="display:inline-flex;align-items:center;margin-right:-4px">${ic('bell', 20)}</span></div>${inner}</div>`;
+const withPanel = (on, inner) => `<img class="wob" src="${A}juju-w-table.jpg" alt=""><div style="position:absolute;left:0;top:0;bottom:0;right:380px;overflow:hidden"><img class="pic" src="${A}juju-w-table.jpg" alt="" style="object-position:50% 50%"><div class="sbot" style="height:300px"></div>${tFoot().replace('right:160px', 'right:40px')}${epLine(24, 'left:40px;right:40px;bottom:30px')}</div>${sb(true)}${tClose}${sidePanel(on, inner)}${hi()}`;
+const TENTH = `<div class="no" style="margin-top:18px">Chapter 7</div><h2>The Tenth Key</h2><p class="first">The key had no teeth. Odile turned it over twice in the lamplight before she understood that it was not meant for a lock at all.</p><p>Below the window the harbour lay flat and black. The bells had stopped an hour ago, and the silence they left behind was louder than any of them.</p><p>“You found it,” Bray said from the door. He did not come in.</p><p>“It found me.” She closed her hand around it. “Where is the tenth door?”</p><p>He looked at the water for a long time before he answered.</p><p>“Under the Vigil,” he said at last. “Where it has always been. You have walked over it more times than you know.”</p><p>She put the key in her coat and did not look back at the window. Somewhere under the floor, very far down, one bell moved and did not ring.</p>`;
+
+const P27 = [
+  frame('P27a', 'A teaser: upright, over its own blur', 'tablet media', `<img class="wob" src="${A}char-maren.jpg" alt="">${sb(true)}<div class="tzcol"><img class="pic" src="${A}char-maren.jpg" alt="" style="object-position:50% 16%"><div class="sbot" style="height:430px"></div>${tzText('Character', 'Maren Kest', 'Tide-caller', '“The tide is lower than it has ever been.”')}${tzRail([['volume', 'Voice', true], ['bell', 'Notify'], ['globe', 'World']])}${tzLine(38)}${tzWorld(WD.undersong)}</div><div class="ptop" style="left:24px"><span class="ib glass">${ic('x', 20, 2)}</span></div>${hi()}`),
+
+  frame('P27b', 'A teaser: a clip, Wide, filling the screen', 'tablet media', `${tWide('', 'juju-w-look.jpg', '50% 30%')}<div class="ptop" style="left:24px"><span class="ib glass">${ic('x', 20, 2)}</span></div>${tzText('Clip · 0:30', 'Gold on Gold', 'Chapter 1', '“She looked at him.”').replace('class="tzt"', 'class="tzt" style="left:40px;right:160px;bottom:132px"')}${tzRail([['volume', 'Sound', true], ['bell', 'Notify'], ['globe', 'World']], 'right:32px;bottom:34px')}${tzLine(62).replace('class="tzs"', 'class="tzs" style="left:40px;right:120px;bottom:114px"')}${tzWorld(WD.juju, 'left:40px;right:auto;width:460px;bottom:30px')}${hi()}`),
+
+  frame('P27c', 'An episode playing, at rest', 'tablet media', `${tWide()}${tFoot()}${tRail()}${tLine}${hi()}`),
+
+  frame('P27d', 'Someone new, while it plays', 'tablet media', `${tWide()}<div class="fnd" style="top:58px;left:40px;right:auto;width:400px"><img src="${A}juju-kemi.jpg" alt=""><div class="grow"><div class="k1"><span class="tag new">New</span><span class="lk">Character</span></div><div class="t">Kemi</div></div><span class="mute">${ic('right', 18)}</span></div>${tFoot()}${tRail()}${tLine}${hi()}`),
+
+  frame('P27e', 'A tap: paused, with its controls', 'tablet media', `${tWide()}<div class="dim"></div><div class="ptop" style="left:24px;right:24px">${close}<div class="ttl"><div class="eb">Na love or Juju</div><div class="sc">3 · Good evening</div></div><span class="ib">${ic('more', 20)}</span></div>${tRail('right:32px;bottom:150px')}
+<div class="emid"><span class="ib">${seek(15, true, 30)}</span><span class="play">${ic('play', 26)}</span><span class="ib">${seek(15, false, 30)}</span></div>
+<div style="position:absolute;z-index:4;left:40px;right:40px;bottom:30px"><div class="scrub"><i style="width:24%"></i><b style="left:24%"></b></div><div class="times"><span>1:15</span><span>5:06</span></div><div class="trow" style="margin-top:8px;justify-content:flex-start;gap:14px">${bookRow2.replace('End of chapter', 'Sleep')}</div></div>${hi()}`),
+
+  frame('P27f', 'Here, beside the picture', 'tablet media', withPanel('Here', `<div style="padding-top:8px">${hr('juju-ife.jpg', 'Ife', 'Kept woman, keeper of men')}${hr('juju-ade.jpg', 'Adeyemi “Ade” Akinola', 'Self-made Lagos man')}</div><div style="padding:12px 16px 0"><span class="btn wide">${ic('globe', 18)}Na Love or Juju</span></div>`)),
+
+  frame('P27g', 'Episodes, beside the picture', 'tablet media', withPanel('Episodes', `${rangeChips('padding-top:12px')}<div class="egl">Chapter 1 · Gold on Gold</div>${er(EP[0], { seen: true })}${er(EP[1], { seen: true })}${er(EP[2], { now: true, left: '3:51 left' }).replace('<span class="btn">Resume</span>', `<span class="end">${ic('bars', 18)}</span>`)}${er(EP[3])}${er(EP[4])}`)),
+
+  frame('P27h', 'Caught up', 'tablet media', `<img class="wob" src="${A}${WD.undersong.tall}" alt="">${sb(true)}${tClose}<div class="cu" style="left:40px;right:auto;width:440px;top:120px"><img src="${A}${WD.undersong.tall}" alt="" style="width:200px;height:300px;margin:0 auto 20px;border-radius:10px;object-fit:cover;box-shadow:var(--shadow-xl)"><h2>Caught up</h2><div class="m num">Episode 97 · Thu 12 Nov</div><span class="btn pri">${ic('bell', 18)}Notify on</span></div>
+<div class="on-media" style="position:absolute;z-index:4;left:520px;right:24px;top:96px">${sh('In this world')}<div class="pgrid" style="grid-template-columns:repeat(4,160px);gap:16px 12px">${person('char-maren.jpg', 'Maren Kest', 'Tide-caller', { w: 160 })}${person('under-dena.jpg', 'Dena Mott', 'North-stairs cart carrier', { w: 160 })}${poster({ img: 'under-bell-house.jpg', title: 'Bell House', kind: 'Place', w: 160 })}${person('under-iven.jpg', 'Iven Darrig', 'Sail-loft worker', { w: 160 })}${person('under-hadrin.jpg', 'Hadrin Vale', 'Character', { w: 160 })}${person('under-nall.jpg', 'Mrs Nall', 'East Chain resident', { w: 160 })}${poster({ img: 'under-east-lock.jpg', title: 'East Lock', kind: 'Place', w: 160 })}</div></div>${hi()}`),
+
+  frame('P27i', 'A chapter opened whole: the audiobook player', 'tablet media', `${tWide('', 'juju-w-tunde.jpg', '50% 40%')}<div class="ptop" style="left:24px;right:24px">${close}<div class="ttl"><div class="eb">Na love or Juju</div><div class="sc">1 · Gold on Gold</div></div><span class="ib">${ic('more', 20)}</span></div><div class="words" style="bottom:250px">“You should come out more,” Tunde said.</div>${audioBar(bookRow2).replace('left:20px;right:20px', 'left:64px;right:64px')}${hi()}`),
+
+  frame('P27j', 'A visual novel', 'tablet media', `<img class="pic" src="${A}red-quiet-cover.jpg" alt="" style="object-position:50% 50%"><div class="sbot" style="height:300px"></div>${sb(true)}<div class="vnstack" style="left:260px;right:260px;bottom:42px">${vnLine('Imani Okoro', 'Stop. They are not shooting.')}</div>${hi()}`),
+
+  frame('P27k', 'A graphic novel: two pages, as a book opens', 'tablet media cm', `${sb(true)}<div class="st"></div>${gnSpread(2, 3)}${gnTop('Chapter 1 · Neap · Pages 2 – 3').replace('class="ptop cm-top"', 'class="ptop cm-top" style="left:24px;right:24px"')}<div class="sbot" style="height:180px"></div>${gnFoot(3, '2 – 3 of 11', 'left:280px;right:280px')}${hi()}`),
+
+  frame('P27l', 'A book: two pages', 'tablet', tcol(`${sb()}<div class="hd" style="gap:6px;padding:6px 24px 0"><span class="icb" style="background:none">${ic('down', 24, 2)}</span><span class="grow mute" style="text-align:center;font:var(--type-ui)">7 · The Tenth Key</span><span class="icb" style="background:none;font:var(--type-ui);font-size:var(--text-md)">Aa</span><span class="icb" style="background:none">${ic('list', 20)}</span></div><div class="body"><div class="page" style="columns:2;column-gap:64px;padding:6px 72px 0;height:100%">${TENTH}</div></div><div style="flex:none;display:flex;align-items:center;gap:12px;padding:10px 72px 34px"><span class="mute num" style="font:var(--type-meta)">12 of 30</span><div class="bar grow"><i style="width:40%"></i></div><span class="btn" style="height:40px">${ic('headphones', 16)}Listen</span></div>${hi()}`)),
+
+  frame('P27m', 'An album', 'tablet', tcol(`${sb(true)}<div class="body"><div class="alb fold" style="grid-template-columns:260px 1fr;padding:84px 32px 22px">${albumHead.replace('class="cv"', 'class="cv" style="width:260px;height:260px;margin:0"').replace(`style="object-position:${ALBUM.pos}"`, '')}<div><h1 style="margin-top:0">${ALBUM.title}</h1><div class="meta num">Album · The Undersong · 9 tracks · 34 min</div><div style="max-width:360px">${albumActs}</div></div></div><div class="trks" style="padding:12px 8px 0">${TRACKS.map((track, index) => trk(track, index)).join('')}</div></div>${foot4('Worlds', true)}`)),
+
+  frame('P27n', 'A song playing, its lyrics beside it', 'tablet media', nowPlaying(`<div class="npc" style="left:72px;right:auto;width:500px;top:150px"><img src="${A}${ALBUM.img}" alt="" style="object-position:${ALBUM.pos}"></div><div class="npt" style="left:640px;right:64px;top:112px"><div class="t">The Drowned Verse</div><div class="m">Theme · The Chorister</div></div><div class="lyr" style="left:640px;right:64px;top:190px;bottom:250px">${LYRICS.map((line) => `<p>${line}</p>`).join('')}</div>${musicBar(true).replace('left:20px;right:20px', 'left:640px;right:64px')}${hi()}`)),
+
+  frame('P27o', 'Upright: an episode, the Tall picture', 'tabletup media', `${epRest()}${epFoot('2 · He heard her', 'Na love or Juju', 'She looked at him.')}${epRail()}${epLine(72)}${hi()}`),
+
+  frame('P27p', 'Upright: Here', 'tabletup media', `${epRest()}<div class="veil" style="background:color-mix(in srgb,var(--media-overlay-bg) 30%,transparent)"></div>${sheet('Here', `${HERE}<div style="padding:12px 16px 0"><span class="btn wide">${ic('globe', 18)}Na Love or Juju</span></div>`, { glass: true, count: '3' })}${hi()}`),
+
+  frame('P27q', 'Upright: a teaser', 'tabletup media', `<img class="pic" src="${A}char-maren.jpg" alt="" style="object-position:50% 16%"><div class="st" style="height:150px"></div><div class="sbot" style="height:560px"></div>${sb(true)}${tzClose}${tzText('Character', 'Maren Kest', 'Tide-caller', '“The tide is lower than it has ever been.”')}${tzRail([['volume', 'Voice', true], ['bell', 'Notify'], ['globe', 'World']])}${tzLine(38)}${tzWorld(WD.undersong)}${hi()}`),
+
+  frame('P27r', 'Upright: a graphic novel, one page', 'tabletup media cm', `${sb(true)}<div class="st"></div>${gnPage(3)}${gnTop()}<div class="sbot" style="height:180px"></div>${gnFoot(3)}${hi()}`),
+];
+
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20), p21: withSize(P21), p22: withSize(P22), p23: withSize(P23), p24: withSize(P24), p25: withSize(P25), p26: withSize(P26), p27: withSize(P27) };

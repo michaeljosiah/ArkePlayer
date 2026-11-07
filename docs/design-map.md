@@ -244,6 +244,42 @@ the page kept as a story's place is.
 | P20b – P20g | The reader: a page whole on black; a tap shows ⌄, the book and chapter, Chapters, and `3 of 24` with its progress; right to left; a webtoon's column; zoom; the Chapters sheet | `/comic/:worldId/:productionId` | `features/comics/presentation/comic_reader_screen.dart`; `features/comics/application/comics.dart` |
 | P20h | `Update app` on a graphic novel in a version this Player does not read; its tile under Read | `…/world/:worldId` | `features/worlds/presentation/world_screen.dart`; `arke_world` `catalogue.dart` (`alone`, `needsNewerApp`) |
 
+## Worlds first, a world's rewards, episodes (P22 – P24, approved, not built)
+
+Calls 37 – 50. Drawn from Arke's list as published, serial 49. Nothing here is built, and delivery stays as
+it is: a world is downloaded whole before it plays. Notes: "Worlds first, a world's rewards, episodes".
+
+| Frame | Screen | Would change |
+|---|---|---|
+| P22a – P22c, P22n | Home: a cover whole, Start, Continue first; on a Fold | `features/home/`, `app/shell/adaptive_shell.dart`; replaces `features/onboarding/` |
+| P22d | Worlds, by genre | `features/worlds/presentation/discover_screen.dart` |
+| P22e | An 18+ world in plain view; only Start asks | `features/worlds/application/worlds.dart` (`InstallController`), `features/settings/domain/device_settings.dart` (`adultContent`) |
+| P22f, P22g | Search over the list and the guides | new, `features/worlds/` |
+| P22h – P22k, P22o | A world's page and its tabs, `Story · People · Places · Lore` | `features/worlds/presentation/world_screen.dart`, `guide_widgets.dart` |
+| P22l, P22m | Library: `Worlds · Files · Downloads`; Add a file | `features/library/`, `features/downloads/` |
+| P23a – P23d | A teaser, full screen, swiped | `features/worlds/presentation/discover_screen.dart` (`TeaserScreen`) |
+| P23e – P23h | Someone new, the count, New in your worlds | `arke_world` `reach.dart`, `features/players/`, `features/worlds/`, `features/home/` |
+| P24a, P24b | A world in episodes | `features/worlds/presentation/` |
+| P24c – P24j | The upright player, Here, Episodes, Caught up, turned, on a Fold | `features/players/` (P3c's native feed); `arke_world` `listening.dart` |
+
+## A brand-new install and a tablet (P25 – P27, approved, not built)
+
+Calls 51 – 53. Sideways is `WindowBands.wide`, 1100, defined in `app/theme/tokens.dart` and unused until these
+are built; upright is `WindowBands.fold`, as a Fold's layouts.
+
+| Frame | Screen | Would change |
+|---|---|---|
+| P25a – P25e, P25h | First open: the wordmark, Home at once, people arriving, the first Start, no connection | `features/home/`, `features/worlds/`; `app/app.dart` opens on Home |
+| P25f | Library, brand new | `features/library/` |
+| P25g | You: Theme, dark by default | `features/settings/`, `app/app.dart` (`themeMode`) |
+| P26a – P26c, P26s | Home on a tablet | `features/home/` |
+| P26d, P26e, P26t | Worlds on a tablet; a sheet at 560 | `features/worlds/`, `app/widgets/shelf.dart` |
+| P26f, P26g | Search in columns | new, `features/worlds/` |
+| P26h – P26n, P26u, P26v | A world in two panes, and its tabs; a character | `features/worlds/presentation/world_screen.dart`, `guide_screens.dart` |
+| P26o – P26r, P26w, P26x | Library and You | `features/library/`, `features/downloads/`, `features/settings/` |
+| P27a – P27i, P27o – P27q | A teaser, an episode, Here and Episodes beside it, Caught up | `features/worlds/`, `features/players/` |
+| P27j – P27n, P27r | A visual novel, a graphic novel, a book, an album, a song | `features/stories/`, `features/comics/`, `features/players/`, `features/worlds/presentation/album_screen.dart` |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.

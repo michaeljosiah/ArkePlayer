@@ -298,6 +298,68 @@ P21 answers each (rules 1 – 9) and asks calls 32 – 36. Its pages are the pub
 scaled to 512 × 768 (`ledger-drawn-p0001.jpg` …). The cover, `ledger-drawn-cover.jpg`, is a
 stand-in, page 8's harbour with the title set over it, for the one to be made in the Studio.
 
+## Worlds first, a world's rewards, episodes (P22 – P24)
+
+Approved by the owner with P25 – P27 on 7 November 2026: "All approved. Lets go ahead with the build."
+
+The owner, on 7 November 2026, of "pocket saga with an emphasis on worlds", then: "Lets leave delivery
+and work on the design turns". Pocket Saga is Pocket FM's short-drama app, seen only through its store
+listing and screenshots: a picture and one press, a side rail on an upright player, episode lists with
+Resume, daily drops, coins and wait timers. These turns take the pace and leave the look, the coins and
+the counts. Arke's pictures on a black ground already do more than a brand colour would.
+
+The review that led here is one sentence: Arke Player has far deeper worlds and is far slower to get
+into. It opened on a choice between a file and an install, a world's page was a shelf of formats with
+the world at its foot, browsing was by format, and nothing played before a whole world was on the phone.
+
+**What is real.** Everything in these frames is Arke's list as published, serial 49, read by HTTP range
+from the public packages, not installed: covers, names, sizes, and each guide's people and counts. The
+words on Juju's pictures are its chapter 1, and who waits for which chapter is its guide. **What is a
+sample:** genres, and every age but Juju's `18+`, which is the owner's (the list has neither), episode cuts and titles, Maren's voice line, the
+Ledger's next date, and the chapters marked New.
+
+**What the guides showed.** The Undersong has 15 characters, 12 places and 10 lore; Legend of Dumah 6, 8
+and 4; The Red Quiet 7 and 2; Embers of the Fallen 8 and nothing else; Na Love or Juju 14 and 3. So an
+empty tab must be absent. Only Juju has teasers, six, so a feed of teasers alone would be nearly empty,
+and P23 fills it with each world's open people and places (call 46).
+
+**Delivery is left as it is**, at the owner's word. `Start` downloads the whole world, so it keeps its
+size on the press. A published package does answer range requests (Juju's 1,145 stored entries indexed in
+1.2 s and 1.9 MB, chapter 1 is 31.5 MB of 1,107 MB), so starting without the whole is possible on
+today's host; AONIK's public asset route turns ranges off, and AONIK Spec 100 leaves them for later.
+When that is decided, `Start` loses its size and nothing else here changes.
+
+**Owed, none of it drawn here:**
+
+- A Studio turn for cutting a chapter into episodes (call 48), which the listening document must carry.
+- The listening document carrying the Studio's scene cast (SPEC-044), for Here to be exact (P24 rule 7).
+- Arke's list carrying `genres`, `age` and a title to start from (calls 39, 41, 42). AONIK and the Studio
+  already collect `audience` and `ageRating` at submission; neither reaches the list or the Player.
+- A Tall cover for First Contact, the one published title without one (call 38).
+- How Arke earns (call 50).
+- The app's own store rating, which has to allow for 18+ covers in plain view (call 42). Not checked.
+
+## A brand-new install (P25)
+
+The owner, on 7 November 2026: "Keep both themes but leave dark as default", and "show a brand new install
+state". Home is whole on the first frame because the list, its covers and its key art ship with the app; a
+world's guide arrives after, and what has not landed is simply absent. A dark default needs a way out, so
+Theme comes to You, Dark and Light only. Following the phone was today's behaviour and could be a third
+choice; it is left out as the simpler start. In the app this is a stored setting read by `themeMode` in
+`app/app.dart`, which today is unset and follows the phone.
+
+## A tablet (P26, P27)
+
+The owner, the same day: "show me the designs for the tablet view for all the pages". A tablet has only had
+the Fold's layout, because `RowSizes` and every screen ask one question, width at least 600. `WindowBands.wide`,
+1100, is defined and unused. So upright a tablet is the Fold's band, and sideways is the new work: a world's
+page in two panes, Search in columns, what was a sheet beside the picture. Frames are 1280 × 800, a common
+Android tablet; an iPad's 1180 × 820 is the same band. Upright, every page is drawn but the players' sheets,
+which follow P27p. The older players (P19, P21, P5, P17) are drawn sideways once each, on their existing rules.
+Not drawn: an 8-inch tablet, a keyboard, picture in picture, an interactive movie's choice (P18h's holds).
+
+Arke Studio's Bench was offered for new pictures; none was needed. Every picture is published art.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -378,6 +440,43 @@ stand-in, page 8's harbour with the title set over it, for the one to be made in
    as a printed book's first right-hand page.
 35. **Discover opens the book's own page** (P21b, approved), with Get, before it is on the phone.
 36. **The reader opens with its controls showing** (P21e, approved), rather than a one-time hint.
+37. **The app opens on Home** (P22a, approved), with no first-open screen, and Add a file moves to
+   Library. This reverses P8a and P9a, which ranked a file above a world.
+38. **Every Tall cover is lettered with its name** (P22a, approved), extending call 32. A cover is
+   shown whole with nothing set over it, and the name is not set again. Every published Tall cover
+   already is.
+39. **Start replaces Install** (P22, approved). It opens the first title in the list, or the one the
+   list names, and keeps the size on the press until delivery changes.
+40. **Four tabs: Home, Worlds, Library, You** (P22, approved). Worlds takes Discover's place, revising
+   call 11, and Downloads becomes a chip in Library. Discover's rows move to Home.
+41. **A world's genres are in Arke's list** (P22d, approved), and Worlds' chips are genres in place of
+   formats.
+42. **A world's age is in Arke's list, and an 18+ world stays in plain view** (P22e, approved). The
+   owner, 7 November 2026: "Juju is 18 and stays. Its only when a user wants to experience the production
+   we remove it." So nothing is blurred or hidden, and only `Start`, `Play` or `Read` asks, once, before
+   anything downloads. This revises P6's rule, whose blur goes. An 18+ world's teasers show without asking,
+   so its author chooses ones that suit anyone.
+43. **Search runs on the phone** (P22g, approved), over the list and each world's guide, and never
+   finds a waiting entry.
+44. **A world of one title has one page** (P22i, approved): its page and its title's are the same.
+45. **A page's colour is its own picture's blur** (P22h, approved), computed and stored nowhere, as the
+   band and an album's page are. The alternative is a colour for each world, chosen in the Studio.
+46. **The feed holds chosen teasers, then open characters and places** (P23a, approved), because only
+   one published world has teasers.
+47. **What you find is counted and never scored** (P23f, approved): `10 of 17 found`, with no streak,
+   badge, level or coin.
+48. **An episode is a cut of a chapter's take** (P24a, approved), made in the Studio on a turn in the
+   story, with no new audio or picture. Real video is the alternative, and this player plays it too.
+49. **The rail is Here, Episodes and Notify** (P24c, approved), with no likes, comments or counts,
+   which need a server.
+50. **No coins, wait timers, ads or locks in these turns** (P24, approved). How Arke earns is a turn of
+   its own. Pay per episode is the heart of Pocket Saga's business, so this is a judgement, not a saving.
+51. **Both themes stay, and a new install is dark** (P25g, the owner's word, 7 November 2026), whatever the
+   phone's setting. Theme in You changes it. This revises P1 rule 9.
+52. **A tablet sideways gets a layout of its own** (P26h, approved), from 1100: a world at the left, its
+   tabs at the right. Upright it takes the Fold's.
+53. **A tablet held upright shows the Tall picture** (P27o, approved), revising call 10 for it. A Fold
+   open, nearly square, keeps the Wide.
 
 ## What this rests on
 
