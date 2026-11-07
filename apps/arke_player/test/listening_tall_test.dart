@@ -14,6 +14,7 @@ import 'package:arke_player/features/players/application/players.dart';
 import 'package:arke_player/features/players/presentation/picture_of_the_moment.dart';
 import 'package:arke_player/features/settings/application/settings_controller.dart';
 import 'package:arke_player/features/settings/domain/device_settings.dart';
+import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -147,6 +148,7 @@ void main() {
       ProviderScope(
         overrides: [
           libraryItemsProvider.overrideWith((ref) => Stream.value(store.items)),
+          catalogueProvider.overrideWith((ref) async => const []),
           libraryStoreProvider.overrideWith((ref) async => store),
           audioEngineProvider.overrideWithValue(_StillEngine(item, plan, at)),
           settingsProvider.overrideWith(() => _Settings(DeviceSettings(text: text))),

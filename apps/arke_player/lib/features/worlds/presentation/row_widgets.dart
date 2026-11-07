@@ -20,9 +20,6 @@ abstract final class RowSizes {
   /// A small poster, 2:3: Teasers, a world's Characters, and a band's row.
   static double small(BuildContext context) => _fold(context) ? 160 : 112;
 
-  /// The feature's height: upright on a phone, wide on a Fold.
-  static double feature(BuildContext context) => _fold(context) ? 424 : 476;
-
   /// A square, 1:1 as album art is everywhere: a world's Music and Discover's (P17 rule 3).
   static double square(BuildContext context) => _fold(context) ? 200 : 160;
 }
@@ -135,8 +132,8 @@ class WholeOverBlur extends StatelessWidget {
 
 /// A poster (P16 rules 3 and 5): 2:3 with its title and kind under it. [tall] fills it; without one,
 /// [wide] shows whole over its own blur. A character's portrait is its [tall] (uncut, where P15 cut
-/// faces to 16:9); a character with none shows its initials. `New` at its top left, a glyph at its
-/// middle (a clip's play). On a band's media colours its words take the overlay's ink.
+/// faces to 16:9); a character with none shows its initials. `New` or a [tag] at its top left, a glyph
+/// at its middle (a clip's play). On a band's media colours its words take the overlay's ink.
 class PosterTile extends StatelessWidget {
   const PosterTile({
     required this.title,
@@ -146,6 +143,7 @@ class PosterTile extends StatelessWidget {
     this.tall,
     this.wide,
     this.fresh = false,
+    this.tag,
     this.glyph,
     this.initials,
     this.pictureAlignment = Alignment.center,
@@ -160,6 +158,9 @@ class PosterTile extends StatelessWidget {
   final ImageProvider? tall;
   final ImageProvider? wide;
   final bool fresh;
+
+  /// `Update`, or `Update app`, in place of `New`.
+  final String? tag;
   final IconData? glyph;
   final String? initials;
   final Alignment pictureAlignment;
@@ -183,7 +184,7 @@ class PosterTile extends StatelessWidget {
     };
     return Semantics(
       button: onOpen != null,
-      label: [title, if (fresh) 'New', kind].join(', '),
+      label: [title, if (fresh) 'New', kind, ?tag].join(', '),
       child: ExcludeSemantics(
         child: GestureDetector(
           onTap: onOpen,
@@ -200,7 +201,22 @@ class PosterTile extends StatelessWidget {
                       fit: StackFit.expand,
                       children: [
                         picture,
-                        if (fresh) const Positioned(left: 6, top: 6, child: NewTag(onMedia: true)),
+                        if (fresh && tag == null) const Positioned(left: 6, top: 6, child: NewTag(onMedia: true)),
+                        if (tag != null)
+                          Positioned(
+                            left: 6,
+                            top: 6,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: _bg.withValues(alpha: 0.62), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                child: Text(
+                                  tag!,
+                                  style: text.labelMedium?.copyWith(color: _fg, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ),
+                          ),
                         if (glyph != null)
                           Center(
                             child: Container(
@@ -233,144 +249,6 @@ class PosterTile extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The feature (P16 rule 2): the one production Discover opens on, under `All`. On a phone it is
-/// 358 × 476 and upright, from its Tall cover or its Wide whole over its blur; on a Fold it is 424
-/// high and wide, from its Wide, its words at the left. `New` and the chapter, the title, the kind
-/// and world, then one press. The card opens the world's page at the production.
-class FeatureCard extends StatelessWidget {
-  const FeatureCard({
-    required this.title,
-    required this.meta,
-    required this.onOpen,
-    this.tall,
-    this.wide,
-    this.fresh = false,
-    this.chapter,
-    this.press,
-    super.key,
-  });
-
-  final String title;
-  final String meta;
-  final VoidCallback onOpen;
-  final ImageProvider? tall;
-  final ImageProvider? wide;
-  final bool fresh;
-
-  /// What is new, `Chapter 24`, beside `New`.
-  final String? chapter;
-
-  /// Install, Play, or the install's progress in the press's place.
-  final Widget? press;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final fold = MediaQuery.sizeOf(context).width >= WindowBands.fold;
-    // The Fold's feature is wider than 16:9, so its Wide loses about a fifth of its height. It is all
-    // taken from the foot: a cover's title sits at its very top, and Na Love or Juju's lost its first
-    // letters when the cut was shared with the top.
-    final picture = fold
-        ? (wide == null ? null : Image(image: wide!, fit: BoxFit.cover, alignment: Alignment.topCenter))
-        : switch ((tall, wide)) {
-            (final ImageProvider tall, _) => Image(image: tall, fit: BoxFit.cover, alignment: const Alignment(0, -0.4)),
-            (null, final ImageProvider wide) => WholeOverBlur(picture: wide),
-            _ => null,
-          };
-    final words = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (fresh || chapter != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                if (fresh) const NewTag(onMedia: true),
-                if (fresh && chapter != null) const SizedBox(width: 8),
-                if (chapter != null)
-                  Flexible(
-                    child: Text(
-                      chapter!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.86)),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        Semantics(
-          header: true,
-          child: Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: (fold ? text.headlineLarge?.copyWith(fontSize: ArkeType.size4xl) : text.headlineLarge)?.copyWith(color: _fg),
-          ),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          meta,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: text.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.74)),
-        ),
-        if (press != null)
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: fold ? 240 : double.infinity),
-            child: press,
-          ),
-      ],
-    );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: GestureDetector(
-        onTap: onOpen,
-        child: Container(
-          height: RowSizes.feature(context),
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: _bg,
-            borderRadius: BorderRadius.circular(ArkeRadius.xxl),
-            border: Border.all(color: _fg.withValues(alpha: 0.14)),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              ?picture,
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: fold
-                      ? const LinearGradient(colors: [Color(0xE60A0A0A), Color(0x940A0A0A), Color(0x000A0A0A)], stops: [0, 0.34, 0.62])
-                      : const LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [Color(0xEB0A0A0A), Color(0x660A0A0A), Color(0x000A0A0A)],
-                          stops: [0.08, 0.42, 0.62],
-                        ),
-                ),
-              ),
-              if (fold)
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [Color(0x990A0A0A), Color(0x000A0A0A)],
-                      stops: [0, 0.4],
-                    ),
-                  ),
-                ),
-              if (fold) Positioned(left: 36, bottom: 36, width: 380, child: words) else Positioned(left: 18, right: 18, bottom: 18, child: words),
-            ],
           ),
         ),
       ),
@@ -514,7 +392,7 @@ class WorldBand extends StatelessWidget {
   }
 }
 
-/// The band's round press, its label under it (P16c): Install, or the install's progress.
+/// The band's round press, its label under it (P22b): Start, or the download's progress.
 class BandPress extends StatelessWidget {
   const BandPress({required this.label, required this.onPressed, this.progress, super.key});
 
@@ -543,7 +421,7 @@ class BandPress extends StatelessWidget {
                 child: progress == null
                     ? const DecoratedBox(
                         decoration: BoxDecoration(shape: BoxShape.circle, color: _fg),
-                        child: Icon(Icons.download_rounded, color: _bg, size: 22),
+                        child: Icon(Icons.play_arrow_rounded, color: _bg, size: 24),
                       )
                     : CircularProgressIndicator(value: progress, strokeWidth: 3, color: _fg, backgroundColor: _fg.withValues(alpha: 0.22)),
               ),

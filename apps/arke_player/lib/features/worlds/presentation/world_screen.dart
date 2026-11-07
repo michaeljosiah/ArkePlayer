@@ -1,3 +1,5 @@
+import 'dart:math' show max;
+
 import 'package:arke_library/arke_library.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -12,31 +14,53 @@ import '../../comics/application/comics.dart';
 import '../../players/application/music.dart';
 import '../../production/domain/production_kind.dart';
 import '../../stories/application/stories.dart';
+import '../application/guides.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
+import 'production_screen.dart';
 import 'row_widgets.dart';
+import 'world_shelf.dart';
 import 'world_widgets.dart';
 
-/// A world's page (P9, P15c, P15d, P16d, P16e, P17a). Before it is installed: the hero with `Install ·
-/// 386 MB`, its productions grouped by how they are taken, `Listen · Music · Watch · Play · Read`, each head
-/// with its count (P15 rule 3), then Space; while it installs, the progress in the press's place
-/// (P9d); a refusal as a sheet (P9e). Installed, the same groups open their productions, a
-/// production with a chapter not yet opened marked `New` (R-52). Listen and Read are posters from a
-/// production's Tall cover, Watch and Play wide tiles, a lone one at the full width (P16 rules 3 and
-/// 4, P9f). On a Fold the words keep to the left (P9h). Either way the world's guide follows its
-/// productions (P11b, P11c, P11i). A newer edition in Arke's list puts `Update` where Install was,
-/// with what it brings and the space it needs (P12b – P12f).
+const _fg = ArkeColors.mediaOverlayForeground;
+const _bg = ArkeColors.mediaOverlayBackground;
+
+/// A world's tabs (P22 rule 11).
+enum WorldTab {
+  story('Story'),
+  people('People'),
+  places('Places'),
+  lore('Lore');
+
+  const WorldTab(this.label);
+  final String label;
+}
+
+/// A world's page (P22h – P22k, P22o). It leads with the world: its key art melting into its own blur,
+/// its name, three of its people, its genre and titles, its age, its logline in two lines, one press
+/// (P22 rule 3), and `Story · People · Places · Lore`, counted, an empty one absent. A world of one
+/// title shows its chapters at once, because its page and that title's page are one (call 44). A newer
+/// edition in Arke's list puts `Update` where the press was, with what it brings and the space it needs
+/// (P12b – P12f). Space and the edition are in ⋯.
 ///
-/// [location] is this page's own path, which a production's page and the guide's pages are pushed
-/// under.
-class WorldScreen extends ConsumerWidget {
+/// [location] is this page's own path, which a production's page and the guide's pages are pushed under.
+class WorldScreen extends ConsumerStatefulWidget {
   const WorldScreen({required this.worldId, required this.location, super.key});
 
   final String worldId;
   final String location;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WorldScreen> createState() => _WorldScreenState();
+}
+
+class _WorldScreenState extends ConsumerState<WorldScreen> {
+  WorldTab _tab = WorldTab.story;
+
+  @override
+  Widget build(BuildContext context) {
+    final worldId = widget.worldId;
+    final location = widget.location;
     final installed = ref.watch(installedWorldProvider(worldId));
     // A world updated to a new id while its page was open (SPEC-058 R-30), or opened from an old
     // link: the page moves to the world's own address. Under the old one, a production opened from
@@ -47,112 +71,369 @@ class WorldScreen extends ConsumerWidget {
         if (context.mounted) context.replace(moved);
       });
     }
-    // Opening a world's page asks Arke's address for its list, at most once a day (P12 rule 1).
+    // Opening a world's page asks Arke's address for its list, at most once a day (P12 rule 1), and
+    // fetches its guide alone (SPEC-059 R-18).
     ref.watch(catalogueRefreshProvider);
+    final id = installed?.id ?? worldId;
+    ref.watch(guideFetchProvider(id));
+    final catalogue = ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[];
+    final listed = listedFor(catalogue, id) ?? catalogue.where((world) => world.id == worldId).firstOrNull;
+    if (installed == null && listed == null) return const Scaffold(body: _Gone());
+    final store = ref.watch(libraryStoreProvider).value;
+    final name = installed?.name ?? listed!.name;
+    // What the world holds, with what is still on its way (R-72), or what is here that the list no longer names.
+    final titles = max(installed?.productions.length ?? 0, listed?.productions.length ?? 0);
+    final picture = installed != null ? libraryPicture(store, installed.keyArt) : ref.keyArtOf(listed!);
+    final guide = ref.watch(worldGuideProvider(id)).value?.guide;
+    final tabs = [
+      (WorldTab.story, null),
+      if (guide != null && guide.characters.isNotEmpty) (WorldTab.people, guide.characters.length),
+      if (guide != null && guide.places.isNotEmpty) (WorldTab.places, guide.places.length),
+      if (guide != null && guide.lore.isNotEmpty) (WorldTab.lore, guide.lore.length),
+    ];
+    final tab = tabs.any((entry) => entry.$1 == _tab) ? _tab : WorldTab.story;
+    final update = installed == null ? null : ref.watch(worldUpdateProvider(installed.id));
+    final newer = update?.package;
+    final updating = ref.watch(installProvider(update?.id ?? id));
+    ref.listen(installProvider(update?.id ?? id), (previous, next) {
+      if (next is InstallFailed && previous is! InstallFailed && update != null) showInstallRefusal(context, ref, update, next.refusal, updating: true);
+    });
+    final data = [...?listed?.genres.take(1), titleCount(titles)].join(' · ');
+
+    void more() {
+      if (installed != null) {
+        showWorldMenu(context, ref, installed);
+      } else {
+        _showSpace(context, listed!);
+      }
+    }
+
     return Scaffold(
-      body: installed != null ? _Installed(world: installed, location: location) : _ToInstall(worldId: worldId, location: location),
+      body: ScrolledHead(
+        title: name,
+        onMore: more,
+        child: ListView(
+          padding: EdgeInsets.only(bottom: footRoom(context)),
+          children: [
+            _WorldHeader(
+              worldId: id,
+              name: name,
+              data: data,
+              age: listed?.age,
+              logline: installed?.logline ?? listed?.logline,
+              picture: picture,
+              onMore: more,
+              press: switch (updating) {
+                Installing() when update != null => InstallProgress(state: updating, onCancel: () => ref.read(installProvider(update.id).notifier).cancel()),
+                _ when update != null && newer != null => HeroPress(
+                  icon: Icons.download_rounded,
+                  label: 'Update',
+                  detail: formatBytes(newer.byteLength),
+                  onPressed: () => ref.read(installProvider(update.id).notifier).start(update),
+                ),
+                _ => WorldPress(worldId: id, top: 12),
+              },
+              tabs: _WorldTabs(tabs: tabs, selected: tab, onSelect: (value) => setState(() => _tab = value)),
+            ),
+            if (installed != null && newer != null) ...[const SizedBox(height: 16), _NewEdition(world: installed, newer: newer)],
+            switch (tab) {
+              WorldTab.story => installed != null ? _StoryHere(world: installed, location: location) : _StoryListed(world: listed!, location: location),
+              WorldTab.people => PeoplePanel(worldId: id, location: location),
+              WorldTab.places => PlacesPanel(worldId: id, location: location),
+              WorldTab.lore => LorePanel(worldId: id, location: location),
+            },
+          ],
+        ),
+      ),
     );
   }
 }
 
-class _ToInstall extends ConsumerWidget {
-  const _ToInstall({required this.worldId, required this.location});
+/// Space and what it needs, in ⋯ before a world is here (P22 rule 11).
+Future<void> _showSpace(BuildContext context, CatalogueWorld world) {
+  final size = formatBytes(worldBytes(world));
+  return showArkeSheet<void>(
+    context,
+    title: world.name,
+    // Watched: nothing on a world's page has asked for the volume yet, so a read here finds it loading.
+    builder: (context) => Consumer(
+      builder: (context, ref, _) {
+        final free = ref.watch(volumeProvider).value?.free;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: GroupRow(label: 'Space', value: free == null ? size : '$size of ${formatBytes(free)} free'),
+        );
+      },
+    ),
+  );
+}
 
-  final String worldId;
-  final String location;
+/// What a newer edition brings (P12b): its date and size, and the space it needs.
+class _NewEdition extends ConsumerWidget {
+  const _NewEdition({required this.world, required this.newer});
+
+  final LibraryWorld world;
+  final CataloguePackage newer;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final world = ref.watch(catalogueProvider).value?.where((world) => world.id == worldId).firstOrNull;
-    final state = ref.watch(installProvider(worldId));
-    ref.listen(installProvider(worldId), (previous, next) {
-      if (next is InstallFailed && previous is! InstallFailed && world != null) showInstallRefusal(context, ref, world, next.refusal);
-    });
-    if (world == null) return const _Gone();
-    final package = world.package;
-    // The edition and every part since it (SPEC-058 R-50).
-    final bytes = package == null ? null : package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength);
-    final size = bytes == null ? null : formatBytes(bytes);
     final free = ref.watch(volumeProvider).value?.free;
-    final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
-    final groups = groupByTakenAs(
-      world.productions,
-      (production) => production.music != null ? ProductionKind.ofMusic(production.music!.name) : ProductionKind.ofLine(production.kind),
+    return GroupRows(
+      rows: [
+        (label: 'New edition', value: [if (newer.edition != null) editionLabel(newer.edition!), formatBytes(newer.byteLength)].join(' · ')),
+        if (free != null)
+          (
+            label: 'Space',
+            value:
+                '${newer.byteLength >= world.byteLength ? '+' : '−'}${formatBytes((newer.byteLength - world.byteLength).abs())} of ${formatBytes(free)} free',
+          ),
+      ],
     );
-    final single = world.productions.length == 1;
+  }
+}
 
-    return ScrolledHead(
-      title: world.name,
-      child: ListView(
-        padding: EdgeInsets.only(bottom: footRoom(context)),
+/// The top of a world's page (P22h, P22o): the key art melts into its own blur, and the tabs sit on that
+/// blur, on the media colours whatever the theme. On a Fold or upright tablet the art is taller and the
+/// words keep to the left, 560 wide.
+class _WorldHeader extends StatelessWidget {
+  const _WorldHeader({
+    required this.worldId,
+    required this.name,
+    required this.data,
+    required this.picture,
+    required this.press,
+    required this.tabs,
+    required this.onMore,
+    this.age,
+    this.logline,
+  });
+
+  final String worldId;
+  final String name;
+  final String data;
+  final String? age;
+  final String? logline;
+  final ImageProvider? picture;
+  final Widget press;
+  final Widget tabs;
+  final VoidCallback onMore;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final top = MediaQuery.paddingOf(context).top;
+    final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
+    final artHeight = wide ? 520.0 : 300.0;
+    return ColoredBox(
+      color: _bg,
+      child: Stack(
         children: [
-          WorldHero(
-            picture: ref.keyArtOf(world),
-            title: world.name,
-            meta: [productionCount(world.productions.length), ?size].join(' · '),
-            logline: world.logline,
-            child: switch (state) {
-              Installing() => InstallProgress(state: state, onCancel: () => ref.read(installProvider(worldId).notifier).cancel()),
-              _ when package == null => null,
-              _ => HeroPress(
-                icon: Icons.download_rounded,
-                label: 'Install',
-                detail: size,
-                onPressed: () => ref.read(installProvider(worldId).notifier).start(world),
-              ),
-            },
-          ),
-          // Nothing opens before it is installed (P9 rule 3); the tiles say what is inside.
-          _Groups(
-            groups: groups,
-            single: single,
-            tile: (production, width, shape) => switch (shape) {
-              _Shape.poster => PosterTile(
-                title: production.title,
-                kind: production.kind,
-                tall: ref.tallOf(production),
-                wide: ref.pictureOf(world, production),
-                width: width,
-                onOpen: null,
-              ),
-              _Shape.square => SquareTile(
-                title: production.title,
-                kind: production.kind,
-                picture: ref.pictureOf(world, production),
-                width: width,
-                onOpen: null,
-              ),
-              _Shape.wide => ProductionTile(
-                title: production.title,
-                kind: production.kind,
-                picture: ref.pictureOf(world, production),
-                width: width,
-                // A story this Player cannot play is shown, and never fetched (R-82).
-                tag: production.needsNewerApp ? 'Update app' : null,
-                onOpen: null,
-              ),
-            },
-          ),
-          if (size != null && free != null)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: wide ? 672 : double.infinity),
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(wide ? 16 : 0, 14, wide ? 16 : 0, 0),
-                  child: GroupRow(label: 'Space', value: '$size of ${formatBytes(free)} free'),
+          if (picture != null) Positioned.fill(child: BlurOf(picture: picture!)),
+          if (picture != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              height: artHeight,
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.52, 1],
+                  colors: [Colors.black, Colors.transparent],
+                ).createShader(bounds),
+                child: Image(
+                  image: picture!,
+                  fit: BoxFit.cover,
+                  alignment: const Alignment(0.2, 0),
+                  errorBuilder: (context, error, stack) => const SizedBox.shrink(),
                 ),
               ),
             ),
-          GuideSections(worldId: worldId, location: location),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(wide ? 28 : 16, (wide ? 300.0 : 204.0).clamp(top + 110, double.infinity), wide ? 28 : 16, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: wide ? 504 : double.infinity),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Semantics(
+                          header: true,
+                          child: Text(name, style: text.headlineLarge?.copyWith(color: _fg)),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            WorldFaces(worldId: worldId, gap: 8),
+                            Expanded(
+                              child: Text(
+                                data,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: text.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.84)),
+                              ),
+                            ),
+                            if (age != null) AgeTag(age!, color: _fg),
+                          ],
+                        ),
+                        if (logline != null) ...[
+                          const SizedBox(height: 9),
+                          Text(
+                            logline!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: text.bodyLarge?.copyWith(color: _fg.withValues(alpha: 0.88)),
+                          ),
+                        ],
+                        press,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              tabs,
+            ],
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            top: top + 8,
+            child: Row(
+              children: [
+                if (context.canPop()) GlassPress(icon: Icons.chevron_left_rounded, label: 'Back', onPressed: () => context.pop()),
+                const Spacer(),
+                GlassPress(icon: Icons.more_horiz, label: 'More', onPressed: onMore),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Installed extends ConsumerWidget {
-  const _Installed({required this.world, required this.location});
+/// `Story · People · Places · Lore`, each with its count, an empty one absent (P22 rule 11).
+class _WorldTabs extends StatelessWidget {
+  const _WorldTabs({required this.tabs, required this.selected, required this.onSelect});
+
+  final List<(WorldTab, int?)> tabs;
+  final WorldTab selected;
+  final ValueChanged<WorldTab> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: _fg.withValues(alpha: 0.14))),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (tab, count) in tabs) ...[
+              Semantics(
+                button: true,
+                selected: tab == selected,
+                label: [tab.label, ?count].join(' '),
+                child: ExcludeSemantics(
+                  child: InkWell(
+                    onTap: () => onSelect(tab),
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border(bottom: BorderSide(color: tab == selected ? _fg : Colors.transparent, width: 2)),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            tab.label,
+                            style: text.bodyMedium?.copyWith(
+                              fontSize: ArkeType.sizeBase,
+                              fontWeight: tab == selected ? FontWeight.w600 : FontWeight.w500,
+                              color: _fg.withValues(alpha: tab == selected ? 1 : 0.68),
+                            ),
+                          ),
+                          if (count != null) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              '$count',
+                              style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.6), fontFeatures: const [FontFeature.tabularFigures()]),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 22),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The shape a title's tile takes (P16 rule 1: a row is one shape).
+enum _Shape { poster, wide, square }
+
+/// More titles than this and they group as `Listen · Music · Watch · Play · Read` (P22 rule 12).
+const _ungrouped = 6;
+
+/// A world's titles under Story, before it is here: posters, each with its kind. Nothing opens before it
+/// is here (P9 rule 3), but a graphic novel opens its own page, with Get (P21 call 35).
+class _StoryListed extends ConsumerWidget {
+  const _StoryListed({required this.world, required this.location});
+
+  final CatalogueWorld world;
+  final String location;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Widget tile(CatalogueProduction production, double width, _Shape shape) {
+      // A story this Player cannot play is shown, and never fetched (R-82), whichever row it is in.
+      final tag = production.needsNewerApp ? 'Update app' : null;
+      final picture = ref.pictureOf(world, production);
+      return switch (shape) {
+        _Shape.poster => PosterTile(
+          title: production.title,
+          kind: production.kind,
+          tall: ref.tallOf(production),
+          wide: picture,
+          width: width,
+          tag: tag,
+          onOpen: tag == null && production.comic != null && production.alone != null && production.id != null
+              ? () => context.push(Routes.production(location, production.id!))
+              : null,
+        ),
+        _Shape.square => SquareTile(title: production.title, kind: production.kind, picture: picture, width: width, tag: tag, onOpen: null),
+        _Shape.wide => ProductionTile(title: production.title, kind: production.kind, picture: picture, width: width, tag: tag, onOpen: null),
+      };
+    }
+
+    return _Titles<CatalogueProduction>(
+      titles: world.productions,
+      kindOf: (production) => production.music != null ? ProductionKind.ofMusic(production.music!.name) : ProductionKind.ofLine(production.kind),
+      tile: tile,
+    );
+  }
+}
+
+/// A world's titles under Story, once it is here: a world of one title its chapters at once (call 44),
+/// else posters, each opening its page, one with a chapter not yet opened marked `New` (R-52).
+class _StoryHere extends ConsumerWidget {
+  const _StoryHere({required this.world, required this.location});
 
   final LibraryWorld world;
   final String location;
@@ -161,7 +442,6 @@ class _Installed extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(libraryStoreProvider).value;
     final items = {for (final item in ref.watch(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
-    final update = ref.watch(worldUpdateProvider(world.id));
     final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], world.id);
     // A production published on its own and not on the phone yet still shows, opening nothing until
     // it arrives (SPEC-058 R-72, R-73, R-83); so does a story this Player cannot play, with `Update
@@ -171,8 +451,72 @@ class _Installed extends ConsumerWidget {
       for (final production in listed?.productions ?? const <CatalogueProduction>[])
         if (production.needsNewerApp && installedProduction(production, world) == null) production,
     ];
-    final groups = groupByTakenAs<Object>([...world.productions, ...coming], (production) {
-      return switch (production) {
+    final titles = <Object>[...world.productions, ...coming];
+    // On the phone alone: a world whose one title is still on its way has nothing of it to show yet.
+    if (titles.length == 1 &&
+        world.productions.length == 1 &&
+        world.productions.single.story == null &&
+        world.productions.single.comic == null &&
+        world.productions.single.music == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: ProductionContents(world: world, production: world.productions.single, worldLocation: location),
+      );
+    }
+
+    Widget tile(Object entry, double width, _Shape shape) {
+      // Whatever a title is, its row's shape draws it (P16 rule 1). The package carries no Tall cover yet:
+      // the list's, fetched with it or bundled with the app, is the one there is.
+      Widget drawn(String title, String kind, ImageProvider? picture, {ImageProvider? tall, String? tag, bool fresh = false, VoidCallback? onOpen}) =>
+          switch (shape) {
+            _Shape.poster => PosterTile(title: title, kind: kind, tall: tall, wide: picture, width: width, tag: tag, fresh: fresh, onOpen: onOpen),
+            _Shape.square => SquareTile(title: title, kind: kind, picture: picture, width: width, tag: tag, onOpen: onOpen),
+            _Shape.wide => ProductionTile(title: title, kind: kind, picture: picture, width: width, tag: tag, fresh: fresh, onOpen: onOpen),
+          };
+      if (entry is CatalogueProduction) {
+        return drawn(
+          entry.title,
+          entry.kind,
+          listed == null ? null : ref.pictureOf(listed, entry),
+          tall: ref.tallOf(entry),
+          tag: entry.needsNewerApp ? 'Update app' : null,
+        );
+      }
+      final production = entry as LibraryProduction;
+      void open() => context.push(Routes.production(location, production.id));
+      final inList = listed?.productions.where((candidate) => candidate.id == production.id || candidate.title == production.title).firstOrNull;
+      final picture = libraryPicture(store, production.picture ?? world.keyArt);
+      String? update() => ref.watch(productionUpdateProvider((world.id, production.id))) != null ? 'Update' : null;
+      if (production.story case final story?) {
+        return drawn(production.title, storyTileKind(story), picture, tall: ref.tallOf(inList), tag: update(), onOpen: open);
+      }
+      if (production.comic case final comic?) {
+        final tall = ref.tallOf(inList) ?? ref.watch(comicFirstPageProvider((world.id, production.id)));
+        return drawn(production.title, comicTileKind(comic), picture, tall: tall, tag: update(), onOpen: open);
+      }
+      if (production.music case final music?) {
+        return drawn(
+          production.title,
+          musicTileKind(music.kind, tracks: music.tracks, length: music.duration),
+          picture,
+          tag: update(),
+          onOpen: open,
+        );
+      }
+      final narration = items[production.narration];
+      return drawn(
+        production.title,
+        productionKind(book: production.book != null, narration: production.narration != null, length: narration?.duration),
+        libraryPicture(store, production.picture ?? narration?.cover ?? items[production.book]?.cover ?? world.keyArt),
+        tall: ref.tallOf(inList),
+        fresh: newChapters(world, production.id, narration).isNotEmpty,
+        onOpen: open,
+      );
+    }
+
+    return _Titles<Object>(
+      titles: titles,
+      kindOf: (production) => switch (production) {
         CatalogueProduction(:final music?) => ProductionKind.ofMusic(music.name),
         CatalogueProduction(:final kind) => ProductionKind.ofLine(kind),
         LibraryProduction(:final music?) => ProductionKind.ofMusic(music.kind),
@@ -181,162 +525,55 @@ class _Installed extends ConsumerWidget {
         LibraryProduction(comic: _?) => ProductionKind.graphicNovel,
         LibraryProduction(:final narration) => narration != null ? ProductionKind.audiobook : ProductionKind.book,
         _ => ProductionKind.book,
-      };
-    });
-    final single = world.productions.length + coming.length == 1;
-    final installing = update?.id ?? world.id;
-    final state = ref.watch(installProvider(installing));
-    ref.listen(installProvider(installing), (previous, next) {
-      if (next is InstallFailed && previous is! InstallFailed && update != null) showInstallRefusal(context, ref, update, next.refusal, updating: true);
-    });
-    final newer = update?.package;
-    final free = ref.watch(volumeProvider).value?.free;
-
-    Widget tile(Object entry, double width, _Shape shape) {
-      if (entry is CatalogueProduction) {
-        final picture = listed == null ? null : ref.pictureOf(listed, entry);
-        final tag = entry.needsNewerApp ? 'Update app' : null;
-        return shape == _Shape.square
-            ? SquareTile(title: entry.title, kind: entry.kind, picture: picture, width: width, tag: tag, onOpen: null)
-            : ProductionTile(title: entry.title, kind: entry.kind, picture: picture, width: width, tag: tag, onOpen: null);
-      }
-      final production = entry as LibraryProduction;
-      void open() => context.push(Routes.production(location, production.id));
-      if (production.story case final story?) {
-        final updating = ref.watch(productionUpdateProvider((world.id, production.id))) != null;
-        return ProductionTile(
-          title: production.title,
-          kind: storyTileKind(story),
-          picture: libraryPicture(store, production.picture ?? world.keyArt),
-          width: width,
-          tag: updating ? 'Update' : null,
-          onOpen: open,
-        );
-      }
-      if (production.comic case final comic?) {
-        final updating = ref.watch(productionUpdateProvider((world.id, production.id))) != null;
-        return ProductionTile(
-          title: production.title,
-          kind: comicTileKind(comic),
-          picture: libraryPicture(store, production.picture ?? world.keyArt),
-          width: width,
-          tag: updating ? 'Update' : null,
-          onOpen: open,
-        );
-      }
-      if (production.music case final music?) {
-        final updating = ref.watch(productionUpdateProvider((world.id, production.id))) != null;
-        return SquareTile(
-          title: production.title,
-          kind: musicTileKind(music.kind, tracks: music.tracks, length: music.duration),
-          picture: libraryPicture(store, production.picture ?? world.keyArt),
-          width: width,
-          tag: updating ? 'Update' : null,
-          onOpen: open,
-        );
-      }
-      final narration = items[production.narration];
-      final picture = production.picture ?? narration?.cover ?? items[production.book]?.cover ?? world.keyArt;
-      final kind = productionKind(book: production.book != null, narration: production.narration != null, length: narration?.duration);
-      final fresh = newChapters(world, production.id, narration).isNotEmpty;
-      if (shape != _Shape.poster) {
-        return ProductionTile(title: production.title, kind: kind, picture: libraryPicture(store, picture), width: width, fresh: fresh, onOpen: open);
-      }
-      // The package carries no Tall cover yet: the list's, fetched with it or bundled with the app, is
-      // the one there is.
-      final tall = ref.tallOf(
-        listed?.productions.where((listedProduction) => listedProduction.id == production.id || listedProduction.title == production.title).firstOrNull,
-      );
-      return PosterTile(title: production.title, kind: kind, tall: tall, wide: libraryPicture(store, picture), width: width, fresh: fresh, onOpen: open);
-    }
-
-    return ScrolledHead(
-      title: world.name,
-      onMore: () => showWorldMenu(context, ref, world),
-      child: ListView(
-        padding: EdgeInsets.only(bottom: footRoom(context)),
-        children: [
-          WorldHero(
-            picture: libraryPicture(store, world.keyArt),
-            title: world.name,
-            // A world from Arke's list says which edition is on the phone (P12b, P12d).
-            meta: [
-              'Installed',
-              if (listed?.package?.edition != null) editionLabel(world.edition) else productionCount(world.productions.length),
-              formatBytes(world.byteLength),
-            ].join(' · '),
-            logline: world.logline,
-            onMore: () => showWorldMenu(context, ref, world),
-            child: switch (state) {
-              Installing() => InstallProgress(state: state, onCancel: () => ref.read(installProvider(installing).notifier).cancel()),
-              _ when update != null && newer != null => HeroPress(
-                icon: Icons.download_rounded,
-                label: 'Update',
-                detail: formatBytes(newer.byteLength),
-                onPressed: () => ref.read(installProvider(installing).notifier).start(update),
-              ),
-              _ => null,
-            },
-          ),
-          if (newer != null) ...[
-            const SizedBox(height: 16),
-            GroupRows(
-              rows: [
-                (label: 'New edition', value: [if (newer.edition != null) editionLabel(newer.edition!), formatBytes(newer.byteLength)].join(' · ')),
-                if (free != null)
-                  (
-                    label: 'Space',
-                    value:
-                        '${newer.byteLength >= world.byteLength ? '+' : '−'}${formatBytes((newer.byteLength - world.byteLength).abs())} of ${formatBytes(free)} free',
-                  ),
-              ],
-            ),
-          ],
-          _Groups(groups: groups, single: single, tile: tile),
-          GuideSections(worldId: world.id, location: location),
-        ],
-      ),
+      },
+      tile: tile,
     );
   }
 }
 
-/// The shape a group's row takes (P16 rule 1: a row is one shape).
-enum _Shape { poster, wide, square }
+/// A world's titles (P22 rule 12): up to six in one row of posters, music as squares; past that, under
+/// `Listen · Music · Watch · Play · Read`, each head with its count (P15 rule 3, P17 rule 2).
+class _Titles<T> extends StatelessWidget {
+  const _Titles({required this.titles, required this.kindOf, required this.tile});
 
-/// A world's productions under `Listen · Music · Watch · Play · Read`, each head with its count (P15
-/// rule 3, P17 rule 2). Listen and Read are posters, where audiobooks and books sit (P16 rule 3);
-/// Music is squares (P17 rule 3); Watch and Play are wide tiles, and a world of one production shows
-/// a wide one at the full width (P9 rule 6). A lone poster keeps the poster's size: at the full width
-/// it would be the feature.
-class _Groups<T> extends StatelessWidget {
-  const _Groups({required this.groups, required this.single, required this.tile});
-
-  final Map<TakenAs, List<T>> groups;
-  final bool single;
+  final List<T> titles;
+  final ProductionKind Function(T) kindOf;
   final Widget Function(T production, double width, _Shape shape) tile;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      for (final MapEntry(key: takenAs, value: productions) in groups.entries) ...[
-        if (single) SectionHead(takenAs.label) else CountHead(title: takenAs.label, count: productions.length),
-        if (takenAs == TakenAs.listen || takenAs == TakenAs.read)
-          TileRow(children: [for (final production in productions) tile(production, RowSizes.poster(context), _Shape.poster)])
-        else if (takenAs == TakenAs.music)
-          TileRow(children: [for (final production in productions) tile(production, RowSizes.square(context), _Shape.square)])
-        else if (single)
-          LayoutBuilder(
-            builder: (context, box) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Align(alignment: Alignment.centerLeft, child: tile(productions.single, (box.maxWidth - 32).clamp(0, 640), _Shape.wide)),
-            ),
-          )
-        else
-          TileRow(children: [for (final production in productions) tile(production, rowTileWidth(context), _Shape.wide)]),
-      ],
-    ],
-  );
+  Widget build(BuildContext context) {
+    if (titles.length <= _ungrouped) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 24),
+        child: TileRow(
+          children: [
+            for (final title in titles)
+              kindOf(title).takenAs == TakenAs.music
+                  ? tile(title, RowSizes.square(context), _Shape.square)
+                  : tile(title, RowSizes.poster(context), _Shape.poster),
+          ],
+        ),
+      );
+    }
+    final groups = groupByTakenAs(titles, kindOf);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final MapEntry(key: takenAs, value: productions) in groups.entries) ...[
+            CountHead(title: takenAs.label, count: productions.length),
+            if (takenAs == TakenAs.listen || takenAs == TakenAs.read)
+              TileRow(children: [for (final production in productions) tile(production, RowSizes.poster(context), _Shape.poster)])
+            else if (takenAs == TakenAs.music)
+              TileRow(children: [for (final production in productions) tile(production, RowSizes.square(context), _Shape.square)])
+            else
+              TileRow(children: [for (final production in productions) tile(production, rowTileWidth(context), _Shape.wide)]),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 /// Once the hero has scrolled away, a head in the shelf's colours with back, the world's name and

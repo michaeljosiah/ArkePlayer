@@ -120,7 +120,7 @@ void main() {
   testWidgets('a new world: Ready, with Inside, Space and Add to library (P2e)', (tester) async {
     await _start(tester, _FakeInstaller(result: _prepared()));
     expect(find.text('PACKAGE'), findsOneWidget);
-    expect(find.text('made 21 Oct 2026 · 1 production · 228 MB'), findsOneWidget);
+    expect(find.text('made 21 Oct 2026 · 1 title · 228 MB'), findsOneWidget);
     expect(find.text('Inside'), findsOneWidget);
     expect(find.text('Audiobook · 3 h 49 m'), findsOneWidget);
     expect(find.text('228 MB of 41 GB free'), findsOneWidget);
@@ -128,11 +128,11 @@ void main() {
     expect(find.text('Replace'), findsNothing);
   });
 
-  testWidgets('another edition of a world in Library: Replace, with In Library and the difference (P10a)', (tester) async {
+  testWidgets('another edition of a world in Library: Replace, with On this phone and the difference (P10a, P22 rule 16)', (tester) async {
     final installer = _FakeInstaller(result: _prepared(installed: _world('2026-10-20', 'a', 182000000)));
     await _start(tester, installer);
     expect(find.text('Replace'), findsOneWidget);
-    expect(find.text('In Library'), findsOneWidget);
+    expect(find.text('On this phone'), findsOneWidget);
     expect(find.text('20 Oct 2026 · 182 MB'), findsOneWidget);
     expect(find.text('+46 MB of 41 GB free'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
@@ -140,10 +140,10 @@ void main() {
     expect(installer.discarded, isTrue);
   });
 
-  testWidgets('the same edition: Already in Library, and the copy is deleted (P10b)', (tester) async {
+  testWidgets('the same edition: Already on this phone, and the copy is deleted (P10b, P22 rule 16)', (tester) async {
     final installer = _FakeInstaller(result: _prepared(installed: _world('2026-10-21', 'b', 228000000)));
     await _start(tester, installer);
-    expect(find.text('Already in Library'), findsOneWidget);
+    expect(find.text('Already on this phone'), findsOneWidget);
     expect(find.text('The Undersong · 21 Oct 2026'), findsOneWidget);
     expect(find.text('Open'), findsOneWidget);
     expect(installer.discarded, isTrue);

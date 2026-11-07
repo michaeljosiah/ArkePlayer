@@ -14,9 +14,6 @@ enum TakenAs {
   const TakenAs(this.label);
   final String label;
 
-  /// The chips over Discover and Library, `All · Listen · Watch · Play · Read`: Music is not one.
-  static const chips = [listen, watch, play, read];
-
   /// The chip a group is shown under.
   TakenAs get chip => this == music ? listen : this;
 }

@@ -34,7 +34,7 @@ Future<bool> isWorldPackage(PickedFile file) async {
 
 /// A world package added from a file (SPEC-058 R-17 – R-21): copied and checked in full while
 /// Checking shows (P2d), then Ready with Add to library (P2e) — or Replace for another edition of a
-/// world in Library (P10a), Already in Library for the same one (P10b), or refused in one clause
+/// world in Library (P10a), Already on this phone for the same one (P10b), or refused in one clause
 /// (P2f). Nothing joins the library before the press, and closing deletes the copy.
 Future<PackageOutcome> addPackage(BuildContext context, WidgetRef ref, PickedFile file) async {
   final installer = await ref.read(worldInstallerProvider.future);
@@ -186,7 +186,7 @@ class _CheckingSheetState extends State<_CheckingSheet> {
 }
 
 /// Ready (P2e), or Replace for another edition of a world in Library (P10a): the package's picture
-/// and name, its line, Inside, then In Library and Space, and the press.
+/// and name, its line, Inside, then On this phone and Space, and the press.
 class _ReadyScreen extends ConsumerWidget {
   const _ReadyScreen({required this.prepared});
 
@@ -277,7 +277,7 @@ class _ReadyScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                     child: Text(
-                      [editionLine(world.edition), productionCount(world.productions.length), formatBytes(world.byteLength)].join(' · '),
+                      [editionLine(world.edition), titleCount(world.productions.length), formatBytes(world.byteLength)].join(' · '),
                       style: text.bodyMedium?.copyWith(color: surface.mutedForeground),
                     ),
                   ),
@@ -298,7 +298,7 @@ class _ReadyScreen extends ConsumerWidget {
                   const SizedBox(height: 14),
                   _Group(
                     rows: [
-                      if (installed != null) ('In Library', '${editionLine(installed.edition, made: false)} · ${formatBytes(installed.byteLength)}'),
+                      if (installed != null) ('On this phone', '${editionLine(installed.edition, made: false)} · ${formatBytes(installed.byteLength)}'),
                       if (space != null) ('Space', space),
                     ],
                   ),
@@ -405,7 +405,7 @@ Future<void> _alreadyInLibrary(BuildContext context, PreparedWorld prepared) asy
           children: [
             Icon(Icons.collections_bookmark_outlined, size: 34, color: surface.mutedForeground),
             const SizedBox(height: 12),
-            Text('Already in Library', textAlign: TextAlign.center, style: text.titleMedium),
+            Text('Already on this phone', textAlign: TextAlign.center, style: text.titleMedium),
             const SizedBox(height: 4),
             Text(
               '${prepared.world.name} · ${editionLine(prepared.world.edition, made: false)}',

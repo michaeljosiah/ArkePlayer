@@ -8,6 +8,7 @@ import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_player/features/worlds/presentation/production_screen.dart';
+import 'package:arke_player/features/worlds/presentation/world_screen.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +88,7 @@ Future<void> _pump(
 }
 
 /// Scrolls the page until [target] is in its middle, clear of the tabs' pill floating at the foot
-/// (P16 rule 9): under Discover's feature (P16a), Worlds is further down.
+/// (P16 rule 9).
 Future<void> _reveal(WidgetTester tester, Finder target) async {
   final page = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
   await tester.scrollUntilVisible(target, 300, scrollable: page);
@@ -104,7 +105,7 @@ void main() {
     expect(editionLabel('first'), 'first');
   });
 
-  testWidgets('Discover marks an installed world with a newer edition (P12a, R-32)', (tester) async {
+  testWidgets('Worlds marks an installed world with a newer edition (P12a, R-32)', (tester) async {
     await _pump(tester, location: Routes.worlds, catalogue: [_listed()]);
     await _reveal(tester, find.text('Update'));
     expect(find.text('Update'), findsOneWidget);
@@ -142,9 +143,15 @@ void main() {
       name: 'The Undersong',
       byteLength: 413000000,
       installedAt: DateTime.utc(2026, 10, 22),
-      productions: const [LibraryProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', book: 'the-undersong.the-ledger-of-nights.book')],
+      // Two titles: a world of one shows its chapters on its page, with no title to open (P22i).
+      productions: const [
+        LibraryProduction(id: 'the-ledger-of-nights', title: 'The Ledger of Nights', book: 'the-undersong.the-ledger-of-nights.book'),
+        LibraryProduction(id: 'undertow', title: 'Undertow', book: 'the-undersong.undertow.book'),
+      ],
     );
     await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [renamed], installed: updated);
+    expect(find.byType(WorldScreen), findsOneWidget);
+    expect(tester.widget<WorldScreen>(find.byType(WorldScreen)).location, Routes.worldsWorld('the-undersong'));
     final router = GoRouter.of(tester.element(find.byType(Scaffold).first));
     await tester.tap(find.text('The Ledger of Nights'));
     await tester.pumpAndSettle();
@@ -171,7 +178,7 @@ void main() {
   testWidgets('the world’s page offers Update with the new edition and the space (P12b), then updates in place (P12c)', (tester) async {
     final installer = _FakeInstaller();
     await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [_listed()], installer: installer);
-    expect(find.text('Installed · 20 Oct 2026 · 182 MB'), findsOneWidget);
+    expect(find.text('1 title'), findsOneWidget);
     expect(find.text('Update · 228 MB', findRichText: true), findsOneWidget);
     expect(find.text('22 Oct 2026 · 228 MB'), findsOneWidget);
     expect(find.text('+46 MB of 41 GB free'), findsOneWidget);
@@ -179,8 +186,18 @@ void main() {
     await tester.tap(find.text('Update · 228 MB', findRichText: true));
     await tester.pump();
     expect(installer.updates, 1);
-    expect(find.text('Downloading · 120 MB of 228 MB'), findsOneWidget);
+    expect(find.text('Downloading · 120 of 228 MB'), findsOneWidget);
     expect(find.text('Cancel'), findsOneWidget);
+  });
+
+  testWidgets('the edition on the phone and its space are in ⋯ (P22 rule 11)', (tester) async {
+    await _pump(tester, location: Routes.worldsWorld('undersong'), catalogue: [_listed()]);
+    expect(find.text('20 Oct 2026'), findsNothing);
+    await tester.tap(find.bySemanticsLabel('More').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Edition'), findsOneWidget);
+    expect(find.text('20 Oct 2026'), findsOneWidget);
+    expect(find.text('182 MB'), findsOneWidget);
   });
 
   testWidgets('a refusal is one clause with the edition it would have brought (P12f, R-35)', (tester) async {
@@ -194,7 +211,8 @@ void main() {
     // The installed edition is untouched: the page still offers the update.
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('Installed · 20 Oct 2026 · 182 MB'), findsOneWidget);
+    expect(find.text('Update · 228 MB', findRichText: true), findsOneWidget);
+    expect(find.text('22 Oct 2026 · 228 MB'), findsOneWidget);
   });
 
   testWidgets('Downloads lists an update under Worlds (P12e)', (tester) async {

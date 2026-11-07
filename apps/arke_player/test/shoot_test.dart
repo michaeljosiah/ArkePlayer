@@ -28,6 +28,8 @@ final _undersong = CatalogueWorld(
   name: 'The Undersong',
   logline: 'A drowned god still sings beneath the harbour.',
   keyArt: 'assets/worlds/undersong/key-art.jpg',
+  genres: const ['Fantasy'],
+  age: '16+',
   productions: const [
     CatalogueProduction(title: 'The Ledger of Nights', kind: 'Audiobook · Book · 2 h 03 m', picture: 'assets/worlds/undersong/ledger-of-nights.jpg'),
   ],
@@ -354,48 +356,57 @@ void main() {
 
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
+  // The row is under About, past what a phone shows.
+  Future<void> toCheck(WidgetTester tester) => tester.scrollUntilVisible(find.text('Check for updates'), 200);
   for (final (name, size) in [('phone', phone), ('tablet', fold), ('desktop', const Size(1440, 900))]) {
     for (final check in CatalogueCheck.values) {
       testWidgets(
-        'P13 $name ${check.name}',
+        'P22 Check for updates, $name ${check.name}',
         (t) => shoot(
           t,
           'P13-$name-${check.name}',
           size,
-          Routes.worlds,
+          Routes.you,
           with_: worldItems,
           catalogue: [_p13World(check == CatalogueCheck.checked)],
           worlds: [installed],
           check: check,
+          act: toCheck,
         ),
       );
     }
     testWidgets(
-      'P13 $name dark',
+      'P22 Check for updates, $name dark',
       (t) => shoot(
         t,
         'P13-$name-dark',
         size,
-        Routes.worlds,
+        Routes.you,
         with_: worldItems,
         catalogue: [_p13World(true)],
         worlds: [installed],
         check: CatalogueCheck.checked,
         brightness: Brightness.dark,
+        act: toCheck,
       ),
     );
+    testWidgets(
+      'P22d what a check found, $name',
+      (t) => shoot(t, 'P13-$name-found', size, Routes.worlds, with_: worldItems, catalogue: [_p13World(true)], worlds: [installed]),
+    );
   }
-  testWidgets('P8b home, nothing added', (t) => shoot(t, 'P8b-home-empty', phone, Routes.home, with_: const []));
-  testWidgets('P8d home, with files', (t) => shoot(t, 'P8d-home', phone, Routes.home));
-  testWidgets('P8c library', (t) => shoot(t, 'P8c-library', phone, Routes.library));
-  testWidgets('P8e library on a fold', (t) => shoot(t, 'P8e-library-fold', fold, Routes.library));
-  testWidgets('P8f you', (t) => shoot(t, 'P8f-you', phone, Routes.you));
+  testWidgets('home with no list and nothing going', (t) => shoot(t, 'home-empty', phone, Routes.home, with_: const []));
+  testWidgets('P22c home, with files going', (t) => shoot(t, 'P22c-home-files', phone, Routes.home));
+  testWidgets('P22l library', (t) => shoot(t, 'P22l-library-files', phone, Routes.library));
+  testWidgets('P22m library, its files', (t) => shoot(t, 'P22m-files', phone, Routes.library, act: (tester) => tester.tap(find.text('Files'))));
+  testWidgets('P8e library on a fold', (t) => shoot(t, 'P8e-library-fold', fold, Routes.library, act: (tester) => tester.tap(find.text('Files'))));
+  testWidgets('P25g you', (t) => shoot(t, 'P25g-you', phone, Routes.you));
   testWidgets('P6a downloads', (t) => shoot(t, 'P6a-downloads', phone, Routes.downloads));
-  testWidgets('P8d home, dark', (t) => shoot(t, 'P8d-home-dark', phone, Routes.home, brightness: Brightness.dark));
-  testWidgets('P6e home on a fold', (t) => shoot(t, 'P6e-home-fold', fold, Routes.home));
+  testWidgets('P22c home, dark', (t) => shoot(t, 'P22c-home-files-dark', phone, Routes.home, brightness: Brightness.dark));
+  testWidgets('P22n home on a fold', (t) => shoot(t, 'P22n-home-covers-fold', fold, Routes.home, with_: const [], catalogue: [_undersong]));
 
-  Future<void> install(WidgetTester tester) => tester.tap(find.textContaining('Install').last);
-  testWidgets('P9c a world to install', (t) => shoot(t, 'P9c-world-to-install', phone, Routes.world('undersong'), catalogue: [_undersong]));
+  Future<void> install(WidgetTester tester) => tester.tap(find.textContaining('Start').last);
+  testWidgets('P22h a world not yet here', (t) => shoot(t, 'P22h-world-not-here', phone, Routes.world('undersong'), catalogue: [_undersong]));
   testWidgets(
     'P9d installing',
     (t) => shoot(t, 'P9d-installing', phone, Routes.world('undersong'), catalogue: [_undersong], installer: _FakeInstaller(), act: install),
@@ -413,11 +424,54 @@ void main() {
     ),
   );
   testWidgets(
-    'P9f installed',
-    (t) => shoot(t, 'P9f-installed', phone, Routes.world('undersong'), with_: [...items, ...worldItems], catalogue: [_undersong], worlds: [installed]),
+    'P22i a world of one title, here',
+    (t) => shoot(t, 'P22i-installed', phone, Routes.world('undersong'), with_: [...items, ...worldItems], catalogue: [_undersong], worlds: [installed]),
   );
-  testWidgets('P9g home with available', (t) => shoot(t, 'P9g-home', phone, Routes.home, catalogue: [_undersong]));
-  testWidgets('P9h a world to install on a fold', (t) => shoot(t, 'P9h-world-fold', fold, Routes.world('undersong'), catalogue: [_undersong]));
+  testWidgets(
+    'P22i a world of one title, here, dark',
+    (t) => shoot(
+      t,
+      'P22i-installed-dark',
+      phone,
+      Routes.world('undersong'),
+      with_: [...items, ...worldItems],
+      catalogue: [_undersong],
+      worlds: [installed],
+      brightness: Brightness.dark,
+    ),
+  );
+  testWidgets(
+    'P22e the one question',
+    (t) => shoot(
+      t,
+      'P22e-ask',
+      phone,
+      Routes.world('undersong'),
+      catalogue: [
+        CatalogueWorld(
+          id: _undersong.id,
+          name: _undersong.name,
+          logline: _undersong.logline,
+          keyArt: _undersong.keyArt,
+          genres: const ['Fantasy'],
+          age: '18+',
+          productions: _undersong.productions,
+          package: _undersong.package,
+        ),
+      ],
+      brightness: Brightness.dark,
+      act: (tester) async {
+        await tester.tap(find.textContaining('Start', findRichText: true).first);
+        await tester.pumpAndSettle();
+      },
+    ),
+  );
+  testWidgets('P22a home, its covers', (t) => shoot(t, 'P22a-home-light', phone, Routes.home, with_: const [], catalogue: [_undersong]));
+  testWidgets(
+    'P22a home, its covers, dark',
+    (t) => shoot(t, 'P22a-home', phone, Routes.home, with_: const [], catalogue: [_undersong], brightness: Brightness.dark),
+  );
+  testWidgets('P22o a world not yet here on a fold', (t) => shoot(t, 'P22o-world-fold', fold, Routes.world('undersong'), catalogue: [_undersong]));
   testWidgets(
     'P1e production',
     (t) => shoot(
@@ -429,5 +483,5 @@ void main() {
       worlds: [installed],
     ),
   );
-  testWidgets('P9c dark', (t) => shoot(t, 'P9c-world-to-install-dark', phone, Routes.world('undersong'), catalogue: [_undersong], brightness: Brightness.dark));
+  testWidgets('P22h dark', (t) => shoot(t, 'P22h-world-not-here-dark', phone, Routes.world('undersong'), catalogue: [_undersong], brightness: Brightness.dark));
 }

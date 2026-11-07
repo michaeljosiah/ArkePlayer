@@ -495,102 +495,135 @@ Future<void> askReveal(BuildContext context, WidgetRef ref, String worldId, Worl
   if (revealed == true) await reveal(ref, worldId, after);
 }
 
-/// A world's guide on its page (P11b, P11c, P11i, P16e), after its productions: Characters as
-/// small posters, each portrait upright and uncut, and Places as wide tiles (P16 rules 4 and 5,
-/// replacing P15 rule 10's one tile), Lore as rows, each head with its count. A section with
-/// nothing public is not drawn; a guide never fetched draws nothing (R-22). [location] is the world
-/// page's own path.
-class GuideSections extends ConsumerWidget {
-  const GuideSections({required this.worldId, required this.location, super.key});
+/// A world's People (P22j, P26k): upright portraits in a grid, three across on a phone, what waits for
+/// a chapter after what shows, each with its chapter. A guide never fetched draws nothing (R-22).
+class PeoplePanel extends ConsumerWidget {
+  const PeoplePanel({required this.worldId, required this.location, super.key});
 
   final String worldId;
   final String location;
 
-  /// On a phone the page shows this many lore rows; the head opens the rest (P11f).
-  static const _loreOnPage = 4;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(guideFetchProvider(worldId));
     final guide = ref.watch(worldGuideProvider(worldId)).value;
     if (guide == null) return const SizedBox.shrink();
     final reach = ref.watch(guideReachProvider(worldId)).value ?? GuideReach.none;
-    final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
-    final width = rowTileWidth(context);
-    void open(GuideEntry entry) => context.push(Routes.guideEntry(location, entry.id));
-    void ask(GuideAfter after) => askReveal(context, ref, worldId, guide, reach, after);
+    final characters = guide.guide.characters;
+    final width = RowSizes.small(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+      child: Wrap(
+        spacing: 11,
+        runSpacing: 14,
+        children: [
+          for (final character in characters.where((entry) => reach.shows(entry.after)))
+            PosterTile(
+              title: character.name,
+              kind: character.role ?? 'Character',
+              tall: guidePicture(guide, character),
+              initials: initials(character.name),
+              pictureAlignment: const Alignment(0, -0.6),
+              width: width,
+              onOpen: () => context.push(Routes.guideEntry(location, character.id)),
+            ),
+          for (final character in characters.where((entry) => !reach.shows(entry.after)))
+            GatedCard(
+              after: character.after!,
+              what: 'Character',
+              width: width,
+              aspectRatio: 2 / 3,
+              onReveal: () => askReveal(context, ref, worldId, guide, reach, character.after!),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
-    // What waits for a chapter goes after what shows (P11b, P11f).
-    List<T> ordered<T extends GuideEntry>(List<T> entries) => [
-      ...entries.where((entry) => reach.shows(entry.after)),
-      ...entries.where((entry) => !reach.shows(entry.after)),
+/// A world's Places (P22k, P26l): wide tiles, one across on a phone, two from a Fold up.
+class PlacesPanel extends ConsumerWidget {
+  const PlacesPanel({required this.worldId, required this.location, super.key});
+
+  final String worldId;
+  final String location;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final guide = ref.watch(worldGuideProvider(worldId)).value;
+    if (guide == null) return const SizedBox.shrink();
+    final reach = ref.watch(guideReachProvider(worldId)).value ?? GuideReach.none;
+    final places = guide.guide.places;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final across = MediaQuery.sizeOf(context).width >= WindowBands.fold ? 2 : 1;
+        final width = (box.maxWidth - 32 - (across - 1) * 12) / across;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 14,
+            children: [
+              for (final place in places.where((entry) => reach.shows(entry.after)))
+                ProductionTile(
+                  title: place.name,
+                  kind: placeKind(place),
+                  picture: guidePicture(guide, place),
+                  width: width,
+                  onOpen: () => context.push(Routes.guideEntry(location, place.id)),
+                ),
+              for (final place in places.where((entry) => !reach.shows(entry.after)))
+                GatedCard(
+                  after: place.after!,
+                  what: placeKind(place),
+                  width: width,
+                  aspectRatio: 16 / 9,
+                  onReveal: () => askReveal(context, ref, worldId, guide, reach, place.after!),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// A world's Lore (P26m, as P11f): `All` and a chip for each kind present, then rows.
+class LorePanel extends ConsumerStatefulWidget {
+  const LorePanel({required this.worldId, required this.location, super.key});
+
+  final String worldId;
+  final String location;
+
+  @override
+  ConsumerState<LorePanel> createState() => _LorePanelState();
+}
+
+class _LorePanelState extends ConsumerState<LorePanel> {
+  LoreKind? _kind;
+
+  static const _chips = [(LoreKind.lore, 'Lore'), (LoreKind.rule, 'Rules'), (LoreKind.timeline, 'Timeline')];
+
+  @override
+  Widget build(BuildContext context) {
+    final guide = ref.watch(worldGuideProvider(widget.worldId)).value;
+    if (guide == null) return const SizedBox.shrink();
+    final reach = ref.watch(guideReachProvider(widget.worldId)).value ?? GuideReach.none;
+    final lore = guide.guide.lore;
+    final kinds = [
+      for (final chip in _chips)
+        if (lore.any((entry) => entry.kind == chip.$1)) chip,
     ];
-    final characters = ordered(guide.guide.characters);
-    final places = ordered(guide.guide.places);
-    final lore = ordered(guide.guide.lore);
-    final loreShown = wide ? lore : lore.take(_loreOnPage).toList();
-
-    Widget loreRow(GuideLore entry) =>
-        reach.shows(entry.after) ? LoreRow(lore: entry, onOpen: () => open(entry)) : GateRow(after: entry.after!, onReveal: () => ask(entry.after!));
-
+    final chosen = lore.where((entry) => _kind == null || entry.kind == _kind);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (characters.isNotEmpty) ...[
-          CountHead(title: 'Characters', count: characters.length),
-          CardRow(
-            children: [
-              for (final character in characters)
-                if (reach.shows(character.after))
-                  PosterTile(
-                    title: character.name,
-                    kind: character.role ?? 'Character',
-                    tall: guidePicture(guide, character),
-                    initials: initials(character.name),
-                    pictureAlignment: const Alignment(0, -0.6),
-                    width: RowSizes.small(context),
-                    onOpen: () => open(character),
-                  )
-                else
-                  GatedCard(
-                    after: character.after!,
-                    what: 'Character',
-                    width: RowSizes.small(context),
-                    aspectRatio: 2 / 3,
-                    onReveal: () => ask(character.after!),
-                  ),
-            ],
-          ),
-        ],
-        if (places.isNotEmpty) ...[
-          CountHead(title: 'Places', count: places.length),
-          CardRow(
-            children: [
-              for (final place in places)
-                if (reach.shows(place.after))
-                  ProductionTile(title: place.name, kind: placeKind(place), picture: guidePicture(guide, place), width: width, onOpen: () => open(place))
-                else
-                  GatedCard(after: place.after!, what: placeKind(place), width: width, aspectRatio: 16 / 9, onReveal: () => ask(place.after!)),
-            ],
-          ),
-        ],
-        if (lore.isNotEmpty) ...[
-          CountHead(title: 'Lore', count: lore.length, onOpen: () => context.push(Routes.lore(location))),
-          if (wide)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: Column(children: [for (final entry in loreShown.take((loreShown.length + 1) ~/ 2)) loreRow(entry)])),
-                  const SizedBox(width: 32),
-                  Expanded(child: Column(children: [for (final entry in loreShown.skip((loreShown.length + 1) ~/ 2)) loreRow(entry)])),
-                ],
-              ),
-            )
-          else
-            for (final entry in loreShown) loreRow(entry),
-        ],
+        const SizedBox(height: 14),
+        if (kinds.isNotEmpty) LabelChips<LoreKind>(options: kinds, selected: _kind, onSelect: (kind) => setState(() => _kind = kind)),
+        const SizedBox(height: 8),
+        for (final entry in chosen.where((entry) => reach.shows(entry.after)))
+          LoreRow(lore: entry, onOpen: () => context.push(Routes.guideEntry(widget.location, entry.id))),
+        for (final entry in chosen.where((entry) => !reach.shows(entry.after)))
+          GateRow(after: entry.after!, onReveal: () => askReveal(context, ref, widget.worldId, guide, reach, entry.after!)),
         const SizedBox(height: 24),
       ],
     );

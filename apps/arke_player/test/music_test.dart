@@ -77,9 +77,8 @@ void main() {
       expect(musicMeta('single', of: 'The Undersong', tracks: 1, length: const Duration(minutes: 3, seconds: 42)), 'Single · The Undersong · 3:42');
     });
 
-    test('music is its own group, after Listen, but never a chip (P17 rule 2)', () {
+    test('music is its own group, after Listen (P17 rule 2)', () {
       expect(TakenAs.values.take(3), [TakenAs.listen, TakenAs.music, TakenAs.watch]);
-      expect(TakenAs.chips, isNot(contains(TakenAs.music)));
       expect(TakenAs.music.chip, TakenAs.listen);
       expect([
         for (final kind in ['album', 'single', 'soundtrack']) ProductionKind.ofMusic(kind).takenAs,
@@ -204,30 +203,30 @@ void main() {
       expect(find.textContaining('Update'), findsOneWidget);
     });
 
-    testWidgets('Discover has a Music row after Stories, under All and Listen (P17b)', (tester) async {
+    testWidgets('Home has a Music row after Stories (P17b, P22 rule 5)', (tester) async {
       // Tall enough that every row is built, so their order can be read.
-      await pumpMusic(tester, Routes.worlds, size: const Size(390, 2600));
+      await pumpMusic(tester, Routes.home, size: const Size(390, 2600));
       final heads = [for (final head in tester.widgetList<SectionHead>(find.byType(SectionHead))) head.title];
       expect(heads.indexOf('Music'), heads.indexOf('Stories') + 1);
       expect(find.text('Album · The Undersong'), findsOneWidget);
       // Arke's list does not say what a soundtrack is for; its installed document does.
       expect(find.text('Soundtrack · The Bell Watch'), findsOneWidget, reason: 'a soundtrack names what it is for');
-      // Music is not a story, and has no chip of its own.
-      expect(find.text('Album · The Undersong'), findsOneWidget);
+      // Music is not a story.
       expect(find.byType(PosterTile).evaluate().where((element) => (element.widget as PosterTile).title == 'Saltmouth Bells'), isEmpty);
       expect(find.text('Music'), findsOneWidget);
+    });
 
-      await tester.tap(find.text('Listen'));
-      await tester.pumpAndSettle();
-      expect(find.text('Album · The Undersong'), findsOneWidget);
-      await tester.tap(find.text('Watch'));
-      await tester.pumpAndSettle();
-      expect(find.text('Album · The Undersong'), findsNothing);
+    testWidgets('up to six titles, music sits in Story’s one row as squares, with no heads (P22 rule 12)', (tester) async {
+      await pumpMusic(tester, _world);
+      expect(find.text('Music'), findsNothing);
+      expect(find.text('Listen'), findsNothing);
+      expect(tester.getSize(find.ancestor(of: find.text('The Ledger of Nights'), matching: find.byType(PosterTile))).width, 172);
+      expect(tester.getSize(find.byType(SquareTile).first).width, 160);
     });
 
     testWidgets('a song is a teaser, a small poster with a note; opened, it plays its excerpt (R-78)', (tester) async {
       final teaser = HeardTeaser();
-      await pumpMusic(tester, Routes.worlds, teaser: teaser);
+      await pumpMusic(tester, Routes.home, teaser: teaser);
       await _reveal(tester, find.text('Song · 0:24'));
       expect(teaser.played, isEmpty, reason: 'nothing plays in the row');
       await tester.tap(find.text('Song · 0:24'));

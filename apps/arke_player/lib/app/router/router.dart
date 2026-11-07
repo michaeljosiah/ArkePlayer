@@ -9,10 +9,12 @@ import '../../features/players/presentation/music_player_screen.dart';
 import '../../features/players/presentation/open_item_screen.dart';
 import '../../features/settings/presentation/you_screen.dart';
 import '../../features/stories/presentation/story_player_screen.dart';
-import '../../features/worlds/presentation/discover_screen.dart';
+import '../../features/worlds/presentation/adult_gate.dart';
 import '../../features/worlds/presentation/guide_screens.dart';
 import '../../features/worlds/presentation/production_screen.dart';
+import '../../features/worlds/presentation/search_screen.dart';
 import '../../features/worlds/presentation/world_screen.dart';
+import '../../features/worlds/presentation/worlds_screen.dart';
 import '../shell/adaptive_shell.dart';
 import 'routes.dart';
 
@@ -34,7 +36,14 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: Routes.worlds, builder: (context, state) => const DiscoverScreen(), routes: [_worldRoute()]),
+              GoRoute(
+                path: Routes.worlds,
+                builder: (context, state) => WorldsScreen(genre: state.uri.queryParameters['genre']),
+                routes: [
+                  GoRoute(path: 'search', builder: (context, state) => const SearchScreen()),
+                  _worldRoute(),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -56,31 +65,45 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
         parentNavigatorKey: root,
         builder: (context, state) {
           final at = int.tryParse(state.uri.queryParameters['at'] ?? '');
-          return OpenItemScreen(
-            itemId: state.pathParameters['itemId']!,
-            startAt: at == null || at < 0 ? null : Duration(milliseconds: at),
+          final itemId = state.pathParameters['itemId']!;
+          return AdultGate(
+            itemId: itemId,
+            child: OpenItemScreen(
+              itemId: itemId,
+              startAt: at == null || at < 0 ? null : Duration(milliseconds: at),
+            ),
           );
         },
       ),
       GoRoute(
         path: '/music/:worldId/:productionId',
         parentNavigatorKey: root,
-        builder: (context, state) => MusicPlayerScreen(
-          worldId: state.pathParameters['worldId']!,
-          productionId: state.pathParameters['productionId']!,
-          track: int.tryParse(state.uri.queryParameters['track'] ?? ''),
-          shuffle: state.uri.queryParameters['shuffle'] == '1',
+        builder: (context, state) => AdultGate(
+          worldId: state.pathParameters['worldId'],
+          child: MusicPlayerScreen(
+            worldId: state.pathParameters['worldId']!,
+            productionId: state.pathParameters['productionId']!,
+            track: int.tryParse(state.uri.queryParameters['track'] ?? ''),
+            shuffle: state.uri.queryParameters['shuffle'] == '1',
+          ),
         ),
       ),
       GoRoute(
         path: '/story/:worldId/:productionId',
         parentNavigatorKey: root,
-        builder: (context, state) => StoryPlayerScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
+        builder: (context, state) => AdultGate(
+          worldId: state.pathParameters['worldId'],
+          child: StoryPlayerScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
+        ),
       ),
       GoRoute(
         path: '/comic/:worldId/:productionId',
         parentNavigatorKey: root,
-        builder: (context, state) => ComicReaderScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
+        builder: (context, state) => AdultGate(
+          worldId: state.pathParameters['worldId'],
+          press: 'Read',
+          child: ComicReaderScreen(worldId: state.pathParameters['worldId']!, productionId: state.pathParameters['productionId']!),
+        ),
       ),
     ],
   );

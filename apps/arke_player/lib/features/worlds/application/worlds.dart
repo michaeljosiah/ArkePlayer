@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:arke_library/arke_library.dart';
 import 'package:arke_world/arke_world.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -150,11 +151,18 @@ final libraryWorldsProvider = StreamProvider<List<LibraryWorld>>((ref) async* {
   yield* store.worldChanges;
 });
 
-/// Available (P9 rule 2): every published world not installed. Empty, and so absent everywhere,
-/// when there is nothing left to install.
-final availableProvider = Provider<List<CatalogueWorld>>(
-  (ref) => availableWorlds(ref.watch(catalogueProvider).value ?? const [], ref.watch(libraryWorldsProvider).value ?? const []),
-);
+/// Whether this phone has a connection (P25h). A phone that cannot say counts as online: a press then
+/// tries, and refuses in one clause if it must.
+final onlineProvider = StreamProvider<bool>((ref) async* {
+  bool has(List<ConnectivityResult> kinds) => kinds.any((kind) => kind != ConnectivityResult.none);
+  final connectivity = Connectivity();
+  try {
+    yield has(await connectivity.checkConnectivity());
+    yield* connectivity.onConnectivityChanged.map(has);
+  } on Object {
+    yield true;
+  }
+});
 
 final worldInstallerProvider = FutureProvider<WorldInstaller>((ref) async {
   final store = await ref.watch(libraryStoreProvider.future);
@@ -186,13 +194,20 @@ class Installing extends InstallState {
 
   /// The page's line (P9d): what is happening, as data.
   String get line => switch (step) {
-    Downloading(:final received, :final total) => 'Downloading · ${formatBytes(received)} of ${formatBytes(total)}',
-    Copying(:final copied, :final total) => '${formatBytes(copied)} of ${formatBytes(total)}',
+    Downloading(:final received, :final total) => 'Downloading · ${_bytesOf(received, total)}',
+    Copying(:final copied, :final total) => _bytesOf(copied, total),
     Checking(:final checked, :final total) => 'Checking · $checked of $total files',
   };
 
   /// Home's card and Downloads (P9 rule 4, P12e).
-  String get short => '${updating ? 'Updating' : 'Installing'} · ${(fraction * 100).floor()}%';
+  String get short => '${updating ? 'Updating' : 'Downloading'} · ${(fraction * 100).floor()}%';
+}
+
+/// `74 of 185 MB`, the first unit dropped when both share it (P25d), else `900 MB of 1.1 GB`.
+String _bytesOf(int part, int whole) {
+  final (first, second) = (formatBytes(part), formatBytes(whole));
+  final unit = second.substring(second.lastIndexOf(' '));
+  return '${first.endsWith(unit) ? first.substring(0, first.length - unit.length) : first} of $second';
 }
 
 class InstallFailed extends InstallState {

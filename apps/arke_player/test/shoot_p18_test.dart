@@ -379,7 +379,7 @@ void main() {
       ),
     );
     testWidgets(
-      'a world’s Play, and Update app$suffix',
+      'a world’s stories, and Update app$suffix',
       (t) => shoot(
         t,
         'p18-world$suffix',
@@ -391,12 +391,7 @@ void main() {
           (ringOnceId, 'Ring Once', 'Interactive movie · 3 scenes', 1),
           ('first-contact', 'First Contact', 'Interactive movie · 202 scenes', 2),
         ]),
-        act: (tester) async {
-          final page = find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).first;
-          await tester.scrollUntilVisible(find.text('Play').first, 200, scrollable: page);
-          await tester.pumpAndSettle();
-          await Scrollable.ensureVisible(tester.element(find.text('Play').first), alignment: 0.3);
-        },
+        act: (tester) => tester.ensureVisible(find.text('Update app')),
       ),
     );
   }

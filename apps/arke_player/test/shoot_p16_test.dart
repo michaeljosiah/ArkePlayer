@@ -1,6 +1,6 @@
-// Renders P16 — rows of different sizes, the feature, posters, a world's band and the pill — with
-// the real fonts and pictures, to compare with the design's frames P16a – P16j. Not a gate — pixels
-// differ by platform — so it runs only when asked:
+// Renders P16's rows on Home, as P22 moved them — rows of different sizes, covers, posters, a world's
+// band and the pill — with the real fonts and pictures, to compare with the design's frames. Not a
+// gate — pixels differ by platform — so it runs only when asked:
 //
 //   SHOOT=1 flutter test test/shoot_p16_test.dart        (from apps/arke_player; PNGs in build/shots)
 import 'dart:async';
@@ -19,6 +19,7 @@ import 'package:arke_player/features/players/application/players.dart';
 import 'package:arke_player/features/worlds/application/discover.dart';
 import 'package:arke_player/features/worlds/application/guides.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
+import 'package:arke_player/features/worlds/presentation/row_widgets.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -427,42 +428,40 @@ void main() {
   final undersong = Routes.worldsWorld('the-undersong');
   final juju = Routes.worldsWorld('na-love-or-juju');
   // The page's own list: the rows inside it scroll across.
-  Future<void> down(WidgetTester tester, double by) =>
-      tester.drag(find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).first, Offset(0, -by));
+  Future<void> bring(WidgetTester tester, Finder target) async {
+    await tester.scrollUntilVisible(
+      target,
+      300,
+      scrollable: find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).first,
+    );
+    await tester.pumpAndSettle();
+    await Scrollable.ensureVisible(tester.element(target), alignment: 0.1);
+  }
 
   for (final brightness in Brightness.values) {
     final suffix = brightness == Brightness.dark ? '' : '-light';
-    testWidgets('P16a discover$suffix', (t) => shoot(t, 'P16a-discover$suffix', phone, Routes.worlds, brightness: brightness));
+    testWidgets('P22c home$suffix', (t) => shoot(t, 'P22c-home$suffix', phone, Routes.home, brightness: brightness));
     testWidgets(
-      'P16b stories$suffix',
-      (t) => shoot(t, 'P16b-stories$suffix', phone, Routes.worlds, brightness: brightness, act: (tester) => down(tester, 520)),
+      'P22b stories$suffix',
+      (t) => shoot(t, 'P22b-stories$suffix', phone, Routes.home, brightness: brightness, act: (tester) => bring(tester, find.text('Stories'))),
     );
-    testWidgets('P16c band$suffix', (t) => shoot(t, 'P16c-band$suffix', phone, Routes.worlds, brightness: brightness, act: (tester) => down(tester, 1010)));
-    testWidgets('P16d world$suffix', (t) => shoot(t, 'P16d-world$suffix', phone, undersong, brightness: brightness));
     testWidgets(
-      'P16e world down$suffix',
-      (t) => shoot(
-        t,
-        'P16e-world-down$suffix',
-        phone,
-        undersong,
-        brightness: brightness,
-        act: (tester) async {
-          // Past Watch, Play and Space to the people, in two strokes: one longer than the page drags off it.
-          await down(tester, 540);
-          await tester.pumpAndSettle();
-          await down(tester, 540);
-        },
-      ),
+      'P16c band$suffix',
+      (t) => shoot(t, 'P16c-band$suffix', phone, Routes.home, brightness: brightness, act: (tester) => bring(tester, find.byType(WorldBand))),
     );
-    testWidgets('P16f fold$suffix', (t) => shoot(t, 'P16f-fold$suffix', fold, Routes.worlds, brightness: brightness));
+    testWidgets('P22h world$suffix', (t) => shoot(t, 'P22h-world$suffix', phone, undersong, brightness: brightness));
     testWidgets(
-      'P16g fold down$suffix',
-      (t) => shoot(t, 'P16g-fold-down$suffix', fold, Routes.worlds, brightness: brightness, act: (tester) => down(tester, 640)),
+      'P22j its people$suffix',
+      (t) => shoot(t, 'P22j-people$suffix', phone, undersong, brightness: brightness, act: (tester) => tester.tap(find.text('People'))),
+    );
+    testWidgets('P22n fold$suffix', (t) => shoot(t, 'P22n-fold$suffix', fold, Routes.home, brightness: brightness));
+    testWidgets(
+      'P22n fold down$suffix',
+      (t) => shoot(t, 'P22n-fold-down$suffix', fold, Routes.home, brightness: brightness, act: (tester) => bring(tester, find.text('Stories'))),
     );
     testWidgets('P16i dock$suffix', (t) => shoot(t, 'P16i-dock$suffix', phone, undersong, brightness: brightness, playing: true));
   }
-  testWidgets('a world with a Tall cover', (t) => shoot(t, 'P16d-world-juju', phone, juju));
+  testWidgets('a world with a Tall cover', (t) => shoot(t, 'P22h-world-juju', phone, juju));
 }
 
 /// Nothing arriving.
