@@ -249,6 +249,9 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> fastForward() => seek(_clamp(now + const Duration(seconds: 30)));
 
+  /// The upright player's forward, the same step as its back (P24 rule 5).
+  Future<void> forward15() => seek(_clamp(now + const Duration(seconds: 15)));
+
   /// Previous: the start of this chapter, or the one before when within its first three seconds.
   /// An album's goes by its tracks in the order they play, shuffled or not.
   @override

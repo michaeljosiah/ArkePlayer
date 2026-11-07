@@ -13,6 +13,7 @@ import '../../../app/widgets/shelf.dart';
 import '../../comics/presentation/comic_production_screen.dart';
 import '../../players/application/music.dart';
 import '../../players/application/players.dart';
+import '../../players/presentation/episode_rows.dart';
 import '../../players/presentation/music_widgets.dart';
 import '../../stories/presentation/story_production_screen.dart';
 import '../application/discover.dart';
@@ -220,27 +221,49 @@ class ProductionContents extends ConsumerWidget {
     final songChapters = {for (final song in heard) song.heard.chapter};
     final engine = ref.watch(audioEngineProvider);
     final guide = ref.watch(worldGuideProvider(world.id)).value?.guide;
+    // Its chapters are its episodes until the Studio cuts them (P24 rule 1): upright pictures, once its
+    // listening document has been read. A file's chapters, and one that cannot be read, keep their numbers.
+    final plan = narration == null ? null : ref.watch(listeningPlanProvider(narration.id)).value;
+    final currentAt = narration == null || !narration.inProgress ? null : ProductionScreen._chapterAt(narration);
+    Widget row(int i) {
+      final chapter = narration!.chapters[i];
+      final length = ProductionScreen._chapterLength(narration, i);
+      final into = i == currentAt ? narration.position : null;
+      return _ChapterRow(
+        number: i + 1,
+        title: chapter.title,
+        length: length,
+        day: released[i],
+        song: songChapters.contains(chapter.id),
+        fresh: fresh.contains(i),
+        heard: narration.finished || (narration.inProgress && (ProductionScreen._chapterAt(narration) ?? 0) > i),
+        current: i == currentAt,
+        episode: plan != null,
+        picture: plan == null || i >= plan.chapters.length ? null : episodePicture(plan, i),
+        into: into == null ? null : into - chapter.start,
+        // A chapter is an explicit seek, not a saved-place update that an already
+        // loaded player can ignore. The engine keeps the selected chapter after seeking. The one
+        // you are in resumes where you left it (P24 rule 2).
+        onOpen: () => context.push(i == currentAt && plan != null ? Routes.open(narration.id) : Routes.open(narration.id, startAt: chapter.start)),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (narration != null && (narration.chapters.length > 1 || next != null)) ...[
-          const SectionHead('Chapters'),
-          for (final (i, chapter) in narration.chapters.indexed)
-            _ChapterRow(
-              number: i + 1,
-              title: chapter.title,
-              length: ProductionScreen._chapterLength(narration, i),
-              day: released[i],
-              song: songChapters.contains(chapter.id),
-              fresh: fresh.contains(i),
-              heard: narration.finished || (narration.inProgress && (ProductionScreen._chapterAt(narration) ?? 0) > i),
-              current: ProductionScreen._chapterAt(narration) == i && narration.inProgress,
-              // A chapter is an explicit seek, not a saved-place update that an already
-              // loaded player can ignore. The engine keeps the selected chapter after seeking.
-              onOpen: () => context.push(Routes.open(narration.id, startAt: chapter.start)),
-            ),
+          if (episodeRanges(narration.chapters.length).isEmpty) ...[
+            SectionHead(plan == null ? 'Chapters' : 'Episodes'),
+            for (var i = 0; i < narration.chapters.length; i++) row(i),
+          ] else
+            _Ranged(count: narration.chapters.length, startsAt: currentAt ?? 0, row: row),
           if (next != null)
-            _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
+            _ChapterRow.soon(
+              number: narration.chapters.length + 1,
+              chapter: (lastNamed ?? narration.chapters.length) + 1,
+              day: shortDate(next),
+              episode: plan != null,
+            ),
         ],
         if (heard.isNotEmpty) ...[
           CountHead(title: 'Music', count: heard.length),
@@ -261,6 +284,37 @@ class ProductionContents extends ConsumerWidget {
   }
 }
 
+/// Episodes in ranges of 50 (P24 rule 2), opening on the range you are in.
+class _Ranged extends StatefulWidget {
+  const _Ranged({required this.count, required this.startsAt, required this.row});
+
+  final int count;
+  final int startsAt;
+  final Widget Function(int index) row;
+
+  @override
+  State<_Ranged> createState() => _RangedState();
+}
+
+class _RangedState extends State<_Ranged> {
+  late int _range = rangeOf(widget.startsAt);
+
+  @override
+  Widget build(BuildContext context) {
+    final (first, last) = episodeRanges(widget.count)[_range];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: RangeChips(count: widget.count, selected: _range, onSelect: (value) => setState(() => _range = value)),
+        ),
+        for (var i = first; i <= last; i++) widget.row(i),
+      ],
+    );
+  }
+}
+
 /// A chapter's row (P5b's grammar on the shelves, P15e): its number, its title, and under it `New`
 /// and its length and day as data; ticked once heard. The author's next date is the last row,
 /// dashed and quiet, `Chapter 4 · 30 Oct`, which opens nothing (R-53).
@@ -272,20 +326,32 @@ class _ChapterRow extends StatelessWidget {
     required this.current,
     required this.onOpen,
     this.day,
+    this.episode = false,
+    this.picture,
+    this.into,
     this.fresh = false,
     this.heard = false,
     this.song = false,
   }) : soon = false;
 
-  const _ChapterRow.soon({required this.number, required int chapter, required this.day})
-    : title = 'Chapter $chapter',
+  const _ChapterRow.soon({required this.number, required int chapter, required this.day, this.episode = false})
+    : title = '${episode ? 'Episode' : 'Chapter'} $chapter',
       length = null,
       current = false,
       onOpen = null,
       fresh = false,
       heard = false,
       song = false,
+      picture = null,
+      into = null,
       soon = true;
+
+  /// Its chapters are episodes: an upright picture, `3 · Good evening`, and `Resume` on the one you are in (P24a).
+  final bool episode;
+  final ImageProvider? picture;
+
+  /// How far into the one you are in.
+  final Duration? into;
 
   final int number;
   final String title;
@@ -305,22 +371,27 @@ class _ChapterRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final muted = context.surface.mutedForeground;
     final data = [if (length != null) formatClock(length!), ?day].join(' · ');
+    final left = episode && current && length != null && into != null ? length! - into! : null;
     final row = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: ArkeSizes.press + 14),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            SizedBox(
-              width: 28,
-              child: Text('$number', style: text.bodyMedium?.copyWith(color: muted)),
-            ),
+            if (episode && !soon) ...[
+              EpisodeThumb(picture: picture),
+              const SizedBox(width: 12),
+            ] else
+              SizedBox(
+                width: 28,
+                child: Text('$number', style: text.bodyMedium?.copyWith(color: muted)),
+              ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    episode && !soon ? '$number · $title' : title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: text.bodyMedium?.copyWith(
@@ -335,14 +406,38 @@ class _ChapterRow extends StatelessWidget {
                       children: [
                         if (fresh) ...[const NewTag(), const SizedBox(width: 8)],
                         if (data.isNotEmpty) Text(data, style: text.labelSmall?.copyWith(color: muted)),
+                        if (left != null) ...[const SizedBox(width: 8), Text('${formatClock(left)} left', style: text.labelSmall?.copyWith(color: muted))],
                         if (song) ...[const SizedBox(width: 5), Icon(Icons.music_note_rounded, size: 13, color: muted)],
                       ],
+                    ),
+                  ],
+                  if (episode && current && length != null) ...[
+                    const SizedBox(height: 7),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(ArkeRadius.pill),
+                      child: LinearProgressIndicator(
+                        value: length!.inMilliseconds == 0 ? 0 : ((into ?? Duration.zero).inMilliseconds / length!.inMilliseconds).clamp(0.0, 1.0),
+                        minHeight: 3,
+                        color: context.surface.foreground,
+                        backgroundColor: context.surface.foreground.withValues(alpha: 0.16),
+                      ),
                     ),
                   ],
                 ],
               ),
             ),
-            if (soon)
+            if (episode && current)
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: IgnorePointer(
+                  child: OutlinedButton(
+                    onPressed: onOpen,
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 13)),
+                    child: const Text('Resume'),
+                  ),
+                ),
+              )
+            else if (soon)
               Icon(Icons.calendar_today_outlined, size: 20, color: muted)
             else if (heard)
               Icon(Icons.check_circle_outline_rounded, size: 22, color: muted)
