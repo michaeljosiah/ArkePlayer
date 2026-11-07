@@ -45,6 +45,8 @@ const P = {
   shuffle: '<path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/>',
   repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
   bars: '<path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>',
+  search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
 };
 const FILLED = {
   play: '<path d="M7 4.5v15l13-7.5z"/>',
@@ -84,6 +86,9 @@ const TABS_DISCOVER = [['home', 'Home'], ['compass', 'Discover'], ['library', 'L
 export const tabs = (on, rail = false, worlds = false) => `<div class="${rail ? 'rail' : 'tabs'}">${(worlds === 'discover' ? TABS_DISCOVER : worlds ? TABS_WORLDS : TABS).map(([i, l]) => `<span class="tab${l === on ? ' on' : ''}">${ic(i, rail ? 24 : 24, l === on ? 2.1 : 1.7)}${l}</span>`).join('')}</div>`;
 /** P16, call 16: the same tabs as a pill floating over the page, the current one in a capsule; on a Fold it takes the rail's place. */
 export const pill = (on, wide = false) => `<div class="pill${wide ? ' wide' : ''}">${TABS_DISCOVER.map(([i, l]) => `<span class="tab${l === on ? ' on' : ''}">${ic(i, 22, l === on ? 2.1 : 1.7)}${l}</span>`).join('')}</div>`;
+// P22, call 40: four tabs. Worlds takes Discover's place, Downloads moves into Library.
+const TABS_FIRST = [['home', 'Home'], ['globe', 'Worlds'], ['library', 'Library'], ['user', 'You']];
+export const pill4 = (on, wide = false) => `<div class="pill${wide ? ' wide' : ''}">${TABS_FIRST.map(([i, l]) => `<span class="tab${l === on ? ' on' : ''}">${ic(i, 22, l === on ? 2.1 : 1.7)}${l}</span>`).join('')}</div>`;
 
 /** The dock: what plays while its player is closed, above the tabs. */
 export const dock = ({ img, title, where, at = 44, playing = true }) => `<div class="dock"><span class="ln" style="width:${at}%"></span><img src="${A}${img}" alt=""><div class="grow"><b>${title}</b><span class="w">${where}</span></div><span class="dib">${seek(15)}</span><span class="dib">${ic(playing ? 'pause' : 'play', 22)}</span></div>`;
