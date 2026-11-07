@@ -21,6 +21,9 @@ class FirstOpenScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // P9a must also discover hosted worlds when the bundled catalogue is empty.
+    // Share Discover's once-per-launch refresh and its normal daily cache policy.
+    ref.watch(catalogueRefreshProvider);
     const fg = ArkeColors.mediaOverlayForeground;
     final height = MediaQuery.sizeOf(context).height;
     final canInstall = ref.watch(availableProvider).isNotEmpty;

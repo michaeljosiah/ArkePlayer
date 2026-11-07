@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../app/catalogue_channel.dart';
 import '../domain/device_settings.dart';
 
 /// The device's settings, read once and written on every change. If storage is refused the
 /// choice still holds for the open app; nothing that plays waits on a write (Studio 211 rule 3).
 class SettingsController extends AsyncNotifier<DeviceSettings> {
-  static const _prefix = 'arke.';
+  static final _prefix = catalogueChannel.preferencePrefix;
 
   @override
   Future<DeviceSettings> build() async {

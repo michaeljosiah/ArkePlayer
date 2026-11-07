@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app/app.dart';
+import 'app/catalogue_channel.dart';
 import 'app/router/router.dart';
 import 'app/router/routes.dart';
 import 'features/parts/application/notices.dart';
@@ -17,6 +19,9 @@ import 'features/players/application/audio_engine.dart';
 import 'features/players/application/players.dart';
 
 Future<void> main() async {
+  if (catalogueChannel.storageFolder.isNotEmpty && !Platform.isAndroid) {
+    throw UnsupportedError('The isolated development channel currently requires the Android dev application ID.');
+  }
   WidgetsFlutterBinding.ensureInitialized();
   await pdfrxFlutterInitialize();
   _registerFontLicences();
@@ -24,7 +29,7 @@ Future<void> main() async {
   // First open (P8a) until a file has been added; Home after.
   var seenFirstOpen = false;
   try {
-    seenFirstOpen = (await SharedPreferences.getInstance()).getBool('arke.seenFirstOpen') ?? false;
+    seenFirstOpen = (await SharedPreferences.getInstance()).getBool('${catalogueChannel.preferencePrefix}seenFirstOpen') ?? false;
   } on Exception {
     // Storage refused: show first open; adding a file sets it again.
   }

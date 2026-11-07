@@ -60,6 +60,7 @@ flutter:
     # The worlds that ship with the app (P9 rule 1): the list, and each world's key art and
     # production pictures, so Available shows offline.
     - assets/worlds/catalogue.json
+    - assets/worlds/catalogue-dev.json
     - assets/worlds/undersong/
     - assets/worlds/legend-of-dumah/
     - assets/worlds/the-red-quiet/

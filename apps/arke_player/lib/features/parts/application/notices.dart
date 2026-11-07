@@ -12,9 +12,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../../../app/catalogue_channel.dart';
 import '../../../app/router/routes.dart';
 import '../../settings/domain/device_settings.dart';
-import '../../worlds/application/worlds.dart';
 import 'parts.dart';
 
 /// The phone's own notifications of a world's new chapters (SPEC-058 R-54, P15i): per world, off
@@ -83,7 +83,7 @@ class Notices {
 final noticesProvider = Provider<Notices>((ref) => Notices());
 
 /// The daily check's name with the phone's scheduler.
-const dailyCheck = 'studio.arke.player.daily-check';
+final dailyCheck = catalogueChannel.dailyCheck;
 
 /// Keeps the daily check in the phone's scheduler while any world's Notify is on (R-54), and only
 /// then. On Wi-Fi when Wi-Fi only is on, as a download is.
@@ -113,9 +113,9 @@ void dailyCheckDispatcher() {
     DartPluginRegistrant.ensureInitialized();
     try {
       final prefs = await SharedPreferences.getInstance();
-      final settings = DeviceSettings.fromPrefs((key) => prefs.get('arke.$key'));
+      final settings = DeviceSettings.fromPrefs((key) => prefs.get('${catalogueChannel.preferencePrefix}$key'));
       if (settings.notify.isEmpty) return true;
-      final support = await getApplicationSupportDirectory();
+      final support = channelSupportDirectory(await getApplicationSupportDirectory());
       final root = Directory('${support.path}${Platform.pathSeparator}library');
       // The index read, never loaded: loading clears what it does not name, an install mid-way
       // among it.
@@ -125,9 +125,9 @@ void dailyCheckDispatcher() {
         for (final raw in ((jsonDecode(await index.readAsString()) as Map<String, Object?>)['worlds'] as List<Object?>? ?? const []))
           LibraryWorld.fromJson((raw! as Map).cast<String, Object?>()),
       ];
-      final hosted = HostedCatalogue(url: arkeWorldsList, kept: File('${support.path}${Platform.pathSeparator}catalogue.json'));
+      final hosted = HostedCatalogue(url: catalogueChannel.url, kept: File('${support.path}${Platform.pathSeparator}catalogue.json'));
       await hosted.refresh();
-      final shipped = parseCatalogue(await rootBundle.loadString('assets/worlds/catalogue.json'));
+      final shipped = parseCatalogue(await rootBundle.loadString(catalogueChannel.bundledCatalogue));
       final catalogue = newestCatalogue(shipped, await hosted.keptList()).worlds;
       final installer = WorldInstaller(store: LibraryStore(root), freeBytes: (_) async => null);
       final inbox = partInbox(root);
