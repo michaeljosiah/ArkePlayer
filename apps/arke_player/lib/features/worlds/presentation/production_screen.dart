@@ -22,6 +22,7 @@ import '../application/worlds.dart';
 import 'album_screen.dart';
 import 'guide_widgets.dart';
 import 'world_screen.dart';
+import 'world_shelf.dart';
 import 'world_widgets.dart';
 
 /// The author's schedule as written (SPEC-058 R-53, P15e, P15f): `Fridays`, `Daily`,
@@ -91,14 +92,7 @@ class ProductionScreen extends ConsumerWidget {
     if (production.story != null) return StoryProductionScreen(world: world, production: production);
     if (production.comic != null) return ComicProductionScreen(world: world, production: production);
     final narration = items[production.narration];
-    // A book released in parts reads as one: the part being read, else the first not finished.
-    final books = [?items[production.book], for (final id in production.bookParts) ?items[id]];
-    final book =
-        books
-            .where((book) => book.inProgress)
-            .fold<LibraryItem?>(null, (latest, book) => latest == null || book.place!.updatedAt.isAfter(latest.place!.updatedAt) ? book : latest) ??
-        books.where((book) => !book.finished).firstOrNull ??
-        books.firstOrNull;
+    final book = bookNow(production, items);
     final kind = productionKind(book: book != null, narration: narration != null, length: narration?.duration);
     final first = narration ?? book;
     final now = ref.watch(clockProvider)();
@@ -275,7 +269,7 @@ class ProductionContents extends ConsumerWidget {
                 if (song.album.document.kind == MusicKind.single) 'Single' else song.album.title,
               ].join(' · '),
               cover: song.album.cover == null ? null : FileImage(File(song.album.cover!)),
-              onPlay: engine == null ? null : () => engine.openMusic(song.album, index: song.track),
+              onPlay: engine == null ? null : () => playSong(context, ref, world.id, () => engine.openMusic(song.album, index: song.track)),
               onOpen: () => context.push(Routes.production(worldLocation, song.album.production.id)),
             ),
         ],

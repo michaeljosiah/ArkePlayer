@@ -311,11 +311,14 @@ class HeroSecondPress extends StatelessWidget {
 
 /// Install's progress in its place (P9d): the line, what is happening as data, and Cancel.
 class InstallProgress extends StatelessWidget {
-  const InstallProgress({required this.state, required this.onCancel, this.top = 20, super.key});
+  const InstallProgress({required this.state, required this.onCancel, this.top = 20, this.ink = _fg, super.key});
 
   final Installing state;
   final VoidCallback onCancel;
   final double top;
+
+  /// Off a picture, as under Continue, the theme's ink.
+  final Color ink;
 
   @override
   Widget build(BuildContext context) {
@@ -329,21 +332,21 @@ class InstallProgress extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(ArkeRadius.pill),
-              child: LinearProgressIndicator(value: state.fraction, minHeight: 4, backgroundColor: _fg.withValues(alpha: 0.22), color: _fg),
+              child: LinearProgressIndicator(value: state.fraction, minHeight: 4, backgroundColor: ink.withValues(alpha: 0.22), color: ink),
             ),
             const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
-                  child: Text(state.line, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.72))),
+                  child: Text(state.line, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: ink.withValues(alpha: 0.72))),
                 ),
                 const SizedBox(width: 10),
                 FilledButton(
                   onPressed: onCancel,
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 40),
-                    backgroundColor: _fg.withValues(alpha: 0.16),
-                    foregroundColor: _fg,
+                    backgroundColor: ink.withValues(alpha: 0.16),
+                    foregroundColor: ink,
                     textStyle: const TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
                   ),
                   child: const Text('Cancel'),
@@ -651,6 +654,17 @@ Future<void> showInstallRefusal(
   final controller = ref.read(installProvider(world.id).notifier);
   controller.dismiss();
   if (again == true) await controller.start(world);
+}
+
+/// The book of a production being read: released in parts it reads as one, so the part in hand, else
+/// the first not finished.
+LibraryItem? bookNow(LibraryProduction production, Map<String, LibraryItem> items) {
+  final books = [?items[production.book], for (final id in production.bookParts) ?items[id]];
+  return books
+          .where((book) => book.inProgress)
+          .fold<LibraryItem?>(null, (latest, book) => latest == null || book.place!.updatedAt.isAfter(latest.place!.updatedAt) ? book : latest) ??
+      books.where((book) => !book.finished).firstOrNull ??
+      books.firstOrNull;
 }
 
 /// Turns a world's Notify on or off (P22 rule 4): the first time it is turned on, the phone asks its

@@ -35,12 +35,16 @@ class _NativePlayer implements AudioPlayer {
   int loads = 0;
   final seeks = <(int?, Duration)>[];
 
+  /// As just_audio does for a moment: the new position has come and the new index has not.
+  bool indexLags = false;
+  final positions = StreamController<Duration>.broadcast();
+
   @override
   Stream<PlaybackEvent> get playbackEventStream => const Stream.empty();
   @override
   Stream<bool> get playingStream => const Stream.empty();
   @override
-  Stream<Duration> get positionStream => const Stream.empty();
+  Stream<Duration> get positionStream => positions.stream;
   @override
   Stream<int?> get currentIndexStream => const Stream.empty();
   @override
@@ -76,7 +80,7 @@ class _NativePlayer implements AudioPlayer {
 
   @override
   Future<void> seek(Duration? position, {int? index}) async {
-    if (index != null) currentIndex = index;
+    if (index != null && !indexLags) currentIndex = index;
     this.position = position ?? Duration.zero;
     seeks.add((index, this.position));
   }
@@ -164,6 +168,33 @@ void main() {
       expect((native.currentIndex, native.position), (2, Duration.zero));
       expect(kept.last.$1.locator, 'ch3');
       expect(native.loads, 1, reason: 'an unchanged queue only needs a seek');
+    });
+
+    test('a seek across chapters keeps to where it is going until the player has the index', () async {
+      final item = _item(), plan = _plan();
+      await engine.open(item, plan: plan, startAt: plan.starts[2], speed: 1, keep: keep);
+      native.indexLags = true;
+      await engine.seek(plan.starts[1] + const Duration(seconds: 2));
+      expect(native.currentIndex, 2, reason: 'the old index, with the new position');
+      expect(engine.now, plan.starts[1] + const Duration(seconds: 2));
+      native
+        ..currentIndex = 1
+        ..position = const Duration(seconds: 3);
+      expect(engine.now, plan.starts[1] + const Duration(seconds: 3));
+    });
+
+    test('End of chapter means the one you moved to: moving there does not stop it', () async {
+      final item = _item(), plan = _plan();
+      await engine.open(item, plan: plan, speed: 1, keep: keep);
+      engine.setSleep(SleepTimer.endOfChapter);
+      await engine.seek(plan.starts[2]);
+      native.positions.add(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(native.playing, isTrue);
+      await engine.seek(plan.starts[1]);
+      native.positions.add(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(native.playing, isTrue);
     });
 
     test('a cold chapter press overrides a stale saved place and finished flag', () async {

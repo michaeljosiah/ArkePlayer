@@ -125,7 +125,10 @@ class _WorldScreenState extends ConsumerState<WorldScreen> {
           icon: Icons.download_rounded,
           label: 'Update',
           detail: formatBytes(newer.byteLength),
-          onPressed: () => ref.read(installProvider(update.id).notifier).start(update),
+          onPressed: () async {
+            if (!await mayOpen(context, ref, update, press: 'Update') || !context.mounted) return;
+            await ref.read(installProvider(update.id).notifier).start(update);
+          },
         ),
         _ => WorldPress(worldId: id, top: 12),
       },

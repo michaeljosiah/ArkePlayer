@@ -25,15 +25,15 @@ const _fg = ArkeColors.mediaOverlayForeground;
 const _bg = ArkeColors.mediaOverlayBackground;
 
 /// Opens the feed at a page. Leaving by a world's name or World opens that world's page, in the tab the
-/// feed was opened from.
+/// feed was opened from, and by Play that world's title.
 Future<void> openFeed(BuildContext context, List<FeedPage> pages, int start) async {
-  final worldPage = await Navigator.of(context, rootNavigator: true).push<String>(
+  final next = await Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute<String>(
       fullscreenDialog: true,
       builder: (_) => TeaserFeedScreen(pages: pages, start: start),
     ),
   );
-  if (worldPage != null && context.mounted) await context.push(worldPage);
+  if (next != null && context.mounted) await context.push(next);
 }
 
 /// The feed (P23a – P23d): a teaser fills the phone, and a swipe up moves to the next, across every
@@ -494,7 +494,7 @@ class _WorldStrip extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    WorldPress(worldId: page.worldId, top: 0, bell: false, hug: true),
+                    WorldPress(worldId: page.worldId, top: 0, bell: false, hug: true, onGo: (route) => Navigator.of(context).pop(route)),
                   ],
                 ),
         ),

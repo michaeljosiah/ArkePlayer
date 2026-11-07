@@ -78,6 +78,8 @@ class _StillEngine implements AudioEngine {
   @override
   Stream<bool> get playingStream => Stream.value(false);
   @override
+  Stream<void> get finished => now >= plan.document.duration ? Stream.value(null) : const Stream.empty();
+  @override
   bool get playing => false;
   @override
   double get speed => 1;

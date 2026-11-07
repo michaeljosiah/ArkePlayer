@@ -61,7 +61,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final colours = _papers[settings.readerPaper]!;
     final muted = colours.ink.withValues(alpha: 0.55);
     final location = _location;
-    final spread = MediaQuery.sizeOf(context).width >= WindowBands.wide ? EpubSpread.always : EpubSpread.none;
+    // Two columns on a tablet sideways, one upright (P27l); anywhere else as it opens by its width.
+    final size = MediaQuery.sizeOf(context);
+    final spread = size.width >= WindowBands.wide
+        ? EpubSpread.always
+        : size.width >= WindowBands.fold && size.width / size.height < 0.8
+        ? EpubSpread.none
+        : EpubSpread.auto;
     return Scaffold(
       backgroundColor: colours.background,
       body: SafeArea(

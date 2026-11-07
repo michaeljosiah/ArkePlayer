@@ -234,6 +234,7 @@ class _Empty extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final genres = genresOf(catalogue);
+    final installed = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
     final width = MediaQuery.sizeOf(context).width;
     final across = width >= WindowBands.fold ? 4 : 2;
     final characters = [
@@ -278,7 +279,9 @@ class _Empty extends ConsumerWidget {
                   tall: guidePicture(guide, character),
                   pictureAlignment: const Alignment(0, -0.6),
                   width: RowSizes.small(context),
-                  onOpen: () => context.push(Routes.guideEntry(Routes.worldsWorld(world.id), character.id)),
+                  onOpen: () => context.push(
+                    Routes.guideEntry(Routes.worldsWorld(installed.where((held) => world.covers(held.id)).firstOrNull?.id ?? world.id), character.id),
+                  ),
                 ),
             ],
           ),

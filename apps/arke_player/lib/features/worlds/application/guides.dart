@@ -97,7 +97,17 @@ final guideReachProvider = FutureProvider.family<GuideReach, String>((ref, world
   final revealed = store.revealed[worldId] ?? const {};
   final installed = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
   if (guide == null || installed == null) return GuideReach(revealed: revealed);
-  final items = {for (final item in ref.watch(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
+  // Only what moves a reach: a place is saved every few seconds while something plays, and this reads
+  // the whole listening document, on Home too, under the dock.
+  ref.watch(
+    libraryItemsProvider.select(
+      (value) => [
+        for (final item in value.value ?? const <LibraryItem>[])
+          if (item.worldId == worldId) '${item.id}:${item.place?.locator}:${(item.place?.position ?? Duration.zero) > Duration.zero}:${item.finished}',
+      ].join(','),
+    ),
+  );
+  final items = {for (final item in ref.read(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
 
   final reached = <String, Reached>{};
   for (final production in guide.productions) {

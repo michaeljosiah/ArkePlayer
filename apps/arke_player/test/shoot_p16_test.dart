@@ -442,6 +442,20 @@ void main() {
     final suffix = brightness == Brightness.dark ? '' : '-light';
     testWidgets('P22c home$suffix', (t) => shoot(t, 'P22c-home$suffix', phone, Routes.home, brightness: brightness));
     testWidgets(
+      'P22c covers under Continue$suffix',
+      (t) => shoot(
+        t,
+        'P22c-covers$suffix',
+        phone,
+        Routes.home,
+        brightness: brightness,
+        act: (tester) async {
+          await tester.drag(find.byType(ListView).first, const Offset(0, -420));
+          await tester.pumpAndSettle();
+        },
+      ),
+    );
+    testWidgets(
       'P22b stories$suffix',
       (t) => shoot(t, 'P22b-stories$suffix', phone, Routes.home, brightness: brightness, act: (tester) => bring(tester, find.text('Stories'))),
     );

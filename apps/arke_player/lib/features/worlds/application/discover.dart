@@ -67,16 +67,23 @@ class _PlayerTeaserAudio implements TeaserAudio {
   final Ref _ref;
   AudioPlayer? _player;
 
+  /// Bumped by each play and stop: one still loading when it is told to stop must not start after it.
+  int _turn = 0;
+
   @override
   Future<void> play(String path) async {
+    final turn = ++_turn;
     await _ref.read(audioEngineProvider)?.pause();
     final player = _player ??= AudioPlayer();
     await player.setFilePath(path);
-    await player.play();
+    if (turn == _turn) await player.play();
   }
 
   @override
-  Future<void> stop() async => _player?.stop();
+  Future<void> stop() async {
+    _turn++;
+    await _player?.stop();
+  }
 
   @override
   Stream<Duration> get position => (_player ??= AudioPlayer()).positionStream;

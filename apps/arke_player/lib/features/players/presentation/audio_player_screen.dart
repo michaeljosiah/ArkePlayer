@@ -95,7 +95,7 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
   /// An illustrated narration plays upright, like a video (P24), and takes the sheet for its speed and
   /// sleep from here.
   Widget _illustratedBody(BuildContext context, ListeningPlan plan) =>
-      EpisodePlayer(item: widget.item, plan: plan, engine: _engine, onSpeedAndSleep: () => _speedAndSleep(context));
+      EpisodePlayer(item: widget.item, plan: plan, engine: _engine, startAt: widget.startAt, onSpeedAndSleep: () => _speedAndSleep(context));
 
   Widget _coverBody(BuildContext context) {
     final item = widget.item;

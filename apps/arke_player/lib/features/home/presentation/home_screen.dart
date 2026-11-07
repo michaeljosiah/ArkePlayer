@@ -277,7 +277,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           for (final (i, world) in covers.indexed) ...[
             if (i > 0) const SizedBox(width: 12),
-            WorldCover(world: world, onOpen: () => context.push(pageOf(world))),
+            WorldCover(world: world, onGlow: going.isEmpty, onOpen: () => context.push(pageOf(world))),
           ],
         ],
       ),
@@ -504,14 +504,18 @@ class _Head extends StatelessWidget {
             button: true,
             label: 'Search',
             child: ExcludeSemantics(
-              child: InkWell(
-                onTap: () => context.go(Routes.search),
-                customBorder: const CircleBorder(),
-                child: Ink(
-                  width: ArkeSizes.press,
-                  height: ArkeSizes.press,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: ink == null ? surface.secondary : color.withValues(alpha: 0.16)),
-                  child: Icon(Icons.search_rounded, size: 22, color: color),
+              // Its own Material: Home's colour lies over the Scaffold's, which would hide an Ink's circle.
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  onTap: () => context.go(Routes.search),
+                  customBorder: const CircleBorder(),
+                  child: Ink(
+                    width: ArkeSizes.press,
+                    height: ArkeSizes.press,
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: ink == null ? surface.secondary : color.withValues(alpha: 0.16)),
+                    child: Icon(Icons.search_rounded, size: 22, color: color),
+                  ),
                 ),
               ),
             ),

@@ -40,16 +40,9 @@ class LibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
-  late LibrarySection _section = _named(widget.show) ?? LibrarySection.worlds;
-
-  static LibrarySection? _named(String? name) => LibrarySection.values.where((section) => section.name == name).firstOrNull;
-
-  @override
-  void didUpdateWidget(LibraryScreen old) {
-    super.didUpdateWidget(old);
-    final named = _named(widget.show);
-    if (named != null && widget.show != old.show) _section = named;
-  }
+  // In the address and nowhere else, or pressing You's `On this phone` a second time changes nothing
+  // once a chip has been pressed since.
+  LibrarySection get _section => LibrarySection.values.where((section) => section.name == widget.show).firstOrNull ?? LibrarySection.worlds;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +59,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             all: false,
             options: [for (final section in LibrarySection.values) (section, section.label)],
             selected: _section,
-            onSelect: (value) => setState(() => _section = value ?? _section),
+            onSelect: (value) => context.go(Uri(path: Routes.library, queryParameters: {'show': (value ?? _section).name}).toString()),
           ),
           Expanded(
             child: switch (_section) {

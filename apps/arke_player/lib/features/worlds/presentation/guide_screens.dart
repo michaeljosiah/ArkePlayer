@@ -81,7 +81,7 @@ class GuideEntryScreen extends ConsumerWidget {
           title: theme.title,
           line: [?(album?.title ?? production?.title), formatClock(theme.duration)].join(' · '),
           cover: album?.cover != null ? FileImage(File(album!.cover!)) : (listed == null || production == null ? null : ref.pictureOf(listed, production)),
-          onPlay: album == null || index < 0 || engine == null ? null : () => engine.openMusic(album, index: index),
+          onPlay: album == null || index < 0 || engine == null ? null : () => playSong(context, ref, worldId, () => engine.openMusic(album, index: index)),
           onOpen: album == null ? null : () => context.push(Routes.production(worldLocation, album.production.id)),
         ),
       ];
