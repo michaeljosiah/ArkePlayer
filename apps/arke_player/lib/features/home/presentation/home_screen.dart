@@ -25,6 +25,8 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The app opens here, so here the list is first asked for, at most once a day (P12 rule 1).
+    ref.watch(catalogueRefreshProvider);
     final items = ref.watch(libraryItemsProvider).value ?? const [];
     final store = ref.watch(libraryStoreProvider).value;
     final worlds = ref.watch(libraryWorldsProvider).value ?? const [];

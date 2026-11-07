@@ -10,12 +10,13 @@ import '../features/add_file/presentation/add_flow.dart';
 import '../features/parts/application/notices.dart';
 import '../features/parts/application/parts.dart';
 import '../features/settings/application/settings_controller.dart';
+import '../features/settings/domain/device_settings.dart';
 import '../features/worlds/application/worlds.dart';
 import 'router/router.dart';
 import 'router/routes.dart';
 import 'theme/arke_theme.dart';
 
-/// The app: the router and the two themes (the shelves follow the phone's light or dark), and the
+/// The app: the router and the two themes (dark until changed in You, P25 rule 8), and the
 /// files the system hands over through Share to Arke Player and Open in, which go through the same
 /// reading as Add a file (P7 rule 3). It brings a world's new chapters when it opens or comes back,
 /// and when Arke's list changes (SPEC-058 R-51), with the pictures that list pins (rev 10), and
@@ -92,6 +93,7 @@ class _ArkePlayerAppState extends ConsumerState<ArkePlayerApp> {
     debugShowCheckedModeBanner: false,
     theme: arkeTheme(Brightness.light),
     darkTheme: arkeTheme(Brightness.dark),
+    themeMode: (ref.watch(settingsProvider).value ?? const DeviceSettings()).theme == AppTheme.light ? ThemeMode.light : ThemeMode.dark,
     routerConfig: ref.watch(routerProvider),
   );
 }

@@ -19,14 +19,13 @@ class _Tab {
 
 const _tabs = [
   _Tab('Home', Icons.home_outlined, Icons.home),
-  _Tab('Discover', Icons.explore_outlined, Icons.explore),
+  _Tab('Worlds', Icons.public_outlined, Icons.public),
   _Tab('Library', Icons.video_library_outlined, Icons.video_library),
-  _Tab('Downloads', Icons.download_outlined, Icons.download),
   _Tab('You', Icons.account_circle_outlined, Icons.account_circle),
 ];
 
-/// The five tabs as a pill floating over the page (Arke Player P16 rule 9, call 16, in place of P1
-/// rule 3's bar and P6e's rail): 358 × 64 on a phone, 520 wide from 600, 24 above the foot. The page
+/// The four tabs (P22 rule 7, call 40) as a pill floating over the page (P16 rule 9, call 16, in place
+/// of P1 rule 3's bar and P6e's rail): 358 × 64 on a phone, 520 wide from 600, 24 above the foot. The page
 /// runs under it to the foot, fading into the page's ground, and is given the pill's room as its
 /// bottom padding so its last row clears it ([footRoom]). Audio playing with its player closed
 /// docks above the pill (P16i). A page pushed from a tab keeps them.
@@ -125,7 +124,7 @@ class TabPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surface = context.surface;
-    // The labels grow with the phone's text only so far: five must share 358.
+    // The labels grow with the phone's text only so far: four must share 358.
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.3,
       child: CustomPaint(

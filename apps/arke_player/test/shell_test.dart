@@ -51,7 +51,7 @@ void main() {
     // 24 above the foot with the phone's 34 for its home indicator; 12 with none, as here.
     expect(tester.getBottomLeft(pill).dy, 844 - 12);
     expect(tester.getCenter(pill).dx, 195);
-    for (final label in ['Home', 'Discover', 'Library', 'Downloads', 'You']) {
+    for (final label in ['Home', 'Worlds', 'Library', 'You']) {
       expect(find.descendant(of: pill, matching: find.text(label)), findsOneWidget);
     }
     expect(find.bySemanticsLabel('Home'), findsWidgets);
@@ -69,7 +69,7 @@ void main() {
     await tester.tap(find.descendant(of: find.byType(TabPill), matching: find.text('You')));
     await tester.pumpAndSettle();
     expect(find.text('Version'), findsOneWidget);
-    expect(tester.widget<TabPill>(find.byType(TabPill)).selected, 4);
+    expect(tester.widget<TabPill>(find.byType(TabPill)).selected, 3);
   });
 
   testWidgets('a page’s last row clears the pill: the page is given its room at the foot (P16 rule 9)', (tester) async {
@@ -85,12 +85,48 @@ void main() {
     expect(find.textContaining('Sign in'), findsNothing);
   });
 
-  testWidgets('first open is the wordmark and Add a file alone (P8a)', (tester) async {
-    await _pumpAt(tester, const Size(390, 844), location: Routes.welcome);
-    expect(find.text('ARKE'), findsOneWidget);
-    expect(find.text('Add a file'), findsOneWidget);
-    expect(find.byType(FilledButton), findsOneWidget);
-    expect(find.textContaining('Sign in'), findsNothing);
+  group('Library (P22l, P22m, P25f)', () {
+    testWidgets('its chips are Worlds, Files and Downloads, and an empty Worlds points to the tab', (tester) async {
+      await _pumpAt(tester, const Size(390, 844), location: Routes.library);
+      expect(find.text('No worlds yet'), findsOneWidget);
+      expect(find.text('Worlds'), findsNWidgets(3)); // The chip, the press, the tab.
+      await tester.tap(find.text('Files'));
+      await tester.pumpAndSettle();
+      expect(find.text('Nothing added'), findsOneWidget);
+      expect(find.text('Add a file'), findsOneWidget);
+    });
+    testWidgets('You’s On this phone opens it at Downloads', (tester) async {
+      await _pumpAt(tester, const Size(390, 844), location: Routes.you);
+      await tester.tap(find.text('On this phone'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Arke Player'), findsOneWidget);
+    });
+  });
+
+  group('You (P25g)', () {
+    testWidgets('has Theme, dark until changed, and Check for updates (P22 rule 7)', (tester) async {
+      await _pumpAt(tester, const Size(390, 844), location: Routes.you);
+      expect(find.text('Theme'), findsOneWidget);
+      expect(find.text('Dark'), findsOneWidget);
+      expect(find.text('Light'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Check for updates'), 200);
+      expect(find.text('Check for updates'), findsOneWidget);
+    });
+    testWidgets('Adult content asks once, and only a yes turns it on (call 42)', (tester) async {
+      await _pumpAt(tester, const Size(390, 844), location: Routes.you);
+      await tester.scrollUntilVisible(find.text('Adult content'), 200);
+      await tester.tap(find.text('Adult content'));
+      await tester.pumpAndSettle();
+      expect(find.text('I am 18 or older · Turn on'), findsOneWidget);
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+      expect(find.text('Off'), findsWidgets);
+      await tester.tap(find.text('Adult content'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('I am 18 or older · Turn on'));
+      await tester.pumpAndSettle();
+      expect(find.text('On'), findsOneWidget);
+    });
   });
 
   testWidgets('Home with files: Continue, then Added (P8d)', (tester) async {
@@ -108,29 +144,14 @@ void main() {
     expect(find.text('Nothing added'), findsNothing);
   });
 
-  testWidgets('Library with one kind shows no chips (P8 rule 4)', (tester) async {
-    await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3)]);
-    expect(find.text('Listen'), findsNothing);
-    expect(find.text('Title a'), findsOneWidget);
-  });
-
-  testWidgets('Library with two kinds shows Discover’s chips, which filter (P8 rule 4, P15h)', (tester) async {
-    await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3), _item('b', FileFormat.pdf)]);
-    for (final chip in ['All', 'Listen', 'Watch', 'Play', 'Read']) {
-      expect(find.text(chip), findsOneWidget);
-    }
-    expect(find.text('Title a'), findsOneWidget);
-    await tester.ensureVisible(find.text('Read'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Read'));
-    await tester.pumpAndSettle();
+  testWidgets('Library’s files are under Files, whatever their kinds (P22l)', (tester) async {
+    await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3), _item('b', FileFormat.epub)]);
+    expect(find.text('All'), findsNothing);
     expect(find.text('Title a'), findsNothing);
+    await tester.tap(find.text('Files'));
+    await tester.pumpAndSettle();
+    expect(find.text('Title a'), findsOneWidget);
     expect(find.text('Title b'), findsOneWidget);
-  });
-
-  testWidgets('Library with one kind shows no chips (P8 rule 4)', (tester) async {
-    await _pumpAt(tester, const Size(390, 844), location: Routes.library, items: [_item('a', FileFormat.mp3)]);
-    expect(find.text('Listen'), findsNothing);
   });
 
   testWidgets('You before an account: Playback, Storage, About only (P8f)', (tester) async {
@@ -151,13 +172,7 @@ void main() {
       _item('b', FileFormat.epub),
       _item('c', FileFormat.mov),
     ];
-    for (final (name, location) in [
-      ('Home', Routes.home),
-      ('Library', Routes.library),
-      ('Downloads', Routes.downloads),
-      ('You', Routes.you),
-      ('first open', Routes.welcome),
-    ]) {
+    for (final (name, location) in [('Home', Routes.home), ('Library', Routes.library), ('Downloads', Routes.downloads), ('You', Routes.you)]) {
       testWidgets(name, (tester) async {
         // An overflow is reported as an exception, so a clipped press fails the test.
         await _pumpAt(tester, const Size(390, 844), location: location, items: items, textScale: 2);

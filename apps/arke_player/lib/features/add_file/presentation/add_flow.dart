@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
-import '../../settings/application/settings_controller.dart';
 import '../application/file_importer.dart';
 import '../application/pdfrx_peek.dart';
 import '../application/video_poster.dart';
@@ -66,8 +65,6 @@ Future<int> addFiles(BuildContext context, WidgetRef ref, {List<PickedFile>? fil
   }
   // The picker's own temporary copies are no longer needed once the library holds its own.
   if (files == null && Platform.isAndroid) await FilePicker.clearTemporaryFiles();
-  // Once anything is in the library, later opens land on Home rather than first open (P8a).
-  if (added > 0) await ref.read(settingsProvider.notifier).change((settings) => settings.copyWith(seenFirstOpen: true));
   // Choose another file (P2f) is the picker again.
   if (another && context.mounted) return added + await addFiles(context, ref);
   return added;

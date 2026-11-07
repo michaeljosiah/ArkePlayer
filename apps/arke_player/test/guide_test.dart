@@ -136,22 +136,22 @@ List<int> _package({List<int>? book}) {
 }
 
 void main() {
-  final world = Routes.discoverWorld('undersong');
+  final world = Routes.worldsWorld('undersong');
 
   group('Discover (P11a, as P15 rule 1 amends it)', () {
     testWidgets('is the second of five tabs', (tester) async {
-      await _pump(tester, location: Routes.discover, guide: _guide);
-      expect(TabPill.labels, ['Home', 'Discover', 'Library', 'Downloads', 'You']);
+      await _pump(tester, location: Routes.worlds, guide: _guide);
+      expect(TabPill.labels, ['Home', 'Worlds', 'Library', 'You']);
       expect(tester.widget<TabPill>(find.byType(TabPill)).selected, 1);
     });
     testWidgets('an installed world stays, In Library counting the productions and the characters', (tester) async {
-      await _pump(tester, location: Routes.discover, guide: _guide);
+      await _pump(tester, location: Routes.worlds, guide: _guide);
       await _down(tester, find.text('In Library · 1 production · 3 characters'));
       expect(find.text('In Library · 1 production · 3 characters'), findsOneWidget);
       expect(find.text('Available'), findsNothing);
     });
     testWidgets('Available adds the size, and the characters once the guide is here', (tester) async {
-      await _pump(tester, location: Routes.discover, installed: false, guide: _guide);
+      await _pump(tester, location: Routes.worlds, installed: false, guide: _guide);
       await _down(tester, find.text('1 production · 3 characters · 386 MB'));
       expect(find.text('1 production · 3 characters · 386 MB'), findsOneWidget);
     });
@@ -307,7 +307,7 @@ void main() {
 
   group('text at 200% clips nothing', () {
     for (final (name, location) in [
-      ('Worlds', Routes.discover),
+      ('Worlds', Routes.worlds),
       ('the world\'s guide', world),
       ('a character', Routes.guideEntry(world, 'maren-kest')),
       ('a place', Routes.guideEntry(world, 'the-vigil')),

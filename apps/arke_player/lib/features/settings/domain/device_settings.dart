@@ -32,6 +32,16 @@ enum ReaderPaper {
   final String label;
 }
 
+/// The theme (P25 rule 8, call 51): dark on a new install whatever the phone's setting, until changed
+/// in You. A hero, a picture card and every player stay on the media colours in either.
+enum AppTheme {
+  dark('Dark'),
+  light('Light');
+
+  const AppTheme(this.label);
+  final String label;
+}
+
 /// Everything the device keeps (P6 rule 3, P8 rule 7). Nothing here is sent to an account or
 /// written into a file.
 class DeviceSettings {
@@ -42,7 +52,7 @@ class DeviceSettings {
     this.sleep = SleepTimer.off,
     this.readerScale = 1.0,
     this.readerPaper = ReaderPaper.paper,
-    this.seenFirstOpen = false,
+    this.theme = AppTheme.dark,
     this.text = false,
     this.slowPush = true,
     this.autoplayNext = true,
@@ -63,17 +73,17 @@ class DeviceSettings {
   final double readerScale;
   final ReaderPaper readerPaper;
 
-  /// First open (P8a) has been passed; later opens land on Home.
-  final bool seenFirstOpen;
+  final AppTheme theme;
 
   /// An illustrated narration's Text (off by default) and Slow push (on), kept on the device
   /// (SPEC-058 R-23, R-24).
   final bool text;
   final bool slowPush;
 
-  // After the MVP (P8 rule 7): these return with the micro dramas, shares and adult-marked
-  // productions they belong to. Kept here, with their designed defaults.
+  /// The next episode comes on its own at the end (P24 rule 4).
   final bool autoplayNext;
+
+  /// Answered once: an 18+ world's Start, Play and Read ask no more on this device (P22e, call 42).
   final bool adultContent;
 
   /// Downloads only over Wi-Fi (P6b): a world's new chapters wait for it (SPEC-058 R-51).
@@ -89,10 +99,12 @@ class DeviceSettings {
     SleepTimer? sleep,
     double? readerScale,
     ReaderPaper? readerPaper,
-    bool? seenFirstOpen,
+    AppTheme? theme,
     bool? text,
     bool? slowPush,
+    bool? autoplayNext,
     bool? wifiOnly,
+    bool? adultContent,
     Set<String>? notify,
   }) => DeviceSettings(
     captions: captions ?? this.captions,
@@ -101,12 +113,12 @@ class DeviceSettings {
     sleep: sleep ?? this.sleep,
     readerScale: readerScale ?? this.readerScale,
     readerPaper: readerPaper ?? this.readerPaper,
-    seenFirstOpen: seenFirstOpen ?? this.seenFirstOpen,
+    theme: theme ?? this.theme,
     text: text ?? this.text,
     slowPush: slowPush ?? this.slowPush,
-    autoplayNext: autoplayNext,
+    autoplayNext: autoplayNext ?? this.autoplayNext,
     wifiOnly: wifiOnly ?? this.wifiOnly,
-    adultContent: adultContent,
+    adultContent: adultContent ?? this.adultContent,
     notify: notify ?? this.notify,
   );
 
@@ -120,10 +132,12 @@ class DeviceSettings {
     'sleep': sleep.name,
     'readerScale': readerScale,
     'readerPaper': readerPaper.name,
-    'seenFirstOpen': seenFirstOpen,
+    'theme': theme.name,
     'text': text,
     'slowPush': slowPush,
+    'autoplayNext': autoplayNext,
     'wifiOnly': wifiOnly,
+    'adultContent': adultContent,
     // World ids are slugs, so a comma never falls inside one.
     'notify': (notify.toList()..sort()).join(','),
   };
@@ -139,10 +153,12 @@ class DeviceSettings {
       sleep: pick(SleepTimer.values, read('sleep'), SleepTimer.off),
       readerScale: scale is double ? scale.clamp(0.7, 2.0) : 1.0,
       readerPaper: pick(ReaderPaper.values, read('readerPaper'), ReaderPaper.paper),
-      seenFirstOpen: read('seenFirstOpen') == true,
+      theme: pick(AppTheme.values, read('theme'), AppTheme.dark),
       text: read('text') == true,
       slowPush: read('slowPush') != false,
+      autoplayNext: read('autoplayNext') != false,
       wifiOnly: read('wifiOnly') != false,
+      adultContent: read('adultContent') == true,
       notify: {
         for (final id in '${read('notify') ?? ''}'.split(','))
           if (id.isNotEmpty) id,

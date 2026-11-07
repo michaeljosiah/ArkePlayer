@@ -191,11 +191,33 @@ class CatalogueWorld {
     this.package,
     this.guide,
     this.replaces = const [],
+    this.genres = const [],
+    this.age,
+    this.start,
   });
 
   final String id;
   final String name;
   final String? logline;
+
+  /// What Worlds' chips and Search's cards sort it by, as the list names them (P22 rule 8, call 41).
+  final List<String> genres;
+
+  /// Its age as the list names it: `16+`, `18+` (P22 rule 9, call 42). Shown on its cover, card and
+  /// page; an adult one stays in plain view and asks only when someone wants the title itself.
+  final String? age;
+
+  /// The production Start opens, by id (P22 rule 3, call 39). Null: the list's first that is not music.
+  final String? start;
+
+  /// An age of 18 or more: Start, Play and Read ask first (P22e, call 42).
+  bool get adult => (int.tryParse(age?.replaceAll('+', '') ?? '') ?? 0) >= 18;
+
+  /// What Start opens (call 39): the production the list names, else its first story.
+  CatalogueProduction? get startsAt =>
+      productions.where((production) => production.id != null && production.id == start).firstOrNull ??
+      productions.where((production) => production.music == null).firstOrNull ??
+      productions.firstOrNull;
 
   /// An asset path in the app's bundle.
   final String? keyArt;
@@ -420,10 +442,19 @@ Catalogue parseCatalogue(String text) {
     if (replaces is! List<Object?> || replaces.any((old) => old is! String || !_slug.hasMatch(old) || old == id)) {
       throw FormatException('catalogue world $id replaces');
     }
+    final genres = raw['genres'] ?? const <Object?>[];
+    if (genres is! List<Object?> || genres.any((genre) => genre is! String || genre.isEmpty)) throw FormatException('catalogue world $id genres');
+    final age = raw['age'];
+    if (age != null && (age is! String || !RegExp(r'^\d{1,2}\+$').hasMatch(age))) throw FormatException('catalogue world $id age');
+    final start = raw['start'];
+    if (start != null && (start is! String || !_slug.hasMatch(start))) throw FormatException('catalogue world $id start');
     worlds.add(
       CatalogueWorld(
         id: id,
         name: name,
+        genres: List.unmodifiable(genres.cast<String>()),
+        age: age as String?,
+        start: start as String?,
         logline: raw['logline'] as String?,
         keyArt: raw['keyArt'] as String?,
         keyArtPin: _picturePin(_pins(raw['pins'], 'catalogue world $id'), 'keyArt', 'catalogue world $id'),
@@ -482,6 +513,9 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
         CatalogueWorld(
           id: world.id,
           name: world.name,
+          genres: world.genres,
+          age: world.age,
+          start: world.start,
           logline: world.logline,
           keyArt: shippedAs(world)?.keyArt,
           keyArtPin: world.keyArtPin,

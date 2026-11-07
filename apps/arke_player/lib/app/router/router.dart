@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/comics/presentation/comic_reader_screen.dart';
-import '../../features/downloads/presentation/downloads_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/library/presentation/library_screen.dart';
-import '../../features/onboarding/presentation/first_open_screen.dart';
 import '../../features/players/presentation/music_player_screen.dart';
 import '../../features/players/presentation/open_item_screen.dart';
 import '../../features/settings/presentation/you_screen.dart';
@@ -26,7 +24,6 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
     navigatorKey: root,
     initialLocation: initialLocation,
     routes: [
-      GoRoute(path: Routes.welcome, builder: (context, state) => const FirstOpenScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AdaptiveShell(shell: shell),
         branches: [
@@ -37,16 +34,17 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: Routes.discover, builder: (context, state) => const DiscoverScreen(), routes: [_worldRoute()]),
+              GoRoute(path: Routes.worlds, builder: (context, state) => const DiscoverScreen(), routes: [_worldRoute()]),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: Routes.library, builder: (context, state) => const LibraryScreen(), routes: [_worldRoute()]),
+              GoRoute(
+                path: Routes.library,
+                builder: (context, state) => LibraryScreen(show: state.uri.queryParameters['show']),
+                routes: [_worldRoute()],
+              ),
             ],
-          ),
-          StatefulShellBranch(
-            routes: [GoRoute(path: Routes.downloads, builder: (context, state) => const DownloadsScreen())],
           ),
           StatefulShellBranch(
             routes: [GoRoute(path: Routes.you, builder: (context, state) => const YouScreen())],
@@ -122,5 +120,5 @@ String _worldOf(String path) => path.substring(0, path.indexOf('/_guide'));
 /// The world page's own path, from a production's.
 String _parentOf(String path) => path.substring(0, path.lastIndexOf('/'));
 
-/// The router; main overrides it with the start the device calls for (first open, or Home).
+/// The router; main overrides it with the one a notification can open a page on.
 final routerProvider = Provider<GoRouter>((ref) => buildRouter());

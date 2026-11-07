@@ -116,7 +116,7 @@ void main() {
 
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
-  final world = Routes.discoverWorld(worldId);
+  final world = Routes.worldsWorld(worldId);
   final album = Routes.production(world, albumId);
 
   for (final brightness in Brightness.values) {
@@ -141,7 +141,7 @@ void main() {
           t,
           'P17b-discover$suffix',
           size,
-          Routes.discover,
+          Routes.worlds,
           brightness: brightness,
           act: (tester) => bring(tester, find.text('Music'), alignment: where.isEmpty ? 0.3 : 0.2),
         ),

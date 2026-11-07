@@ -368,15 +368,15 @@ void main() {
 
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
-  final undersong = Routes.discoverWorld('the-undersong');
+  final undersong = Routes.worldsWorld('the-undersong');
   final whispers = Routes.production(Routes.libraryWorld('legend-of-dumah'), 'whispers');
   // The page's own list: the rows inside it scroll across.
   Future<void> down(WidgetTester tester, double by) =>
       tester.drag(find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).first, Offset(0, -by));
 
-  testWidgets('P15a discover', (t) => shoot(t, 'P15a-discover', phone, Routes.discover));
-  testWidgets('P15a discover, light', (t) => shoot(t, 'P15a-discover-light', phone, Routes.discover, brightness: Brightness.light));
-  testWidgets('P15b discover, further down', (t) => shoot(t, 'P15b-discover-down', phone, Routes.discover, act: (tester) => down(tester, 420)));
+  testWidgets('P15a discover', (t) => shoot(t, 'P15a-discover', phone, Routes.worlds));
+  testWidgets('P15a discover, light', (t) => shoot(t, 'P15a-discover-light', phone, Routes.worlds, brightness: Brightness.light));
+  testWidgets('P15b discover, further down', (t) => shoot(t, 'P15b-discover-down', phone, Routes.worlds, act: (tester) => down(tester, 420)));
   testWidgets('P15c a world of several kinds', (t) => shoot(t, 'P15c-kinds', phone, undersong));
   testWidgets('P15d the same world, further down', (t) => shoot(t, 'P15d-kinds-down', phone, undersong, act: (tester) => down(tester, 440)));
   testWidgets('P15e released a chapter at a time', (t) => shoot(t, 'P15e-chapters', phone, whispers));
@@ -397,5 +397,5 @@ void main() {
       arriving: {'legend-of-dumah': PartArrival(world: _dumah, part: _dumahPart, step: const Downloading(9000000, 18000000))},
     ),
   );
-  testWidgets('P15l discover on a fold', (t) => shoot(t, 'P15l-discover-fold', fold, Routes.discover));
+  testWidgets('P15l discover on a fold', (t) => shoot(t, 'P15l-discover-fold', fold, Routes.worlds));
 }

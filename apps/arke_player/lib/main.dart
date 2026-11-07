@@ -7,13 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfrx/pdfrx.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app/app.dart';
 import 'app/catalogue_channel.dart';
 import 'app/router/router.dart';
-import 'app/router/routes.dart';
 import 'features/parts/application/notices.dart';
 import 'features/players/application/audio_engine.dart';
 import 'features/players/application/players.dart';
@@ -26,13 +24,6 @@ Future<void> main() async {
   await pdfrxFlutterInitialize();
   _registerFontLicences();
 
-  // First open (P8a) until a file has been added; Home after.
-  var seenFirstOpen = false;
-  try {
-    seenFirstOpen = (await SharedPreferences.getInstance()).getBool('${catalogueChannel.preferencePrefix}seenFirstOpen') ?? false;
-  } on Exception {
-    // Storage refused: show first open; adding a file sets it again.
-  }
   // The media session exists before anything plays, so the lock screen, the headset and the
   // notification reach the engine from the first press (ADR 0004).
   final engine = await AudioService.init(
@@ -55,7 +46,8 @@ Future<void> main() async {
   } on Object {
     // A phone with no scheduler checks when the app opens.
   }
-  final router = buildRouter(initialLocation: seenFirstOpen ? Routes.home : Routes.welcome);
+  // Nothing to set up: the app opens on Home (P25 rule 1, call 37).
+  final router = buildRouter();
   // A notification opens the production it names (P15i), the app's first page under it.
   final notices = Notices();
   try {

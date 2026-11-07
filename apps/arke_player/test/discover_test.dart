@@ -328,7 +328,7 @@ void main() {
 
   group('Discover (P15a, P15b, P16a – P16c; SPEC-059 R-30, R-31)', () {
     testWidgets('the feature first, then New chapters, Stories, Teasers, a world’s band and Worlds', (tester) async {
-      await _pump(tester, location: Routes.discover);
+      await _pump(tester, location: Routes.worlds);
       // With nothing named, the newest part's production; installed, so Play at its chapter.
       final feature = find.byType(FeatureCard);
       expect(find.descendant(of: feature, matching: find.text('Whispers from the Void')), findsOneWidget);
@@ -346,12 +346,12 @@ void main() {
       expect(find.descendant(of: band, matching: find.text('4 productions · 1.9 GB')), findsOneWidget);
       expect(find.descendant(of: band, matching: find.text('Install')), findsOneWidget);
       expect(find.descendant(of: band, matching: find.text('Maren Kest')), findsOneWidget);
-      await _reveal(tester, find.text('Worlds'));
+      await _reveal(tester, find.descendant(of: find.byType(DiscoverScreen), matching: find.text('Worlds')));
       expect(find.text('In Library · 1 production'), findsOneWidget);
     });
 
     testWidgets('a chip keeps what is taken that way, and leaves out the feature, Teasers, the band and Worlds', (tester) async {
-      await _pump(tester, location: Routes.discover);
+      await _pump(tester, location: Routes.worlds);
       await tester.tap(find.text('Watch'));
       await tester.pumpAndSettle();
       expect(find.text('Micro drama · The Undersong'), findsOneWidget);
@@ -359,11 +359,11 @@ void main() {
       expect(find.byType(FeatureCard), findsNothing);
       expect(find.byType(WorldBand), findsNothing);
       expect(find.text('Teasers'), findsNothing);
-      expect(find.text('Worlds'), findsNothing);
+      expect(find.descendant(of: find.byType(DiscoverScreen), matching: find.text('Worlds')), findsNothing);
     });
 
     testWidgets('each row is one size: the feature 358 × 476, wide tiles 240, posters 172, small posters 112 (P16 rule 1)', (tester) async {
-      await _pump(tester, location: Routes.discover);
+      await _pump(tester, location: Routes.worlds);
       // 358 × 476 inside the page's 16 at each side and 12 above.
       expect(tester.getSize(find.byType(FeatureCard)), const Size(16 + 358 + 16, 12 + 476));
       expect({for (final tile in find.byType(ProductionTile).evaluate()) tile.size!.width}, {240.0});
@@ -377,7 +377,7 @@ void main() {
     testWidgets('a poster is its Tall cover; without one, its Wide whole over its own blur (P16 rule 3)', (tester) async {
       await _pump(
         tester,
-        location: Routes.discover,
+        location: Routes.worlds,
         picks: (feature: const CatalogueFeature(world: 'the-undersong'), band: 'legend-of-dumah'),
       );
       await _reveal(tester, find.text('Stories'));
@@ -398,7 +398,7 @@ void main() {
       final fetched = File(_pathOf('char-bray.jpg'));
       await _pump(
         tester,
-        location: Routes.discover,
+        location: Routes.worlds,
         catalogue: [_pinned],
         kept: {'1' * 64: only, '2' * 64: fetched},
         picks: (feature: const CatalogueFeature(world: 'the-red-quiet', production: 'waiting'), band: 'not-listed'),
@@ -419,7 +419,7 @@ void main() {
     testWidgets('the list names the feature and the band: not installed, Install with its size (P16a)', (tester) async {
       await _pump(
         tester,
-        location: Routes.discover,
+        location: Routes.worlds,
         picks: (feature: const CatalogueFeature(world: 'the-undersong'), band: 'legend-of-dumah'),
       );
       final feature = find.byType(FeatureCard);
@@ -438,7 +438,7 @@ void main() {
     testWidgets('on a Fold the feature is wide, from its Wide, its words at the left (P16f)', (tester) async {
       await _pump(
         tester,
-        location: Routes.discover,
+        location: Routes.worlds,
         size: const Size(984, 1092),
         picks: (feature: const CatalogueFeature(world: 'the-undersong'), band: null),
       );
@@ -450,7 +450,7 @@ void main() {
     });
 
     testWidgets('a clip opens full screen with sound, and stops when closed (SPEC-059 R-32)', (tester) async {
-      final audio = await _pump(tester, location: Routes.discover);
+      final audio = await _pump(tester, location: Routes.worlds);
       await _reveal(tester, find.text('Saltmouth bells'));
       await tester.tap(find.text('Saltmouth bells'));
       await tester.pumpAndSettle();
@@ -465,7 +465,7 @@ void main() {
   });
 
   testWidgets('a world’s page groups its productions by how they are taken, each counted (P15c, R-33)', (tester) async {
-    await _pump(tester, location: Routes.discoverWorld('the-undersong'));
+    await _pump(tester, location: Routes.worldsWorld('the-undersong'));
     expect(find.text('Listen'), findsOneWidget);
     expect(find.text('Watch'), findsOneWidget);
     expect(find.text('2'), findsNWidgets(2));
@@ -473,7 +473,7 @@ void main() {
   });
 
   testWidgets('a world’s page: Listen as posters, Watch as wide tiles, its characters as small posters (P16d, P16e)', (tester) async {
-    await _pump(tester, location: Routes.discoverWorld('the-undersong'));
+    await _pump(tester, location: Routes.worldsWorld('the-undersong'));
     await _reveal(tester, find.text('Undertow'));
     for (final listen in ['The Ledger of Nights', 'Undertow']) {
       expect(tester.getSize(find.ancestor(of: find.text(listen), matching: find.byType(PosterTile))).width, 172);

@@ -84,7 +84,7 @@ Future<void> _pump(
           data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
           child: child!,
         ),
-        routerConfig: buildRouter(initialLocation: Routes.discover),
+        routerConfig: buildRouter(initialLocation: Routes.worlds),
       ),
     ),
   );
@@ -153,7 +153,7 @@ void main() {
     await tester.pump();
     hosted.pending!.complete(_list('new'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Discover').last);
+    await tester.tap(find.text('Worlds').last);
     await tester.pumpAndSettle();
     expect(find.text('Checked'), findsOneWidget);
     expect(find.text('Update'), findsOneWidget);

@@ -8,19 +8,18 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
-import '../../add_file/presentation/add_flow.dart';
 import '../../library/presentation/item_menu.dart';
 import '../../parts/application/parts.dart';
 import '../../production/domain/production_kind.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/world_widgets.dart';
 
-/// What is on the phone (P6a, before an account): the space Arke Player takes against the rest and
-/// what is free, then under Worlds a world's update (P12e) and a world's new chapters arriving or
+/// Library's Downloads chip (P22l, P26q, as P6a): the space Arke Player takes against the rest and what
+/// is free, then under Worlds a world's update (P12e) and a world's new chapters arriving or
 /// waiting for Wi-Fi (P15k, SPEC-058 R-51), then everything added: a world installing with its line
 /// (P9 rule 4), installed worlds, then files largest first, each with ⋯ to remove it.
-class DownloadsScreen extends ConsumerWidget {
-  const DownloadsScreen({super.key});
+class DownloadsPane extends ConsumerWidget {
+  const DownloadsPane({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,90 +42,84 @@ class DownloadsScreen extends ConsumerWidget {
     final rows = items.where((item) => item.worldId == null).toList()..sort((a, b) => b.byteLength.compareTo(a.byteLength));
     final empty = rows.isEmpty && worlds.isEmpty && installing.isEmpty;
 
-    return SafeArea(
-      bottom: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const ShelfHeader(title: 'Downloads'),
-          if (!empty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: _SpaceBar(used: used, free: volume?.free, total: volume?.total),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: _SpaceBar(used: used, free: volume?.free, total: volume?.total),
+        ),
+        // Brand new, the storage bar alone (P25 rule 7).
+        if (!empty)
           Expanded(
-            child: empty
-                ? EmptyShelf(onAdd: () => addFiles(context, ref))
-                : ListView(
-                    padding: EdgeInsets.only(bottom: 24 + footRoom(context)),
-                    children: [
-                      if (updating.isNotEmpty || arriving.isNotEmpty) const SectionHead('Worlds'),
-                      for (final MapEntry(key: worldId, value: arrival) in arriving.entries)
-                        _WorldRow(
-                          name: arrival.world.name,
-                          line: arrival.line(
-                            episodes: switch (arrival.world.productions.where((production) => production.id == arrival.part?.production).firstOrNull) {
-                              final production? => const {ProductionKind.microDrama, ProductionKind.series}.contains(ProductionKind.ofLine(production.kind)),
-                              null => false,
-                            },
-                          ),
-                          picture: libraryPicture(store, worlds.where((installed) => installed.id == worldId).firstOrNull?.keyArt),
-                          progress: arrival.fraction,
-                          onOpen: () => context.go(Routes.libraryWorld(worldId)),
-                          end: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Icon(arrival.waiting ? Icons.wifi_off_rounded : Icons.downloading_rounded, color: context.surface.mutedForeground),
-                          ),
-                        ),
-                      if (updating.isNotEmpty) ...[
-                        for (final (:world, :state) in updating)
-                          _WorldRow(
-                            name: world.name,
-                            line: state.short,
-                            picture: libraryPicture(store, worlds.where((installed) => world.covers(installed.id)).firstOrNull?.keyArt),
-                            progress: state.fraction,
-                            onOpen: () => context.push(Routes.world(world.id)),
-                            end: IconButton(
-                              onPressed: () => ref.read(installProvider(world.id).notifier).cancel(),
-                              tooltip: 'Cancel',
-                              icon: Icon(Icons.close_rounded, color: context.surface.mutedForeground),
-                            ),
-                          ),
-                      ],
-                      if (installing.isNotEmpty || worlds.any((installed) => !updatingIds.contains(installed.id)) || rows.isNotEmpty)
-                        const SectionHead('Added'),
-                      for (final (:world, :state) in installing)
-                        _WorldRow(
-                          name: world.name,
-                          line: state.short,
-                          picture: ref.keyArtOf(world),
-                          progress: state.fraction,
-                          onOpen: () => context.push(Routes.world(world.id)),
-                          end: IconButton(
-                            onPressed: () => ref.read(installProvider(world.id).notifier).cancel(),
-                            tooltip: 'Cancel',
-                            icon: Icon(Icons.close_rounded, color: context.surface.mutedForeground),
-                          ),
-                        ),
-                      for (final world in worlds.where((installed) => !updatingIds.contains(installed.id)))
-                        _WorldRow(
-                          name: world.name,
-                          line: '${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
-                          picture: libraryPicture(store, world.keyArt),
-                          onOpen: () => context.go(Routes.libraryWorld(world.id)),
-                          end: IconButton(
-                            onPressed: () => showWorldMenu(context, ref, world),
-                            tooltip: 'More',
-                            icon: Icon(Icons.more_horiz, color: context.surface.mutedForeground),
-                          ),
-                        ),
-                      for (final item in rows)
-                        FileRow(item: item, cover: coverOf(store, item), onOpen: () => openItem(context, item), onMore: () => showItemMenu(context, ref, item)),
-                    ],
+            child: ListView(
+              padding: EdgeInsets.only(bottom: 24 + footRoom(context)),
+              children: [
+                if (updating.isNotEmpty || arriving.isNotEmpty) const SectionHead('Worlds'),
+                for (final MapEntry(key: worldId, value: arrival) in arriving.entries)
+                  _WorldRow(
+                    name: arrival.world.name,
+                    line: arrival.line(
+                      episodes: switch (arrival.world.productions.where((production) => production.id == arrival.part?.production).firstOrNull) {
+                        final production? => const {ProductionKind.microDrama, ProductionKind.series}.contains(ProductionKind.ofLine(production.kind)),
+                        null => false,
+                      },
+                    ),
+                    picture: libraryPicture(store, worlds.where((installed) => installed.id == worldId).firstOrNull?.keyArt),
+                    progress: arrival.fraction,
+                    onOpen: () => context.go(Routes.libraryWorld(worldId)),
+                    end: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Icon(arrival.waiting ? Icons.wifi_off_rounded : Icons.downloading_rounded, color: context.surface.mutedForeground),
+                    ),
                   ),
+                if (updating.isNotEmpty) ...[
+                  for (final (:world, :state) in updating)
+                    _WorldRow(
+                      name: world.name,
+                      line: state.short,
+                      picture: libraryPicture(store, worlds.where((installed) => world.covers(installed.id)).firstOrNull?.keyArt),
+                      progress: state.fraction,
+                      onOpen: () => context.push(Routes.world(world.id)),
+                      end: IconButton(
+                        onPressed: () => ref.read(installProvider(world.id).notifier).cancel(),
+                        tooltip: 'Cancel',
+                        icon: Icon(Icons.close_rounded, color: context.surface.mutedForeground),
+                      ),
+                    ),
+                ],
+                if (installing.isNotEmpty || worlds.any((installed) => !updatingIds.contains(installed.id)) || rows.isNotEmpty) const SectionHead('Added'),
+                for (final (:world, :state) in installing)
+                  _WorldRow(
+                    name: world.name,
+                    line: state.short,
+                    picture: ref.keyArtOf(world),
+                    progress: state.fraction,
+                    onOpen: () => context.push(Routes.world(world.id)),
+                    end: IconButton(
+                      onPressed: () => ref.read(installProvider(world.id).notifier).cancel(),
+                      tooltip: 'Cancel',
+                      icon: Icon(Icons.close_rounded, color: context.surface.mutedForeground),
+                    ),
+                  ),
+                for (final world in worlds.where((installed) => !updatingIds.contains(installed.id)))
+                  _WorldRow(
+                    name: world.name,
+                    line: '${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
+                    picture: libraryPicture(store, world.keyArt),
+                    onOpen: () => context.go(Routes.libraryWorld(world.id)),
+                    end: IconButton(
+                      onPressed: () => showWorldMenu(context, ref, world),
+                      tooltip: 'More',
+                      icon: Icon(Icons.more_horiz, color: context.surface.mutedForeground),
+                    ),
+                  ),
+                for (final item in rows)
+                  FileRow(item: item, cover: coverOf(store, item), onOpen: () => openItem(context, item), onMore: () => showItemMenu(context, ref, item)),
+              ],
+            ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }

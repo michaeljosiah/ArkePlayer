@@ -23,6 +23,51 @@ String _list({required int serial, Object? tall, Object? feature, Object? band, 
 });
 
 void main() {
+  group('a world’s genres, age and start (P22, calls 39, 41, 42)', () {
+    String list(String fields, {int serial = 2}) =>
+        '{"version": 2, "serial": $serial, "worlds": [{"id": "world-one", "name": "World", "productions": [{"title": "Song", "kind": "Album", "music": "album"}, {"id": "the-book", "title": "Book", "kind": "Book"}, {"id": "the-film", "title": "Film", "kind": "Film"}]$fields}]}';
+
+    test('are read, and a list without them reads as before', () {
+      final world = parseCatalogue(list(', "genres": ["Fantasy", "Sci-fi"], "age": "18+", "start": "the-film"')).worlds.single;
+      expect(world.genres, ['Fantasy', 'Sci-fi']);
+      expect(world.age, '18+');
+      expect(world.adult, isTrue);
+      expect(world.startsAt?.title, 'Film');
+      final plain = parseCatalogue(list('')).worlds.single;
+      expect(plain.genres, isEmpty);
+      expect(plain.age, isNull);
+      expect(plain.adult, isFalse);
+    });
+
+    test('Start opens the list’s first story, never its music, when it names none', () {
+      expect(parseCatalogue(list('')).worlds.single.startsAt?.title, 'Book');
+      // A name that answers to nothing is not a reason to refuse the list.
+      expect(parseCatalogue(list(', "start": "no-such-title"')).worlds.single.startsAt?.title, 'Book');
+    });
+
+    test('16+ is not adult', () => expect(parseCatalogue(list(', "age": "16+"')).worlds.single.adult, isFalse));
+
+    test('a malformed one refuses the list', () {
+      expect(() => parseCatalogue(list(', "genres": "Fantasy"')), throwsFormatException);
+      expect(() => parseCatalogue(list(', "age": "adults"')), throwsFormatException);
+      expect(() => parseCatalogue(list(', "start": "Not A Slug"')), throwsFormatException);
+    });
+
+    test('a newer fetched list’s own are the ones shown', () {
+      final shipped = parseCatalogue(list(', "genres": ["Fantasy"], "age": "16+"', serial: 1));
+      final kept = parseCatalogue(list(', "genres": ["Romance"], "age": "18+", "start": "the-film"'));
+      final world = newestCatalogue(shipped, kept).worlds.single;
+      expect(
+        [world.genres, world.age, world.start],
+        [
+          ['Romance'],
+          '18+',
+          'the-film',
+        ],
+      );
+    });
+  });
+
   group('a production’s Tall cover', () {
     test('reads beside its picture, and is absent when the list names none', () {
       final tall = parseCatalogue(_list(serial: 1, tall: 'assets/worlds/juju/cover-tall.jpg')).worlds.single.productions.single;

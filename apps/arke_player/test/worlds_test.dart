@@ -7,9 +7,7 @@ import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/home/presentation/home_screen.dart';
-import 'package:arke_player/features/library/presentation/library_screen.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
-import 'package:arke_player/features/worlds/presentation/discover_screen.dart';
 import 'package:arke_player/features/worlds/presentation/row_widgets.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_publication/arke_publication.dart';
@@ -24,11 +22,6 @@ final _undersong = CatalogueWorld(
   logline: 'A drowned god still sings beneath the harbour.',
   productions: const [CatalogueProduction(title: 'The Ledger of Nights', kind: 'Audiobook · Book · 2 h 03 m')],
   package: CataloguePackage(url: Uri.parse('https://example.org/undersong.zip'), byteLength: 386000000, sha256: 'a' * 64),
-);
-const _unpublished = CatalogueWorld(
-  id: 'undersong',
-  name: 'The Undersong',
-  productions: [CatalogueProduction(title: 'The Ledger of Nights', kind: 'Book')],
 );
 
 final _installed = LibraryWorld(
@@ -135,21 +128,15 @@ Future<void> _pump(
 
 /// Scrolls the page until [target] is in its middle, clear of the tabs' pill floating at the foot
 /// (P16 rule 9): under Discover's feature (P16a), Worlds is further down.
-Future<void> _reveal(WidgetTester tester, Finder target) async {
-  final page = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
-  await tester.scrollUntilVisible(target, 300, scrollable: page);
-  await Scrollable.ensureVisible(tester.element(target), alignment: 0.5);
-  await tester.pumpAndSettle();
-}
 
 void main() {
-  group('first open (P9a)', () {
-    testWidgets('an empty first install discovers a hosted world without importing a file', (tester) async {
+  group('a brand-new install (P25, call 37)', () {
+    testWidgets('opens on Home, and a hosted world shows once the list arrives, with no file added', (tester) async {
       final fetched = Completer<void>();
       final catalogue = <CatalogueWorld>[];
       await _pump(
         tester,
-        location: Routes.welcome,
+        location: Routes.home,
         catalogue: catalogue,
         refresh: (ref) async {
           await fetched.future;
@@ -157,38 +144,19 @@ void main() {
           ref.invalidate(catalogueProvider);
         },
       );
-      expect(find.text('Add a file'), findsOneWidget);
-      expect(find.text('Install a world'), findsNothing);
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.text(_undersong.name), findsNothing);
       fetched.complete();
       await tester.pumpAndSettle();
-      expect(find.text('Install a world'), findsOneWidget);
-      await tester.tap(find.text('Install a world'));
-      await tester.pumpAndSettle();
-      expect(find.byType(DiscoverScreen), findsOneWidget);
+      expect(find.text(_undersong.name), findsOneWidget);
     });
 
-    testWidgets('an unavailable hosted list preserves local import on first open', (tester) async {
-      await _pump(tester, location: Routes.welcome, refresh: (ref) async => throw const SocketException('offline'));
+    testWidgets('with no list at all, Add a file is still there in Library', (tester) async {
+      await _pump(tester, location: Routes.library, refresh: (ref) async => throw const SocketException('offline'));
+      await tester.tap(find.text('Files'));
+      await tester.pumpAndSettle();
       expect(find.text('Add a file'), findsOneWidget);
-      expect(find.text('Install a world'), findsNothing);
       expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('offers Install a world when one is published', (tester) async {
-      await _pump(tester, location: Routes.welcome, catalogue: [_undersong]);
-      expect(find.text('Add a file'), findsOneWidget);
-      expect(find.text('Install a world'), findsOneWidget);
-      await tester.tap(find.text('Install a world'));
-      await tester.pumpAndSettle();
-      // Discover, the tab that took P9b's place (P11 rule 1, P15 rule 1), its worlds under Worlds.
-      expect(find.byType(DiscoverScreen), findsOneWidget);
-      await _reveal(tester, find.text('1 production · 386 MB'));
-      expect(find.descendant(of: find.byType(DiscoverScreen), matching: find.text('Worlds')), findsOneWidget);
-      expect(find.text('1 production · 386 MB'), findsOneWidget);
-    });
-    testWidgets('has no second press while nothing is published (P9 rule 2)', (tester) async {
-      await _pump(tester, location: Routes.welcome, catalogue: [_unpublished]);
-      expect(find.text('Install a world'), findsNothing);
     });
   });
 
@@ -272,21 +240,19 @@ void main() {
       expect(find.text('Chapters'), findsOneWidget);
       expect(find.text('The Weir'), findsOneWidget);
     });
-    testWidgets('Library shows the world under Worlds, above the files under Added (P15h)', (tester) async {
+    testWidgets('Library shows the world under Worlds, and its own items are not files (P22l)', (tester) async {
       await _pump(tester, location: Routes.library, worlds: [_installed], items: [..._worldItems, _file]);
       expect(find.text('The Undersong'), findsOneWidget);
-      expect(find.descendant(of: find.byType(LibraryScreen), matching: find.text('Worlds')), findsOneWidget);
-      expect(find.text('Added'), findsOneWidget);
+      await tester.tap(find.text('Files'));
+      await tester.pumpAndSettle();
       expect(find.text('Harbour Songs'), findsOneWidget);
-      // The world's own items are not listed as files.
       expect(find.text('The Ledger of Nights'), findsNothing);
     });
   });
 
   group('text at 200% clips no press (acceptance 9)', () {
     for (final (name, location, worlds, items) in [
-      ('first open with two presses', Routes.welcome, const <LibraryWorld>[], const <LibraryItem>[]),
-      ('Worlds', Routes.discover, const <LibraryWorld>[], const <LibraryItem>[]),
+      ('Worlds', Routes.worlds, const <LibraryWorld>[], const <LibraryItem>[]),
       ('a world to install', Routes.world('undersong'), const <LibraryWorld>[], const <LibraryItem>[]),
       ('Home with Available', Routes.home, const <LibraryWorld>[], [_file]),
       ('the installed world', Routes.world('undersong'), [_installed], _worldItems),
