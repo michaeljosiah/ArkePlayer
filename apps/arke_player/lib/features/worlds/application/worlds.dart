@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/catalogue_channel.dart';
 import '../../../app/services.dart';
 import '../../players/application/players.dart';
-import '../../settings/application/settings_controller.dart';
 
 /// Arke's address for its list of worlds (SPEC-058 R-31, P12 rule 1): HTTPS, as a package is.
 final arkeWorldsList = catalogueChannel.url;
@@ -229,8 +228,6 @@ class InstallController extends Notifier<InstallState> {
         await installer.install(world, cancel: cancel, onStep: onStep);
       }
       state = const NotInstalling();
-      // Once a world is in, later opens land on Home rather than first open (P8a).
-      await ref.read(settingsProvider.notifier).change((settings) => settings.copyWith(seenFirstOpen: true));
     } on InstallCancelled {
       state = const NotInstalling();
     } on InstallRefusal catch (refusal) {

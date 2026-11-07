@@ -362,7 +362,7 @@ void main() {
           t,
           'P13-$name-${check.name}',
           size,
-          Routes.discover,
+          Routes.worlds,
           with_: worldItems,
           catalogue: [_p13World(check == CatalogueCheck.checked)],
           worlds: [installed],
@@ -376,7 +376,7 @@ void main() {
         t,
         'P13-$name-dark',
         size,
-        Routes.discover,
+        Routes.worlds,
         with_: worldItems,
         catalogue: [_p13World(true)],
         worlds: [installed],
@@ -385,7 +385,6 @@ void main() {
       ),
     );
   }
-  testWidgets('P8a first open', (t) => shoot(t, 'P8a-first-open', phone, Routes.welcome, with_: const []));
   testWidgets('P8b home, nothing added', (t) => shoot(t, 'P8b-home-empty', phone, Routes.home, with_: const []));
   testWidgets('P8d home, with files', (t) => shoot(t, 'P8d-home', phone, Routes.home));
   testWidgets('P8c library', (t) => shoot(t, 'P8c-library', phone, Routes.library));
@@ -396,7 +395,6 @@ void main() {
   testWidgets('P6e home on a fold', (t) => shoot(t, 'P6e-home-fold', fold, Routes.home));
 
   Future<void> install(WidgetTester tester) => tester.tap(find.textContaining('Install').last);
-  testWidgets('P9a first open, with a world to install', (t) => shoot(t, 'P9a-first-open', phone, Routes.welcome, with_: const [], catalogue: [_undersong]));
   testWidgets('P9c a world to install', (t) => shoot(t, 'P9c-world-to-install', phone, Routes.world('undersong'), catalogue: [_undersong]));
   testWidgets(
     'P9d installing',

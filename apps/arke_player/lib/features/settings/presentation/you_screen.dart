@@ -10,10 +10,12 @@ import '../../../app/widgets/shelf.dart';
 import '../../worlds/application/worlds.dart';
 import '../application/settings_controller.dart';
 import '../domain/device_settings.dart';
+import 'adult_ask.dart';
 
-/// You, before an account (P8f): Playback (Captions), Storage with Wi-Fi only (P6b: a world's new
-/// chapters wait for Wi-Fi, SPEC-058 R-51), About. Every setting is this
-/// device's (P6 rule 3); nothing here needs or names an account (P8 rule 1).
+/// You (P25g): Appearance with Theme, dark until changed (call 51); Playback; Downloads with Wi-Fi only
+/// (a world's new chapters wait for it, SPEC-058 R-51) and what is on the phone; Content; About with
+/// Check for updates, moved from Discover's head (P22 rule 7). Every setting is this device's (P6 rule
+/// 3); nothing here needs or names an account (P8 rule 1).
 class YouScreen extends ConsumerWidget {
   const YouScreen({super.key});
 
@@ -31,13 +33,37 @@ class YouScreen extends ConsumerWidget {
             child: ListView(
               padding: EdgeInsets.only(top: 8, bottom: 24 + footRoom(context)),
               children: [
+                const _GroupLabel('Appearance'),
+                _Group(
+                  children: [
+                    _ThemeRow(
+                      value: settings.theme,
+                      onChanged: (theme) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(theme: theme)),
+                    ),
+                  ],
+                ),
                 const _GroupLabel('Playback'),
                 _Group(
                   children: [
                     _Row(label: 'Captions', value: settings.captions ? 'On · ${settings.captionSize.label}' : 'Off', onTap: () => _captions(context, ref)),
+                    _SwitchRow(
+                      label: 'Text',
+                      value: settings.text,
+                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(text: on)),
+                    ),
+                    _SwitchRow(
+                      label: 'Slow push',
+                      value: settings.slowPush,
+                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(slowPush: on)),
+                    ),
+                    _SwitchRow(
+                      label: 'Autoplay next',
+                      value: settings.autoplayNext,
+                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(autoplayNext: on)),
+                    ),
                   ],
                 ),
-                const _GroupLabel('Storage'),
+                const _GroupLabel('Downloads'),
                 _Group(
                   children: [
                     _SwitchRow(
@@ -52,9 +78,31 @@ class YouScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const _GroupLabel('Content'),
+                _Group(
+                  children: [
+                    _Row(
+                      label: 'Adult content',
+                      value: settings.adultContent ? 'On' : 'Off',
+                      onTap: () => settings.adultContent
+                          ? ref.read(settingsProvider.notifier).change((current) => current.copyWith(adultContent: false))
+                          : askAdult(context, ref, title: 'Adult content', line: '18+', press: 'I am 18 or older · Turn on'),
+                    ),
+                  ],
+                ),
                 const _GroupLabel('About'),
                 _Group(
                   children: [
+                    _Row(
+                      label: 'Check for updates',
+                      value: switch (ref.watch(catalogueCheckProvider)) {
+                        CatalogueCheck.idle => null,
+                        CatalogueCheck.checking => 'Checking',
+                        CatalogueCheck.checked => 'Checked',
+                        CatalogueCheck.failed => 'Couldn’t check',
+                      },
+                      onTap: () => ref.read(catalogueCheckProvider.notifier).check(),
+                    ),
                     const _Row(label: 'Version', value: appVersion),
                     _Row(
                       label: 'Licences',
@@ -140,6 +188,57 @@ class _Group extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Theme, in the group's row (P25g): its two choices side by side, the current one raised.
+class _ThemeRow extends StatelessWidget {
+  const _ThemeRow({required this.value, required this.onChanged});
+
+  final AppTheme value;
+  final ValueChanged<AppTheme> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = context.surface;
+    final text = Theme.of(context).textTheme.bodyMedium;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 50),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text('Theme', style: text?.copyWith(fontSize: ArkeType.sizeBase)),
+            ),
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(color: surface.foreground.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(ArkeRadius.lg)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final theme in AppTheme.values)
+                    Semantics(
+                      button: true,
+                      selected: theme == value,
+                      child: GestureDetector(
+                        onTap: () => onChanged(theme),
+                        child: Container(
+                          width: 75,
+                          height: 32,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(color: theme == value ? surface.background : null, borderRadius: BorderRadius.circular(ArkeRadius.md)),
+                          child: Text(theme.label, style: text?.copyWith(color: surface.foreground)),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// A label and its switch (P6b).

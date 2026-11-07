@@ -8,56 +8,49 @@ import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../add_file/presentation/add_flow.dart';
-import '../../production/domain/production_kind.dart';
+import '../../downloads/presentation/downloads_screen.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/world_widgets.dart';
 import 'item_menu.dart';
 
-/// How a file is taken, as Discover's chips name it (P15 rule 1).
-TakenAs takenAsOf(LibraryKind kind) => switch (kind) {
-  LibraryKind.listen => TakenAs.listen,
-  LibraryKind.read => TakenAs.read,
-  LibraryKind.watch => TakenAs.watch,
-};
+/// What Library's chips show (P22l).
+enum LibrarySection {
+  worlds('Worlds'),
+  files('Files'),
+  downloads('Downloads');
 
-/// What is on the phone (P8c, P15h; on a Fold, two columns, P8e): installed worlds first as cards,
-/// each with `New` or `Update` (P15 rule 1), under `Worlds`, then the files added under `Added`,
-/// newest first, `+` in the head. Discover's chips, `All · Listen · Watch · Play · Read`, show when
-/// two or more of them are present and filter both.
+  const LibrarySection(this.label);
+  final String label;
+}
+
+/// What is on the phone (P22l, P22m, P25f): under `Worlds · Files · Downloads`, with `+` in the head for
+/// Add a file. Worlds are cards with `New` or `Update`; an empty Worlds says so with a press to the
+/// Worlds tab. Files are rows, two across on a Fold (P8e); an empty Files is `Nothing added` with Add a
+/// file. Downloads is P6a's.
 class LibraryScreen extends ConsumerStatefulWidget {
-  const LibraryScreen({super.key});
+  const LibraryScreen({this.show, super.key});
+
+  /// A section by name: You's `On this phone` opens Downloads.
+  final String? show;
 
   @override
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
 }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
-  TakenAs? _kind;
+  late LibrarySection _section = _named(widget.show) ?? LibrarySection.worlds;
+
+  static LibrarySection? _named(String? name) => LibrarySection.values.where((section) => section.name == name).firstOrNull;
+
+  @override
+  void didUpdateWidget(LibraryScreen old) {
+    super.didUpdateWidget(old);
+    final named = _named(widget.show);
+    if (named != null && widget.show != old.show) _section = named;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final items = ref.watch(libraryItemsProvider).value ?? const [];
-    final store = ref.watch(libraryStoreProvider).value;
-    final allWorlds = ref.watch(libraryWorldsProvider).value ?? const [];
-    // A world's music is heard: it is under Listen (P17 rule 2).
-    Set<TakenAs> takenIn(LibraryWorld world) => {
-      for (final production in world.productions) production.narration != null || production.music != null ? TakenAs.listen : TakenAs.read,
-    };
-    final present = {for (final kind in kindsPresent(items)) takenAsOf(kind), for (final world in allWorlds) ...takenIn(world)};
-    final kinds = [
-      for (final taken in TakenAs.chips)
-        if (present.contains(taken)) taken,
-    ];
-    final kind = kinds.length > 1 && kinds.contains(_kind) ? _kind : null;
-    final rows = libraryRows(items).where((item) => kind == null || takenAsOf(item.kind) == kind).toList();
-    final worlds = allWorlds.where((world) => kind == null || takenIn(world).contains(kind)).toList();
-    final showWorlds = worlds.isNotEmpty;
-    final empty = allWorlds.isEmpty && libraryRows(items).isEmpty;
-    final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
-
-    Widget row(LibraryItem item) =>
-        FileRow(item: item, cover: coverOf(store, item), onOpen: () => openItem(context, item), onMore: () => showItemMenu(context, ref, item));
-
     return SafeArea(
       bottom: false,
       child: Column(
@@ -67,55 +60,95 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             title: 'Library',
             trailing: RoundPress(icon: Icons.add, label: 'Add a file', onPressed: () => addFiles(context, ref)),
           ),
-          if (kinds.length > 1)
-            LabelChips<TakenAs>(
-              options: [for (final taken in TakenAs.chips) (taken, taken.label)],
-              selected: kind,
-              onSelect: (value) => setState(() => _kind = value),
-            ),
+          LabelChips<LibrarySection>(
+            all: false,
+            options: [for (final section in LibrarySection.values) (section, section.label)],
+            selected: _section,
+            onSelect: (value) => setState(() => _section = value ?? _section),
+          ),
           Expanded(
-            child: empty
-                ? EmptyShelf(onAdd: () => addFiles(context, ref))
-                : CustomScrollView(
-                    slivers: [
-                      if (showWorlds) ...[
-                        const SliverToBoxAdapter(child: SectionHead('Worlds')),
-                        SliverList.list(
-                          children: [
-                            for (final world in worlds)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                                child: WorldCard(
-                                  name: world.name,
-                                  meta: 'Installed · ${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
-                                  picture: libraryPicture(store, world.keyArt),
-                                  fresh: worldHasNew(world, items),
-                                  tag: ref.watch(worldUpdateProvider(world.id)) != null ? 'Update' : null,
-                                  onOpen: () => context.push(Routes.libraryWorld(world.id)),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ] else
-                        const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                      if (showWorlds && rows.isNotEmpty) const SliverToBoxAdapter(child: SectionHead('Added')),
-                      if (wide)
-                        SliverPadding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          sliver: SliverGrid.builder(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisExtent: 68, crossAxisSpacing: 8),
-                            itemCount: rows.length,
-                            itemBuilder: (context, index) => row(rows[index]),
-                          ),
-                        )
-                      else
-                        SliverList.builder(itemCount: rows.length, itemBuilder: (context, index) => row(rows[index])),
-                      SliverToBoxAdapter(child: SizedBox(height: 24 + footRoom(context))),
-                    ],
-                  ),
+            child: switch (_section) {
+              LibrarySection.worlds => const _Worlds(),
+              LibrarySection.files => const _Files(),
+              LibrarySection.downloads => const DownloadsPane(),
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class _Worlds extends ConsumerWidget {
+  const _Worlds();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(libraryItemsProvider).value ?? const [];
+    final store = ref.watch(libraryStoreProvider).value;
+    final worlds = ref.watch(libraryWorldsProvider).value ?? const [];
+    if (worlds.isEmpty) {
+      return Align(
+        alignment: const Alignment(0, -0.16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('No worlds yet', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: context.surface.mutedForeground)),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => context.go(Routes.worlds),
+              icon: const Icon(Icons.public, size: 18),
+              label: const Text('Worlds'),
+              style: FilledButton.styleFrom(minimumSize: const Size(0, 44), padding: const EdgeInsets.symmetric(horizontal: 18)),
+            ),
+          ],
+        ),
+      );
+    }
+    return ListView(
+      padding: EdgeInsets.only(top: 14, bottom: 24 + footRoom(context)),
+      children: [
+        for (final world in worlds)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: WorldCard(
+              name: world.name,
+              meta: formatBytes(world.byteLength),
+              picture: libraryPicture(store, world.keyArt),
+              fresh: worldHasNew(world, items),
+              tag: ref.watch(worldUpdateProvider(world.id)) != null ? 'Update' : null,
+              onOpen: () => context.push(Routes.libraryWorld(world.id)),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _Files extends ConsumerWidget {
+  const _Files();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(libraryItemsProvider).value ?? const [];
+    final store = ref.watch(libraryStoreProvider).value;
+    final rows = libraryRows(items);
+    if (rows.isEmpty) return EmptyShelf(onAdd: () => addFiles(context, ref));
+    Widget row(LibraryItem item) =>
+        FileRow(item: item, cover: coverOf(store, item), onOpen: () => openItem(context, item), onMore: () => showItemMenu(context, ref, item));
+    final bottom = 24 + footRoom(context);
+    if (MediaQuery.sizeOf(context).width >= WindowBands.fold) {
+      return GridView.builder(
+        padding: EdgeInsets.fromLTRB(8, 12, 8, bottom),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisExtent: 68, crossAxisSpacing: 8),
+        itemCount: rows.length,
+        itemBuilder: (context, index) => row(rows[index]),
+      );
+    }
+    return ListView.builder(
+      padding: EdgeInsets.only(top: 12, bottom: bottom),
+      itemCount: rows.length,
+      itemBuilder: (context, index) => row(rows[index]),
     );
   }
 }

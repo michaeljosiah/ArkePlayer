@@ -424,20 +424,20 @@ void main() {
 
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
-  final undersong = Routes.discoverWorld('the-undersong');
-  final juju = Routes.discoverWorld('na-love-or-juju');
+  final undersong = Routes.worldsWorld('the-undersong');
+  final juju = Routes.worldsWorld('na-love-or-juju');
   // The page's own list: the rows inside it scroll across.
   Future<void> down(WidgetTester tester, double by) =>
       tester.drag(find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).first, Offset(0, -by));
 
   for (final brightness in Brightness.values) {
     final suffix = brightness == Brightness.dark ? '' : '-light';
-    testWidgets('P16a discover$suffix', (t) => shoot(t, 'P16a-discover$suffix', phone, Routes.discover, brightness: brightness));
+    testWidgets('P16a discover$suffix', (t) => shoot(t, 'P16a-discover$suffix', phone, Routes.worlds, brightness: brightness));
     testWidgets(
       'P16b stories$suffix',
-      (t) => shoot(t, 'P16b-stories$suffix', phone, Routes.discover, brightness: brightness, act: (tester) => down(tester, 520)),
+      (t) => shoot(t, 'P16b-stories$suffix', phone, Routes.worlds, brightness: brightness, act: (tester) => down(tester, 520)),
     );
-    testWidgets('P16c band$suffix', (t) => shoot(t, 'P16c-band$suffix', phone, Routes.discover, brightness: brightness, act: (tester) => down(tester, 1010)));
+    testWidgets('P16c band$suffix', (t) => shoot(t, 'P16c-band$suffix', phone, Routes.worlds, brightness: brightness, act: (tester) => down(tester, 1010)));
     testWidgets('P16d world$suffix', (t) => shoot(t, 'P16d-world$suffix', phone, undersong, brightness: brightness));
     testWidgets(
       'P16e world down$suffix',
@@ -455,10 +455,10 @@ void main() {
         },
       ),
     );
-    testWidgets('P16f fold$suffix', (t) => shoot(t, 'P16f-fold$suffix', fold, Routes.discover, brightness: brightness));
+    testWidgets('P16f fold$suffix', (t) => shoot(t, 'P16f-fold$suffix', fold, Routes.worlds, brightness: brightness));
     testWidgets(
       'P16g fold down$suffix',
-      (t) => shoot(t, 'P16g-fold-down$suffix', fold, Routes.discover, brightness: brightness, act: (tester) => down(tester, 640)),
+      (t) => shoot(t, 'P16g-fold-down$suffix', fold, Routes.worlds, brightness: brightness, act: (tester) => down(tester, 640)),
     );
     testWidgets('P16i dock$suffix', (t) => shoot(t, 'P16i-dock$suffix', phone, undersong, brightness: brightness, playing: true));
   }

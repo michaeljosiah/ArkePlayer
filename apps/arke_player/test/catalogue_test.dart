@@ -44,6 +44,15 @@ void main() {
     }
   });
 
+  test('every world has its genre and age, and Na Love or Juju is 18+ (P22 rules 8, 9, calls 41, 42)', () {
+    final worlds = readCatalogue(File('assets/worlds/catalogue.json').readAsStringSync());
+    for (final world in worlds) {
+      expect(world.genres, isNotEmpty, reason: world.id);
+      expect(world.age, isNotNull, reason: world.id);
+    }
+    expect(worlds.where((world) => world.adult).map((world) => world.id), ['na-love-or-juju']);
+  });
+
   test('Discover’s feature and band name listed worlds (P16 call 15)', () {
     final list = parseCatalogue(File('assets/worlds/catalogue.json').readAsStringSync());
     final ids = {for (final world in list.worlds) world.id};

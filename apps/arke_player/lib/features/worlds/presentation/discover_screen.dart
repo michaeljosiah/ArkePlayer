@@ -74,7 +74,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     /// opens its own page whether or not it is here, with Get (P21 call 35).
     void openProduction(CatalogueWorld world, String? productionId) {
       final held = installedAs(world);
-      final page = Routes.discoverWorld(held?.id ?? world.id);
+      final page = Routes.worldsWorld(held?.id ?? world.id);
       final there =
           productionId != null &&
           ((held?.productions.any((production) => production.id == productionId) ?? false) ||
@@ -137,7 +137,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     // A small poster has room for what a teaser is, not its world's name too (P16c); it opens into
     // its world all the same (P15 rule 4).
     Widget teaserPoster(CatalogueWorld world, WorldGuide guide, GuideTeaser teaser) {
-      final page = Routes.discoverWorld(installedAs(world)?.id ?? world.id);
+      final page = Routes.worldsWorld(installedAs(world)?.id ?? world.id);
       return switch (teaser) {
         EntryTeaser(entry: final GuideCharacter character) => PosterTile(
           title: character.name,
@@ -185,7 +185,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     Widget worldCard(CatalogueWorld world, {bool mini = false}) {
       final held = installedAs(world);
       if (held == null) {
-        return AvailableCard(world: world, mini: mini, width: mini ? wideWidth : null, onOpen: () => context.push(Routes.discoverWorld(world.id)));
+        return AvailableCard(world: world, mini: mini, width: mini ? wideWidth : null, onOpen: () => context.push(Routes.worldsWorld(world.id)));
       }
       // A world updating shows it as an install does (P9 rule 4, P12 rule 4); one with a newer
       // edition carries Update (P12a).
@@ -206,7 +206,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         picture: ref.keyArtOf(world) ?? libraryPicture(ref.watch(libraryStoreProvider).value, held.keyArt),
         mini: mini,
         width: mini ? wideWidth : null,
-        onOpen: () => context.push(Routes.discoverWorld(held.id)),
+        onOpen: () => context.push(Routes.worldsWorld(held.id)),
       );
       return mini ? card : Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: card);
     }
@@ -251,7 +251,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     Widget worldBand(CatalogueWorld world) {
       final held = installedAs(world);
       final state = ref.watch(installProvider(world.id));
-      final page = Routes.discoverWorld(held?.id ?? world.id);
+      final page = Routes.worldsWorld(held?.id ?? world.id);
       final guide = ref.watch(worldGuideProvider(held?.id ?? world.id)).value;
       return WorldBand(
         name: world.name,

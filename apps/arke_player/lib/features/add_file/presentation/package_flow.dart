@@ -12,7 +12,6 @@ import '../../../app/router/routes.dart';
 import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
-import '../../settings/application/settings_controller.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/world_widgets.dart';
 import '../domain/added_file.dart';
@@ -75,8 +74,6 @@ Future<PackageOutcome> addPackage(BuildContext context, WidgetRef ref, PickedFil
         return PackageOutcome.none;
       }
       final world = await installer.commit(prepared);
-      // Once anything is in the library, later opens land on Home rather than first open (P8a).
-      await ref.read(settingsProvider.notifier).change((settings) => settings.copyWith(seenFirstOpen: true));
       if (context.mounted) context.go(Routes.libraryWorld(world.id));
       return PackageOutcome.added;
     case InstallCancelled():

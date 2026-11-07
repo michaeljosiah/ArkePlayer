@@ -61,7 +61,16 @@ void main() {
       expect(settings.sleep, SleepTimer.off);
       expect(settings.readerScale, 1.0);
       expect(settings.readerPaper, ReaderPaper.paper);
-      expect(settings.seenFirstOpen, isFalse);
+      expect(settings.theme, AppTheme.dark);
+      expect(settings.adultContent, isFalse);
+      expect(settings.autoplayNext, isTrue);
+    });
+    test('Theme and Adult content come back as they were left (P25g, call 42, call 51)', () {
+      final saved = const DeviceSettings().copyWith(theme: AppTheme.light, adultContent: true, autoplayNext: false).toPrefs();
+      final back = DeviceSettings.fromPrefs((key) => saved[key]);
+      expect([back.theme, back.adultContent, back.autoplayNext], [AppTheme.light, true, false]);
+      // Nothing stored, a new install: dark whatever the phone says.
+      expect(DeviceSettings.fromPrefs((key) => null).theme, AppTheme.dark);
     });
     test('what is saved comes back, and a bad value falls back', () {
       final saved = const DeviceSettings().copyWith(captions: true, speed: 1.5, sleep: SleepTimer.endOfChapter, readerPaper: ReaderPaper.night).toPrefs();

@@ -21,7 +21,7 @@ import 'music_fixture.dart';
 // SPEC-058 R-72 – R-78 and SPEC-059 R-38 on the Player (P17): the Music group, an album's page,
 // playing music, lyrics, Heard in, Theme and the Song teaser, and a production package arriving.
 
-final _world = Routes.discoverWorld(worldId);
+final _world = Routes.worldsWorld(worldId);
 final _album = Routes.production(_world, albumId);
 const _fold = Size(984, 1092);
 
@@ -206,7 +206,7 @@ void main() {
 
     testWidgets('Discover has a Music row after Stories, under All and Listen (P17b)', (tester) async {
       // Tall enough that every row is built, so their order can be read.
-      await pumpMusic(tester, Routes.discover, size: const Size(390, 2600));
+      await pumpMusic(tester, Routes.worlds, size: const Size(390, 2600));
       final heads = [for (final head in tester.widgetList<SectionHead>(find.byType(SectionHead))) head.title];
       expect(heads.indexOf('Music'), heads.indexOf('Stories') + 1);
       expect(find.text('Album · The Undersong'), findsOneWidget);
@@ -227,7 +227,7 @@ void main() {
 
     testWidgets('a song is a teaser, a small poster with a note; opened, it plays its excerpt (R-78)', (tester) async {
       final teaser = HeardTeaser();
-      await pumpMusic(tester, Routes.discover, teaser: teaser);
+      await pumpMusic(tester, Routes.worlds, teaser: teaser);
       await _reveal(tester, find.text('Song · 0:24'));
       expect(teaser.played, isEmpty, reason: 'nothing plays in the row');
       await tester.tap(find.text('Song · 0:24'));

@@ -87,14 +87,23 @@ class KindChips extends StatelessWidget {
       LabelChips<LibraryKind>(options: [for (final kind in kinds) (kind, kind.label)], selected: selected, onSelect: onSelect);
 }
 
-/// `All` and then each option, one of them on (P8 rule 4, P15 rule 2): the chips over a shelf.
+/// `All` and then each option, one of them on (P8 rule 4, P15 rule 2): the chips over a shelf. Without
+/// [all], only the options: Library's `Worlds · Files · Downloads` (P22l).
 class LabelChips<T> extends StatelessWidget {
-  const LabelChips({required this.options, required this.selected, required this.onSelect, this.padding = const EdgeInsets.fromLTRB(16, 2, 16, 0), super.key});
+  const LabelChips({
+    required this.options,
+    required this.selected,
+    required this.onSelect,
+    this.padding = const EdgeInsets.fromLTRB(16, 2, 16, 0),
+    this.all = true,
+    super.key,
+  });
 
   final List<(T, String)> options;
   final T? selected;
   final ValueChanged<T?> onSelect;
   final EdgeInsets padding;
+  final bool all;
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +134,7 @@ class LabelChips<T> extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          chip('All', selected == null, () => onSelect(null)),
+          if (all) chip('All', selected == null, () => onSelect(null)),
           for (final (value, label) in options) chip(label, selected == value, () => onSelect(value)),
         ],
       ),

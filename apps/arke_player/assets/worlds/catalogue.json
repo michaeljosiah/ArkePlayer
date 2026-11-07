@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "serial": 49,
+  "serial": 50,
   "feature": { "world": "the-red-quiet" },
   "band": "the-undersong",
   "worlds": [
     {
       "id": "the-undersong",
       "name": "The Undersong",
+      "genres": ["Fantasy"],
+      "age": "16+",
       "replaces": ["undersong"],
       "logline": "A drowned god still sings beneath the harbour.",
       "keyArt": "assets/worlds/undersong/key-art.jpg",
@@ -66,6 +68,8 @@
     {
       "id": "legend-of-dumah",
       "name": "Legend of Dumah",
+      "genres": ["Fantasy"],
+      "age": "16+",
       "logline": "Twice the world has stood at the edge of ending. The third time begins with a thief in the City of Light.",
       "keyArt": "assets/worlds/legend-of-dumah/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/legend-of-dumah-keyArt-20261024.jpg", "byteLength": 206972, "sha256": "7946424399bdcf27cd03a8e752a0c7dd384adb1eb6487c49fced3ce279591aee" } },
@@ -94,6 +98,8 @@
     {
       "id": "the-red-quiet",
       "name": "The Red Quiet",
+      "genres": ["Sci-fi"],
+      "age": "16+",
       "logline": "A colony crash-lands on a moon its survey called dead. The moon is not empty, and the Mistress was here first.",
       "keyArt": "assets/worlds/the-red-quiet/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/the-red-quiet-keyArt-20261024.jpg", "byteLength": 163611, "sha256": "99da6f43deeb87d2efc3e0cd17770f33c2b74f106d3408e1cc52d6e7b6fcaf2d" } },
@@ -135,6 +141,8 @@
     {
       "id": "embers-of-the-fallen",
       "name": "Embers of the Fallen",
+      "genres": ["Thriller"],
+      "age": "16+",
       "logline": "When a covert military-scientific team investigating impossible spatial anomalies in the Swiss Alps retrieves a living organism from beyond known reality, they trigger a biological nightmare that threatens to break containment. As they race to stop it, they discover another armed expedition in the valley—one that knows far more about the ancient machinery beneath the mountain than it will reveal.",
       "keyArt": "assets/worlds/embers-of-the-fallen/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/embers-of-the-fallen-keyArt-20261024.jpg", "byteLength": 164652, "sha256": "a82e22f04649850d3db0c2f5bd1beea7f0c35bd2796a0f8e96bd7d9b39699ef2" } },
@@ -163,6 +171,8 @@
     {
       "id": "na-love-or-juju",
       "name": "Na Love or Juju",
+      "genres": ["Romance"],
+      "age": "18+",
       "logline": "Ife cannot make a man want her. She can only make wanting her cost him everything. Now the most disciplined man in Lagos is buying her a car she never asked for, and his best friend has found a trail of ruined men behind her. Is Ade truly in love? Or has his heart been twisted by something far darker?",
       "keyArt": "assets/worlds/na-love-or-juju/key-art.jpg",
       "pins": { "keyArt": { "url": "https://github.com/michaeljosiah/ArkeStudio/releases/download/arke-player-worlds/na-love-or-juju-keyArt-20261031.jpg", "byteLength": 639117, "sha256": "bf0730e39e861b32ff920c8cae750bf220381220c9f49edd1a98b6aae5ed29e5" } },
