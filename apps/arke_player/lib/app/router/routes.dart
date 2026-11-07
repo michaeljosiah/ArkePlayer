@@ -4,6 +4,7 @@ abstract final class Routes {
   // The four tabs (P22 rule 7, call 40).
   static const home = '/';
   static const worlds = '/worlds';
+  static const search = '/worlds/search';
   static const library = '/library';
   static const you = '/you';
 

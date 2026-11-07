@@ -70,7 +70,7 @@ void main() {
     expect(playerForProduction(ProductionKind.graphicNovel), PlayerKind.pageViewer);
   });
 
-  testWidgets('an installed graphic novel sits under Read with its page count, and opens its page', (tester) async {
+  testWidgets('an installed graphic novel sits in Story’s row with its page count, and opens its page', (tester) async {
     await pumpStories(tester, world, stories: const [], comics: [ltr]);
     expect(find.text('Graphic novel · 4 pages'), findsOneWidget);
     await tester.tap(find.text('Low Water'));
@@ -203,6 +203,26 @@ void main() {
     expect(pageOf(1, 2, 11), '2 – 3 of 11');
     expect(pageOf(2, null, 11), '3 of 11');
     expect(listedPages('Graphic novel · 11 pages'), 11);
+  });
+
+  // P22 rule 9: before anything downloads. Get on an 18+ world's graphic novel asks nothing yet, and
+  // Home's posters open this page before the world is here. Skipped rather than weakened.
+  testWidgets('on an 18+ world, Get asks first (P22e)', (tester) async {
+    final listed = listedStoryWorld(const []);
+    final withComic = CatalogueWorld(
+      id: listed.id,
+      name: listed.name,
+      age: '18+',
+      package: listed.package,
+      productions: [
+        ...listed.productions,
+        CatalogueProduction(id: id, title: 'Low Water', kind: 'Graphic novel · 4 pages', comic: storyPin(id)),
+      ],
+    );
+    await pumpStories(tester, page, stories: const [], listed: withComic);
+    await tester.tap(find.text('Get · 1.2 GB', findRichText: true));
+    await tester.pumpAndSettle();
+    expect(find.text('I am 18 or older · Get'), findsOneWidget);
   });
 
   testWidgets('not on the phone, its page opens with Get and its size (rule 3, call 35)', (tester) async {

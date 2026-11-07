@@ -73,20 +73,6 @@ class SectionHead extends StatelessWidget {
   );
 }
 
-/// What a person does — `All · Listen · Read · Watch` — shown only when two or more kinds are
-/// present (P8 rule 4).
-class KindChips extends StatelessWidget {
-  const KindChips({required this.kinds, required this.selected, required this.onSelect, super.key});
-
-  final List<LibraryKind> kinds;
-  final LibraryKind? selected;
-  final ValueChanged<LibraryKind?> onSelect;
-
-  @override
-  Widget build(BuildContext context) =>
-      LabelChips<LibraryKind>(options: [for (final kind in kinds) (kind, kind.label)], selected: selected, onSelect: onSelect);
-}
-
 /// `All` and then each option, one of them on (P8 rule 4, P15 rule 2): the chips over a shelf. Without
 /// [all], only the options: Library's `Worlds · Files · Downloads` (P22l).
 class LabelChips<T> extends StatelessWidget {

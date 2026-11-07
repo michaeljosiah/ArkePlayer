@@ -1,4 +1,5 @@
 import 'package:arke_library/arke_library.dart';
+import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import '../../../app/widgets/shelf.dart';
 import '../../add_file/presentation/add_flow.dart';
 import '../../downloads/presentation/downloads_screen.dart';
 import '../../worlds/application/worlds.dart';
+import '../../worlds/presentation/world_shelf.dart';
 import '../../worlds/presentation/world_widgets.dart';
 import 'item_menu.dart';
 
@@ -105,22 +107,38 @@ class _Worlds extends ConsumerWidget {
         ),
       );
     }
+    final byId = {for (final item in items) item.id: item};
+    final catalogue = ref.watch(catalogueProvider).value ?? const [];
+    Widget card(LibraryWorld world, {bool grid = false}) {
+      final where = worldStart(world, listedFor(catalogue, world.id), byId)?.where;
+      return WorldShelfCard(
+        worldId: world.id,
+        name: world.name,
+        line: [?where, formatBytes(world.byteLength)].join(' · '),
+        picture: libraryPicture(store, world.keyArt),
+        age: listedFor(catalogue, world.id)?.age,
+        fresh: worldHasNew(world, items),
+        tag: ref.watch(worldUpdateProvider(world.id)) != null ? 'Update' : null,
+        grid: grid,
+        onOpen: () => context.push(Routes.libraryWorld(world.id)),
+      );
+    }
+
+    final width = MediaQuery.sizeOf(context).width;
+    final bottom = 24 + footRoom(context);
+    if (width >= WindowBands.fold) {
+      return GridView.count(
+        crossAxisCount: width >= WindowBands.wide ? 3 : 2,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: 16 / 9,
+        padding: EdgeInsets.fromLTRB(24, 14, 24, bottom),
+        children: [for (final world in worlds) card(world, grid: true)],
+      );
+    }
     return ListView(
-      padding: EdgeInsets.only(top: 14, bottom: 24 + footRoom(context)),
-      children: [
-        for (final world in worlds)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: WorldCard(
-              name: world.name,
-              meta: formatBytes(world.byteLength),
-              picture: libraryPicture(store, world.keyArt),
-              fresh: worldHasNew(world, items),
-              tag: ref.watch(worldUpdateProvider(world.id)) != null ? 'Update' : null,
-              onOpen: () => context.push(Routes.libraryWorld(world.id)),
-            ),
-          ),
-      ],
+      padding: EdgeInsets.fromLTRB(16, 14, 16, bottom),
+      children: [for (final world in worlds) Padding(padding: const EdgeInsets.only(bottom: 12), child: card(world))],
     );
   }
 }

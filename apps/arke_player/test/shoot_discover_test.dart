@@ -1,5 +1,6 @@
-// Renders Discover, a world's kinds, a production released a chapter at a time, Home, Library,
-// Notify and Downloads (P15) with the real fonts and pictures, to compare with the design's frames.
+// Renders Worlds, Home with Discover's rows, a world's titles and people, a production released a
+// chapter at a time, Library, Notify and Downloads (P22, P15) with the real fonts and pictures, to
+// compare with the design's frames.
 // Not a gate — pixels differ by platform — so it runs only when asked:
 //
 //   SHOOT=1 flutter test test/shoot_discover_test.dart        (from apps/arke_player; PNGs in build/shots)
@@ -374,15 +375,15 @@ void main() {
   Future<void> down(WidgetTester tester, double by) =>
       tester.drag(find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).first, Offset(0, -by));
 
-  testWidgets('P15a discover', (t) => shoot(t, 'P15a-discover', phone, Routes.worlds));
-  testWidgets('P15a discover, light', (t) => shoot(t, 'P15a-discover-light', phone, Routes.worlds, brightness: Brightness.light));
-  testWidgets('P15b discover, further down', (t) => shoot(t, 'P15b-discover-down', phone, Routes.worlds, act: (tester) => down(tester, 420)));
-  testWidgets('P15c a world of several kinds', (t) => shoot(t, 'P15c-kinds', phone, undersong));
-  testWidgets('P15d the same world, further down', (t) => shoot(t, 'P15d-kinds-down', phone, undersong, act: (tester) => down(tester, 440)));
+  testWidgets('P22d worlds', (t) => shoot(t, 'P22d-worlds', phone, Routes.worlds));
+  testWidgets('P22d worlds, light', (t) => shoot(t, 'P22d-worlds-light', phone, Routes.worlds, brightness: Brightness.light));
+  testWidgets('P22b home, further down', (t) => shoot(t, 'P22b-home-down', phone, Routes.home, act: (tester) => down(tester, 420)));
+  testWidgets('P22h a world of several titles', (t) => shoot(t, 'P22h-titles', phone, undersong));
+  testWidgets('P22j the same world, its people', (t) => shoot(t, 'P22j-people', phone, undersong, act: (tester) => tester.tap(find.text('People'))));
   testWidgets('P15e released a chapter at a time', (t) => shoot(t, 'P15e-chapters', phone, whispers));
   testWidgets('P15e light', (t) => shoot(t, 'P15e-chapters-light', phone, whispers, brightness: Brightness.light));
-  testWidgets('P15g home', (t) => shoot(t, 'P15g-home', phone, Routes.home));
-  testWidgets('P15h library', (t) => shoot(t, 'P15h-library', phone, Routes.library));
+  testWidgets('P22c home, coming back', (t) => shoot(t, 'P22c-home', phone, Routes.home));
+  testWidgets('P22l library', (t) => shoot(t, 'P22l-library', phone, Routes.library));
   testWidgets(
     'P15j notify',
     (t) => shoot(t, 'P15j-notify', phone, Routes.libraryWorld('legend-of-dumah'), act: (tester) => tester.tap(find.byIcon(Icons.more_horiz).first)),
@@ -397,5 +398,5 @@ void main() {
       arriving: {'legend-of-dumah': PartArrival(world: _dumah, part: _dumahPart, step: const Downloading(9000000, 18000000))},
     ),
   );
-  testWidgets('P15l discover on a fold', (t) => shoot(t, 'P15l-discover-fold', fold, Routes.worlds));
+  testWidgets('P22n home on a fold', (t) => shoot(t, 'P22n-home-fold', fold, Routes.home));
 }

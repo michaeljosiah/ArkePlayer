@@ -102,34 +102,9 @@ class ProductionScreen extends ConsumerWidget {
     final first = narration ?? book;
     final now = ref.watch(clockProvider)();
     final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], world.id);
-    final schedule = listed?.productions.where((listed) => listed.id == production.id).firstOrNull?.schedule;
-    // The chapter the next date brings, by the author's numbering: after the last one a part named.
-    final lastNamed = [
-      for (final part in listed?.package?.parts ?? const <CataloguePart>[])
-        if (part.production == production.id) ...part.chapters.map((chapter) => chapter.number),
-    ].fold<int?>(null, (most, number) => most == null || number > most ? number : most);
-    final scheduled = scheduleLine(schedule, now);
-    final next = upcoming(schedule, now);
-    final fresh = newChapters(world, production.id, narration);
-    // The day each chapter that came in a part was released: its part's label.
-    final released = <int, String>{};
-    if (narration != null) {
-      final parts = world.parts.where((part) => part.production == production.id).toList();
-      var index = narration.chapters.length - parts.fold<int>(0, (sum, part) => sum + part.chapters.length);
-      for (final part in parts) {
-        for (final _ in part.chapters) {
-          if (parseDay(part.edition.length >= 10 ? part.edition.substring(0, 10) : part.edition) case final day?) released[index] = shortDate(day);
-          index++;
-        }
-      }
-    }
+    final scheduled = scheduleLine(listed?.productions.where((listed) => listed.id == production.id).firstOrNull?.schedule, now);
 
     void open(LibraryItem item) => context.push(Routes.open(item.id));
-    // The world's music heard here, in album order (R-77), and the chapters that hold a song.
-    final heard = tracksHeardIn(ref.watch(worldMusicProvider(world.id)).value ?? const [], production.id);
-    final songChapters = {for (final song in heard) song.heard.chapter};
-    final engine = ref.watch(audioEngineProvider);
-    final guide = ref.watch(worldGuideProvider(world.id)).value?.guide;
 
     return Scaffold(
       // Its chapters and its music run long: once the hero has gone, a head says whose they are (P17g).
@@ -172,39 +147,7 @@ class ProductionScreen extends ConsumerWidget {
                       ],
                     ),
             ),
-            if (narration != null && (narration.chapters.length > 1 || next != null)) ...[
-              const SectionHead('Chapters'),
-              for (final (i, chapter) in narration.chapters.indexed)
-                _ChapterRow(
-                  number: i + 1,
-                  title: chapter.title,
-                  length: _chapterLength(narration, i),
-                  day: released[i],
-                  song: songChapters.contains(chapter.id),
-                  fresh: fresh.contains(i),
-                  heard: narration.finished || (narration.inProgress && (_chapterAt(narration) ?? 0) > i),
-                  current: _chapterAt(narration) == i && narration.inProgress,
-                  // A chapter is an explicit seek, not a saved-place update that an already
-                  // loaded player can ignore. The engine keeps the selected chapter after seeking.
-                  onOpen: () => context.push(Routes.open(narration.id, startAt: chapter.start)),
-                ),
-              if (next != null)
-                _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
-            ],
-            if (heard.isNotEmpty) ...[
-              CountHead(title: 'Music', count: heard.length),
-              for (final song in heard)
-                SongRow(
-                  title: song.album.tracks[song.track].title,
-                  line: [
-                    if (heardPlace(song.heard, world: world, items: items, guide: guide)?.number case final number?) 'Chapter $number',
-                    if (song.album.document.kind == MusicKind.single) 'Single' else song.album.title,
-                  ].join(' · '),
-                  cover: song.album.cover == null ? null : FileImage(File(song.album.cover!)),
-                  onPlay: engine == null ? null : () => engine.openMusic(song.album, index: song.track),
-                  onOpen: () => context.push(Routes.production(worldLocation, song.album.production.id)),
-                ),
-            ],
+            ProductionContents(world: world, production: production, worldLocation: worldLocation),
             const SizedBox(height: 24),
           ],
         ),
@@ -234,6 +177,87 @@ class ProductionScreen extends ConsumerWidget {
   static Duration? _chapterLength(LibraryItem item, int index) {
     final end = index + 1 < item.chapters.length ? item.chapters[index + 1].start : item.duration;
     return end == null ? null : end - item.chapters[index].start;
+  }
+}
+
+/// A title's Chapters and the world's Music heard in it: on its own page, and on the page of a world
+/// that has only it (P22i, call 44).
+class ProductionContents extends ConsumerWidget {
+  const ProductionContents({required this.world, required this.production, required this.worldLocation, super.key});
+
+  final LibraryWorld world;
+  final LibraryProduction production;
+  final String worldLocation;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = {for (final item in ref.watch(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
+    final narration = items[production.narration];
+    final now = ref.watch(clockProvider)();
+    final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], world.id);
+    final schedule = listed?.productions.where((listed) => listed.id == production.id).firstOrNull?.schedule;
+    // The chapter the next date brings, by the author's numbering: after the last one a part named.
+    final lastNamed = [
+      for (final part in listed?.package?.parts ?? const <CataloguePart>[])
+        if (part.production == production.id) ...part.chapters.map((chapter) => chapter.number),
+    ].fold<int?>(null, (most, number) => most == null || number > most ? number : most);
+    final next = upcoming(schedule, now);
+    final fresh = newChapters(world, production.id, narration);
+    // The day each chapter that came in a part was released: its part's label.
+    final released = <int, String>{};
+    if (narration != null) {
+      final parts = world.parts.where((part) => part.production == production.id).toList();
+      var index = narration.chapters.length - parts.fold<int>(0, (sum, part) => sum + part.chapters.length);
+      for (final part in parts) {
+        for (final _ in part.chapters) {
+          if (parseDay(part.edition.length >= 10 ? part.edition.substring(0, 10) : part.edition) case final day?) released[index] = shortDate(day);
+          index++;
+        }
+      }
+    }
+    // The world's music heard here, in album order (R-77), and the chapters that hold a song.
+    final heard = tracksHeardIn(ref.watch(worldMusicProvider(world.id)).value ?? const [], production.id);
+    final songChapters = {for (final song in heard) song.heard.chapter};
+    final engine = ref.watch(audioEngineProvider);
+    final guide = ref.watch(worldGuideProvider(world.id)).value?.guide;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (narration != null && (narration.chapters.length > 1 || next != null)) ...[
+          const SectionHead('Chapters'),
+          for (final (i, chapter) in narration.chapters.indexed)
+            _ChapterRow(
+              number: i + 1,
+              title: chapter.title,
+              length: ProductionScreen._chapterLength(narration, i),
+              day: released[i],
+              song: songChapters.contains(chapter.id),
+              fresh: fresh.contains(i),
+              heard: narration.finished || (narration.inProgress && (ProductionScreen._chapterAt(narration) ?? 0) > i),
+              current: ProductionScreen._chapterAt(narration) == i && narration.inProgress,
+              // A chapter is an explicit seek, not a saved-place update that an already
+              // loaded player can ignore. The engine keeps the selected chapter after seeking.
+              onOpen: () => context.push(Routes.open(narration.id, startAt: chapter.start)),
+            ),
+          if (next != null)
+            _ChapterRow.soon(number: narration.chapters.length + 1, chapter: (lastNamed ?? narration.chapters.length) + 1, day: shortDate(next)),
+        ],
+        if (heard.isNotEmpty) ...[
+          CountHead(title: 'Music', count: heard.length),
+          for (final song in heard)
+            SongRow(
+              title: song.album.tracks[song.track].title,
+              line: [
+                if (heardPlace(song.heard, world: world, items: items, guide: guide)?.number case final number?) 'Chapter $number',
+                if (song.album.document.kind == MusicKind.single) 'Single' else song.album.title,
+              ].join(' · '),
+              cover: song.album.cover == null ? null : FileImage(File(song.album.cover!)),
+              onPlay: engine == null ? null : () => engine.openMusic(song.album, index: song.track),
+              onOpen: () => context.push(Routes.production(worldLocation, song.album.production.id)),
+            ),
+        ],
+      ],
+    );
   }
 }
 

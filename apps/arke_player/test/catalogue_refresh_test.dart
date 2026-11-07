@@ -5,6 +5,7 @@ import 'package:arke_library/arke_library.dart';
 import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
+import 'package:arke_player/app/shell/adaptive_shell.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_world/arke_world.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+// P13, as P22 rule 7 moved it: Check for updates is a row in You, and what it finds shows in Worlds.
 
 Catalogue _list(String fingerprint) => Catalogue(
   serial: fingerprint == 'old' ? 100 : 101,
@@ -84,10 +87,24 @@ Future<void> _pump(
           data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
           child: child!,
         ),
-        routerConfig: buildRouter(initialLocation: Routes.worlds),
+        routerConfig: buildRouter(initialLocation: Routes.you),
       ),
     ),
   );
+  await tester.pumpAndSettle();
+  await tester.scrollUntilVisible(
+    _row,
+    200,
+    scrollable: find.byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down).first,
+  );
+  await tester.pumpAndSettle();
+}
+
+/// The row in You, under About.
+final _row = find.text('Check for updates');
+
+Future<void> _tab(WidgetTester tester, String label) async {
+  await tester.tap(find.descendant(of: find.byType(TabPill), matching: find.text(label)));
   await tester.pumpAndSettle();
 }
 
@@ -105,83 +122,96 @@ void main() {
     expect((await container.read(catalogueProvider.future)).single.package!.fingerprint, 'new');
   });
 
-  testWidgets('manual check updates cards without restart, disables repeats and re-enables', (tester) async {
+  testWidgets('a check updates Worlds’ cards without a restart, ignores a repeat while it runs, and can run again', (tester) async {
     final hosted = _Hosted()..pending = Completer<Catalogue?>();
     await _pump(tester, hosted);
-    expect(find.text('Update'), findsNothing);
-    await tester.tap(find.byTooltip('Check for updates'));
+    await tester.tap(_row);
     await tester.pump();
-    expect(find.text('Checking for updates'), findsOneWidget);
-    final button = tester.widget<IconButton>(find.byWidgetPredicate((w) => w is IconButton && w.tooltip == 'Check for updates'));
-    expect(button.onPressed, isNull);
-    await tester.tap(find.byTooltip('Check for updates'));
+    expect(find.text('Checking'), findsOneWidget);
+    await tester.tap(_row);
     await tester.pump();
     expect(hosted.calls, [true]);
     hosted.pending!.complete(_list('new'));
     await tester.pumpAndSettle();
     expect(find.text('Checked'), findsOneWidget);
-    expect(find.text('Update'), findsOneWidget);
-    expect(tester.widget<IconButton>(find.byWidgetPredicate((w) => w is IconButton && w.tooltip == 'Check for updates')).onPressed, isNotNull);
-  });
 
-  testWidgets('failure keeps worlds visible and retries immediately', (tester) async {
-    final hosted = _Hosted()..fail = true;
-    await _pump(tester, hosted);
-    await tester.tap(find.byTooltip('Check for updates'));
-    await tester.pumpAndSettle();
-    expect(find.text('Couldn’t check for updates'), findsOneWidget);
-    expect(find.text('The Undersong'), findsOneWidget);
-    expect(find.text('Checked'), findsNothing);
-    hosted.fail = false;
-    await tester.tap(find.byTooltip('Check for updates'));
+    await tester.tap(_row);
     await tester.pumpAndSettle();
     expect(hosted.calls, [true, true]);
+
+    await _tab(tester, 'Worlds');
     expect(find.text('Update'), findsOneWidget);
   });
 
-  testWidgets('manual check waits for startup and survives navigation', (tester) async {
+  testWidgets('before it is pressed the row says nothing, and Worlds shows no Update', (tester) async {
+    final hosted = _Hosted();
+    await _pump(tester, hosted);
+    expect(find.text('Checking'), findsNothing);
+    expect(find.text('Checked'), findsNothing);
+    await _tab(tester, 'Worlds');
+    expect(find.text('Update'), findsNothing);
+  });
+
+  testWidgets('a failure keeps the worlds visible, and it can be tried again at once', (tester) async {
+    final hosted = _Hosted()..fail = true;
+    await _pump(tester, hosted);
+    await tester.tap(_row);
+    await tester.pumpAndSettle();
+    expect(find.text('Couldn’t check'), findsOneWidget);
+    expect(find.text('Checked'), findsNothing);
+    await _tab(tester, 'Worlds');
+    expect(find.text('The Undersong'), findsOneWidget);
+    await _tab(tester, 'You');
+    hosted.fail = false;
+    await tester.tap(_row);
+    await tester.pumpAndSettle();
+    expect(hosted.calls, [true, true]);
+    expect(find.text('Checked'), findsOneWidget);
+    await _tab(tester, 'Worlds');
+    expect(find.text('Update'), findsOneWidget);
+  });
+
+  testWidgets('a check waits for startup’s, and survives navigation', (tester) async {
     final automatic = Completer<void>();
     final hosted = _Hosted()..pending = Completer<Catalogue?>();
     await _pump(tester, hosted, automatic: automatic.future);
-    await tester.tap(find.byTooltip('Check for updates'));
+    await tester.tap(_row);
     await tester.pump();
     expect(hosted.calls, isEmpty);
     automatic.complete();
     await tester.pump();
     expect(hosted.calls, [true]);
-    await tester.tap(find.text('Home').last);
+    await tester.tap(find.descendant(of: find.byType(TabPill), matching: find.text('Home')));
     await tester.pump();
     hosted.pending!.complete(_list('new'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Worlds').last);
-    await tester.pumpAndSettle();
+    await _tab(tester, 'You');
     expect(find.text('Checked'), findsOneWidget);
+    await _tab(tester, 'Worlds');
     expect(find.text('Update'), findsOneWidget);
   });
 
-  testWidgets('keyboard can activate the check', (tester) async {
+  testWidgets('a keyboard can press the row', (tester) async {
     final hosted = _Hosted();
     await _pump(tester, hosted);
-    final buttonContext = tester.element(find.byTooltip('Check for updates'));
-    Focus.of(tester.element(find.byIcon(Icons.refresh))).requestFocus();
+    Focus.of(tester.element(_row)).requestFocus();
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
-    expect(buttonContext.mounted, isTrue);
     expect(hosted.calls, [true]);
   });
 
   for (final size in [const Size(390, 844), const Size(984, 1092), const Size(1440, 900)]) {
     for (final brightness in Brightness.values) {
-      testWidgets('P13 refresh reachable at 200% text, $size $brightness', (tester) async {
+      testWidgets('reachable at 200% text, $size $brightness', (tester) async {
         final hosted = _Hosted()..fail = true;
         await _pump(tester, hosted, size: size, scale: 2, brightness: brightness);
-        final control = find.byTooltip('Check for updates');
+        final control = find.ancestor(of: _row, matching: find.byType(InkWell)).first;
         expect(tester.getSize(control).width, greaterThanOrEqualTo(44));
         expect(tester.getSize(control).height, greaterThanOrEqualTo(44));
         await tester.tap(control);
         await tester.pumpAndSettle();
-        expect(find.text('Couldn’t check for updates'), findsOneWidget);
+        expect(find.text('Couldn’t check'), findsOneWidget);
         expect(tester.takeException(), isNull);
         expect(tester.getRect(control).right, lessThanOrEqualTo(size.width));
       });

@@ -105,7 +105,7 @@ class DownloadsPane extends ConsumerWidget {
                 for (final world in worlds.where((installed) => !updatingIds.contains(installed.id)))
                   _WorldRow(
                     name: world.name,
-                    line: '${productionCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
+                    line: '${titleCount(world.productions.length)} · ${formatBytes(world.byteLength)}',
                     picture: libraryPicture(store, world.keyArt),
                     onOpen: () => context.go(Routes.libraryWorld(world.id)),
                     end: IconButton(

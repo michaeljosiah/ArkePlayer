@@ -291,10 +291,14 @@ class _Row extends StatelessWidget {
               Expanded(
                 child: Text(label, style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase)),
               ),
+              // Flexible: at 200% text `Couldn’t check` is wider than the row has room for.
               if (value != null)
-                Text(
-                  value!,
-                  style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase, color: muted),
+                Flexible(
+                  child: Text(
+                    value!,
+                    textAlign: TextAlign.end,
+                    style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase, color: muted),
+                  ),
                 ),
               if (onTap != null) ...[const SizedBox(width: 6), Icon(Icons.chevron_right, size: 18, color: muted)],
             ],

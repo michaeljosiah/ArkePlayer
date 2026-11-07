@@ -53,7 +53,7 @@ void main() {
     expect(worlds.where((world) => world.adult).map((world) => world.id), ['na-love-or-juju']);
   });
 
-  test('Discover’s feature and band name listed worlds (P16 call 15)', () {
+  test('the feature and the band the list names are listed worlds (P16 call 15)', () {
     final list = parseCatalogue(File('assets/worlds/catalogue.json').readAsStringSync());
     final ids = {for (final world in list.worlds) world.id};
     expect(ids, contains(list.feature?.world));

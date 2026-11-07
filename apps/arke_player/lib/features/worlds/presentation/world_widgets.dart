@@ -11,15 +11,16 @@ import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../parts/application/notices.dart';
 import '../../settings/application/settings_controller.dart';
-import '../../settings/domain/device_settings.dart';
-import '../application/guides.dart';
 import '../application/worlds.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
 const _bg = ArkeColors.mediaOverlayBackground;
 
-/// `1 production`, `3 productions`.
-String productionCount(int count) => count == 1 ? '1 production' : '$count productions';
+/// `1 title`, `3 titles` (P22 rule 16): what a person calls them.
+String titleCount(int count) => count == 1 ? '1 title' : '$count titles';
+
+/// The data words of a kind line, without its lengths and counts: `Audiobook · Book`.
+String kindWords(String kindLine) => kindLine.split(' · ').takeWhile((word) => !word.contains(RegExp(r'\d'))).join(' · ');
 
 /// An edition as the page says it (P12): `20 Oct 2026` for the Studio's dated labels, else the
 /// label as it is.
@@ -85,136 +86,6 @@ extension ListPictures on WidgetRef {
 
   /// A production's Tall cover (P16 call 14): what a poster and a phone's feature show.
   ImageProvider? tallOf(CatalogueProduction? production) => production == null ? null : listPicture(_kept, production.tall, production.tallPin);
-}
-
-/// A world as a card: 358 × 190 in Discover's Worlds and in Library (P15b, P15h), and in a row
-/// the width of the row's tile (P9g, P15g, P15l). While it installs, its meta line is
-/// `Installing · 42%` over a line of progress (P9 rule 4); a world with a newer edition carries
-/// `Update` (P12a), one with a chapter not yet opened `New` (P15h).
-class WorldCard extends StatelessWidget {
-  const WorldCard({
-    required this.name,
-    required this.meta,
-    required this.picture,
-    required this.onOpen,
-    this.mini = false,
-    this.progress,
-    this.tag,
-    this.fresh = false,
-    this.width,
-    super.key,
-  });
-
-  final String name;
-  final String meta;
-  final ImageProvider? picture;
-  final VoidCallback onOpen;
-  final bool mini;
-  final double? progress;
-
-  /// One word in a pill at the card's top left.
-  final String? tag;
-
-  /// `New`, filled, before the tag.
-  final bool fresh;
-
-  /// A card in a row: 240 unless given, 16:9.
-  final double? width;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final card = ClipRRect(
-      borderRadius: BorderRadius.circular(mini ? ArkeRadius.xl : 16),
-      child: SizedBox(
-        width: mini ? (width ?? 240) : double.infinity,
-        height: mini ? (width ?? 240) * 9 / 16 : 190,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (picture != null) Image(image: picture!, fit: BoxFit.cover) else const ColoredBox(color: ArkeColors.neutral800),
-            const _Shade(),
-            if (tag != null || fresh)
-              Positioned(
-                left: 12,
-                top: 12,
-                child: Row(
-                  children: [
-                    if (fresh) const NewTag(onMedia: true),
-                    if (fresh && tag != null) const SizedBox(width: 6),
-                    if (tag != null)
-                      DecoratedBox(
-                        decoration: BoxDecoration(color: _fg.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                          child: Text(
-                            tag!,
-                            style: text.labelMedium?.copyWith(color: _fg, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            Positioned(
-              left: mini ? 12 : 14,
-              right: mini ? 12 : 14,
-              bottom: mini ? 11 : 14,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: (mini ? text.titleMedium : text.titleMedium?.copyWith(fontSize: ArkeType.sizeXl))?.copyWith(color: _fg),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    meta,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.8)),
-                  ),
-                ],
-              ),
-            ),
-            if (progress != null)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 3,
-                child: LinearProgressIndicator(value: progress, backgroundColor: _fg.withValues(alpha: 0.26), color: _fg, minHeight: 3),
-              ),
-          ],
-        ),
-      ),
-    );
-    return Semantics(
-      button: true,
-      label: [name, if (fresh) 'New', ?tag, meta].join(', '),
-      child: ExcludeSemantics(
-        child: GestureDetector(onTap: onOpen, child: card),
-      ),
-    );
-  }
-}
-
-class _Shade extends StatelessWidget {
-  const _Shade();
-
-  @override
-  Widget build(BuildContext context) => const DecoratedBox(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-        colors: [Color(0xE00A0A0A), Color(0x4D0A0A0A), Color(0x000A0A0A)],
-        stops: [0.06, 0.52, 0.74],
-      ),
-    ),
-  );
 }
 
 /// A round glass press on a picture: back, ⋯.
@@ -440,16 +311,17 @@ class HeroSecondPress extends StatelessWidget {
 
 /// Install's progress in its place (P9d): the line, what is happening as data, and Cancel.
 class InstallProgress extends StatelessWidget {
-  const InstallProgress({required this.state, required this.onCancel, super.key});
+  const InstallProgress({required this.state, required this.onCancel, this.top = 20, super.key});
 
   final Installing state;
   final VoidCallback onCancel;
+  final double top;
 
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: EdgeInsets.only(top: top),
       child: SizedBox(
         width: wide ? 320 : double.infinity,
         child: Column(
@@ -781,40 +653,7 @@ Future<void> showInstallRefusal(
   if (again == true) await controller.start(world);
 }
 
-/// A world to install as a card, showing its install while one runs (P9 rule 4). Its characters
-/// count once its guide is on the phone (P11a).
-class AvailableCard extends ConsumerWidget {
-  const AvailableCard({required this.world, required this.onOpen, this.mini = false, this.width, super.key});
-
-  final CatalogueWorld world;
-  final VoidCallback onOpen;
-  final bool mini;
-  final double? width;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(installProvider(world.id));
-    final package = world.package;
-    final card = WorldCard(
-      name: world.name,
-      meta: state is Installing
-          ? state.short
-          : [
-              productionCount(world.productions.length),
-              if (ref.watch(worldGuideProvider(world.id)).value?.guide.characters.length case final count? when count > 0) characterCount(count),
-              if (package != null) formatBytes(package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength)),
-            ].join(' · '),
-      picture: ref.keyArtOf(world),
-      progress: state is Installing ? state.fraction : null,
-      mini: mini,
-      width: width,
-      onOpen: onOpen,
-    );
-    return mini ? card : Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), child: card);
-  }
-}
-
-/// Turns a world's Notify on or off (P15j): the first time it is turned on, the phone asks its
+/// Turns a world's Notify on or off (P22 rule 4): the first time it is turned on, the phone asks its
 /// permission; refused, it stays off.
 Future<void> setNotify(WidgetRef ref, String worldId, bool on) async {
   final settings = ref.read(settingsProvider.notifier);
@@ -822,53 +661,24 @@ Future<void> setNotify(WidgetRef ref, String worldId, bool on) async {
   await settings.change((current) => current.copyWith(notify: on ? {...current.notify, worldId} : ({...current.notify}..remove(worldId))));
 }
 
-/// ⋯ on an installed world (P9 rule 6, P15j): Notify of its new chapters, its edition and space,
-/// then Details and Remove.
+/// ⋯ on an installed world (P9 rule 6): its edition and space, then Details and Remove. Notify is the
+/// bell beside its press (P22 rule 4).
 Future<void> showWorldMenu(BuildContext context, WidgetRef ref, LibraryWorld world) async {
   final choice = await showArkeSheet<String>(
     context,
     title: world.name,
     scrollable: true,
-    builder: (context) => Consumer(
-      builder: (context, ref, _) {
-        final text = Theme.of(context).textTheme;
-        final notify = (ref.watch(settingsProvider).value ?? const DeviceSettings()).notify.contains(world.id);
-        return SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-                child: Text(
-                  'Notify',
-                  style: text.labelSmall?.copyWith(color: context.surface.mutedForeground, fontWeight: FontWeight.w500),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.fromLTRB(14, 2, 8, 2),
-                decoration: BoxDecoration(color: context.surface.secondary, borderRadius: BorderRadius.circular(ArkeRadius.xl)),
-                child: MergeSemantics(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text('New chapters', style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase)),
-                      ),
-                      Switch(value: notify, onChanged: (on) => setNotify(ref, world.id, on)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              GroupRows(rows: [(label: 'Edition', value: editionLabel(world.edition)), (label: 'Space', value: formatBytes(world.byteLength))]),
-              const SizedBox(height: 8),
-              ListTile(leading: const Icon(Icons.info_outline), title: const Text('Details'), onTap: () => Navigator.of(context).pop('details')),
-              ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Remove'), onTap: () => Navigator.of(context).pop('remove')),
-            ],
-          ),
-        );
-      },
+    builder: (context) => SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GroupRows(rows: [(label: 'Edition', value: editionLabel(world.edition)), (label: 'Space', value: formatBytes(world.byteLength))]),
+          const SizedBox(height: 8),
+          ListTile(leading: const Icon(Icons.info_outline), title: const Text('Details'), onTap: () => Navigator.of(context).pop('details')),
+          ListTile(leading: const Icon(Icons.delete_outline), title: const Text('Remove'), onTap: () => Navigator.of(context).pop('remove')),
+        ],
+      ),
     ),
   );
   if (!context.mounted || choice == null) return;
@@ -879,7 +689,7 @@ Future<void> showWorldMenu(BuildContext context, WidgetRef ref, LibraryWorld wor
       builder: (context) {
         final text = Theme.of(context).textTheme;
         final muted = context.surface.mutedForeground;
-        final installed = world.installedAt.toLocal();
+        final added = world.installedAt.toLocal();
         Widget row(String label, String value) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
@@ -898,9 +708,9 @@ Future<void> showWorldMenu(BuildContext context, WidgetRef ref, LibraryWorld wor
           children: [
             row('Name', world.name),
             row('Edition', world.edition),
-            row('Productions', '${world.productions.length}'),
+            row('Titles', '${world.productions.length}'),
             row('Size', formatBytes(world.byteLength)),
-            row('Installed', '${installed.day} ${_months[installed.month - 1]} ${installed.year}'),
+            row('Added', '${added.day} ${_months[added.month - 1]} ${added.year}'),
           ],
         );
       },

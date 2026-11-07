@@ -12,6 +12,8 @@ import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/features/worlds/application/guides.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_player/features/worlds/presentation/guide_widgets.dart';
+import 'package:arke_player/features/worlds/presentation/row_widgets.dart';
+import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -30,10 +32,6 @@ Map<String, WorldAsset> _assets() => {
 
 final _guide = (readGuide(_fixture('valid.json'), _assets()) as GuideOk).guide;
 
-/// Scrolls the page until [target] is in view: under Discover's feature (P16a), Worlds is further
-/// down.
-Future<void> _down(WidgetTester tester, Finder target) =>
-    tester.scrollUntilVisible(target, 300, scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
 const _ledger = 'the-ledger-of-nights';
 
 final _undersong = CatalogueWorld(
@@ -138,51 +136,117 @@ List<int> _package({List<int>? book}) {
 void main() {
   final world = Routes.worldsWorld('undersong');
 
-  group('Discover (P11a, as P15 rule 1 amends it)', () {
-    testWidgets('is the second of five tabs', (tester) async {
+  group('Worlds (P11a, P22d)', () {
+    testWidgets('is the second of four tabs', (tester) async {
       await _pump(tester, location: Routes.worlds, guide: _guide);
       expect(TabPill.labels, ['Home', 'Worlds', 'Library', 'You']);
       expect(tester.widget<TabPill>(find.byType(TabPill)).selected, 1);
     });
-    testWidgets('an installed world stays, In Library counting the productions and the characters', (tester) async {
+    testWidgets('a world that is here stays, its card counting its titles and its characters', (tester) async {
       await _pump(tester, location: Routes.worlds, guide: _guide);
-      await _down(tester, find.text('In Library · 1 production · 3 characters'));
-      expect(find.text('In Library · 1 production · 3 characters'), findsOneWidget);
+      expect(find.text('1 title · 3 characters'), findsOneWidget);
+      expect(find.textContaining('In Library'), findsNothing);
       expect(find.text('Available'), findsNothing);
     });
-    testWidgets('Available adds the size, and the characters once the guide is here', (tester) async {
+    testWidgets('one not here reads the same, with no size, the characters once the guide is here', (tester) async {
       await _pump(tester, location: Routes.worlds, installed: false, guide: _guide);
-      await _down(tester, find.text('1 production · 3 characters · 386 MB'));
-      expect(find.text('1 production · 3 characters · 386 MB'), findsOneWidget);
+      expect(find.text('1 title · 3 characters'), findsOneWidget);
+      expect(find.textContaining('MB'), findsNothing);
+    });
+    testWidgets('with no guide on the phone, its titles alone', (tester) async {
+      await _pump(tester, location: Routes.worlds, installed: false);
+      expect(find.text('1 title'), findsOneWidget);
     });
   });
 
-  group('a world\'s guide on its page (P11b, P11c)', () {
-    testWidgets('Characters, Places and Lore, each with its count; what waits for a chapter after what shows', (tester) async {
+  group('a world\'s guide on its page (P11b, P11c, P22j, P22k)', () {
+    // The tabs scroll across when they run past the page.
+    Future<void> tab(WidgetTester tester, String label) async {
+      await tester.ensureVisible(find.text(label).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label).first);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Story, People, Places and Lore, each counted; nothing of them shows until its tab is pressed', (tester) async {
       await _pump(tester, location: world, guide: _guide);
-      await tester.scrollUntilVisible(find.text('Lore'), 300, scrollable: find.byType(Scrollable).last);
-      expect(find.text('Characters'), findsOneWidget);
-      expect(find.text('Maren Kest'), findsOneWidget);
-      expect(find.text('Places'), findsOneWidget);
-      expect(find.text('The Vigil'), findsOneWidget);
-      // The Chorister and the drowning of the god wait for chapter 6.
+      expect(find.bySemanticsLabel('Story'), findsOneWidget);
+      expect(find.bySemanticsLabel('People 3'), findsOneWidget);
+      expect(find.bySemanticsLabel('Places 1'), findsOneWidget);
+      expect(find.bySemanticsLabel('Lore 2'), findsOneWidget);
+      expect(find.text('Maren Kest'), findsNothing);
+      expect(find.text('The Vigil'), findsNothing);
+      expect(find.byType(LoreRow), findsNothing);
+    });
+    testWidgets('an empty tab is absent: a guide of characters alone has Story and People', (tester) async {
+      final guide = Guide(productions: _guide.productions, characters: _guide.characters, places: const [], lore: const []);
+      await _pump(tester, location: world, guide: guide);
+      expect(find.text('Story'), findsOneWidget);
+      expect(find.text('People'), findsOneWidget);
+      expect(find.text('Places'), findsNothing);
+      expect(find.text('Lore'), findsNothing);
+    });
+    testWidgets('a world with no guide, or one never fetched offline, has no tabs but Story (R-22)', (tester) async {
+      await _pump(tester, location: world, installed: false);
+      expect(find.text('Story'), findsOneWidget);
+      expect(find.text('People'), findsNothing);
+      expect(find.text('Places'), findsNothing);
+      expect(find.text('Lore'), findsNothing);
+      expect(find.text('The Ledger of Nights'), findsOneWidget);
+    });
+    testWidgets('People: portraits, three across, what waits for a chapter after what shows (P22j)', (tester) async {
+      await _pump(tester, location: world, guide: _guide);
+      await tab(tester, 'People');
+      expect(find.ancestor(of: find.text('Maren Kest'), matching: find.byType(PosterTile)), findsOneWidget);
+      expect(tester.getTopLeft(find.text('Bray Half-Hitch')).dy, tester.getTopLeft(find.text('Maren Kest')).dy);
+      expect(find.text('Tide-caller'), findsOneWidget);
+      // The Chorister waits for chapter 6: its chapter in its place, never its name.
       expect(find.text('The Chorister'), findsNothing);
-      expect(find.text('After Chapter 6'), findsNWidgets(2));
+      final gated = find.byType(GatedCard);
+      expect(find.descendant(of: gated, matching: find.text('After Chapter 6')), findsOneWidget);
+      expect(tester.getTopLeft(gated).dx, greaterThan(tester.getTopLeft(find.text('Bray Half-Hitch')).dx));
+    });
+    testWidgets('a portrait opens its entry, and one that waits asks Reveal', (tester) async {
+      await _pump(tester, location: world, guide: _guide);
+      await tab(tester, 'People');
+      await tester.tap(find.byType(GatedCard));
+      await tester.pumpAndSettle();
       expect(find.text('Reveal'), findsOneWidget);
+      expect(find.text('Not now'), findsOneWidget);
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Maren Kest'));
+      await tester.pumpAndSettle();
+      expect(find.text('Tide-caller · The Undersong'), findsOneWidget);
+    });
+    testWidgets('Places: wide tiles, one across on a phone (P22k)', (tester) async {
+      await _pump(tester, location: world, guide: _guide);
+      await tab(tester, 'Places');
+      final tile = find.ancestor(of: find.text('The Vigil'), matching: find.byType(ProductionTile));
+      expect(tester.getSize(tile).width, 358);
+      expect(find.descendant(of: tile, matching: find.text('Place')), findsOneWidget);
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(find.text('Place · The Undersong'), findsOneWidget);
+    });
+    testWidgets('Lore: All and the kinds present; a chip keeps its kind (P11f)', (tester) async {
+      await _pump(tester, location: world, guide: _guide);
+      await tab(tester, 'Lore');
+      expect(find.text('All'), findsOneWidget);
+      expect(find.text('Rules'), findsNothing);
+      expect(find.byType(LoreRow), findsOneWidget);
+      expect(find.text('After Chapter 6'), findsOneWidget);
+      expect(find.text('Reveal'), findsOneWidget);
+      await tester.tap(find.text('Timeline'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoreRow), findsNothing);
+      expect(find.text('After Chapter 6'), findsOneWidget);
     });
     testWidgets('before install, from the guide alone (R-10)', (tester) async {
       await _pump(tester, location: world, installed: false, guide: _guide);
-      expect(find.textContaining('Install'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('Characters'), 300, scrollable: find.byType(Scrollable).last);
-      expect(find.text('Characters'), findsOneWidget);
-    });
-    testWidgets('a world with no guide, or one never fetched offline, draws none (R-22)', (tester) async {
-      await _pump(tester, location: world, installed: false);
-      await tester.scrollUntilVisible(find.text('Space'), 300, scrollable: find.byType(Scrollable).last);
-      await tester.drag(find.byType(Scrollable).last, const Offset(0, -600));
-      await tester.pumpAndSettle();
-      expect(find.text('Characters'), findsNothing);
-      expect(find.text('Lore'), findsNothing);
+      expect(find.text('Start · 386 MB', findRichText: true), findsOneWidget);
+      await tab(tester, 'People');
+      expect(find.text('Maren Kest'), findsOneWidget);
     });
     testWidgets('a chapter reached shows what waited for it', (tester) async {
       await _pump(
@@ -191,9 +255,20 @@ void main() {
         guide: _guide,
         reach: const GuideReach(reached: {_ledger: (at: 6, through: 6)}),
       );
-      await tester.scrollUntilVisible(find.text('Lore'), 300, scrollable: find.byType(Scrollable).last);
+      await tab(tester, 'People');
       expect(find.text('The Chorister'), findsOneWidget);
       expect(find.text('After Chapter 6'), findsNothing);
+      await tab(tester, 'Lore');
+      expect(find.text('The drowning of the god'), findsOneWidget);
+      expect(find.text('After Chapter 6'), findsNothing);
+    });
+    testWidgets('Story comes back from another tab', (tester) async {
+      await _pump(tester, location: world, guide: _guide, installed: false);
+      await tab(tester, 'People');
+      expect(find.text('The Ledger of Nights'), findsNothing);
+      await tab(tester, 'Story');
+      expect(find.text('The Ledger of Nights'), findsOneWidget);
+      expect(find.text('Maren Kest'), findsNothing);
     });
   });
 
@@ -308,7 +383,6 @@ void main() {
   group('text at 200% clips nothing', () {
     for (final (name, location) in [
       ('Worlds', Routes.worlds),
-      ('the world\'s guide', world),
       ('a character', Routes.guideEntry(world, 'maren-kest')),
       ('a place', Routes.guideEntry(world, 'the-vigil')),
       ('lore', Routes.lore(world)),
@@ -319,10 +393,18 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
-    testWidgets('the guide on a Fold (P11i)', (tester) async {
-      await _pump(tester, location: world, guide: _guide, size: const Size(984, 1092), textScale: 2);
-      expect(tester.takeException(), isNull);
-    });
+    for (final (name, size) in [('a phone', const Size(390, 844)), ('a Fold (P22o)', const Size(984, 1092))]) {
+      testWidgets('a world\'s tabs on $name', (tester) async {
+        await _pump(tester, location: world, guide: _guide, size: size, textScale: 2);
+        for (final label in ['People', 'Places', 'Lore', 'Story']) {
+          await tester.ensureVisible(find.text(label).first);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text(label).first);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: label);
+        }
+      });
+    }
   });
 
   group('the guide read from this phone (R-18, R-21)', () {

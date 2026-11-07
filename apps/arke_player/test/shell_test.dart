@@ -5,7 +5,10 @@ import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/shell/adaptive_shell.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
 import 'package:arke_player/app/widgets/shelf.dart';
+import 'package:arke_player/features/home/presentation/home_screen.dart';
+import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_publication/arke_publication.dart';
+import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +19,11 @@ Future<void> _pumpAt(WidgetTester tester, Size size, {String location = Routes.h
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [libraryItemsProvider.overrideWith((ref) => Stream.value(items))],
+      overrides: [
+        libraryItemsProvider.overrideWith((ref) => Stream.value(items)),
+        // No list: Home's covers have their own tests, and these are the shell's.
+        catalogueProvider.overrideWith((ref) async => const <CatalogueWorld>[]),
+      ],
       child: MaterialApp.router(
         theme: arkeTheme(Brightness.light),
         routerConfig: buildRouter(initialLocation: location),
@@ -58,7 +65,7 @@ void main() {
   });
 
   testWidgets('a Fold7 open has the pill too, 520 wide, and no rail: the page takes the width (P16j)', (tester) async {
-    await _pumpAt(tester, const Size(984, 1092));
+    await _pumpAt(tester, const Size(984, 1092), location: Routes.you);
     expect(find.byType(NavigationRail), findsNothing);
     expect(tester.getSize(find.byType(TabPill)).width, 520);
     expect(tester.getTopLeft(find.byType(ShelfHeader)).dx, 0);
@@ -74,11 +81,11 @@ void main() {
 
   testWidgets('a page’s last row clears the pill: the page is given its room at the foot (P16 rule 9)', (tester) async {
     await _pumpAt(tester, const Size(390, 844));
-    final page = tester.element(find.byType(ShelfHeader));
+    final page = tester.element(find.byType(HomeScreen));
     expect(MediaQuery.paddingOf(page).bottom, 12 + 64 + 12);
   });
 
-  testWidgets('nothing added: the state line and Add a file, no account anywhere (P8b, P8 rule 1)', (tester) async {
+  testWidgets('with no list and nothing going: the state line and Add a file, no account anywhere (P22 rule 1, P8 rule 1)', (tester) async {
     await _pumpAt(tester, const Size(390, 844));
     expect(find.text('Nothing added'), findsOneWidget);
     expect(find.text('Add a file'), findsOneWidget);
@@ -129,7 +136,7 @@ void main() {
     });
   });
 
-  testWidgets('Home with files: Continue, then Added (P8d)', (tester) async {
+  testWidgets('Home with files: Continue, and Added has left for Library (P22 rule 5)', (tester) async {
     final items = [
       _item(
         'a',
@@ -140,8 +147,13 @@ void main() {
     ];
     await _pumpAt(tester, const Size(390, 844), items: items);
     expect(find.text('Continue'), findsOneWidget);
-    expect(find.text('Added'), findsOneWidget);
+    expect(find.text('Added'), findsNothing);
     expect(find.text('Nothing added'), findsNothing);
+    await tester.tap(find.descendant(of: find.byType(TabPill), matching: find.text('Library')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Files'));
+    await tester.pumpAndSettle();
+    expect(find.text('Title b'), findsOneWidget);
   });
 
   testWidgets('Library’s files are under Files, whatever their kinds (P22l)', (tester) async {
@@ -179,7 +191,7 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
-    testWidgets('Home with nothing added', (tester) async {
+    testWidgets('Home with no list and nothing going', (tester) async {
       await _pumpAt(tester, const Size(390, 844), textScale: 2);
       expect(find.text('Add a file'), findsOneWidget);
     });

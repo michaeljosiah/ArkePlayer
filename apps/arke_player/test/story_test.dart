@@ -1,7 +1,9 @@
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/features/players/presentation/chrome.dart';
 import 'package:arke_player/features/stories/application/stories.dart';
+import 'package:arke_player/features/stories/presentation/story_player_screen.dart';
 import 'package:arke_player/features/stories/presentation/story_widgets.dart';
+import 'package:arke_player/features/worlds/presentation/row_widgets.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,14 +38,30 @@ void main() {
   List<ChoiceCard> cards(WidgetTester tester) => tester.widgetList<ChoiceCard>(find.byType(ChoiceCard)).toList();
 
   group('installing and Update app (R-82, R-83)', () {
-    testWidgets('an installed story sits under Play with its kind line, and opens its page', (tester) async {
+    testWidgets('an installed story sits in Story’s row with its kind line, and opens its page (P22 rule 12)', (tester) async {
       await pumpStories(tester, world, stories: stories);
-      expect(find.text('Play'), findsWidgets);
       expect(find.text('Interactive movie · 6 scenes'), findsNWidgets(2));
       expect(find.text('Visual novel · 5 scenes'), findsOneWidget);
+      await tester.ensureVisible(find.text('Low Water'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Low Water'));
       await tester.pumpAndSettle();
       expect(find.text('Interactive movie · The Undersong · 6 scenes'), findsOneWidget);
+    });
+
+    // P22 rule 12 and P16 rule 1: Story's row is posters, one shape, whether a title is here or not.
+    testWidgets('an installed story in Story’s row is a poster', (tester) async {
+      await pumpStories(tester, world, stories: stories);
+      expect(find.ancestor(of: find.text('Low Water'), matching: find.byType(PosterTile)), findsOneWidget);
+    });
+
+    testWidgets('a world’s press plays the story the list names, in its own player (P22 rule 3, call 39)', (tester) async {
+      final listed = listedStoryWorld([(lowWaterId, 'Low Water', 'Interactive movie · 6 scenes', 1)]);
+      final named = CatalogueWorld(id: listed.id, name: listed.name, start: lowWaterId, productions: listed.productions, package: listed.package);
+      await pumpStories(tester, world, stories: stories, listed: named, saves: saved(lowStory, saveAt(lowWater, const [])));
+      await tester.tap(find.text('Play'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<StoryPlayerScreen>(find.byType(StoryPlayerScreen)).productionId, lowWaterId);
     });
 
     testWidgets('a story whose version this Player does not read shows Update app, and opens nothing', (tester) async {
@@ -53,6 +71,8 @@ void main() {
       ]);
       await pumpStories(tester, world, stories: [lowStory], listed: listed);
       expect(find.text('Update app'), findsOneWidget);
+      await tester.ensureVisible(find.text('First Contact'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('First Contact'));
       await tester.pumpAndSettle();
       expect(find.text('Update app'), findsOneWidget, reason: 'the tile opens nothing');

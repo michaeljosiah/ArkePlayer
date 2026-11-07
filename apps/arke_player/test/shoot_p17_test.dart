@@ -1,4 +1,4 @@
-// Renders P17's screens — a world's Music, Discover's row and song teaser, an album's page, a song
+// Renders P17's screens — a world's Music, Home's row and song teaser, an album's page, a song
 // playing and its lyrics, a character's Theme and a story's music — over The Undersong and its
 // music, and saves PNGs to compare with the design's frames (P17a – P17h). Not a gate, like
 // shoot_test.dart, so it runs only when asked:
@@ -136,12 +136,12 @@ void main() {
       );
       // Stories ending, then Music, then the Teasers with the song first (P17b).
       testWidgets(
-        'P17b Discover$suffix',
+        'P17b Home$suffix',
         (t) => shoot(
           t,
-          'P17b-discover$suffix',
+          'P17b-home$suffix',
           size,
-          Routes.worlds,
+          Routes.home,
           brightness: brightness,
           act: (tester) => bring(tester, find.text('Music'), alignment: where.isEmpty ? 0.3 : 0.2),
         ),

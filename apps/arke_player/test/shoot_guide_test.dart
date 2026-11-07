@@ -315,18 +315,17 @@ void main() {
   const phone = Size(390, 844);
   const fold = Size(984, 1092);
   final world = Routes.worldsWorld('undersong');
-  Future<void> toGuide(WidgetTester tester) => tester.scrollUntilVisible(find.text('Characters'), 400, scrollable: find.byType(Scrollable).last);
-  Future<void> scrolled(WidgetTester tester) async {
-    await toGuide(tester);
-    await tester.drag(find.byType(Scrollable).last, const Offset(0, -300));
-  }
+  Future<void> Function(WidgetTester tester) tab(String label) =>
+      (tester) => tester.tap(find.text(label).first);
 
-  testWidgets('P11a worlds', (t) => shoot(t, 'P11a-worlds', phone, Routes.worlds));
-  testWidgets('P11a worlds, light', (t) => shoot(t, 'P11a-worlds-light', phone, Routes.worlds, brightness: Brightness.light));
-  testWidgets('P11b before install', (t) => shoot(t, 'P11b-before-install', phone, world, isInstalled: false));
-  testWidgets('P11b before install, its guide', (t) => shoot(t, 'P11b-before-install-guide', phone, world, isInstalled: false, act: scrolled));
-  testWidgets('P11c installed, its guide', (t) => shoot(t, 'P11c-installed-guide', phone, world, act: scrolled));
-  testWidgets('P11c installed, light', (t) => shoot(t, 'P11c-installed-guide-light', phone, world, act: scrolled, brightness: Brightness.light));
+  testWidgets('P22d worlds', (t) => shoot(t, 'P22d-worlds-guide', phone, Routes.worlds));
+  testWidgets('P22d worlds, light', (t) => shoot(t, 'P22d-worlds-guide-light', phone, Routes.worlds, brightness: Brightness.light));
+  testWidgets('P22h before it is here', (t) => shoot(t, 'P22h-before', phone, world, isInstalled: false));
+  testWidgets('P22j before it is here, its people', (t) => shoot(t, 'P22j-before', phone, world, isInstalled: false, act: tab('People')));
+  testWidgets('P22j here, its people', (t) => shoot(t, 'P22j-here', phone, world, act: tab('People')));
+  testWidgets('P22j here, light', (t) => shoot(t, 'P22j-here-light', phone, world, act: tab('People'), brightness: Brightness.light));
+  testWidgets('P22k its places', (t) => shoot(t, 'P22k-places', phone, world, act: tab('Places')));
+  testWidgets('its lore', (t) => shoot(t, 'P22-lore', phone, world, act: tab('Lore')));
   testWidgets('P11d a character', (t) => shoot(t, 'P11d-character', phone, Routes.guideEntry(world, 'maren-kest')));
   testWidgets('P11d a character, light', (t) => shoot(t, 'P11d-character-light', phone, Routes.guideEntry(world, 'maren-kest'), brightness: Brightness.light));
   testWidgets('P11e a place', (t) => shoot(t, 'P11e-place', phone, Routes.guideEntry(world, 'the-vigil')));
@@ -336,5 +335,5 @@ void main() {
     'P11h reveal',
     (t) => shoot(t, 'P11h-reveal', phone, Routes.guideEntry(world, 'maren-kest'), act: (tester) => tester.tap(find.text('Reveal').first)),
   );
-  testWidgets('P11i on a fold', (t) => shoot(t, 'P11i-fold', fold, world, act: toGuide));
+  testWidgets('P22o its people on a fold', (t) => shoot(t, 'P22o-fold', fold, world, act: tab('People')));
 }

@@ -12,6 +12,7 @@ import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/world_screen.dart';
+import '../../worlds/presentation/world_shelf.dart';
 import '../../worlds/presentation/world_widgets.dart';
 import '../application/comics.dart';
 
@@ -118,9 +119,12 @@ class ComicProductionScreen extends ConsumerWidget {
         icon: Icons.download_rounded,
         label: 'Get',
         detail: formatBytes(bytes),
-        onPressed: () => world != null
-            ? ref.read(productionInstallProvider(key).notifier).start(inList, inListProduction!)
-            : ref.read(installProvider(inList.id).notifier).start(inList),
+        onPressed: () async {
+          if (!await mayOpen(context, ref, inList, press: 'Get') || !context.mounted) return;
+          await (world != null
+              ? ref.read(productionInstallProvider(key).notifier).start(inList, inListProduction!)
+              : ref.read(installProvider(inList.id).notifier).start(inList));
+        },
       );
     } else {
       press = const SizedBox.shrink();
