@@ -98,7 +98,10 @@ class ComicProductionScreen extends ConsumerWidget {
               icon: Icons.download_rounded,
               label: 'Update',
               detail: formatBytes(update.alone!.byteLength),
-              onPressed: () => ref.read(productionInstallProvider(key).notifier).start(inList, update),
+              onPressed: () async {
+                if (!await mayOpen(context, ref, inList, press: 'Update') || !context.mounted) return;
+                await ref.read(productionInstallProvider(key).notifier).start(inList, update);
+              },
             ),
             _ => const SizedBox.shrink(),
           },

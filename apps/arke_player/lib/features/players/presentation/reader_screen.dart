@@ -61,6 +61,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final colours = _papers[settings.readerPaper]!;
     final muted = colours.ink.withValues(alpha: 0.55);
     final location = _location;
+    // Two columns on a tablet sideways, one upright (P27l); anywhere else as it opens by its width.
+    final size = MediaQuery.sizeOf(context);
+    final spread = size.width >= WindowBands.wide
+        ? EpubSpread.always
+        : size.width >= WindowBands.fold && size.width / size.height < 0.8
+        ? EpubSpread.none
+        : EpubSpread.auto;
     return Scaffold(
       backgroundColor: colours.background,
       body: SafeArea(
@@ -104,11 +111,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             ),
             Expanded(
               child: EpubViewer(
+                // The spread is only read as the book opens, so turning it opens it again, at the place.
+                key: ValueKey(spread),
                 epubController: _controller,
                 epubSource: EpubSource.fromFile(File(widget.store.resolve(widget.item.file))),
-                initialCfi: widget.item.finished ? null : widget.item.place?.locator,
+                initialCfi: _location?.startCfi ?? (widget.item.finished ? null : widget.item.place?.locator),
                 displaySettings: EpubDisplaySettings(
                   flow: EpubFlow.paginated,
+                  spread: spread,
                   snap: true,
                   fontSize: (_baseSize * settings.readerScale).round(),
                   theme: _theme(settings.readerPaper),

@@ -37,6 +37,9 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
 
   final AudioPlayer _player;
 
+  /// A seek across chapters, until the player has its index.
+  ({int index, Duration to})? _seeking;
+
   LibraryItem? _item;
   ListeningPlan? _plan;
   MusicAlbum? _music;
@@ -66,6 +69,10 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
   Stream<LoopMode> get repeatStream => _player.loopModeStream;
   Stream<Duration> get position => _player.positionStream.map(_book);
   Stream<bool> get playingStream => _player.playingStream;
+
+  /// It has played to its very end. A narration's chapters can run a little short of what its document
+  /// says, so its position alone never quite gets there.
+  Stream<void> get finished => _player.processingStateStream.where((state) => state == ProcessingState.completed).map((_) {});
   bool get playing => _player.playing;
   Duration get now => _book(_player.position);
   Duration get length => _music?.length ?? _plan?.document.duration ?? _player.duration ?? _item?.duration ?? Duration.zero;
@@ -76,6 +83,13 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
   Duration _book(Duration local) {
     final starts = _music?.starts ?? _plan?.starts;
     if (starts == null) return local;
+    // just_audio reports a seek's new position before its new index, which on this clock is somewhere
+    // else entirely: pages run there and back, and a place could be kept there. Until it has the index,
+    // the clock says where it is going.
+    if (_seeking case final seeking?) {
+      if (_player.currentIndex != seeking.index) return seeking.to;
+      _seeking = null;
+    }
     final index = (_player.currentIndex ?? 0).clamp(0, starts.length - 1);
     return starts[index] + local;
   }
@@ -176,6 +190,7 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     _item = item;
     _plan = plan;
     _music = null;
+    _seeking = null;
     _keep = keep;
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.speech());
@@ -240,7 +255,10 @@ class AudioEngine extends BaseAudioHandler with SeekHandler {
     final plan = _plan;
     if (plan == null) return _player.seek(position);
     final (index, offset) = plan.locate(position);
-    return _player.seek(offset, index: index);
+    // End of chapter means the one you chose to be in: moving is not reaching its end.
+    if (_sleepChapter != null) _sleepChapter = index;
+    _seeking = (index: index, to: position);
+    return _player.seek(offset, index: index).catchError((Object _) => _seeking = null);
   }
 
   @override

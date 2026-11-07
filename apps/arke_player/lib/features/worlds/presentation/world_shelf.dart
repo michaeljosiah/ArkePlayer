@@ -76,6 +76,63 @@ class BlurOf extends StatelessWidget {
   );
 }
 
+/// The left of a page on a tablet sideways (P26h, P26n): its picture melting into its own blur, and what
+/// must never leave the screen. What the page holds scrolls beside it.
+class WorldPane extends StatelessWidget {
+  const WorldPane({required this.picture, required this.child, this.pictureAlignment = const Alignment(0.2, 0), this.onMore, super.key});
+
+  final ImageProvider? picture;
+  final Widget child;
+  final Alignment pictureAlignment;
+  final VoidCallback? onMore;
+
+  static const width = 460.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    return ColoredBox(
+      color: _bg,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (picture != null) BlurOf(picture: picture!),
+          if (picture != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              height: 470,
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.52, 1],
+                  colors: [Colors.black, Colors.transparent],
+                ).createShader(bounds),
+                child: Image(image: picture!, fit: BoxFit.cover, alignment: pictureAlignment, errorBuilder: (context, error, stack) => const SizedBox.shrink()),
+              ),
+            ),
+          SingleChildScrollView(padding: const EdgeInsets.fromLTRB(24, 330, 24, 24), child: child),
+          Positioned(
+            left: 12,
+            right: 12,
+            top: top + 8,
+            child: Row(
+              children: [
+                if (context.canPop()) GlassPress(icon: Icons.chevron_left_rounded, label: 'Back', onPressed: () => context.pop()),
+                const Spacer(),
+                if (onMore != null) GlassPress(icon: Icons.more_horiz, label: 'More', onPressed: onMore!),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// A world's age (P22 rule 9, call 42), from Arke's list: a small outlined mark, in the ink it sits on.
 class AgeTag extends StatelessWidget {
   const AgeTag(this.age, {this.color, super.key});
@@ -162,27 +219,37 @@ class WorldFaces extends ConsumerWidget {
 
 /// The world's Notify (P22 rule 4), brought forward from ⋯: round beside the press, filled when on.
 class NotifyBell extends ConsumerWidget {
-  const NotifyBell({required this.worldId, this.size = ArkeSizes.widePress, super.key});
+  const NotifyBell({required this.worldId, this.size = ArkeSizes.widePress, this.onMedia = true, super.key});
 
   final String worldId;
   final double size;
 
+  /// On a picture or its blur. Off them, as under Continue, it takes the theme's colours.
+  final bool onMedia;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final on = (ref.watch(settingsProvider).value ?? const DeviceSettings()).notify.contains(worldId);
+    final fg = onMedia ? _fg : context.surface.foreground;
+    final bg = onMedia ? _bg : context.surface.background;
     return Semantics(
       button: true,
       toggled: on,
       label: 'Notify',
       child: ExcludeSemantics(
-        child: InkWell(
-          onTap: () => setNotify(ref, worldId, !on),
-          customBorder: const CircleBorder(),
-          child: Ink(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: on ? _fg : _fg.withValues(alpha: 0.16)),
-            child: Icon(on ? Icons.notifications_rounded : Icons.notifications_none_rounded, size: 22, color: on ? _bg : _fg),
+        // Its own Material: an Ink paints on the nearest one, and the Scaffold's lies under an opaque
+        // page, which is where its circle went.
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: () => setNotify(ref, worldId, !on),
+            customBorder: const CircleBorder(),
+            child: Ink(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: on ? fg : fg.withValues(alpha: 0.16)),
+              child: Icon(on ? Icons.notifications_rounded : Icons.notifications_none_rounded, size: 22, color: on ? bg : fg),
+            ),
           ),
         ),
       ),
@@ -207,6 +274,9 @@ class WorldStart {
   final String? where;
 
   bool get read => first != null && production.narration == null;
+
+  /// Begun, whether or not it can say where: a book's place is a position in its text.
+  bool get begun => first?.inProgress ?? false;
 }
 
 /// The production a world's press opens: the list's start, else the place kept most lately, else the
@@ -214,13 +284,13 @@ class WorldStart {
 WorldStart? worldStart(LibraryWorld world, CatalogueWorld? listed, Map<String, LibraryItem> items) {
   final stories = world.productions.where((production) => production.music == null).toList();
   if (stories.isEmpty) return null;
-  LibraryItem? firstOf(LibraryProduction production) => items[production.narration] ?? items[production.book];
+  LibraryItem? firstOf(LibraryProduction production) => items[production.narration] ?? bookNow(production, items);
   final going = stories.map((production) => (production, firstOf(production))).where((pair) => pair.$2?.inProgress ?? false).toList()
     ..sort((a, b) => b.$2!.place!.updatedAt.compareTo(a.$2!.place!.updatedAt));
   final named = listed?.startsAt == null ? null : stories.where((production) => production.id == listed!.startsAt!.id).firstOrNull;
   final production = going.firstOrNull?.$1 ?? named ?? stories.first;
   final first = firstOf(production);
-  return WorldStart(production: production, first: first, book: production.narration == null ? null : items[production.book], where: _whereIn(first));
+  return WorldStart(production: production, first: first, book: production.narration == null ? null : bookNow(production, items), where: _whereIn(first));
 }
 
 String? _whereIn(LibraryItem? item) {
@@ -248,16 +318,19 @@ int worldBytes(CatalogueWorld world) =>
     (world.package?.parts ?? const <CataloguePart>[]).fold<int>(0, (sum, part) => sum + part.byteLength) +
     world.productions.fold<int>(0, (sum, production) => sum + (production.alone?.byteLength ?? 0));
 
-/// Opens a world's title in its player.
-void openStart(BuildContext context, LibraryWorld world, WorldStart start) {
+/// A song played from where it is listed: no player's route opens for it, so nothing else would ask.
+Future<void> playSong(BuildContext context, WidgetRef ref, String worldId, VoidCallback play) async {
+  final listed = listedFor(ref.read(catalogueProvider).value ?? const [], worldId);
+  if (await mayOpen(context, ref, listed, press: 'Play') && context.mounted) play();
+}
+
+/// The route of a world's title in its player.
+String? startRoute(LibraryWorld world, WorldStart start) {
   final production = start.production;
-  if (start.first case final item?) {
-    context.push(Routes.open(item.id));
-  } else if (production.story != null) {
-    context.push(Routes.story(world.id, production.id));
-  } else if (production.comic != null) {
-    context.push(Routes.comic(world.id, production.id));
-  }
+  if (start.first case final item?) return Routes.open(item.id);
+  if (production.story != null) return Routes.story(world.id, production.id);
+  if (production.comic != null) return Routes.comic(world.id, production.id);
+  return null;
 }
 
 /// A world's one press (P22 rule 3, call 39), wherever it shows: `Start · 1.1 GB` before it is here,
@@ -265,7 +338,7 @@ void openStart(BuildContext context, LibraryWorld world, WorldStart start) {
 /// `Continue · Chapter 3` once begun, with Read beside a narration's book. With no connection, it says
 /// so and asks nothing (P25h). The bell sits at its end.
 class WorldPress extends ConsumerWidget {
-  const WorldPress({required this.worldId, this.top = 10, this.bell = true, this.hug = false, super.key});
+  const WorldPress({required this.worldId, this.top = 10, this.bell = true, this.hug = false, this.onMedia = true, this.onGo, super.key});
 
   final String worldId;
   final double top;
@@ -273,6 +346,12 @@ class WorldPress extends ConsumerWidget {
 
   /// In a teaser's strip (P23 rule 3): as wide as its words and lower, the verb alone once it is here.
   final bool hug;
+
+  /// On a picture or its blur. Off them, as under Continue, it takes the theme's colours.
+  final bool onMedia;
+
+  /// Goes to a title's player itself: the feed leaves first, or its sound and the title's play together.
+  final ValueChanged<String>? onGo;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -283,8 +362,10 @@ class WorldPress extends ConsumerWidget {
     ref.listen(installProvider(listed?.id ?? worldId), (previous, next) {
       if (next is InstallFailed && previous is! InstallFailed && listed != null) showInstallRefusal(context, ref, listed, next.refusal);
     });
+    final fg = onMedia ? _fg : context.surface.foreground;
+    final bg = onMedia ? _bg : context.surface.background;
     if (state is Installing) {
-      return InstallProgress(state: state, top: top + 6, onCancel: () => ref.read(installProvider(listed?.id ?? worldId).notifier).cancel());
+      return InstallProgress(state: state, top: top + 6, ink: fg, onCancel: () => ref.read(installProvider(listed?.id ?? worldId).notifier).cancel());
     }
     final items = {for (final item in ref.watch(libraryItemsProvider).value ?? const <LibraryItem>[]) item.id: item};
     final start = held == null ? null : worldStart(held, listed, items);
@@ -293,13 +374,15 @@ class WorldPress extends ConsumerWidget {
     final List<Widget> presses;
     if (held != null) {
       if (start == null) return const SizedBox.shrink();
-      final verb = start.where != null ? 'Continue' : (start.read ? 'Read' : 'Play');
+      final verb = start.begun ? 'Continue' : (start.read ? 'Read' : 'Play');
       Future<void> open(LibraryItem? item, String press) async {
         if (!await mayOpen(context, ref, listed, press: press) || !context.mounted) return;
-        if (item != null) {
-          await context.push(Routes.open(item.id));
+        final route = item != null ? Routes.open(item.id) : startRoute(held, start);
+        if (route == null) return;
+        if (onGo case final go?) {
+          go(route);
         } else {
-          openStart(context, held, start);
+          await context.push(route);
         }
       }
 
@@ -309,13 +392,15 @@ class WorldPress extends ConsumerWidget {
         label: verb,
         detail: hug ? null : start.where,
         height: hug ? _hugHeight : ArkeSizes.widePress,
+        fg: fg,
+        bg: bg,
         onPressed: () => open(start.first, verb),
       );
       presses = [
         if (hug) press else Expanded(child: press),
         if (start.book case final book? when !hug) ...[
           const SizedBox(width: 8),
-          _Press(icon: Icons.menu_book_rounded, label: 'Read', onPressed: () => open(book, 'Read')),
+          _Press(icon: Icons.menu_book_rounded, label: 'Read', fg: fg, bg: bg, onPressed: () => open(book, 'Read')),
         ],
       ];
     } else {
@@ -327,12 +412,14 @@ class WorldPress extends ConsumerWidget {
               label: 'Start',
               detail: formatBytes(worldBytes(listed)),
               height: hug ? _hugHeight : ArkeSizes.widePress,
+              fg: fg,
+              bg: bg,
               onPressed: () async {
                 if (!await mayOpen(context, ref, listed, press: 'Start') || !context.mounted) return;
                 await ref.read(installProvider(listed.id).notifier).start(listed);
               },
             )
-          : _Press(primary: true, label: 'Start', detail: 'No connection', height: hug ? _hugHeight : ArkeSizes.widePress);
+          : _Press(primary: true, label: 'Start', detail: 'No connection', height: hug ? _hugHeight : ArkeSizes.widePress, fg: fg, bg: bg);
       presses = [if (hug) press else Expanded(child: press)];
     }
     return Padding(
@@ -341,7 +428,7 @@ class WorldPress extends ConsumerWidget {
         mainAxisSize: hug ? MainAxisSize.min : MainAxisSize.max,
         children: [
           ...presses,
-          if (bell) ...[const SizedBox(width: 8), NotifyBell(worldId: held?.id ?? worldId)],
+          if (bell) ...[const SizedBox(width: 8), NotifyBell(worldId: held?.id ?? worldId, onMedia: onMedia)],
         ],
       ),
     );
@@ -351,9 +438,20 @@ class WorldPress extends ConsumerWidget {
 const _hugHeight = 40.0;
 
 class _Press extends StatelessWidget {
-  const _Press({required this.label, this.icon, this.detail, this.onPressed, this.primary = false, this.height = ArkeSizes.widePress});
+  const _Press({
+    required this.label,
+    required this.fg,
+    required this.bg,
+    this.icon,
+    this.detail,
+    this.onPressed,
+    this.primary = false,
+    this.height = ArkeSizes.widePress,
+  });
 
   final double height;
+  final Color fg;
+  final Color bg;
 
   final String label;
   final IconData? icon;
@@ -370,7 +468,7 @@ class _Press extends StatelessWidget {
           if (detail != null)
             TextSpan(
               text: ' · $detail',
-              style: TextStyle(fontWeight: FontWeight.w400, color: (primary ? _bg : _fg).withValues(alpha: 0.72)),
+              style: TextStyle(fontWeight: FontWeight.w400, color: (primary ? bg : fg).withValues(alpha: 0.72)),
             ),
         ],
       ),
@@ -380,10 +478,10 @@ class _Press extends StatelessWidget {
     final style = FilledButton.styleFrom(
       minimumSize: Size(0, height),
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      backgroundColor: primary ? _fg : _fg.withValues(alpha: 0.16),
-      foregroundColor: primary ? _bg : _fg,
-      disabledBackgroundColor: _fg.withValues(alpha: 0.42),
-      disabledForegroundColor: _bg,
+      backgroundColor: primary ? fg : fg.withValues(alpha: 0.16),
+      foregroundColor: primary ? bg : fg,
+      disabledBackgroundColor: fg.withValues(alpha: 0.42),
+      disabledForegroundColor: bg,
       // A button's textStyle replaces the theme's rather than merging, so it names the family.
       textStyle: const TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
     );
@@ -397,10 +495,14 @@ class _Press extends StatelessWidget {
 /// set over it; under it three of its people, its genre, its age and its press. A world with no Tall
 /// cover shows its key art with its name. 300 × 450 at every size: more fit, and none grows (P26 rule 2).
 class WorldCover extends ConsumerWidget {
-  const WorldCover({required this.world, required this.onOpen, super.key});
+  const WorldCover({required this.world, required this.onOpen, this.onGlow = true, super.key});
 
   final CatalogueWorld world;
   final VoidCallback onOpen;
+
+  /// On Home's colour, in the overlay's ink. Coming back they sit under Continue, on the page's own
+  /// ground, where that ink and a white press would vanish in the light theme.
+  final bool onGlow;
 
   static const width = 300.0;
   static const height = 450.0;
@@ -408,6 +510,7 @@ class WorldCover extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
+    final ink = onGlow ? _fg : context.surface.foreground;
     final tall = ref.tallOf(world.startsAt);
     final art = tall ?? ref.keyArtOf(world);
     return SizedBox(
@@ -457,23 +560,23 @@ class WorldCover extends ConsumerWidget {
             height: 28,
             child: Row(
               children: [
-                WorldFaces(worldId: world.id, gap: 8),
+                WorldFaces(worldId: world.id, gap: 8, ring: onGlow ? _bg : context.surface.background),
                 if (world.genres.isNotEmpty)
                   Expanded(
                     child: Text(
                       world.genres.first,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: text.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.84)),
+                      style: text.bodyMedium?.copyWith(color: ink.withValues(alpha: 0.84)),
                     ),
                   )
                 else
                   const Spacer(),
-                if (world.age case final age?) AgeTag(age, color: _fg),
+                if (world.age case final age?) AgeTag(age, color: ink),
               ],
             ),
           ),
-          WorldPress(worldId: world.id),
+          WorldPress(worldId: world.id, onMedia: onGlow),
         ],
       ),
     );

@@ -41,11 +41,14 @@ const _controlsRest = Duration(milliseconds: 2500);
 /// (P19 rule 2: a tap never moves on). Until a title has the Studio's cuts its chapters are its episodes,
 /// so this plays them whole, and a chapter opened whole is the same thing (P24 rule 1).
 class EpisodePlayer extends ConsumerStatefulWidget {
-  const EpisodePlayer({required this.item, required this.plan, required this.engine, required this.onSpeedAndSleep, super.key});
+  const EpisodePlayer({required this.item, required this.plan, required this.engine, required this.onSpeedAndSleep, this.startAt, super.key});
 
   final LibraryItem item;
   final ListeningPlan plan;
   final AudioEngine engine;
+
+  /// A chapter pressed: where it is opening, rather than where it was left.
+  final Duration? startAt;
   final VoidCallback onSpeedAndSleep;
 
   @override
@@ -56,7 +59,27 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
   AudioEngine get _engine => widget.engine;
   List<ListeningChapter> get _chapters => widget.plan.chapters;
 
-  late final PageController _pages = PageController(initialPage: _engine.chapterAt(_engine.now));
+  /// The engine has this title. As this first builds it may still be opening it, or holding another.
+  bool get _held => sameAudioSource(_engine.item, widget.item);
+
+  /// Where it opens, worked out as the engine works it out: what shows until the engine gets there.
+  late final Duration _opening =
+      widget.startAt ??
+      (_held
+          ? _engine.now
+          : widget.plan.timeOf(
+              widget.item.finished ? null : widget.item.place?.locator,
+              widget.item.finished ? Duration.zero : (widget.item.place?.position ?? Duration.zero),
+            ));
+
+  /// The engine has reached [_opening]. Until then what it reports is the title or place it had, and
+  /// following that would run the pages somewhere and back.
+  late bool _arrived = widget.startAt == null && _held;
+  int _strays = 0;
+
+  int _chapterAt(Duration position) => widget.plan.locate(position).$1;
+
+  late final PageController _pages = PageController(initialPage: _chapterAt(_opening));
 
   /// The page showing: a chapter, or past the last of them Caught up.
   late int _page = _pages.initialPage;
@@ -67,14 +90,32 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
   /// The chapter a press or a swipe asked for: its coming is not the player moving on by itself.
   int? _asked;
 
+  /// What it last reported, to tell a chapter that ended from a step across its end.
+  late Duration _last = _opening;
+
+  /// This production, here (watched in build); what this has already kept as reached.
+  String? _production;
+  int _kept = 0;
+  bool _leaving = false;
+
   /// The pages are being moved to follow the sound, not the other way about.
   bool _following = false;
   bool _controls = false;
 
   /// A sheet is up: only the picture stays behind it (P24e, P24f).
   bool _sheet = false;
+
+  /// A tablet sideways: `here` or `episodes`, open beside the picture rather than over it (P27f, P27g).
+  String? _beside;
+
+  bool get _sideways {
+    final size = MediaQuery.sizeOf(context);
+    return size.width >= WindowBands.wide && size.height >= WindowBands.fold;
+  }
+
   Timer? _rest;
   StreamSubscription<Duration>? _positions;
+  StreamSubscription<void>? _finished;
 
   /// What the reader had when this opened (P24 rule 7). Asked only once: it works over the whole
   /// listening document, and a place is saved every few seconds. The chapter playing adds to it.
@@ -86,29 +127,72 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
   void initState() {
     super.initState();
     _positions = _engine.position.listen(_follow);
+    _finished = _engine.finished.listen((_) {
+      if (_held && !_caughtUp) _moveTo(_chapters.length);
+    });
   }
 
   @override
   void dispose() {
     _positions?.cancel();
+    _finished?.cancel();
     _rest?.cancel();
     _pages.dispose();
     super.dispose();
   }
 
   void _follow(Duration position) {
-    final length = _engine.length;
-    final index = _engine.chapterAt(position);
+    if (!_held) return;
+    final index = _chapterAt(position);
+    if (!_arrived) {
+      // A dozen reports is a couple of seconds: an engine that went somewhere else is still followed.
+      if (index != _chapterAt(_opening) && ++_strays < 12) return;
+      _arrived = true;
+      _keepReached(index);
+    }
+    final last = _last;
+    _last = position;
     if (index != _chapter) {
-      final byItself = _asked != index && index == _chapter + 1;
+      // By itself only out of the end of the chapter it left: Forward 15 or the lock screen's Next is a
+      // step across, and Autoplay next being off says nothing about those.
+      final byItself = _asked != index && index == _chapter + 1 && widget.plan.starts[index] - last < const Duration(seconds: 2);
       _chapter = index;
       _asked = null;
+      _keepReached(index);
       final settings = ref.read(settingsProvider).value ?? const DeviceSettings();
       if (byItself && !settings.autoplayNext) _engine.pause();
       if (_page != index) _moveTo(index);
-    } else if (length > Duration.zero && position >= length - const Duration(milliseconds: 300) && !_caughtUp) {
-      _moveTo(_chapters.length);
     }
+  }
+
+  /// A chapter once reached stays reached (P23 rule 6). Reach reads where the place is, and here a swipe
+  /// moves it back, which would take `17 of 17 found` down and bring every card round again.
+  void _keepReached(int index) {
+    final worldId = widget.item.worldId;
+    final production = _production;
+    if (worldId == null || production == null) return;
+    final number = _numberOf(index, ref.read(worldGuideProvider(worldId)).value?.guide);
+    if (number <= _kept) return;
+    _kept = number;
+    reveal(ref, worldId, GuideAfter(production: production, chapter: _chapters[index].id, number: number)).catchError((Object _) {});
+  }
+
+  /// The number a reader knows a chapter by: the guide's, else its place in the listening document.
+  int _numberOf(int chapter, Guide? guide) =>
+      guide?.productions
+          .where((known) => known.id == _production)
+          .firstOrNull
+          ?.chapters
+          .where((known) => known.id == _chapters[chapter].id)
+          .firstOrNull
+          ?.number ??
+      _chapters[chapter].order;
+
+  /// Back from Caught up: a list that can scroll takes every drag, so pulling down past its top is it.
+  void _backFromCaughtUp() {
+    if (_leaving || !_pages.hasClients) return;
+    _leaving = true;
+    _pages.previousPage(duration: const Duration(milliseconds: 320), curve: Curves.easeOut).whenComplete(() => _leaving = false);
   }
 
   void _moveTo(int page) {
@@ -131,6 +215,7 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
     _asked = index;
     _engine.seek(widget.plan.starts[index]);
     _engine.play();
+    if (_controls) _restSoon();
   }
 
   void _restSoon() {
@@ -142,6 +227,10 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
 
   void _tap() {
     if (_caughtUp) return;
+    if (_beside != null) {
+      setState(() => _beside = null);
+      return;
+    }
     if (!_controls) {
       _engine.pause();
       _rest?.cancel();
@@ -165,25 +254,12 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
     }
   }
 
-  String? get _productionId {
-    final world = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == widget.item.worldId).firstOrNull;
-    return world?.productions.where((production) => production.narration == widget.item.id).firstOrNull?.id;
-  }
-
   /// Who the chapter has reached (P24 rule 7): nobody still waiting. It will say who is in this moment
   /// once the listening document carries the Studio's scene cast.
   List<GuideCharacter> _here(Guide? guide, int chapter) {
     if (guide == null) return const [];
-    final production = _productionId;
-    final number =
-        guide.productions
-            .where((known) => known.id == production)
-            .firstOrNull
-            ?.chapters
-            .where((known) => known.id == _chapters[chapter].id)
-            .firstOrNull
-            ?.number ??
-        _chapters[chapter].order;
+    final production = _production;
+    final number = _numberOf(chapter, guide);
     return [
       for (final character in guide.characters)
         if (character.after == null ||
@@ -260,30 +336,37 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
     if (_before == null && worldId != null && guide != null) _before = ref.watch(guideReachProvider(worldId)).value;
     final settings = ref.watch(settingsProvider).value ?? const DeviceSettings();
     final notify = worldId != null && settings.notify.contains(worldId);
+    final held = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
+    _production = held?.productions.where((production) => production.narration == widget.item.id).firstOrNull?.id;
     // A phone upright and an upright tablet take Tall (call 53). A phone turned fills with Wide; a Fold
-    // open or a tablet sideways puts Wide beside its panel.
+    // open keeps Wide beside its panel; a tablet sideways fills with it, the panel only when asked (P27).
     final turned = size.height < WindowBands.fold;
-    final side = !turned && size.width >= WindowBands.fold && size.width / size.height >= 0.8;
-    final upright = !turned && !side;
+    final sideways = _sideways;
+    final side = !turned && !sideways && size.width >= WindowBands.fold && size.width / size.height >= 0.8;
+    final upright = !turned && !sideways && !side;
     return Scaffold(
       backgroundColor: _bg,
       body: StreamBuilder<Duration>(
         stream: _engine.position,
         builder: (context, snapshot) {
-          final position = snapshot.data ?? _engine.now;
-          final chapter = _engine.chapterAt(position);
-          final (start, end) = _engine.chapterBounds(position);
-          final length = end - start;
-          final title = '${chapter + 1} · ${widget.item.chapters[chapter].title}';
+          final position = _arrived ? (snapshot.data ?? _engine.now) : _opening;
+          final chapter = _chapterAt(position);
+          final start = widget.plan.starts[chapter];
+          final length = _chapters[chapter].duration;
+          final title = '${chapter + 1} · ${_chapters[chapter].title}';
           final words = settings.text ? widget.plan.phraseAt(position)?.text : null;
 
           final rail = Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (!side) ...[
-                RailPress(icon: Icons.groups_rounded, label: 'Here', onPressed: () => _showHere(guide, chapter)),
+                RailPress(icon: Icons.groups_rounded, label: 'Here', onPressed: () => sideways ? setState(() => _beside = 'here') : _showHere(guide, chapter)),
                 const SizedBox(height: 12),
-                RailPress(icon: Icons.format_list_bulleted_rounded, label: 'Episodes', onPressed: _showEpisodes),
+                RailPress(
+                  icon: Icons.format_list_bulleted_rounded,
+                  label: 'Episodes',
+                  onPressed: () => sideways ? setState(() => _beside = 'episodes') : _showEpisodes(),
+                ),
                 const SizedBox(height: 12),
               ],
               if (worldId != null && !side)
@@ -317,7 +400,7 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                       onPageChanged: _onPage,
                       itemBuilder: (context, index) {
                         if (index == _chapters.length) {
-                          return _CaughtUp(item: widget.item, plan: widget.plan, onClose: () => context.pop(), onEntry: _openEntry);
+                          return _CaughtUp(item: widget.item, plan: widget.plan, onClose: () => context.pop(), onEntry: _openEntry, onBack: _backFromCaughtUp);
                         }
                         final current = index == chapter;
                         final at = current ? position : widget.plan.starts[index];
@@ -330,6 +413,7 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                           speed: _engine.speed,
                           push: settings.slowPushIn(reducedMotion: media.disableAnimations),
                           tall: upright,
+                          cover: sideways,
                           // Letterboxed as P14 shows a moment with no Tall; beside a panel, above its words.
                           top: side ? pictureTop : 0,
                           height: side
@@ -384,18 +468,41 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                     if (_controls) const IgnorePointer(child: ColoredBox(color: Color(0x570A0A0A))),
                     if (!_controls)
                       Positioned(
-                        left: side ? 28 : 16,
-                        right: side ? 28 : 84,
+                        left: sideways
+                            ? 40
+                            : side
+                            ? 28
+                            : 16,
+                        right: sideways
+                            ? (_beside == null ? 160 : 40)
+                            : side
+                            ? 28
+                            : 84,
                         top: side ? pictureTop + pictureHeight + 32 : null,
-                        bottom: side ? null : foot + 28,
+                        bottom: side
+                            ? null
+                            : sideways
+                            ? foot + 48
+                            : foot + 28,
                         child: _Foot(words: words, title: title, name: widget.item.title, large: side, onName: worldId == null ? null : _openWorld),
                       ),
-                    if (!side) Positioned(right: 8, bottom: _controls ? foot + 116 : foot + 24, child: rail),
+                    if (!side && _beside == null)
+                      Positioned(right: sideways ? 32 : 8, bottom: _controls ? foot + 116 : (sideways ? foot + 40 : foot + 24), child: rail),
+                    if (_beside != null)
+                      Positioned(
+                        left: 12,
+                        top: media.padding.top + 4,
+                        child: IconButton(
+                          onPressed: () => context.pop(),
+                          tooltip: 'Close',
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _fg, size: 28),
+                        ),
+                      ),
                     if (!_controls && !side)
                       Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: foot + 8,
+                        left: sideways ? 40 : 16,
+                        right: sideways ? (_beside == null ? 120 : 40) : 16,
+                        bottom: sideways ? foot + 26 : foot + 8,
                         child: ThinLine(value: length.inMilliseconds == 0 ? 0 : (position - start).inMilliseconds / length.inMilliseconds),
                       ),
                     if (!_controls && side)
@@ -429,8 +536,8 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                         ),
                       ),
                       Positioned(
-                        left: 20,
-                        right: 20,
+                        left: sideways ? 64 : 20,
+                        right: sideways ? 64 : 20,
                         bottom: foot + 8,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -467,26 +574,29 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
               );
             },
           );
-          if (!side) return stage;
+          // One Row always, so opening the panel does not build the stage and its picture again.
           return Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: stage),
-              SizedBox(
-                width: size.width >= WindowBands.wide ? 380 : 320,
-                child: _SidePanel(
-                  here: _here(guide?.guide, chapter),
-                  guide: guide,
-                  plan: widget.plan,
-                  position: position,
-                  worldId: worldId,
-                  notify: notify,
-                  worldName: worldId == null ? null : ref.watch(worldNameProvider(worldId)),
-                  onEntry: _openEntry,
-                  onWorld: _openWorld,
-                  onEpisode: _seekTo,
+              if (side || _beside != null)
+                SizedBox(
+                  width: sideways ? 380 : 320,
+                  child: _SidePanel(
+                    key: ValueKey(_beside),
+                    startsOnEpisodes: _beside == 'episodes',
+                    here: _here(guide?.guide, chapter),
+                    guide: guide,
+                    plan: widget.plan,
+                    position: position,
+                    worldId: worldId,
+                    notify: notify,
+                    worldName: worldId == null ? null : ref.watch(worldNameProvider(worldId)),
+                    onEntry: _openEntry,
+                    onWorld: _openWorld,
+                    onEpisode: _seekTo,
+                  ),
                 ),
-              ),
             ],
           );
         },
@@ -510,6 +620,7 @@ class _EpisodePicture extends StatelessWidget {
     required this.speed,
     required this.push,
     required this.tall,
+    required this.cover,
     required this.top,
     required this.height,
   });
@@ -522,18 +633,21 @@ class _EpisodePicture extends StatelessWidget {
   final double speed;
   final bool push;
   final bool tall;
+
+  /// A tablet sideways: the Wide picture covers the screen about its focus (P27c).
+  final bool cover;
   final double top;
   final double height;
 
   @override
   Widget build(BuildContext context) {
     final shown = this.shown;
-    final fills = tall && shown?.tallPath != null;
+    final fills = (tall && shown?.tallPath != null) || (cover && shown != null);
     final picture = StreamBuilder<bool>(
       stream: playingStream,
       initialData: playing,
       builder: (context, state) => PictureOfTheMoment(
-        shown: fills ? shown!.tall : shown,
+        shown: tall && fills ? shown!.tall : shown,
         position: position,
         playing: current && (state.data ?? false),
         speed: speed,
@@ -797,6 +911,8 @@ class _HereList extends StatelessWidget {
 /// `Here · Episodes` beside the picture (P24j, P27): the same two lists as the sheets, with the bell.
 class _SidePanel extends ConsumerStatefulWidget {
   const _SidePanel({
+    this.startsOnEpisodes = false,
+    super.key,
     required this.here,
     required this.guide,
     required this.plan,
@@ -819,13 +935,14 @@ class _SidePanel extends ConsumerStatefulWidget {
   final ValueChanged<GuideEntry> onEntry;
   final VoidCallback onWorld;
   final ValueChanged<int> onEpisode;
+  final bool startsOnEpisodes;
 
   @override
   ConsumerState<_SidePanel> createState() => _SidePanelState();
 }
 
 class _SidePanelState extends ConsumerState<_SidePanel> {
-  bool _episodes = false;
+  late bool _episodes = widget.startsOnEpisodes;
 
   @override
   Widget build(BuildContext context) {
@@ -931,12 +1048,19 @@ class _SidePanelState extends ConsumerState<_SidePanel> {
 /// After the last released episode (P24h): `Caught up`, the next date from the title's schedule (P15e),
 /// Notify, and `In this world`, the moment to send someone into the world.
 class _CaughtUp extends ConsumerWidget {
-  const _CaughtUp({required this.item, required this.plan, required this.onClose, required this.onEntry});
+  const _CaughtUp({required this.item, required this.plan, required this.onClose, required this.onEntry, required this.onBack});
 
   final LibraryItem item;
   final ListeningPlan plan;
   final VoidCallback onClose;
   final ValueChanged<GuideEntry> onEntry;
+  final VoidCallback onBack;
+
+  /// Its lists take the drag even at their top, so it is watched for there: a swipe down still goes back.
+  bool _pulledDown(OverscrollNotification notification) {
+    if (notification.metrics.axis == Axis.vertical && notification.overscroll < 0 && notification.dragDetails != null) onBack();
+    return false;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -954,75 +1078,158 @@ class _CaughtUp extends ConsumerWidget {
     final reach = worldId == null ? GuideReach.none : (ref.watch(guideReachProvider(worldId)).value ?? GuideReach.none);
     final notify = worldId != null && (ref.watch(settingsProvider).value ?? const DeviceSettings()).notify.contains(worldId);
     final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    List<Widget> found(double width) => [
+      if (guide != null)
+        for (final entry in [...guide.guide.characters, ...guide.guide.places])
+          if (reach.shows(entry.after))
+            PosterTile(
+              title: entryName(entry),
+              kind: entry is GuideCharacter ? (entry.role ?? 'Character') : placeKind(entry as GuidePlace),
+              tall: entry is GuideCharacter ? guidePicture(guide, entry) : null,
+              wide: entry is GuideCharacter ? null : guidePicture(guide, entry),
+              initials: initials(entryName(entry)),
+              pictureAlignment: const Alignment(0, -0.6),
+              width: width,
+              onMedia: true,
+              onOpen: () => onEntry(entry),
+            ),
+    ];
+    // A tablet sideways: the cover and the next date at the left, the world four across at the right (P27h).
+    if (MediaQuery.sizeOf(context).width >= WindowBands.wide) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          if (cover != null) BlurOf(picture: cover),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 480,
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (cover != null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: SizedBox(
+                              width: 200,
+                              height: 300,
+                              child: Image(image: cover, fit: BoxFit.cover, errorBuilder: (context, error, stack) => const SizedBox.shrink()),
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+                        Text('Caught up', style: text.headlineLarge?.copyWith(color: _fg)),
+                        if (next != null) ...[
+                          const SizedBox(height: 8),
+                          Text('Episode ${plan.chapters.length + 1} · ${shortDate(next)}', style: text.bodyLarge?.copyWith(color: _fg.withValues(alpha: 0.8))),
+                        ],
+                        if (worldId != null) ...[
+                          const SizedBox(height: 18),
+                          FilledButton.icon(
+                            onPressed: () => setNotify(ref, worldId, !notify),
+                            icon: Icon(notify ? Icons.notifications_rounded : Icons.notifications_none_rounded, size: 18),
+                            label: Text(notify ? 'Notify on' : 'Notify'),
+                            style: FilledButton.styleFrom(minimumSize: const Size(180, ArkeSizes.press), backgroundColor: _fg, foregroundColor: _bg),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, box) => NotificationListener<OverscrollNotification>(
+                    onNotification: _pulledDown,
+                    child: ListView(
+                      physics: const ClampingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(0, top + 64, 32, bottom + 24),
+                      children: [
+                        if (guide != null) ...[
+                          Text('In this world', style: text.titleMedium?.copyWith(color: _fg)),
+                          const SizedBox(height: 12),
+                          Wrap(spacing: 12, runSpacing: 16, children: found(((box.maxWidth - 32 - 3 * 12) / 4).floorToDouble())),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Positioned(
+            left: 12,
+            top: top + 4,
+            child: IconButton(
+              onPressed: onClose,
+              tooltip: 'Close',
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _fg, size: 28),
+            ),
+          ),
+        ],
+      );
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
         if (cover != null) BlurOf(picture: cover),
-        ListView(
-          padding: EdgeInsets.only(top: top + 96, bottom: MediaQuery.paddingOf(context).bottom + 24),
-          children: [
-            if (cover != null)
-              Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(9),
-                  child: SizedBox(
-                    width: 132,
-                    height: 198,
-                    child: Image(image: cover, fit: BoxFit.cover, errorBuilder: (context, error, stack) => const SizedBox.shrink()),
+        NotificationListener<OverscrollNotification>(
+          onNotification: _pulledDown,
+          child: ListView(
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.only(top: top + 96, bottom: MediaQuery.paddingOf(context).bottom + 24),
+            children: [
+              if (cover != null)
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: SizedBox(
+                      width: 132,
+                      height: 198,
+                      child: Image(image: cover, fit: BoxFit.cover, errorBuilder: (context, error, stack) => const SizedBox.shrink()),
+                    ),
                   ),
                 ),
-              ),
-            const SizedBox(height: 18),
-            Text(
-              'Caught up',
-              textAlign: TextAlign.center,
-              style: text.headlineLarge?.copyWith(color: _fg),
-            ),
-            if (next != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Episode ${plan.chapters.length + 1} · ${shortDate(next)}',
-                textAlign: TextAlign.center,
-                style: text.bodyLarge?.copyWith(color: _fg.withValues(alpha: 0.8), fontFeatures: const [FontFeature.tabularFigures()]),
-              ),
-            ],
-            if (worldId != null) ...[
               const SizedBox(height: 18),
-              Center(
-                child: FilledButton.icon(
-                  onPressed: () => setNotify(ref, worldId, !notify),
-                  icon: Icon(notify ? Icons.notifications_rounded : Icons.notifications_none_rounded, size: 18),
-                  label: Text(notify ? 'Notify on' : 'Notify'),
-                  style: FilledButton.styleFrom(minimumSize: const Size(180, ArkeSizes.press), backgroundColor: _fg, foregroundColor: _bg),
+              Text(
+                'Caught up',
+                textAlign: TextAlign.center,
+                style: text.headlineLarge?.copyWith(color: _fg),
+              ),
+              if (next != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Episode ${plan.chapters.length + 1} · ${shortDate(next)}',
+                  textAlign: TextAlign.center,
+                  style: text.bodyLarge?.copyWith(color: _fg.withValues(alpha: 0.8), fontFeatures: const [FontFeature.tabularFigures()]),
                 ),
-              ),
+              ],
+              if (worldId != null) ...[
+                const SizedBox(height: 18),
+                Center(
+                  child: FilledButton.icon(
+                    onPressed: () => setNotify(ref, worldId, !notify),
+                    icon: Icon(notify ? Icons.notifications_rounded : Icons.notifications_none_rounded, size: 18),
+                    label: Text(notify ? 'Notify on' : 'Notify'),
+                    style: FilledButton.styleFrom(minimumSize: const Size(180, ArkeSizes.press), backgroundColor: _fg, foregroundColor: _bg),
+                  ),
+                ),
+              ],
+              if (guide != null) ...[
+                const SizedBox(height: 26),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('In this world', style: text.titleMedium?.copyWith(color: _fg)),
+                ),
+                const SizedBox(height: 10),
+                TileRow(children: found(RowSizes.small(context))),
+              ],
             ],
-            if (guide != null) ...[
-              const SizedBox(height: 26),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text('In this world', style: text.titleMedium?.copyWith(color: _fg)),
-              ),
-              const SizedBox(height: 10),
-              TileRow(
-                children: [
-                  for (final entry in [...guide.guide.characters, ...guide.guide.places])
-                    if (reach.shows(entry.after))
-                      PosterTile(
-                        title: entryName(entry),
-                        kind: entry is GuideCharacter ? (entry.role ?? 'Character') : placeKind(entry as GuidePlace),
-                        tall: entry is GuideCharacter ? guidePicture(guide, entry) : null,
-                        wide: entry is GuideCharacter ? null : guidePicture(guide, entry),
-                        initials: initials(entryName(entry)),
-                        pictureAlignment: const Alignment(0, -0.6),
-                        width: RowSizes.small(context),
-                        onMedia: true,
-                        onOpen: () => onEntry(entry),
-                      ),
-                ],
-              ),
-            ],
-          ],
+          ),
         ),
         Positioned(
           left: 4,

@@ -18,6 +18,7 @@ import '../application/worlds.dart';
 import 'guide_widgets.dart';
 import 'row_widgets.dart';
 import 'world_screen.dart';
+import 'world_shelf.dart';
 import 'world_widgets.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
@@ -99,7 +100,7 @@ class AlbumScreen extends ConsumerWidget {
               title: const Text('Play'),
               onTap: () {
                 Navigator.of(sheet).pop();
-                engine?.openMusic(album, index: index);
+                playSong(context, ref, world.id, () => engine?.openMusic(album, index: index));
               },
             ),
             for (final place in places)
@@ -135,7 +136,7 @@ class AlbumScreen extends ConsumerWidget {
           line: lineOf(album.tracks[index]),
           length: album.tracks[index].duration,
           now: index == playing,
-          onPlay: () => engine?.openMusic(album, index: index),
+          onPlay: () => playSong(context, ref, world.id, () => engine?.openMusic(album, index: index)),
           onMore: () => more(album, index),
         );
         if (!fold) return Column(children: [for (var i = 0; i < album.tracks.length; i++) row(i)]);
@@ -186,7 +187,10 @@ class AlbumScreen extends ConsumerWidget {
                       icon: Icons.download_rounded,
                       label: 'Update',
                       detail: formatBytes(update.package!.byteLength),
-                      onPressed: () => ref.read(productionInstallProvider(key).notifier).start(listed, update),
+                      onPressed: () async {
+                        if (!await mayOpen(context, ref, listed, press: 'Update') || !context.mounted) return;
+                        await ref.read(productionInstallProvider(key).notifier).start(listed, update);
+                      },
                     ),
                     _ => const SizedBox.shrink(),
                   },

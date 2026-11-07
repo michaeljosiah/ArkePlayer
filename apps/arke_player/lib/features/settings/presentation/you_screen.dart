@@ -23,6 +23,88 @@ class YouScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider).value ?? const DeviceSettings();
     final items = ref.watch(libraryItemsProvider).value ?? const [];
+    // Two columns on a tablet sideways, one upright (P26r, P26x).
+    final first = <Widget>[
+      const _GroupLabel('Appearance'),
+      _Group(
+        children: [
+          _ThemeRow(
+            value: settings.theme,
+            onChanged: (theme) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(theme: theme)),
+          ),
+        ],
+      ),
+      const _GroupLabel('Playback'),
+      _Group(
+        children: [
+          _Row(label: 'Captions', value: settings.captions ? 'On · ${settings.captionSize.label}' : 'Off', onTap: () => _captions(context, ref)),
+          _SwitchRow(
+            label: 'Text',
+            value: settings.text,
+            onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(text: on)),
+          ),
+          _SwitchRow(
+            label: 'Slow push',
+            value: settings.slowPush,
+            onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(slowPush: on)),
+          ),
+          _SwitchRow(
+            label: 'Autoplay next',
+            value: settings.autoplayNext,
+            onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(autoplayNext: on)),
+          ),
+        ],
+      ),
+    ];
+    final second = <Widget>[
+      const _GroupLabel('Downloads'),
+      _Group(
+        children: [
+          _SwitchRow(
+            label: 'Wi-Fi only',
+            value: settings.wifiOnly,
+            onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(wifiOnly: on)),
+          ),
+          _Row(
+            label: 'On this phone',
+            value: formatBytes(bytesUsed(items, ref.watch(libraryWorldsProvider).value ?? const [])),
+            onTap: () => context.go(Routes.downloads),
+          ),
+        ],
+      ),
+      const _GroupLabel('Content'),
+      _Group(
+        children: [
+          _Row(
+            label: 'Adult content',
+            value: settings.adultContent ? 'On' : 'Off',
+            onTap: () => settings.adultContent
+                ? ref.read(settingsProvider.notifier).change((current) => current.copyWith(adultContent: false))
+                : askAdult(context, ref, title: 'Adult content', line: '18+', press: 'I am 18 or older · Turn on'),
+          ),
+        ],
+      ),
+      const _GroupLabel('About'),
+      _Group(
+        children: [
+          _Row(
+            label: 'Check for updates',
+            value: switch (ref.watch(catalogueCheckProvider)) {
+              CatalogueCheck.idle => null,
+              CatalogueCheck.checking => 'Checking',
+              CatalogueCheck.checked => 'Checked',
+              CatalogueCheck.failed => 'Couldn’t check',
+            },
+            onTap: () => ref.read(catalogueCheckProvider.notifier).check(),
+          ),
+          const _Row(label: 'Version', value: appVersion),
+          _Row(
+            label: 'Licences',
+            onTap: () => showLicensePage(context: context, applicationName: 'Arke Player', applicationVersion: appVersion),
+          ),
+        ],
+      ),
+    ];
     return SafeArea(
       bottom: false,
       child: Column(
@@ -32,85 +114,21 @@ class YouScreen extends ConsumerWidget {
           Expanded(
             child: ListView(
               padding: EdgeInsets.only(top: 8, bottom: 24 + footRoom(context)),
-              children: [
-                const _GroupLabel('Appearance'),
-                _Group(
-                  children: [
-                    _ThemeRow(
-                      value: settings.theme,
-                      onChanged: (theme) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(theme: theme)),
-                    ),
-                  ],
-                ),
-                const _GroupLabel('Playback'),
-                _Group(
-                  children: [
-                    _Row(label: 'Captions', value: settings.captions ? 'On · ${settings.captionSize.label}' : 'Off', onTap: () => _captions(context, ref)),
-                    _SwitchRow(
-                      label: 'Text',
-                      value: settings.text,
-                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(text: on)),
-                    ),
-                    _SwitchRow(
-                      label: 'Slow push',
-                      value: settings.slowPush,
-                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(slowPush: on)),
-                    ),
-                    _SwitchRow(
-                      label: 'Autoplay next',
-                      value: settings.autoplayNext,
-                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(autoplayNext: on)),
-                    ),
-                  ],
-                ),
-                const _GroupLabel('Downloads'),
-                _Group(
-                  children: [
-                    _SwitchRow(
-                      label: 'Wi-Fi only',
-                      value: settings.wifiOnly,
-                      onChanged: (on) => ref.read(settingsProvider.notifier).change((current) => current.copyWith(wifiOnly: on)),
-                    ),
-                    _Row(
-                      label: 'On this phone',
-                      value: formatBytes(bytesUsed(items, ref.watch(libraryWorldsProvider).value ?? const [])),
-                      onTap: () => context.go(Routes.downloads),
-                    ),
-                  ],
-                ),
-                const _GroupLabel('Content'),
-                _Group(
-                  children: [
-                    _Row(
-                      label: 'Adult content',
-                      value: settings.adultContent ? 'On' : 'Off',
-                      onTap: () => settings.adultContent
-                          ? ref.read(settingsProvider.notifier).change((current) => current.copyWith(adultContent: false))
-                          : askAdult(context, ref, title: 'Adult content', line: '18+', press: 'I am 18 or older · Turn on'),
-                    ),
-                  ],
-                ),
-                const _GroupLabel('About'),
-                _Group(
-                  children: [
-                    _Row(
-                      label: 'Check for updates',
-                      value: switch (ref.watch(catalogueCheckProvider)) {
-                        CatalogueCheck.idle => null,
-                        CatalogueCheck.checking => 'Checking',
-                        CatalogueCheck.checked => 'Checked',
-                        CatalogueCheck.failed => 'Couldn’t check',
-                      },
-                      onTap: () => ref.read(catalogueCheckProvider.notifier).check(),
-                    ),
-                    const _Row(label: 'Version', value: appVersion),
-                    _Row(
-                      label: 'Licences',
-                      onTap: () => showLicensePage(context: context, applicationName: 'Arke Player', applicationVersion: appVersion),
-                    ),
-                  ],
-                ),
-              ],
+              children: MediaQuery.sizeOf(context).width >= WindowBands.wide
+                  ? [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: first),
+                          ),
+                          Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: second),
+                          ),
+                        ],
+                      ),
+                    ]
+                  : [...first, ...second],
             ),
           ),
         ],

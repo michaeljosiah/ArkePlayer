@@ -392,6 +392,24 @@ void main() {
   testWidgets('P23f found', (t) => shoot(t, 'P23f-found', phone, world));
   testWidgets('P23g people found', (t) => shoot(t, 'P23g-people', phone, world, act: tab('People'), through: 12));
   testWidgets('P23h home, new in your worlds', (t) => shoot(t, 'P23h-home', phone, Routes.home, through: 12));
+  // P26, P27: a tablet, sideways and upright.
+  const tablet = Size(1280, 800);
+  const upright = Size(800, 1280);
+  testWidgets('P26a home', (t) => shoot(t, 'P26a-home', tablet, Routes.home));
+  testWidgets('P26d worlds', (t) => shoot(t, 'P26d-worlds', tablet, Routes.worlds));
+  testWidgets('P26h a world', (t) => shoot(t, 'P26h-world', tablet, world));
+  testWidgets('P26k people', (t) => shoot(t, 'P26k-people', tablet, world, act: tab('People'), through: 12));
+  testWidgets('P26l places', (t) => shoot(t, 'P26l-places', tablet, world, act: tab('Places')));
+  testWidgets('P26m lore', (t) => shoot(t, 'P26m-lore', tablet, world, act: tab('Lore')));
+  testWidgets('P26n a character', (t) => shoot(t, 'P26n-character', tablet, Routes.guideEntry(world, 'maren-kest')));
+  testWidgets('P26r you', (t) => shoot(t, 'P26r-you', tablet, Routes.you));
+  testWidgets('P26s home upright', (t) => shoot(t, 'P26s-home', upright, Routes.home));
+  testWidgets('P26u a world upright', (t) => shoot(t, 'P26u-world', upright, world));
+  testWidgets('P26v people upright', (t) => shoot(t, 'P26v-people', upright, world, act: tab('People')));
+  testWidgets('P26x you upright', (t) => shoot(t, 'P26x-you', upright, Routes.you));
+  testWidgets('P27a a teaser', (t) => shoot(t, 'P27a-teaser', tablet, Routes.home, act: feedAt(0)));
+  testWidgets('P27b a wide teaser', (t) => shoot(t, 'P27b-teaser', tablet, Routes.home, act: feedAt(4)));
+  testWidgets('P27q a teaser upright', (t) => shoot(t, 'P27q-teaser', upright, Routes.home, act: feedAt(0)));
   testWidgets('P22d worlds', (t) => shoot(t, 'P22d-worlds-guide', phone, Routes.worlds));
   testWidgets('P22d worlds, light', (t) => shoot(t, 'P22d-worlds-guide-light', phone, Routes.worlds, brightness: Brightness.light));
   testWidgets('P22h before it is here', (t) => shoot(t, 'P22h-before', phone, world, isInstalled: false));

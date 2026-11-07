@@ -78,6 +78,8 @@ class _StillEngine implements AudioEngine {
   @override
   Stream<bool> get playingStream => Stream.value(false);
   @override
+  Stream<void> get finished => now >= plan.document.duration ? Stream.value(null) : const Stream.empty();
+  @override
   bool get playing => false;
   @override
   double get speed => 1;
@@ -300,7 +302,14 @@ void main() {
   testWidgets('P24i turned', (t) => shoot(t, 'P24i-turned', const Size(844, 390), tallAt()));
   testWidgets('P24j on a fold', (t) => shoot(t, 'P24j-fold', fold, tallAt(), text: true));
   testWidgets('P27o upright on a tablet', (t) => shoot(t, 'P27o-tablet', const Size(800, 1280), tallAt()));
-  testWidgets('P27c sideways on a tablet', (t) => shoot(t, 'P27c-tablet', const Size(1280, 800), tallAt()));
+  const tablet = Size(1280, 800);
+  testWidgets('P27c sideways on a tablet', (t) => shoot(t, 'P27c-tablet', tablet, tallAt()));
+  testWidgets('P27e a tap', (t) => shoot(t, 'P27e-tap', tablet, tallAt(), act: (tester) => tester.tapAt(const Offset(500, 300))));
+  testWidgets('P27f here', (t) => shoot(t, 'P27f-here', tablet, tallAt(), act: (tester) => tester.tap(find.text('Here'))));
+  testWidgets('P27g episodes', (t) => shoot(t, 'P27g-episodes', tablet, tallAt(), act: (tester) => tester.tap(find.text('Episodes'))));
+  testWidgets('P27h caught up', (t) => shoot(t, 'P27h-caught-up', tablet, plan.document.duration));
+  testWidgets('P24h caught up', (t) => shoot(t, 'P24h-caught-up', phone, plan.document.duration));
+  testWidgets('P27p here upright', (t) => shoot(t, 'P27p-here', const Size(800, 1280), tallAt(), act: (tester) => tester.tap(find.text('Here'))));
   testWidgets('P5a the picture of the moment', (t) => shoot(t, 'P5a-listening', phone, const Duration(milliseconds: 2000)));
   testWidgets('P5a with Text', (t) => shoot(t, 'P5a-listening-text', phone, const Duration(milliseconds: 1500), text: true));
   testWidgets('P5a a tall picture', (t) => shoot(t, 'P5a-listening-tall', phone, const Duration(milliseconds: 4000)));

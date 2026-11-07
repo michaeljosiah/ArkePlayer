@@ -971,6 +971,15 @@ class _LineBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final box = _box(context);
+    if (MediaQuery.sizeOf(context).width < WindowBands.wide) return box;
+    return Align(
+      heightFactor: 1,
+      child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 760), child: box),
+    );
+  }
+
+  Widget _box(BuildContext context) {
     final radius = BorderRadius.circular(ArkeRadius.xxl);
     return Stack(
       clipBehavior: Clip.none,

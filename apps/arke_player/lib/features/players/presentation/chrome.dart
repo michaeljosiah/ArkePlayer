@@ -185,6 +185,7 @@ Future<T?> showPlayerSheet<T>(BuildContext context, {required String title, Stri
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
+  constraints: const BoxConstraints(maxWidth: 560),
   backgroundColor: const Color(0xCC0A0A0A),
   barrierColor: const Color(0x4D0A0A0A),
   builder: (context) => Theme(

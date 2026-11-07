@@ -88,9 +88,11 @@ class _SomeoneNewState extends ConsumerState<SomeoneNew> {
       _look(guide, before, chapter, productionId);
     }
     final card = _card;
+    final wide = MediaQuery.sizeOf(context).width >= WindowBands.wide;
     return Positioned(
-      left: 12,
-      right: 12,
+      left: wide ? 40 : 12,
+      right: wide ? null : 12,
+      width: wide ? 400 : null,
       top: MediaQuery.paddingOf(context).top + 8,
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 220),

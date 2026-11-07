@@ -11,6 +11,7 @@ import 'package:arke_player/features/players/application/music.dart';
 import 'package:arke_player/features/players/application/players.dart';
 import 'package:arke_player/features/players/presentation/episode_player.dart';
 import 'package:arke_player/features/players/presentation/episode_rows.dart';
+import 'package:arke_player/features/players/presentation/picture_of_the_moment.dart';
 import 'package:arke_player/features/settings/application/settings_controller.dart';
 import 'package:arke_player/features/settings/domain/device_settings.dart';
 import 'package:arke_player/features/worlds/application/discover.dart';
@@ -109,6 +110,7 @@ class _Engine implements AudioEngine {
 
   final _positions = StreamController<Duration>.broadcast();
   final _playing = StreamController<bool>.broadcast();
+  final _finished = StreamController<void>.broadcast();
   Duration at;
   bool isPlaying = true;
   final seeks = <Duration>[];
@@ -122,8 +124,13 @@ class _Engine implements AudioEngine {
     _positions.add(position);
   }
 
+  void finish() => _finished.add(null);
+
+  /// What it holds: [_item] until a test says otherwise.
+  LibraryItem? held = _item;
+
   @override
-  LibraryItem get item => _item;
+  LibraryItem? get item => held;
   @override
   ListeningPlan get plan => _plan;
   @override
@@ -132,6 +139,8 @@ class _Engine implements AudioEngine {
   Stream<Duration> get position => _positions.stream;
   @override
   Stream<bool> get playingStream => _playing.stream;
+  @override
+  Stream<void> get finished => _finished.stream;
   @override
   bool get playing => isPlaying;
   @override
@@ -305,11 +314,112 @@ void main() {
       expect(find.text('Sleep'), findsNothing);
     });
 
+    testWidgets('choosing an episode with them up plays it, and they rest as usual', (tester) async {
+      final engine = await _pump(tester);
+      await tap(tester);
+      await tester.tap(find.text('Episodes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('3 · The Tenth Key'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(seconds: 3));
+      expect(engine.seeks, [_minute * 6]);
+      expect(find.text('Sleep'), findsNothing);
+    });
+
     testWidgets('paused, they stay', (tester) async {
       await _pump(tester);
       await tap(tester);
       await tester.pump(const Duration(seconds: 10));
       expect(find.text('Sleep'), findsOneWidget);
+    });
+  });
+
+  group('as it opens (cold, or holding another title)', () {
+    Future<_Engine> pumpOpening(WidgetTester tester, {Duration? startAt, required LibraryItem? held, Place? place}) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final engine = _Engine()..held = held;
+      final item = LibraryItem(
+        id: _item.id,
+        format: _item.format,
+        title: _item.title,
+        byteLength: _item.byteLength,
+        addedAt: _item.addedAt,
+        file: _item.file,
+        worldId: _item.worldId,
+        duration: _item.duration,
+        chapters: _item.chapters,
+        place: place,
+      );
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => EpisodePlayer(item: item, plan: _plan, engine: engine, startAt: startAt, onSpeedAndSleep: () {}),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            libraryItemsProvider.overrideWith((ref) => Stream.value([item])),
+            libraryWorldsProvider.overrideWith((ref) => Stream.value([_world])),
+            catalogueProvider.overrideWith((ref) async => [_listed]),
+            worldGuideProvider.overrideWith((ref, worldId) async => WorldGuide(guide: _guide, pathOf: (asset) => 'guide/$asset')),
+            guideReachProvider.overrideWith((ref, worldId) async => GuideReach.none),
+            settingsProvider.overrideWith(() => _Settings(const DeviceSettings(slowPush: false, autoplayNext: false))),
+            noticesProvider.overrideWithValue(_NoNotices()),
+          ],
+          child: MaterialApp.router(theme: arkeTheme(Brightness.dark), routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return engine;
+    }
+
+    final kept = Place(locator: 'ch3', position: _minute, progress: 0.8, updatedAt: DateTime.utc(2026, 11, 1));
+
+    testWidgets('with nothing open yet, it shows where it was left, not the first chapter', (tester) async {
+      await pumpOpening(tester, held: null, place: kept);
+      expect(find.text('3 · The Tenth Key'), findsOneWidget);
+    });
+
+    testWidgets('it ignores the engine until it gets there, and then follows it', (tester) async {
+      final engine = await pumpOpening(tester, held: null, place: kept);
+      // The engine still holds the title it had.
+      engine.moveTo(_minute);
+      await tester.pumpAndSettle();
+      expect(find.text('3 · The Tenth Key'), findsOneWidget);
+      // It has this one now, and a report from before it reached its place is no reason to run back.
+      engine.held = _item;
+      engine.moveTo(_minute);
+      await tester.pumpAndSettle();
+      expect(find.text('3 · The Tenth Key'), findsOneWidget);
+      expect(engine.pauses, 0, reason: 'nor is it the player moving on by itself');
+      engine.moveTo(_minute * 7);
+      engine.moveTo(_minute * 3);
+      await tester.pumpAndSettle();
+      expect(find.text('2 · The Weir'), findsOneWidget);
+    });
+
+    testWidgets('a chapter pressed opens there, whatever the engine last reported', (tester) async {
+      final engine = await pumpOpening(tester, held: _item, startAt: _minute * 6);
+      expect(find.text('3 · The Tenth Key'), findsOneWidget);
+      engine.moveTo(_minute);
+      await tester.pumpAndSettle();
+      expect(find.text('3 · The Tenth Key'), findsOneWidget);
+    });
+
+    testWidgets('a place the engine never reaches does not hold the pages for good', (tester) async {
+      final engine = await pumpOpening(tester, held: _item, startAt: _minute * 6);
+      for (var i = 0; i < 12; i++) {
+        engine.moveTo(_minute);
+      }
+      await tester.pumpAndSettle();
+      expect(find.text('1 · The Weigh House'), findsOneWidget);
     });
   });
 
@@ -324,10 +434,19 @@ void main() {
 
     testWidgets('with Autoplay next off it stops at the next one’s start', (tester) async {
       final engine = await _pump(tester, settings: const DeviceSettings(slowPush: false, autoplayNext: false));
+      engine.moveTo(_minute * 3 - const Duration(milliseconds: 500));
       engine.moveTo(_minute * 3);
       await tester.pumpAndSettle();
       expect(find.text('2 · The Weir'), findsOneWidget);
       expect(engine.pauses, 1);
+    });
+
+    testWidgets('a step across a chapter’s end is not it ending: Autoplay next off pauses nothing', (tester) async {
+      final engine = await _pump(tester, at: _minute * 2, settings: const DeviceSettings(slowPush: false, autoplayNext: false));
+      engine.moveTo(_minute * 3 + const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.text('2 · The Weir'), findsOneWidget);
+      expect(engine.pauses, 0);
     });
 
     testWidgets('a swipe up moves to the next, a swipe down to the one before', (tester) async {
@@ -411,7 +530,7 @@ void main() {
   group('Caught up (P24h, rule 9)', () {
     testWidgets('after the last episode: the next date, Notify and what is in this world', (tester) async {
       final engine = await _pump(tester, at: _minute * 8);
-      engine.moveTo(_minute * 9);
+      engine.finish();
       await tester.pumpAndSettle();
       expect(find.text('Caught up'), findsOneWidget);
       expect(find.text('Episode 4 · 13 Nov'), findsOneWidget);
@@ -430,9 +549,22 @@ void main() {
       expect(engine.pauses, 1);
     });
 
+    for (final size in const [Size(390, 844), Size(390, 620), Size(1280, 800)]) {
+      testWidgets('a swipe down leaves it for the last episode, at ${size.width.toInt()} × ${size.height.toInt()}', (tester) async {
+        final engine = await _pump(tester, at: _minute * 8, size: size);
+        engine.finish();
+        await tester.pumpAndSettle();
+        expect(find.text('Caught up'), findsOneWidget);
+        await tester.fling(find.byType(PageView), const Offset(0, 500), 1200);
+        await tester.pumpAndSettle();
+        expect(find.text('Caught up'), findsNothing);
+        expect(engine.seeks, [_minute * 6]);
+      });
+    }
+
     testWidgets('someone from it opens their entry', (tester) async {
       final engine = await _pump(tester, at: _minute * 8);
-      engine.moveTo(_minute * 9);
+      engine.finish();
       await tester.pumpAndSettle();
       await tester.tap(find.text('Maren Kest'));
       await tester.pumpAndSettle();
@@ -531,6 +663,73 @@ void main() {
       expect(find.text('Chapters'), findsOneWidget);
       expect(find.text('The Weir'), findsOneWidget);
       expect(find.byType(EpisodeThumb), findsNothing);
+    });
+  });
+
+  group('a tablet, playing (P27)', () {
+    const sideways = Size(1280, 800);
+
+    testWidgets('sideways, Wide covers the screen, and the rail stays at the right (P27c)', (tester) async {
+      await _pump(tester, size: sideways);
+      expect(tester.widget<PictureOfTheMoment>(find.byType(PictureOfTheMoment)).fill, isTrue);
+      expect(tester.widget<PictureOfTheMoment>(find.byType(PictureOfTheMoment)).shown!.path, 'world/wide1.jpg');
+      expect(tester.getCenter(find.text('Here')).dx, greaterThan(1180));
+    });
+
+    testWidgets('upright, it takes the Tall (P27o, call 53)', (tester) async {
+      await _pump(tester, size: const Size(800, 1280));
+      expect(tester.widget<PictureOfTheMoment>(find.byType(PictureOfTheMoment)).shown!.path, 'world/tall1.jpg');
+    });
+
+    testWidgets('Here and Episodes open beside the picture, not over it, and it plays on (P27f, P27g)', (tester) async {
+      final engine = await _pump(tester, size: sideways, at: _minute * 4);
+      await tester.tap(find.text('Here'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(tester.getTopLeft(find.text('Maren Kest')).dx, greaterThan(1280 - 380));
+      expect(find.text('2 · The Weir'), findsOneWidget);
+      expect(engine.pauses, 0);
+      await tester.tap(find.text('Episodes'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 · The Tenth Key'), findsOneWidget);
+    });
+
+    testWidgets('a tap on the picture closes the panel, and pauses nothing', (tester) async {
+      final engine = await _pump(tester, size: sideways, at: _minute * 4);
+      await tester.tap(find.text('Here'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(400, 300));
+      await tester.pumpAndSettle();
+      expect(find.text('Maren Kest'), findsNothing);
+      expect(engine.pauses, 0);
+    });
+
+    testWidgets('someone new comes at the top left, 400 wide (P27d)', (tester) async {
+      final engine = await _pump(tester, size: sideways);
+      engine.moveTo(_minute * 3);
+      await tester.pumpAndSettle();
+      final card = find.ancestor(of: find.text('Kemi'), matching: find.byType(Positioned)).first;
+      expect(tester.getSize(card).width, 400);
+      expect(tester.getTopLeft(card).dx, 40);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('Caught up: the cover at the left, the world at the right (P27h)', (tester) async {
+      final engine = await _pump(tester, size: sideways, at: _minute * 8);
+      engine.finish();
+      await tester.pumpAndSettle();
+      expect(tester.getCenter(find.text('Caught up')).dx, lessThan(480));
+      expect(tester.getTopLeft(find.text('In this world')).dx, greaterThanOrEqualTo(480));
+    });
+
+    testWidgets('turning it changes the layout and nothing else: it keeps its place (rule 7)', (tester) async {
+      final engine = await _pump(tester, at: _minute * 4);
+      tester.view.physicalSize = sideways;
+      await tester.pumpAndSettle();
+      expect(find.text('2 · The Weir'), findsOneWidget);
+      expect(engine.seeks, isEmpty);
+      expect(engine.pauses, 0);
     });
   });
 

@@ -131,8 +131,12 @@ final installedWorldProvider = Provider.family<LibraryWorld?, String>((ref, worl
   final worlds = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];
   final own = worlds.where((world) => world.id == worldId).firstOrNull;
   if (own != null) return own;
-  final successor = ref.watch(catalogueProvider).value?.where((world) => world.replaces.contains(worldId)).firstOrNull;
-  return successor == null ? null : worlds.where((world) => world.id == successor.id).firstOrNull;
+  final catalogue = ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[];
+  final successor = catalogue.where((world) => world.replaces.contains(worldId)).firstOrNull;
+  if (successor != null) return worlds.where((world) => world.id == successor.id).firstOrNull;
+  // Asked by the list's id, as Home's covers ask: the older edition it replaces is still that world here.
+  final named = catalogue.where((world) => world.id == worldId).firstOrNull;
+  return named == null ? null : worlds.where((world) => named.covers(world.id)).firstOrNull;
 });
 
 /// The newer edition Arke's list names for an installed world, if any (SPEC-058 R-30, R-32, P12

@@ -120,59 +120,106 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 PlayerTop(eyebrow: album.title, title: '${index + 1} of ${album.tracks.length}'),
-                Expanded(
-                  child: lyrics
-                      ? _Lyrics(text: track.lyrics!.text)
-                      : LayoutBuilder(
-                          builder: (context, box) {
-                            final side = (box.maxWidth - 64).clamp(120.0, box.maxHeight - 24).clamp(120.0, 520.0);
-                            return Align(
-                              alignment: Alignment.topCenter,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 16),
-                                child: Container(
-                                  width: side,
-                                  height: side,
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(
-                                    color: ArkeColors.neutral800,
-                                    borderRadius: BorderRadius.circular(ArkeRadius.xl),
-                                    boxShadow: const [BoxShadow(color: Color(0x80000000), blurRadius: 50, offset: Offset(0, 24))],
-                                  ),
-                                  child: cover == null ? const Icon(Icons.music_note_rounded, color: _fg, size: 48) : Image(image: cover, fit: BoxFit.cover),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-                Center(
-                  child: SizedBox(
-                    // As wide as the transport under it, so the words keep to its left edge (P17d).
-                    width: MediaQuery.sizeOf(context).width.clamp(0.0, 640.0),
+                if (MediaQuery.sizeOf(context).width >= WindowBands.wide)
+                  Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-                      child: Column(
+                      padding: const EdgeInsets.fromLTRB(64, 16, 64, 0),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            track.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: _fg, fontSize: lyrics ? ArkeType.sizeLg : ArkeType.size2xl, fontWeight: FontWeight.w700, height: 1.15),
+                          AspectRatio(
+                            aspectRatio: 1,
+                            child: Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                color: ArkeColors.neutral800,
+                                borderRadius: BorderRadius.circular(ArkeRadius.xl),
+                                boxShadow: const [BoxShadow(color: Color(0x80000000), blurRadius: 50, offset: Offset(0, 24))],
+                              ),
+                              child: cover == null ? const Icon(Icons.music_note_rounded, color: _fg, size: 48) : Image(image: cover, fit: BoxFit.cover),
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            line,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: _fg.withValues(alpha: 0.74), fontSize: ArkeType.sizeSm, fontWeight: FontWeight.w500),
+                          const SizedBox(width: 56),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  track.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: _fg, fontSize: ArkeType.size2xl, fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  line,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: _fg.withValues(alpha: 0.74), fontSize: ArkeType.sizeSm),
+                                ),
+                                if (lyrics) ...[const SizedBox(height: 16), Expanded(child: _Lyrics(text: track.lyrics!.text))],
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
+                  )
+                else ...[
+                  Expanded(
+                    child: lyrics
+                        ? _Lyrics(text: track.lyrics!.text)
+                        : LayoutBuilder(
+                            builder: (context, box) {
+                              final side = (box.maxWidth - 64).clamp(120.0, box.maxHeight - 24).clamp(120.0, 520.0);
+                              return Align(
+                                alignment: Alignment.topCenter,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 16),
+                                  child: Container(
+                                    width: side,
+                                    height: side,
+                                    clipBehavior: Clip.antiAlias,
+                                    decoration: BoxDecoration(
+                                      color: ArkeColors.neutral800,
+                                      borderRadius: BorderRadius.circular(ArkeRadius.xl),
+                                      boxShadow: const [BoxShadow(color: Color(0x80000000), blurRadius: 50, offset: Offset(0, 24))],
+                                    ),
+                                    child: cover == null ? const Icon(Icons.music_note_rounded, color: _fg, size: 48) : Image(image: cover, fit: BoxFit.cover),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                   ),
-                ),
+                  Center(
+                    child: SizedBox(
+                      // As wide as the transport under it, so the words keep to its left edge (P17d).
+                      width: MediaQuery.sizeOf(context).width.clamp(0.0, 640.0),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              track.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: _fg, fontSize: lyrics ? ArkeType.sizeLg : ArkeType.size2xl, fontWeight: FontWeight.w700, height: 1.15),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              line,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: _fg.withValues(alpha: 0.74), fontSize: ArkeType.sizeSm, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 _transport(context, engine, album, opens: opens, words: words, lyrics: lyrics),
               ],
             ),

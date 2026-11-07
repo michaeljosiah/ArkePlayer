@@ -38,7 +38,7 @@ final placeKeeperProvider = Provider<Future<void> Function(String itemId, Place 
 
 /// A narration's listening document, for what a page shows of it: its episodes' pictures (P24 rule 2).
 /// Null for a file, and for one that cannot be read, whose rows keep their numbers.
-final listeningPlanProvider = FutureProvider.family<ListeningPlan?, String>((ref, itemId) async {
+final listeningPlanProvider = FutureProvider.autoDispose.family<ListeningPlan?, String>((ref, itemId) async {
   final store = await ref.watch(libraryStoreProvider.future);
   final item = store.items.where((item) => item.id == itemId).firstOrNull;
   if (item == null || item.format != FileFormat.listening) return null;

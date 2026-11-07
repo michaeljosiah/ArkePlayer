@@ -22,6 +22,7 @@ import '../application/worlds.dart';
 import 'album_screen.dart';
 import 'guide_widgets.dart';
 import 'world_screen.dart';
+import 'world_shelf.dart';
 import 'world_widgets.dart';
 
 /// The author's schedule as written (SPEC-058 R-53, P15e, P15f): `Fridays`, `Daily`,
@@ -91,14 +92,7 @@ class ProductionScreen extends ConsumerWidget {
     if (production.story != null) return StoryProductionScreen(world: world, production: production);
     if (production.comic != null) return ComicProductionScreen(world: world, production: production);
     final narration = items[production.narration];
-    // A book released in parts reads as one: the part being read, else the first not finished.
-    final books = [?items[production.book], for (final id in production.bookParts) ?items[id]];
-    final book =
-        books
-            .where((book) => book.inProgress)
-            .fold<LibraryItem?>(null, (latest, book) => latest == null || book.place!.updatedAt.isAfter(latest.place!.updatedAt) ? book : latest) ??
-        books.where((book) => !book.finished).firstOrNull ??
-        books.firstOrNull;
+    final book = bookNow(production, items);
     final kind = productionKind(book: book != null, narration: narration != null, length: narration?.duration);
     final first = narration ?? book;
     final now = ref.watch(clockProvider)();
@@ -254,7 +248,7 @@ class ProductionContents extends ConsumerWidget {
         if (narration != null && (narration.chapters.length > 1 || next != null)) ...[
           if (episodeRanges(narration.chapters.length).isEmpty) ...[
             SectionHead(plan == null ? 'Chapters' : 'Episodes'),
-            for (var i = 0; i < narration.chapters.length; i++) row(i),
+            _Rows(first: 0, last: narration.chapters.length - 1, across: plan != null, row: row),
           ] else
             _Ranged(count: narration.chapters.length, startsAt: currentAt ?? 0, row: row),
           if (next != null)
@@ -275,7 +269,7 @@ class ProductionContents extends ConsumerWidget {
                 if (song.album.document.kind == MusicKind.single) 'Single' else song.album.title,
               ].join(' · '),
               cover: song.album.cover == null ? null : FileImage(File(song.album.cover!)),
-              onPlay: engine == null ? null : () => engine.openMusic(song.album, index: song.track),
+              onPlay: engine == null ? null : () => playSong(context, ref, world.id, () => engine.openMusic(song.album, index: song.track)),
               onOpen: () => context.push(Routes.production(worldLocation, song.album.production.id)),
             ),
         ],
@@ -309,8 +303,30 @@ class _RangedState extends State<_Ranged> {
           padding: const EdgeInsets.only(top: 12),
           child: RangeChips(count: widget.count, selected: _range, onSelect: (value) => setState(() => _range = value)),
         ),
-        for (var i = first; i <= last; i++) widget.row(i),
+        _Rows(first: first, last: last, across: true, row: widget.row),
       ],
+    );
+  }
+}
+
+/// Rows down the page, or two across on a tablet sideways (P26j).
+class _Rows extends StatelessWidget {
+  const _Rows({required this.first, required this.last, required this.across, required this.row});
+
+  final int first;
+  final int last;
+  final bool across;
+  final Widget Function(int index) row;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!across || MediaQuery.sizeOf(context).width < WindowBands.wide) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = first; i <= last; i++) row(i)]);
+    }
+    return LayoutBuilder(
+      builder: (context, box) => Wrap(
+        children: [for (var i = first; i <= last; i++) SizedBox(width: box.maxWidth / 2, child: row(i))],
+      ),
     );
   }
 }

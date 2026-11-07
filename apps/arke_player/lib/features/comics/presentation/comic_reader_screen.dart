@@ -153,7 +153,8 @@ class _ComicReaderScreenState extends ConsumerState<ComicReaderScreen> {
     final scroll = comic.document.reading == ComicReading.scroll;
     final rtl = comic.document.reading == ComicReading.rtl;
     final size = MediaQuery.sizeOf(context);
-    final spreads = !scroll && (size.width >= WindowBands.fold || size.width > size.height);
+    // A Fold open opens two pages (P21 rule 9), and so does anything sideways; a tablet held upright one (P27r).
+    final spreads = !scroll && (size.width > size.height || (size.width >= WindowBands.fold && size.width / size.height >= 0.8));
     final pairs = comicSpreads(count);
     final turns = spreads ? pairs.length : count;
     if (!scroll && (_pages == null || _spreads != spreads)) {

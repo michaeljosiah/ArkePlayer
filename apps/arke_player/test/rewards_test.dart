@@ -7,7 +7,9 @@ import 'package:arke_player/app/router/router.dart';
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/app/services.dart';
 import 'package:arke_player/app/theme/arke_theme.dart';
+import 'package:arke_player/features/downloads/presentation/downloads_screen.dart';
 import 'package:arke_player/features/parts/application/notices.dart';
+import 'package:arke_player/features/players/presentation/open_item_screen.dart';
 import 'package:arke_player/features/settings/application/settings_controller.dart';
 import 'package:arke_player/features/settings/domain/device_settings.dart';
 import 'package:arke_player/features/worlds/application/discover.dart';
@@ -19,6 +21,7 @@ import 'package:arke_player/features/worlds/presentation/guide_widgets.dart';
 import 'package:arke_player/features/worlds/presentation/someone_new.dart';
 import 'package:arke_player/features/worlds/presentation/teaser_screen.dart';
 import 'package:arke_player/features/worlds/presentation/world_screen.dart';
+import 'package:arke_player/features/worlds/presentation/world_shelf.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -159,8 +162,9 @@ Future<_Audio> _pump(
   GuideReach reach = GuideReach.none,
   DeviceSettings settings = const DeviceSettings(),
   Guide? guide,
+  Size size = const Size(390, 844),
 }) async {
-  tester.view.physicalSize = const Size(390, 844);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final audio = _Audio();
@@ -318,6 +322,19 @@ void main() {
       expect(find.text('I am 18 or older · Start'), findsOneWidget);
     });
 
+    testWidgets('Play leaves the feed, its sound with it, for the title (P22 rule 3)', (tester) async {
+      final audio = await _pump(tester, worlds: [_here]);
+      final pages = teaserFeed([
+        (world: _listed(), worldId: 'undersong', worldPage: Routes.world('undersong'), guide: WorldGuide(guide: _guide, pathOf: (asset) => asset)),
+      ]);
+      await _openFeed(tester, pages);
+      await tester.tap(find.text('Play').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(TeaserFeedScreen), findsNothing);
+      expect(audio.stopped, greaterThan(0));
+      expect(find.byType(OpenItemScreen), findsOneWidget);
+    });
+
     testWidgets('a Fold keeps it upright, centred (P23d)', (tester) async {
       tester.view.physicalSize = const Size(984, 1092);
       tester.view.devicePixelRatio = 1;
@@ -333,6 +350,109 @@ void main() {
       final strip = tester.getRect(find.text('World 0'));
       expect(strip.left, greaterThan((984 - 1092 * 0.695) / 2));
       expect(strip.left, lessThan(984 / 2));
+    });
+  });
+
+  group('an older edition on the phone', () {
+    final replacing = CatalogueWorld(
+      id: 'the-undersong',
+      name: 'The Undersong',
+      replaces: const ['undersong'],
+      productions: const [CatalogueProduction(id: _ledger, title: 'The Ledger of Nights', kind: 'Audiobook · Book · 6 chapters')],
+      package: CataloguePackage(url: Uri.parse('https://example.org/undersong.zip'), byteLength: 72000000, sha256: 'a' * 64),
+    );
+
+    testWidgets('Home’s cover knows it is here, and offers Play rather than a download', (tester) async {
+      await _pump(tester, catalogue: [replacing], worlds: [_here]);
+      expect(find.text('Play'), findsOneWidget);
+      expect(find.textContaining('Start', findRichText: true), findsNothing);
+    });
+  });
+
+  group('a press’s title (P22 rule 3)', () {
+    LibraryItem book(String id, {Place? place, bool finished = false}) =>
+        LibraryItem(id: id, format: FileFormat.epub, title: id, byteLength: 1, addedAt: DateTime.utc(2026), file: '$id.epub', place: place, finished: finished);
+
+    test('a book in parts: the part in hand, and it says Continue', () {
+      final world = LibraryWorld(
+        id: 'w',
+        edition: '2026-10-21',
+        name: 'W',
+        byteLength: 1,
+        installedAt: DateTime.utc(2026),
+        productions: const [
+          LibraryProduction(id: 'p', title: 'P', book: 'one', bookParts: ['two']),
+        ],
+      );
+      final items = {
+        'one': book('one', finished: true),
+        'two': book(
+          'two',
+          place: Place(locator: 'epubcfi(/6/4)', progress: 0.5, updatedAt: DateTime.utc(2026)),
+        ),
+      };
+      final start = worldStart(world, null, items)!;
+      expect(start.first?.id, 'two');
+      expect(start.begun, isTrue);
+      expect(start.read, isTrue);
+    });
+  });
+
+  group('every way to a song asks (P22 rule 9)', () {
+    Future<List<int>> pumpSong(WidgetTester tester, CatalogueWorld world, DeviceSettings settings) async {
+      final played = <int>[];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _overrides(audio: _Audio(), catalogue: [world], worlds: const [], reach: GuideReach.none, settings: settings),
+          child: MaterialApp(
+            home: Consumer(
+              builder: (context, ref, _) {
+                ref.watch(catalogueProvider);
+                ref.watch(settingsProvider);
+                return Scaffold(
+                  body: TextButton(onPressed: () => playSong(context, ref, world.id, () => played.add(1)), child: const Text('A song')),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return played;
+    }
+
+    testWidgets('on an 18+ world it asks, and Not now plays nothing', (tester) async {
+      final played = await pumpSong(tester, _listed(age: '18+'), const DeviceSettings());
+      await tester.tap(find.text('A song'));
+      await tester.pumpAndSettle();
+      expect(find.text('I am 18 or older · Play'), findsOneWidget);
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+      expect(played, isEmpty);
+    });
+
+    testWidgets('anywhere else it just plays', (tester) async {
+      final played = await pumpSong(tester, _listed(), const DeviceSettings());
+      await tester.tap(find.text('A song'));
+      await tester.pumpAndSettle();
+      expect(played, [1]);
+    });
+  });
+
+  group('Library’s section (P22 rule 15)', () {
+    testWidgets('You’s On this phone opens Downloads, every time', (tester) async {
+      await _pump(tester, location: Routes.you);
+      await tester.tap(find.text('On this phone'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DownloadsPane), findsOneWidget);
+      await tester.tap(find.text('Worlds').first);
+      await tester.pumpAndSettle();
+      expect(find.byType(DownloadsPane), findsNothing);
+      await tester.tap(find.text('You'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('On this phone'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DownloadsPane), findsOneWidget);
     });
   });
 
@@ -521,6 +641,89 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Kemi'), findsNothing);
+    });
+  });
+
+  group('a tablet (P26, P27)', () {
+    const sideways = Size(1280, 800);
+    const upright = Size(800, 1280);
+    const reached = GuideReach(reached: {_ledger: (at: 2, through: 2)});
+
+    testWidgets('sideways, a world stays at the left, so its press never leaves the screen (P26h)', (tester) async {
+      await _pump(tester, location: Routes.world('undersong'), worlds: [_here], reach: reached, size: sideways);
+      expect(tester.getSize(find.byType(WorldPane)).width, 460);
+      await tester.tap(find.text('People'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kemi'), findsOneWidget);
+      final press = find.byType(WorldPress);
+      expect(press, findsOneWidget);
+      expect(tester.getTopLeft(press).dx, lessThan(460));
+      expect(tester.getTopLeft(find.text('Kemi')).dx, greaterThan(460));
+    });
+
+    testWidgets('upright, it keeps the Fold’s page (P26u)', (tester) async {
+      await _pump(tester, location: Routes.world('undersong'), worlds: [_here], reach: reached, size: upright);
+      expect(find.byType(WorldPane), findsNothing);
+      expect(find.byType(WorldPress), findsOneWidget);
+    });
+
+    for (final size in const [sideways, upright]) {
+      testWidgets('People runs five across at ${size.width.toInt()} wide', (tester) async {
+        const everyone = GuideReach(reached: {_ledger: (at: 6, through: 6)});
+        final crowd = Guide(
+          productions: _guide.productions,
+          characters: [
+            for (var i = 0; i < 7; i++) GuideCharacter(id: 'c$i', name: 'Person $i', sections: _says('.')),
+            _kemi,
+          ],
+          places: const [],
+          lore: const [],
+        );
+        await _pump(tester, location: Routes.world('undersong'), worlds: [_here], reach: everyone, guide: crowd, size: size);
+        await tester.tap(find.text('People'));
+        await tester.pumpAndSettle();
+        final tops = [for (var i = 0; i < 6; i++) tester.getTopLeft(find.text('Person $i')).dy];
+        expect(tops.take(4).toSet(), hasLength(1), reason: 'Kemi is new and first, then four on her row');
+        expect(tops[5], greaterThan(tops[3]));
+      });
+    }
+
+    testWidgets('a character keeps the portrait at the left and its words at the right (P26n)', (tester) async {
+      await _pump(tester, location: Routes.guideEntry(Routes.worldsWorld('undersong'), 'maren'), worlds: [_here], reach: reached, size: sideways);
+      expect(tester.getSize(find.byType(WorldPane)).width, 460);
+      expect(tester.getTopLeft(find.textContaining('Voice', findRichText: true)).dx, lessThan(460));
+      expect(tester.getTopLeft(find.text('Tide-caller.')).dx, greaterThan(460));
+    });
+
+    testWidgets('You: two columns sideways, one upright (P26r, P26x)', (tester) async {
+      await _pump(tester, location: Routes.you, size: sideways);
+      expect(tester.getTopLeft(find.text('Appearance'.toUpperCase())).dy, tester.getTopLeft(find.text('Downloads'.toUpperCase())).dy);
+      await _pump(tester, location: Routes.you, size: upright);
+      expect(tester.getTopLeft(find.text('Downloads'.toUpperCase())).dy, greaterThan(tester.getTopLeft(find.text('Appearance'.toUpperCase())).dy));
+    });
+
+    testWidgets('a sheet keeps a phone’s width, centred (P26e)', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.world('undersong'),
+        catalogue: [_listed(age: '18+')],
+        size: sideways,
+      );
+      await tester.tap(find.textContaining('Start', findRichText: true).first);
+      await tester.pumpAndSettle();
+      // Its press runs its width, less the sheet's margins.
+      final press = tester.getRect(find.widgetWithText(FilledButton, 'I am 18 or older · Start'));
+      expect(press.width, 560 - 32);
+      expect(press.center.dx, closeTo(640, 0.5));
+    });
+
+    testWidgets('a teaser is upright over its blur sideways, and fills the tablet upright (P27a, P27q)', (tester) async {
+      await _pump(tester, size: sideways);
+      await _openFeed(tester, _feedOf([_guide]), start: 1);
+      expect(tester.getTopLeft(find.text('Bray')).dx, greaterThan(400));
+      await _pump(tester, size: upright);
+      await _openFeed(tester, _feedOf([_guide]), start: 1);
+      expect(tester.getTopLeft(find.text('Bray')).dx, 16);
     });
   });
 

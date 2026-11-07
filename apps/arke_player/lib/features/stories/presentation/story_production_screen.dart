@@ -10,6 +10,7 @@ import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../worlds/application/worlds.dart';
 import '../../worlds/presentation/world_screen.dart';
+import '../../worlds/presentation/world_shelf.dart';
 import '../../worlds/presentation/world_widgets.dart';
 import '../application/stories.dart';
 import 'story_widgets.dart';
@@ -123,7 +124,10 @@ class StoryProductionScreen extends ConsumerWidget {
                       icon: Icons.download_rounded,
                       label: 'Update',
                       detail: formatBytes(update.alone!.byteLength),
-                      onPressed: () => ref.read(productionInstallProvider(key).notifier).start(listed, update),
+                      onPressed: () async {
+                        if (!await mayOpen(context, ref, listed, press: 'Update') || !context.mounted) return;
+                        await ref.read(productionInstallProvider(key).notifier).start(listed, update);
+                      },
                     ),
                     _ => const SizedBox.shrink(),
                   },

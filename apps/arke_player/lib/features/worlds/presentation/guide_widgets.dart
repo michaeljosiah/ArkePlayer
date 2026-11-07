@@ -514,7 +514,6 @@ class PeoplePanel extends ConsumerWidget {
     if (guide == null) return const SizedBox.shrink();
     final reach = ref.watch(guideReachProvider(worldId)).value ?? GuideReach.none;
     final characters = guide.guide.characters;
-    final width = RowSizes.small(context);
     final opened = _openedIn(ref);
     bool fresh(GuideEntry entry) => isNewEntry(worldId, entry, reach, opened);
     final here = ref.watch(installedWorldProvider(worldId)) != null;
@@ -526,37 +525,43 @@ class PeoplePanel extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: FoundLine(found: foundIn(characters, reach), ink: context.surface.mutedForeground),
           ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-          child: Wrap(
-            spacing: 11,
-            runSpacing: 14,
-            children: [
-              // New comes first (P23 rule 7), then the rest as the guide has them.
-              for (final character in [
-                ...characters.where((entry) => reach.shows(entry.after) && fresh(entry)),
-                ...characters.where((entry) => reach.shows(entry.after) && !fresh(entry)),
-              ])
-                PosterTile(
-                  title: character.name,
-                  kind: character.role ?? 'Character',
-                  tall: guidePicture(guide, character),
-                  initials: initials(character.name),
-                  pictureAlignment: const Alignment(0, -0.6),
-                  width: width,
-                  fresh: fresh(character),
-                  onOpen: () => context.push(Routes.guideEntry(location, character.id)),
-                ),
-              for (final character in characters.where((entry) => !reach.shows(entry.after)))
-                GatedCard(
-                  after: character.after!,
-                  what: 'Character',
-                  width: width,
-                  aspectRatio: 2 / 3,
-                  onReveal: () => askReveal(context, ref, worldId, guide, reach, character.after!),
-                ),
-            ],
-          ),
+        LayoutBuilder(
+          builder: (context, box) {
+            // Five across from a Fold up, whatever room there is (P26 rules 7, 11).
+            final width = MediaQuery.sizeOf(context).width >= WindowBands.fold ? ((box.maxWidth - 32 - 4 * 11) / 5).floorToDouble() : RowSizes.small(context);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+              child: Wrap(
+                spacing: 11,
+                runSpacing: 14,
+                children: [
+                  // New comes first (P23 rule 7), then the rest as the guide has them.
+                  for (final character in [
+                    ...characters.where((entry) => reach.shows(entry.after) && fresh(entry)),
+                    ...characters.where((entry) => reach.shows(entry.after) && !fresh(entry)),
+                  ])
+                    PosterTile(
+                      title: character.name,
+                      kind: character.role ?? 'Character',
+                      tall: guidePicture(guide, character),
+                      initials: initials(character.name),
+                      pictureAlignment: const Alignment(0, -0.6),
+                      width: width,
+                      fresh: fresh(character),
+                      onOpen: () => context.push(Routes.guideEntry(location, character.id)),
+                    ),
+                  for (final character in characters.where((entry) => !reach.shows(entry.after)))
+                    GatedCard(
+                      after: character.after!,
+                      what: 'Character',
+                      width: width,
+                      aspectRatio: 2 / 3,
+                      onReveal: () => askReveal(context, ref, worldId, guide, reach, character.after!),
+                    ),
+                ],
+              ),
+            );
+          },
         ),
       ],
     );
