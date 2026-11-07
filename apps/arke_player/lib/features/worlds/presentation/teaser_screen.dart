@@ -191,7 +191,7 @@ class _Teaser {
   final Duration? length;
 }
 
-class _FeedPageView extends ConsumerWidget {
+class _FeedPageView extends ConsumerStatefulWidget {
   const _FeedPageView({required this.page, required this.current, required this.sound, required this.position, required this.onSound, required this.onWorld});
 
   final FeedPage page;
@@ -202,19 +202,43 @@ class _FeedPageView extends ConsumerWidget {
   final VoidCallback onWorld;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FeedPageView> createState() => _FeedPageViewState();
+}
+
+class _FeedPageViewState extends ConsumerState<_FeedPageView> {
+  /// Its picture is Wide or square: a teaser does not say, so the picture is asked.
+  bool _across = false;
+
+  FeedPage get page => widget.page;
+
+  @override
+  Widget build(BuildContext context) {
     final teaser = _Teaser.of(page);
     final text = Theme.of(context).textTheme;
     final media = MediaQuery.of(context);
     final foot = media.padding.bottom + 12;
     final notify = (ref.watch(settingsProvider).value ?? const DeviceSettings()).notify.contains(page.worldId);
-    // A Fold or tablet keeps the upright shape, centred over the picture's blur (P23d).
-    final wide = media.size.width >= WindowBands.fold;
-    final width = wide ? min(media.size.width, media.size.height * 0.695) : media.size.width;
+    final size = media.size;
+    // A tablet sideways: a Wide picture fills the screen, a portrait stays upright over its blur. A Fold,
+    // nearly square, keeps the upright shape too; a tablet held upright is as tall as a phone (P23d, P27).
+    final sideways = size.width >= WindowBands.wide && size.height >= WindowBands.fold;
+    final bleeds = sideways && _across;
+    final boxed = (sideways && !_across) || (!sideways && size.width >= WindowBands.fold && size.width / size.height >= 0.8);
+    final width = sideways ? size.height * 0.5625 : min(size.width, size.height * 0.695);
     final body = Stack(
       fit: StackFit.expand,
       children: [
-        if (teaser.picture != null) _FeedPicture(picture: teaser.picture!, upright: teaser.upright) else const ColoredBox(color: ArkeColors.neutral800),
+        if (teaser.picture != null)
+          _FeedPicture(
+            picture: teaser.picture!,
+            upright: teaser.upright,
+            covers: bleeds,
+            onAcross: (across) {
+              if (across != _across && mounted) setState(() => _across = across);
+            },
+          )
+        else
+          const ColoredBox(color: ArkeColors.neutral800),
         const Positioned(
           left: 0,
           right: 0,
@@ -243,8 +267,8 @@ class _FeedPageView extends ConsumerWidget {
           ),
         ),
         Positioned(
-          left: 16,
-          right: 84,
+          left: bleeds ? 40 : 16,
+          right: bleeds ? 160 : 84,
           bottom: foot + 98,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,13 +290,19 @@ class _FeedPageView extends ConsumerWidget {
           ),
         ),
         Positioned(
-          right: 8,
-          bottom: foot + 94,
+          right: bleeds ? 32 : 8,
+          bottom: bleeds ? foot + 16 : foot + 94,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (teaser.soundLabel case final label?) ...[
-                RailPress(icon: sound ? Icons.volume_up_rounded : Icons.volume_off_rounded, label: label, on: sound, toggles: true, onPressed: onSound),
+                RailPress(
+                  icon: widget.sound ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                  label: label,
+                  on: widget.sound,
+                  toggles: true,
+                  onPressed: widget.onSound,
+                ),
                 const SizedBox(height: 12),
               ],
               RailPress(
@@ -283,30 +313,31 @@ class _FeedPageView extends ConsumerWidget {
                 onPressed: () => setNotify(ref, page.worldId, !notify),
               ),
               const SizedBox(height: 12),
-              RailPress(icon: Icons.public, label: 'World', onPressed: onWorld),
+              RailPress(icon: Icons.public, label: 'World', onPressed: widget.onWorld),
             ],
           ),
         ),
-        if (teaser.length case final length? when current && sound)
+        if (teaser.length case final length? when widget.current && widget.sound)
           Positioned(
-            left: 16,
-            right: 16,
+            left: bleeds ? 40 : 16,
+            right: bleeds ? 120 : 16,
             bottom: foot + 80,
             child: StreamBuilder<Duration>(
-              stream: position,
+              stream: widget.position,
               builder: (context, snapshot) =>
                   ThinLine(value: length.inMilliseconds == 0 ? 0 : (snapshot.data ?? Duration.zero).inMilliseconds / length.inMilliseconds),
             ),
           ),
         Positioned(
-          left: 12,
-          right: 12,
+          left: bleeds ? 40 : 12,
+          right: bleeds ? null : 12,
+          width: bleeds ? 420 : null,
           bottom: foot,
-          child: _WorldStrip(page: page, onWorld: onWorld),
+          child: _WorldStrip(page: page, onWorld: widget.onWorld),
         ),
       ],
     );
-    if (!wide) return body;
+    if (!boxed) return body;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -325,10 +356,14 @@ class _FeedPageView extends ConsumerWidget {
 /// A Tall picture or portrait fills its page; a Wide or square one shows whole over its own blur
 /// (P23b, P23c). A teaser does not say which it has, so the picture is asked.
 class _FeedPicture extends StatefulWidget {
-  const _FeedPicture({required this.picture, required this.upright});
+  const _FeedPicture({required this.picture, required this.upright, required this.covers, required this.onAcross});
 
   final ImageProvider picture;
   final Alignment upright;
+
+  /// A Wide picture fills a tablet sideways rather than showing whole.
+  final bool covers;
+  final ValueChanged<bool> onAcross;
 
   @override
   State<_FeedPicture> createState() => _FeedPictureState();
@@ -337,7 +372,12 @@ class _FeedPicture extends StatefulWidget {
 class _FeedPictureState extends State<_FeedPicture> {
   ImageStream? _stream;
   late final _listener = ImageStreamListener((info, _) {
-    if (mounted) setState(() => _across = info.image.width >= info.image.height);
+    if (!mounted) return;
+    setState(() => _across = info.image.width >= info.image.height);
+    // Told after the frame: a picture already decoded answers while its parent is still building.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onAcross(_across);
+    });
   }, onError: (error, stack) {});
   bool _across = false;
 
@@ -357,7 +397,7 @@ class _FeedPictureState extends State<_FeedPicture> {
   }
 
   @override
-  Widget build(BuildContext context) => _across
+  Widget build(BuildContext context) => _across && !widget.covers
       ? Padding(
           padding: const EdgeInsets.only(bottom: 200),
           child: WholeOverBlur(picture: widget.picture),

@@ -17,6 +17,7 @@ import '../application/found.dart';
 import '../application/guides.dart';
 import '../application/worlds.dart';
 import 'guide_widgets.dart';
+import 'world_shelf.dart';
 import 'world_widgets.dart';
 
 /// `0:08`.
@@ -86,6 +87,58 @@ class GuideEntryScreen extends ConsumerWidget {
       ];
     }
 
+    // A tablet sideways: the portrait stays at the left with its name and Voice, its words at the right (P26n).
+    if (entry is GuideCharacter && MediaQuery.sizeOf(context).width >= WindowBands.wide) {
+      final text = Theme.of(context).textTheme;
+      const fg = ArkeColors.mediaOverlayForeground;
+      return Scaffold(
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: WorldPane.width,
+              child: WorldPane(
+                picture: guidePicture(guide, entry),
+                pictureAlignment: const Alignment(0, -0.7),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(entry.name, style: text.headlineLarge?.copyWith(color: fg)),
+                    const SizedBox(height: 8),
+                    Text([?entry.role, ?world].join(' · '), style: text.bodyMedium?.copyWith(color: fg.withValues(alpha: 0.84))),
+                    if (entry.voice case final voice?)
+                      HeroSecondPress(
+                        icon: Icons.volume_up_outlined,
+                        label: 'Voice',
+                        detail: _length(voice.duration),
+                        onPressed: () => ref.read(voiceLineProvider)(guide.pathOf(voice.audio)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: SafeArea(
+                left: false,
+                bottom: false,
+                child: ListView(
+                  padding: EdgeInsets.only(top: 16, bottom: footRoom(context)),
+                  children: [
+                    ...themed(entry.theme),
+                    GuideProse(sections: entry.sections, reach: reach, onReveal: ask),
+                    if (linked(entry.links) case final withs when withs.isNotEmpty) ...[
+                      const SectionHead('With'),
+                      WithChips(guide: guide, entries: withs, onOpen: open),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Scaffold(
       body: switch (entry) {
         GuideCharacter() => ListView(

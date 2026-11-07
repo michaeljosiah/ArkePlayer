@@ -11,6 +11,7 @@ import 'package:arke_player/features/players/application/music.dart';
 import 'package:arke_player/features/players/application/players.dart';
 import 'package:arke_player/features/players/presentation/episode_player.dart';
 import 'package:arke_player/features/players/presentation/episode_rows.dart';
+import 'package:arke_player/features/players/presentation/picture_of_the_moment.dart';
 import 'package:arke_player/features/settings/application/settings_controller.dart';
 import 'package:arke_player/features/settings/domain/device_settings.dart';
 import 'package:arke_player/features/worlds/application/discover.dart';
@@ -531,6 +532,73 @@ void main() {
       expect(find.text('Chapters'), findsOneWidget);
       expect(find.text('The Weir'), findsOneWidget);
       expect(find.byType(EpisodeThumb), findsNothing);
+    });
+  });
+
+  group('a tablet, playing (P27)', () {
+    const sideways = Size(1280, 800);
+
+    testWidgets('sideways, Wide covers the screen, and the rail stays at the right (P27c)', (tester) async {
+      await _pump(tester, size: sideways);
+      expect(tester.widget<PictureOfTheMoment>(find.byType(PictureOfTheMoment)).fill, isTrue);
+      expect(tester.widget<PictureOfTheMoment>(find.byType(PictureOfTheMoment)).shown!.path, 'world/wide1.jpg');
+      expect(tester.getCenter(find.text('Here')).dx, greaterThan(1180));
+    });
+
+    testWidgets('upright, it takes the Tall (P27o, call 53)', (tester) async {
+      await _pump(tester, size: const Size(800, 1280));
+      expect(tester.widget<PictureOfTheMoment>(find.byType(PictureOfTheMoment)).shown!.path, 'world/tall1.jpg');
+    });
+
+    testWidgets('Here and Episodes open beside the picture, not over it, and it plays on (P27f, P27g)', (tester) async {
+      final engine = await _pump(tester, size: sideways, at: _minute * 4);
+      await tester.tap(find.text('Here'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(tester.getTopLeft(find.text('Maren Kest')).dx, greaterThan(1280 - 380));
+      expect(find.text('2 · The Weir'), findsOneWidget);
+      expect(engine.pauses, 0);
+      await tester.tap(find.text('Episodes'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 · The Tenth Key'), findsOneWidget);
+    });
+
+    testWidgets('a tap on the picture closes the panel, and pauses nothing', (tester) async {
+      final engine = await _pump(tester, size: sideways, at: _minute * 4);
+      await tester.tap(find.text('Here'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(400, 300));
+      await tester.pumpAndSettle();
+      expect(find.text('Maren Kest'), findsNothing);
+      expect(engine.pauses, 0);
+    });
+
+    testWidgets('someone new comes at the top left, 400 wide (P27d)', (tester) async {
+      final engine = await _pump(tester, size: sideways);
+      engine.moveTo(_minute * 3);
+      await tester.pumpAndSettle();
+      final card = find.ancestor(of: find.text('Kemi'), matching: find.byType(Positioned)).first;
+      expect(tester.getSize(card).width, 400);
+      expect(tester.getTopLeft(card).dx, 40);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('Caught up: the cover at the left, the world at the right (P27h)', (tester) async {
+      final engine = await _pump(tester, size: sideways, at: _minute * 8);
+      engine.moveTo(_minute * 9);
+      await tester.pumpAndSettle();
+      expect(tester.getCenter(find.text('Caught up')).dx, lessThan(480));
+      expect(tester.getTopLeft(find.text('In this world')).dx, greaterThanOrEqualTo(480));
+    });
+
+    testWidgets('turning it changes the layout and nothing else: it keeps its place (rule 7)', (tester) async {
+      final engine = await _pump(tester, at: _minute * 4);
+      tester.view.physicalSize = sideways;
+      await tester.pumpAndSettle();
+      expect(find.text('2 · The Weir'), findsOneWidget);
+      expect(engine.seeks, isEmpty);
+      expect(engine.pauses, 0);
     });
   });
 

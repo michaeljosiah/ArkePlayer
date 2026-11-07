@@ -421,6 +421,8 @@ Future<T?> showArkeSheet<T>(BuildContext context, {required String? title, requi
   isScrollControlled: scrollable,
   useSafeArea: true,
   useRootNavigator: true,
+  // A question never stretches across a tablet (P26 rule 10).
+  constraints: const BoxConstraints(maxWidth: 560),
   builder: (context) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
     child: Column(

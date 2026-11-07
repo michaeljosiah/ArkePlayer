@@ -254,7 +254,7 @@ class ProductionContents extends ConsumerWidget {
         if (narration != null && (narration.chapters.length > 1 || next != null)) ...[
           if (episodeRanges(narration.chapters.length).isEmpty) ...[
             SectionHead(plan == null ? 'Chapters' : 'Episodes'),
-            for (var i = 0; i < narration.chapters.length; i++) row(i),
+            _Rows(first: 0, last: narration.chapters.length - 1, across: plan != null, row: row),
           ] else
             _Ranged(count: narration.chapters.length, startsAt: currentAt ?? 0, row: row),
           if (next != null)
@@ -309,8 +309,30 @@ class _RangedState extends State<_Ranged> {
           padding: const EdgeInsets.only(top: 12),
           child: RangeChips(count: widget.count, selected: _range, onSelect: (value) => setState(() => _range = value)),
         ),
-        for (var i = first; i <= last; i++) widget.row(i),
+        _Rows(first: first, last: last, across: true, row: widget.row),
       ],
+    );
+  }
+}
+
+/// Rows down the page, or two across on a tablet sideways (P26j).
+class _Rows extends StatelessWidget {
+  const _Rows({required this.first, required this.last, required this.across, required this.row});
+
+  final int first;
+  final int last;
+  final bool across;
+  final Widget Function(int index) row;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!across || MediaQuery.sizeOf(context).width < WindowBands.wide) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [for (var i = first; i <= last; i++) row(i)]);
+    }
+    return LayoutBuilder(
+      builder: (context, box) => Wrap(
+        children: [for (var i = first; i <= last; i++) SizedBox(width: box.maxWidth / 2, child: row(i))],
+      ),
     );
   }
 }

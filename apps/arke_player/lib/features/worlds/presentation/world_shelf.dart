@@ -76,6 +76,63 @@ class BlurOf extends StatelessWidget {
   );
 }
 
+/// The left of a page on a tablet sideways (P26h, P26n): its picture melting into its own blur, and what
+/// must never leave the screen. What the page holds scrolls beside it.
+class WorldPane extends StatelessWidget {
+  const WorldPane({required this.picture, required this.child, this.pictureAlignment = const Alignment(0.2, 0), this.onMore, super.key});
+
+  final ImageProvider? picture;
+  final Widget child;
+  final Alignment pictureAlignment;
+  final VoidCallback? onMore;
+
+  static const width = 460.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    return ColoredBox(
+      color: _bg,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (picture != null) BlurOf(picture: picture!),
+          if (picture != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              height: 470,
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.52, 1],
+                  colors: [Colors.black, Colors.transparent],
+                ).createShader(bounds),
+                child: Image(image: picture!, fit: BoxFit.cover, alignment: pictureAlignment, errorBuilder: (context, error, stack) => const SizedBox.shrink()),
+              ),
+            ),
+          SingleChildScrollView(padding: const EdgeInsets.fromLTRB(24, 330, 24, 24), child: child),
+          Positioned(
+            left: 12,
+            right: 12,
+            top: top + 8,
+            child: Row(
+              children: [
+                if (context.canPop()) GlassPress(icon: Icons.chevron_left_rounded, label: 'Back', onPressed: () => context.pop()),
+                const Spacer(),
+                if (onMore != null) GlassPress(icon: Icons.more_horiz, label: 'More', onPressed: onMore!),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// A world's age (P22 rule 9, call 42), from Arke's list: a small outlined mark, in the ink it sits on.
 class AgeTag extends StatelessWidget {
   const AgeTag(this.age, {this.color, super.key});

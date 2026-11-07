@@ -111,6 +111,66 @@ class _WorldScreenState extends ConsumerState<WorldScreen> {
       }
     }
 
+    final header = _WorldHeader(
+      worldId: id,
+      name: name,
+      data: data,
+      age: listed?.age,
+      logline: installed?.logline ?? listed?.logline,
+      picture: picture,
+      onMore: more,
+      press: switch (updating) {
+        Installing() when update != null => InstallProgress(state: updating, onCancel: () => ref.read(installProvider(update.id).notifier).cancel()),
+        _ when update != null && newer != null => HeroPress(
+          icon: Icons.download_rounded,
+          label: 'Update',
+          detail: formatBytes(newer.byteLength),
+          onPressed: () => ref.read(installProvider(update.id).notifier).start(update),
+        ),
+        _ => WorldPress(worldId: id, top: 12),
+      },
+      found: reach == null ? null : FoundLine(found: foundIn(entriesOf(guide!), reach), ink: _fg, top: 12),
+    );
+    void onTab(WorldTab value) => setState(() => _tab = value);
+    final held = <Widget>[
+      if (installed != null && newer != null) ...[const SizedBox(height: 16), _NewEdition(world: installed, newer: newer)],
+      switch (tab) {
+        WorldTab.story => installed != null ? _StoryHere(world: installed, location: location) : _StoryListed(world: listed!, location: location),
+        WorldTab.people => PeoplePanel(worldId: id, location: location),
+        WorldTab.places => PlacesPanel(worldId: id, location: location),
+        WorldTab.lore => LorePanel(worldId: id, location: location),
+      },
+    ];
+    // A tablet sideways: the world stays at the left, so Start and Continue never leave the screen on
+    // any tab, and its tabs and what they hold scroll at the right (P26h, call 52).
+    if (MediaQuery.sizeOf(context).width >= WindowBands.wide) {
+      return Scaffold(
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(width: WorldPane.width, child: header.asPane()),
+            Expanded(
+              child: SafeArea(
+                left: false,
+                bottom: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _WorldTabs(tabs: tabs, selected: tab, onSelect: onTab, ink: context.surface.foreground),
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.only(bottom: footRoom(context)),
+                        children: held,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Scaffold(
       body: ScrolledHead(
         title: name,
@@ -118,34 +178,8 @@ class _WorldScreenState extends ConsumerState<WorldScreen> {
         child: ListView(
           padding: EdgeInsets.only(bottom: footRoom(context)),
           children: [
-            _WorldHeader(
-              worldId: id,
-              name: name,
-              data: data,
-              age: listed?.age,
-              logline: installed?.logline ?? listed?.logline,
-              picture: picture,
-              onMore: more,
-              press: switch (updating) {
-                Installing() when update != null => InstallProgress(state: updating, onCancel: () => ref.read(installProvider(update.id).notifier).cancel()),
-                _ when update != null && newer != null => HeroPress(
-                  icon: Icons.download_rounded,
-                  label: 'Update',
-                  detail: formatBytes(newer.byteLength),
-                  onPressed: () => ref.read(installProvider(update.id).notifier).start(update),
-                ),
-                _ => WorldPress(worldId: id, top: 12),
-              },
-              found: reach == null ? null : FoundLine(found: foundIn(entriesOf(guide!), reach), ink: _fg, top: 12),
-              tabs: _WorldTabs(tabs: tabs, selected: tab, onSelect: (value) => setState(() => _tab = value)),
-            ),
-            if (installed != null && newer != null) ...[const SizedBox(height: 16), _NewEdition(world: installed, newer: newer)],
-            switch (tab) {
-              WorldTab.story => installed != null ? _StoryHere(world: installed, location: location) : _StoryListed(world: listed!, location: location),
-              WorldTab.people => PeoplePanel(worldId: id, location: location),
-              WorldTab.places => PlacesPanel(worldId: id, location: location),
-              WorldTab.lore => LorePanel(worldId: id, location: location),
-            },
+            header.withTabs(_WorldTabs(tabs: tabs, selected: tab, onSelect: onTab)),
+            ...held,
           ],
         ),
       ),
@@ -213,8 +247,8 @@ class _WorldHeader extends StatelessWidget {
     required this.data,
     required this.picture,
     required this.press,
-    required this.tabs,
     required this.onMore,
+    this.tabs,
     this.age,
     this.logline,
     this.found,
@@ -227,13 +261,69 @@ class _WorldHeader extends StatelessWidget {
   final String? logline;
   final ImageProvider? picture;
   final Widget press;
-  final Widget tabs;
+  final Widget? tabs;
   final VoidCallback onMore;
   final Widget? found;
 
+  _WorldHeader withTabs(Widget tabs) => _WorldHeader(
+    worldId: worldId,
+    name: name,
+    data: data,
+    picture: picture,
+    press: press,
+    onMore: onMore,
+    tabs: tabs,
+    age: age,
+    logline: logline,
+    found: found,
+  );
+
+  /// Its picture and words at the left of a tablet sideways (P26h).
+  Widget asPane() => Builder(
+    builder: (context) => WorldPane(picture: picture, onMore: onMore, child: _words(context)),
+  );
+
+  Widget _words(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(name, style: text.headlineLarge?.copyWith(color: _fg)),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            WorldFaces(worldId: worldId, gap: 8),
+            Expanded(
+              child: Text(
+                data,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: text.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.84)),
+              ),
+            ),
+            if (age != null) AgeTag(age!, color: _fg),
+          ],
+        ),
+        if (logline != null) ...[
+          const SizedBox(height: 9),
+          Text(
+            logline!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: text.bodyLarge?.copyWith(color: _fg.withValues(alpha: 0.88)),
+          ),
+        ],
+        press,
+        ?found,
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final top = MediaQuery.paddingOf(context).top;
     final wide = MediaQuery.sizeOf(context).width >= WindowBands.fold;
     final artHeight = wide ? 520.0 : 300.0;
@@ -273,45 +363,11 @@ class _WorldHeader extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: wide ? 504 : double.infinity),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Semantics(
-                          header: true,
-                          child: Text(name, style: text.headlineLarge?.copyWith(color: _fg)),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            WorldFaces(worldId: worldId, gap: 8),
-                            Expanded(
-                              child: Text(
-                                data,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: text.bodyMedium?.copyWith(color: _fg.withValues(alpha: 0.84)),
-                              ),
-                            ),
-                            if (age != null) AgeTag(age!, color: _fg),
-                          ],
-                        ),
-                        if (logline != null) ...[
-                          const SizedBox(height: 9),
-                          Text(
-                            logline!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: text.bodyLarge?.copyWith(color: _fg.withValues(alpha: 0.88)),
-                          ),
-                        ],
-                        press,
-                        ?found,
-                      ],
-                    ),
+                    child: _words(context),
                   ),
                 ),
               ),
-              tabs,
+              ?tabs,
             ],
           ),
           Positioned(
@@ -334,7 +390,10 @@ class _WorldHeader extends StatelessWidget {
 
 /// `Story · People · Places · Lore`, each with its count, an empty one absent (P22 rule 11).
 class _WorldTabs extends StatelessWidget {
-  const _WorldTabs({required this.tabs, required this.selected, required this.onSelect});
+  const _WorldTabs({required this.tabs, required this.selected, required this.onSelect, this.ink = _fg});
+
+  /// On a world's blur, the media colours; on a tablet's right pane, the theme's.
+  final Color ink;
 
   final List<(WorldTab, String?)> tabs;
   final WorldTab selected;
@@ -347,7 +406,7 @@ class _WorldTabs extends StatelessWidget {
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: _fg.withValues(alpha: 0.14))),
+        border: Border(bottom: BorderSide(color: ink.withValues(alpha: 0.14))),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -365,7 +424,7 @@ class _WorldTabs extends StatelessWidget {
                     child: Container(
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: tab == selected ? _fg : Colors.transparent, width: 2)),
+                        border: Border(bottom: BorderSide(color: tab == selected ? ink : Colors.transparent, width: 2)),
                       ),
                       child: Row(
                         children: [
@@ -374,14 +433,14 @@ class _WorldTabs extends StatelessWidget {
                             style: text.bodyMedium?.copyWith(
                               fontSize: ArkeType.sizeBase,
                               fontWeight: tab == selected ? FontWeight.w600 : FontWeight.w500,
-                              color: _fg.withValues(alpha: tab == selected ? 1 : 0.68),
+                              color: ink.withValues(alpha: tab == selected ? 1 : 0.68),
                             ),
                           ),
                           if (count != null) ...[
                             const SizedBox(width: 6),
                             Text(
                               count,
-                              style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.6), fontFeatures: const [FontFeature.tabularFigures()]),
+                              style: text.labelSmall?.copyWith(color: ink.withValues(alpha: 0.6), fontFeatures: const [FontFeature.tabularFigures()]),
                             ),
                           ],
                         ],

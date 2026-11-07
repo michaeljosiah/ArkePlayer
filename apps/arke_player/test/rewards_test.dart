@@ -19,6 +19,7 @@ import 'package:arke_player/features/worlds/presentation/guide_widgets.dart';
 import 'package:arke_player/features/worlds/presentation/someone_new.dart';
 import 'package:arke_player/features/worlds/presentation/teaser_screen.dart';
 import 'package:arke_player/features/worlds/presentation/world_screen.dart';
+import 'package:arke_player/features/worlds/presentation/world_shelf.dart';
 import 'package:arke_publication/arke_publication.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:flutter/material.dart';
@@ -159,8 +160,9 @@ Future<_Audio> _pump(
   GuideReach reach = GuideReach.none,
   DeviceSettings settings = const DeviceSettings(),
   Guide? guide,
+  Size size = const Size(390, 844),
 }) async {
-  tester.view.physicalSize = const Size(390, 844);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final audio = _Audio();
@@ -521,6 +523,89 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Kemi'), findsNothing);
+    });
+  });
+
+  group('a tablet (P26, P27)', () {
+    const sideways = Size(1280, 800);
+    const upright = Size(800, 1280);
+    const reached = GuideReach(reached: {_ledger: (at: 2, through: 2)});
+
+    testWidgets('sideways, a world stays at the left, so its press never leaves the screen (P26h)', (tester) async {
+      await _pump(tester, location: Routes.world('undersong'), worlds: [_here], reach: reached, size: sideways);
+      expect(tester.getSize(find.byType(WorldPane)).width, 460);
+      await tester.tap(find.text('People'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kemi'), findsOneWidget);
+      final press = find.byType(WorldPress);
+      expect(press, findsOneWidget);
+      expect(tester.getTopLeft(press).dx, lessThan(460));
+      expect(tester.getTopLeft(find.text('Kemi')).dx, greaterThan(460));
+    });
+
+    testWidgets('upright, it keeps the Fold’s page (P26u)', (tester) async {
+      await _pump(tester, location: Routes.world('undersong'), worlds: [_here], reach: reached, size: upright);
+      expect(find.byType(WorldPane), findsNothing);
+      expect(find.byType(WorldPress), findsOneWidget);
+    });
+
+    for (final size in const [sideways, upright]) {
+      testWidgets('People runs five across at ${size.width.toInt()} wide', (tester) async {
+        const everyone = GuideReach(reached: {_ledger: (at: 6, through: 6)});
+        final crowd = Guide(
+          productions: _guide.productions,
+          characters: [
+            for (var i = 0; i < 7; i++) GuideCharacter(id: 'c$i', name: 'Person $i', sections: _says('.')),
+            _kemi,
+          ],
+          places: const [],
+          lore: const [],
+        );
+        await _pump(tester, location: Routes.world('undersong'), worlds: [_here], reach: everyone, guide: crowd, size: size);
+        await tester.tap(find.text('People'));
+        await tester.pumpAndSettle();
+        final tops = [for (var i = 0; i < 6; i++) tester.getTopLeft(find.text('Person $i')).dy];
+        expect(tops.take(4).toSet(), hasLength(1), reason: 'Kemi is new and first, then four on her row');
+        expect(tops[5], greaterThan(tops[3]));
+      });
+    }
+
+    testWidgets('a character keeps the portrait at the left and its words at the right (P26n)', (tester) async {
+      await _pump(tester, location: Routes.guideEntry(Routes.worldsWorld('undersong'), 'maren'), worlds: [_here], reach: reached, size: sideways);
+      expect(tester.getSize(find.byType(WorldPane)).width, 460);
+      expect(tester.getTopLeft(find.textContaining('Voice', findRichText: true)).dx, lessThan(460));
+      expect(tester.getTopLeft(find.text('Tide-caller.')).dx, greaterThan(460));
+    });
+
+    testWidgets('You: two columns sideways, one upright (P26r, P26x)', (tester) async {
+      await _pump(tester, location: Routes.you, size: sideways);
+      expect(tester.getTopLeft(find.text('Appearance'.toUpperCase())).dy, tester.getTopLeft(find.text('Downloads'.toUpperCase())).dy);
+      await _pump(tester, location: Routes.you, size: upright);
+      expect(tester.getTopLeft(find.text('Downloads'.toUpperCase())).dy, greaterThan(tester.getTopLeft(find.text('Appearance'.toUpperCase())).dy));
+    });
+
+    testWidgets('a sheet keeps a phone’s width, centred (P26e)', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.world('undersong'),
+        catalogue: [_listed(age: '18+')],
+        size: sideways,
+      );
+      await tester.tap(find.textContaining('Start', findRichText: true).first);
+      await tester.pumpAndSettle();
+      // Its press runs its width, less the sheet's margins.
+      final press = tester.getRect(find.widgetWithText(FilledButton, 'I am 18 or older · Start'));
+      expect(press.width, 560 - 32);
+      expect(press.center.dx, closeTo(640, 0.5));
+    });
+
+    testWidgets('a teaser is upright over its blur sideways, and fills the tablet upright (P27a, P27q)', (tester) async {
+      await _pump(tester, size: sideways);
+      await _openFeed(tester, _feedOf([_guide]), start: 1);
+      expect(tester.getTopLeft(find.text('Bray')).dx, greaterThan(400));
+      await _pump(tester, size: upright);
+      await _openFeed(tester, _feedOf([_guide]), start: 1);
+      expect(tester.getTopLeft(find.text('Bray')).dx, 16);
     });
   });
 

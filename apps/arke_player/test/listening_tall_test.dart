@@ -204,13 +204,18 @@ void main() {
     expect(shown.shown!.path, plan.shownAt(withTall)!.tallPath);
   });
 
-  testWidgets('a Fold open and a tablet sideways keep the Wide picture (P24j, P27c)', (tester) async {
-    for (final size in const [Size(984, 1092), Size(1280, 800)]) {
-      await open(tester, size, withTall);
-      final shown = picture(tester);
-      expect(shown.fill, isFalse);
-      expect(shown.shown!.path, plan.shownAt(withTall)!.path);
-    }
+  testWidgets('a Fold open keeps the Wide picture, whole (P24j)', (tester) async {
+    await open(tester, const Size(984, 1092), withTall);
+    final shown = picture(tester);
+    expect(shown.fill, isFalse);
+    expect(shown.shown!.path, plan.shownAt(withTall)!.path);
+  });
+
+  testWidgets('a tablet sideways covers the screen with the Wide picture (P27c)', (tester) async {
+    await open(tester, const Size(1280, 800), withTall);
+    final shown = picture(tester);
+    expect(shown.fill, isTrue);
+    expect(shown.shown!.path, plan.shownAt(withTall)!.path);
   });
 
   testWidgets('a phone turned shows the Wide picture, at the same place in the hold (P14 rule 4)', (tester) async {

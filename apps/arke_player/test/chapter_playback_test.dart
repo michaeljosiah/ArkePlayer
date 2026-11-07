@@ -329,7 +329,15 @@ void main() {
       router.dispose();
       await tester.runAsync(() async {
         await store.close();
-        await root.delete(recursive: true);
+        // On Windows the player's pictures can still be reading from it for a moment after it has gone.
+        for (var attempt = 0; attempt < 20; attempt++) {
+          try {
+            await root.delete(recursive: true);
+            break;
+          } on FileSystemException {
+            await Future<void>.delayed(const Duration(milliseconds: 50));
+          }
+        }
       });
     }
   });
