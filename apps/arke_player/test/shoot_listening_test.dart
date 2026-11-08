@@ -239,11 +239,16 @@ void main() {
     tester.view.padding = const FakeViewPadding(top: 47 * 2, bottom: 34 * 2);
     addTearDown(tester.view.reset);
     await tester.runAsync(() async {
-      for (final path in {
-        for (final chapter in plan.chapters) ...[
-          for (final picture in chapter.pictures) ...[plan.pathOf(picture.picture), if (picture.tall != null) plan.pathOf(picture.tall!)],
-        ],
-      }..add(plan.pathOf(plan.document.cover!))) {
+      for (final path
+          in {
+              for (final chapter in plan.chapters) ...[
+                for (final picture in chapter.pictures) ...[plan.pathOf(picture.picture), if (picture.tall != null) plan.pathOf(picture.tall!)],
+              ],
+            }
+            ..add(plan.pathOf(plan.document.cover!))
+            ..addAll([
+              for (final name in const ['char-maren.jpg', 'char-bray.jpg', 'char-chorister.jpg']) '$_design/$name',
+            ])) {
         final loaded = Completer<void>();
         FileImage(File(path))
             .resolve(ImageConfiguration.empty)
