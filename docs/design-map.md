@@ -299,6 +299,16 @@ drawn glass blur: a backdrop blur per poster would read the screen back a score 
 |---|---|---|
 | P28a – P28e | A mark on every title's poster and wide tile, on a phone and a tablet | `features/worlds/presentation/row_widgets.dart` (`KindMark`, `PosterTile`), `world_widgets.dart` (`ProductionTile`), `world_screen.dart`, `features/home/presentation/home_screen.dart` |
 
+## A character, for readers (P29, for approval, not built)
+
+Call 55. The owner asked for it on 8 November 2026. A description written for readers comes first and
+shows to everyone; every public section waits for the end of the story, together. The Studio's half is
+its turn 274, and the guide document needs a new version for the description.
+
+| Frame | Screen | File |
+|---|---|---|
+| P29a – P29e | A character and a place with a description and one row for the rest; Reveal; finished; a tablet | `features/worlds/presentation/guide_screens.dart` (`GuideEntryScreen`), `guide_widgets.dart` (`GuideProse`, `GateRow`) |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.

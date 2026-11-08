@@ -377,6 +377,23 @@ approval and approved the same day.
   `ProductionTile` draw it; a `SquareTile` never does. The app's round is the tags' tint, without the
   backdrop blur the frames draw, so a row of posters does not read the screen back once each.
 
+## A character, for readers (P29)
+
+The owner, 8 November 2026: the character page shows what the author used to make the story, not what a
+reader wants. Na Love or Juju's guide opens each character's Appearance from the start, a brief written
+for the picture model, and holds their Essence until the last chapter because it gives the ending away.
+Drawn for approval, nothing built; the Studio's half is Studio turn 274.
+
+- **A description:** the author's words for a reader meeting them, up to 400 characters, first under the
+  hero with no heading, shown to everyone the moment the character is. It is written in the Guide for
+  this page and never comes from a sheet.
+- **After the story:** every public section waits for the end of one title the author names, all at
+  once, in one row with Reveal. No section waits for a chapter of its own any more; an entry still does.
+- **Places** follow characters. Lore is unchanged.
+- **Building it:** the guide document gains a description per character and place and the story's last
+  chapter, so it is a new guide version. `GuideEntryScreen` (`features/worlds/presentation/guide_screens.dart`)
+  draws the description and one gate in place of `GuideProse`'s per-section gates.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -497,6 +514,15 @@ approval and approved the same day.
 
 54. **A title's kind is an icon at its corner, never a word** (P28, approved): a word would cover a
    112-wide poster, and the line under every title already says it.
+
+55. **A description for everyone, the rest after the story** (P29, the owner's word, for approval): a
+   character's description is written for readers and shows whatever they have read; every section
+   made public waits for the end of the story, all at once, never section by section.
+56. **The story is one title of the world**, named in the Studio's Guide (P29, for approval). Each
+   character's own last title is the alternative.
+57. **Reveal stays** (P29b, for approval), so a reader can open the rest early. Without it, only the end
+   opens it.
+58. **A place follows a character** (P29d, for approval): a description, then its sections after the story.
 
 ## What this rests on
 
