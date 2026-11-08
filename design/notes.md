@@ -363,7 +363,7 @@ Arke Studio's Bench was offered for new pictures; none was needed. Every picture
 ## A title's kind at its corner (P28)
 
 The owner, 8 November 2026, asked for a corner badge on the story pictures to say their kind. Drawn for
-approval, nothing built.
+approval and approved the same day.
 
 - **The mark:** an icon in a round of glass at a title's top right, 26 across (22 on a small poster), in
   the overlay's ink in either theme. The word stays in the line under every title, so the icon is
@@ -494,7 +494,7 @@ approval, nothing built.
 53. **A tablet held upright shows the Tall picture** (P27o, approved), revising call 10 for it. A Fold
    open, nearly square, keeps the Wide.
 
-54. **A title's kind is an icon at its corner, never a word** (P28, for approval): a word would cover a
+54. **A title's kind is an icon at its corner, never a word** (P28, approved): a word would cover a
    112-wide poster, and the line under every title already says it.
 
 ## What this rests on

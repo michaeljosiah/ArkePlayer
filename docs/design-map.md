@@ -288,9 +288,9 @@ tablet held upright takes the Tall picture (call 53), and a Fold open, nearly sq
 | P27c – P27i, P27o, P27p | An episode, Here and Episodes beside it, Caught up | `features/players/presentation/episode_player.dart` |
 | P27j – P27n, P27r | A visual novel, a graphic novel, a book, an album, a song | `features/stories/`, `features/comics/`, `features/players/presentation/reader_screen.dart`, `music_player_screen.dart`, `features/worlds/presentation/album_screen.dart` |
 
-## A title's kind at its corner (P28, for approval, not built)
+## A title's kind at its corner (P28, approved, not built)
 
-Call 54. The owner asked for it on 8 November 2026.
+Call 54. The owner asked for it and approved it on 8 November 2026.
 
 | Frame | Screen | Would change |
 |---|---|---|
