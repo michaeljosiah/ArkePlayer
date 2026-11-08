@@ -51,7 +51,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     ref.read(placeKeeperProvider)(
       widget.item.id,
       Place(locator: location.startCfi, progress: location.progress.clamp(0.0, 1.0), updatedAt: DateTime.now().toUtc()),
-      finished: location.progress >= 0.999,
+      finished: hasFinishedPaginatedBook(progress: location.progress, chapterPage: location.chapterPage, chapterTotalPages: location.chapterTotalPages),
     );
   }
 
