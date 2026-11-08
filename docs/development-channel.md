@@ -36,3 +36,10 @@ part/update, force refresh and withdraw from discovery. Check background notific
 delivery separately on Android; a unit test or successful HTTP fetch does not prove
 the operating system's scheduler ran. Production catalogue migration and historical
 rights review remain separate, and this build does not change the production feed.
+
+For the newer-edition check, keep an unfinished book at a saved CFI before refreshing
+the feed. Verify `Update`, replace through the normal download/check flow, and compare
+the item ID, CFI, progress and unfinished state before reopening offline. Short EPUBs
+can report 100% at the first screen page of their final location; Player requires the
+last reported chapter page as well before marking them finished (P5e, P12d, SPEC-058
+R-33). Otherwise reopening would restart at the cover despite retaining the CFI.

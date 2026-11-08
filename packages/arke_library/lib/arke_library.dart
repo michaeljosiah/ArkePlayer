@@ -3,6 +3,7 @@
 library;
 
 export 'src/item.dart';
+export 'src/reading_progress.dart';
 export 'src/shelves.dart';
 export 'src/store.dart';
 export 'src/words.dart';
