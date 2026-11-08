@@ -39,7 +39,9 @@ typedef SearchChapter = ({CatalogueWorld world, String production, String produc
 /// Searches Arke's list and each world's guide on the phone, with no account (P22 rule 10, call 43).
 /// A word of a name has to begin with what is typed, so `ade` finds Adeyemi and Ade's House but never
 /// Arcade. An entry still waiting for a chapter is not found until it is reached or revealed: a search
-/// must not be how someone learns who turns up later.
+/// must not be how someone learns who turns up later. A character or place is found by its
+/// description as by its name (P29 rule 9), which shows whatever has been read; never by a section,
+/// which may still wait for the story's end.
 List<SearchHit> searchWorlds(String query, Iterable<CatalogueWorld> worlds, Map<String, SearchGuide> guides, {Iterable<SearchChapter> chapters = const []}) {
   final typed = query.trim();
   if (typed.isEmpty) return const [];
@@ -60,12 +62,12 @@ List<SearchHit> searchWorlds(String query, Iterable<CatalogueWorld> worlds, Map<
     if (held == null) continue;
     final (:guide, :reach) = held;
     for (final character in guide.characters) {
-      if (reach.shows(character.after) && matches(character.name)) {
+      if (reach.shows(character.after) && (matches(character.name) || matches(character.description ?? ''))) {
         hits.add(SearchHit(kind: SearchKind.character, title: character.name, line: [?character.role, world.name].join(' · '), world: world, entry: character));
       }
     }
     for (final place in guide.places) {
-      if (reach.shows(place.after) && matches(place.name)) {
+      if (reach.shows(place.after) && (matches(place.name) || matches(place.description ?? ''))) {
         hits.add(SearchHit(kind: SearchKind.place, title: place.name, line: '${place.role ?? 'Place'} · ${world.name}', world: world, entry: place));
       }
     }

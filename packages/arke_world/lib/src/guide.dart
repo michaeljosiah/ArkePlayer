@@ -10,8 +10,12 @@ const guideMediaType = 'application/vnd.arke.guide+json';
 const guideFormat = 'arke-guide';
 
 /// Version 2 (SPEC-059 R-28) adds `teasers`; version 3 (R-37) a character's or place's `theme` and
-/// a `song` teaser. Versions 1 and 2 are still read.
-const guideVersion = 3;
+/// a `song` teaser; version 4 (R-44) a character's or place's `description` and the guide's `story`.
+/// Versions 1 to 3 are still read.
+const guideVersion = 4;
+
+/// A description is a reader's first words about someone, not a section (R-39).
+const maxGuideDescription = 400;
 
 /// Media by role in a guide (R-13).
 const guideVoiceMediaTypes = {'audio/mp4'};
@@ -108,6 +112,7 @@ class GuideCharacter extends GuideEntry {
     this.portrait,
     this.voice,
     this.theme,
+    this.description,
   });
   final String name;
   final String? role;
@@ -119,11 +124,24 @@ class GuideCharacter extends GuideEntry {
 
   /// Version 3 (R-35): the track that is this character's theme, which follows the character's gate.
   final GuideTheme? theme;
+
+  /// Version 4 (R-39): written for a reader meeting them, shown whatever has been read.
+  final String? description;
 }
 
 /// A place, or a faction, which follows the places (SPEC-059 R-1).
 class GuidePlace extends GuideEntry {
-  const GuidePlace({required super.id, required this.name, required this.sections, super.links = const [], super.after, this.role, this.picture, this.theme});
+  const GuidePlace({
+    required super.id,
+    required this.name,
+    required this.sections,
+    super.links = const [],
+    super.after,
+    this.role,
+    this.picture,
+    this.theme,
+    this.description,
+  });
   final String name;
   final String? role;
 
@@ -133,6 +151,9 @@ class GuidePlace extends GuideEntry {
 
   /// Version 3 (R-35): the track that is this place's theme.
   final GuideTheme? theme;
+
+  /// Version 4 (R-39): written for a reader meeting it.
+  final String? description;
 }
 
 /// A settled canon entry: its statement, with no sections.
@@ -193,7 +214,7 @@ class SongTeaser extends GuideTeaser {
 }
 
 class Guide {
-  const Guide({required this.productions, required this.characters, required this.places, required this.lore, this.teasers = const []});
+  const Guide({required this.productions, required this.characters, required this.places, required this.lore, this.teasers = const [], this.story});
   final List<GuideProduction> productions;
   final List<GuideCharacter> characters;
   final List<GuidePlace> places;
@@ -201,6 +222,10 @@ class Guide {
 
   /// In the author's order.
   final List<GuideTeaser> teasers;
+
+  /// Version 4 (R-41, R-44): the story's end, which every public section waits for, so a gate that
+  /// names it reads After the story rather than a chapter.
+  final GuideAfter? story;
 
   List<GuideEntry> get entries => [...characters, ...places, ...lore];
 
@@ -301,7 +326,17 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
   if (requires is! List<Object?>) _notAPackage('requires is not a list');
   if (requires.isNotEmpty) _newer('requires ${requires.join(', ')}');
   // Teasers came with version 2: a version 1 guide naming them was made by something newer.
-  final json = _object(decoded, 'the guide', {'format', 'version', 'requires', 'productions', 'characters', 'places', 'lore', if (version >= 2) 'teasers'});
+  final json = _object(decoded, 'the guide', {
+    'format',
+    'version',
+    'requires',
+    'productions',
+    'characters',
+    'places',
+    'lore',
+    if (version >= 2) 'teasers',
+    if (version >= 4) 'story',
+  });
 
   final productions = <GuideProduction>[];
   final numbers = <String, Map<String, int>>{};
@@ -372,13 +407,27 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
       }(),
   ]);
 
+  // A description came with version 4 (R-44); in an older guide its key is refused as newer.
+  String? description(Object? value, String what) => value == null ? null : _text(value, '$what description', max: maxGuideDescription);
+
   List<String> links(Object? value, String what) => [
     for (final link in _list(value ?? const <Object?>[], '$what links', _maxLinks)) link is String ? link : _notAPackage('$what links'),
   ];
 
   final characters = <GuideCharacter>[];
   for (final raw in _list(json['characters'], 'characters', _maxEntries)) {
-    final c = _object(raw, 'a character', {'id', 'name', 'role', 'portrait', 'after', 'sections', 'voice', 'links', if (version >= 3) 'theme'});
+    final c = _object(raw, 'a character', {
+      'id',
+      'name',
+      'role',
+      'portrait',
+      'after',
+      'sections',
+      'voice',
+      'links',
+      if (version >= 3) 'theme',
+      if (version >= 4) 'description',
+    });
     final id = _id(c['id'], 'character id');
     final where = 'entry $id';
     GuideVoice? voice;
@@ -409,13 +458,24 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
         voice: voice,
         links: links(c['links'], where),
         theme: theme(c['theme'], where),
+        description: description(c['description'], where),
       ),
     );
   }
 
   final places = <GuidePlace>[];
   for (final raw in _list(json['places'], 'places', _maxEntries)) {
-    final p = _object(raw, 'a place', {'id', 'name', 'role', 'picture', 'after', 'sections', 'links', if (version >= 3) 'theme'});
+    final p = _object(raw, 'a place', {
+      'id',
+      'name',
+      'role',
+      'picture',
+      'after',
+      'sections',
+      'links',
+      if (version >= 3) 'theme',
+      if (version >= 4) 'description',
+    });
     final id = _id(p['id'], 'place id');
     final where = 'entry $id';
     final role = p['role'];
@@ -429,6 +489,7 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
         sections: sections(p['sections'], where),
         links: links(p['links'], where),
         theme: theme(p['theme'], where),
+        description: description(p['description'], where),
       ),
     );
   }
@@ -456,6 +517,8 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
     characters: List.unmodifiable(characters),
     places: List.unmodifiable(places),
     lore: List.unmodifiable(lore),
+    // Named as an `after` is, so a story that names no chapter of the guide is no package.
+    story: json['story'] == null ? null : after(json['story'], 'the story'),
   );
   final ids = <String>{};
   for (final entry in guide.entries) {
@@ -536,5 +599,12 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
         _notAPackage('$what kind $kind');
     }
   }
-  return Guide(productions: guide.productions, characters: guide.characters, places: guide.places, lore: guide.lore, teasers: List.unmodifiable(teasers));
+  return Guide(
+    productions: guide.productions,
+    characters: guide.characters,
+    places: guide.places,
+    lore: guide.lore,
+    teasers: List.unmodifiable(teasers),
+    story: guide.story,
+  );
 }

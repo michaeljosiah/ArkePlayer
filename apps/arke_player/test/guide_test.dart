@@ -13,6 +13,7 @@ import 'package:arke_player/features/worlds/application/guides.dart';
 import 'package:arke_player/features/worlds/application/worlds.dart';
 import 'package:arke_player/features/worlds/presentation/guide_widgets.dart';
 import 'package:arke_player/features/worlds/presentation/row_widgets.dart';
+import 'package:arke_player/features/worlds/presentation/world_shelf.dart';
 import 'package:arke_player/features/worlds/presentation/world_widgets.dart';
 import 'package:arke_world/arke_world.dart';
 import 'package:crypto/crypto.dart';
@@ -31,6 +32,12 @@ Map<String, WorldAsset> _assets() => {
 };
 
 final _guide = (readGuide(_fixture('valid.json'), _assets()) as GuideOk).guide;
+
+/// The same guide at version 4 (SPEC-059 R-44): Maren and the Vigil described, and every section
+/// waiting for the story's end, chapter 6 of The Ledger of Nights.
+final _described = (readGuide(_fixture('descriptions.json'), _assets()) as GuideOk).guide;
+const _marenAbout =
+    'A tide-caller on the Vigil’s night crew, half deaf already and not about to say so. She hears the drowned verse under the harbour and pulls the water where the boats need it.';
 
 const _ledger = 'the-ledger-of-nights';
 
@@ -325,6 +332,95 @@ void main() {
     });
   });
 
+  group('a description for everyone, the rest after the story (P29)', () {
+    testWidgets('the description first under the hero; both sections behind one row, After the story · 2 sections (P29a)', (tester) async {
+      await _pump(tester, location: Routes.guideEntry(world, 'maren-kest'), guide: _described);
+      expect(find.text(_marenAbout), findsOneWidget);
+      expect(find.text('After the story'), findsOneWidget);
+      expect(find.text('2 sections'), findsOneWidget);
+      expect(find.text('ESSENCE'), findsNothing);
+      expect(find.text('RELATIONSHIPS'), findsNothing);
+      expect(find.text('After Chapter 6'), findsNothing);
+      expect(tester.getTopLeft(find.text(_marenAbout)).dy, lessThan(tester.getTopLeft(find.text('After the story')).dy));
+      expect(tester.getTopLeft(find.text(_marenAbout)).dy, greaterThan(tester.getBottomLeft(find.text('Tide-caller · The Undersong')).dy));
+    });
+
+    testWidgets('beginning the last chapter is not finishing it', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.guideEntry(world, 'maren-kest'),
+        guide: _described,
+        reach: const GuideReach(reached: {_ledger: (at: 6, through: 6)}),
+      );
+      expect(find.text('After the story'), findsOneWidget, reason: 'chapter 6 begun is not the story heard');
+      expect(find.text('ESSENCE'), findsNothing);
+    });
+
+    testWidgets('finished, the sections follow the description under their headings (P29c)', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.guideEntry(world, 'maren-kest'),
+        guide: _described,
+        reach: const GuideReach(reached: {_ledger: (at: 6, through: reachedAll)}),
+      );
+      expect(find.text('After the story'), findsNothing);
+      expect(find.text('ESSENCE'), findsOneWidget);
+      expect(find.text('RELATIONSHIPS'), findsOneWidget);
+      expect(tester.getTopLeft(find.text(_marenAbout)).dy, lessThan(tester.getTopLeft(find.text('ESSENCE')).dy));
+      expect(tester.getTopLeft(find.text('ESSENCE')).dy, lessThan(tester.getTopLeft(find.text('RELATIONSHIPS')).dy));
+    });
+
+    testWidgets('Reveal asks After the story, and where you are out of its last chapter (P29b)', (tester) async {
+      final store = await _pump(
+        tester,
+        location: Routes.guideEntry(world, 'maren-kest'),
+        guide: _described,
+        reach: const GuideReach(reached: {_ledger: (at: 3, through: 3)}),
+      );
+      await tester.tap(find.text('Reveal'));
+      await tester.pumpAndSettle();
+      expect(find.text('After the story'), findsNWidgets(2), reason: 'the row and the sheet');
+      expect(find.text('The Ledger of Nights · you are at Chapter 3 of 6'), findsOneWidget);
+      await tester.tap(find.text('Reveal').last);
+      await tester.pumpAndSettle();
+      expect(store.revealedNow, [('undersong', _ledger, 6)]);
+    });
+
+    testWidgets('revealed, it reads as finished', (tester) async {
+      await _pump(
+        tester,
+        location: Routes.guideEntry(world, 'maren-kest'),
+        guide: _described,
+        reach: const GuideReach(revealed: {_ledger: 6}),
+      );
+      expect(find.text('After the story'), findsNothing);
+      expect(find.text('ESSENCE'), findsOneWidget);
+    });
+
+    testWidgets('a place: its description, its one section behind the row (P29d)', (tester) async {
+      await _pump(tester, location: Routes.guideEntry(world, 'the-vigil'), guide: _described);
+      expect(find.text('A watchtower of black stone at the harbour mouth, where the night crew keeps the lamps.'), findsOneWidget);
+      expect(find.text('After the story'), findsOneWidget);
+      expect(find.text('1 section'), findsOneWidget);
+      expect(find.text('LOOK'), findsNothing);
+    });
+
+    testWidgets('a guide before version 4 reads as it did: each waiting section its own row, uncounted', (tester) async {
+      await _pump(tester, location: Routes.guideEntry(world, 'maren-kest'), guide: _guide);
+      expect(find.text('After Chapter 6'), findsOneWidget);
+      expect(find.text('After the story'), findsNothing);
+      expect(find.text('1 section'), findsNothing);
+      expect(find.text(_marenAbout), findsNothing);
+    });
+
+    testWidgets('a tablet sideways heads the right column with the description (P29e)', (tester) async {
+      await _pump(tester, location: Routes.guideEntry(world, 'maren-kest'), guide: _described, size: const Size(1280, 800));
+      final about = tester.getTopLeft(find.text(_marenAbout));
+      expect(about.dx, greaterThanOrEqualTo(WorldPane.width));
+      expect(about.dy, lessThan(tester.getTopLeft(find.text('After the story')).dy));
+    });
+  });
+
   group('a place (P11e), lore (P11f) and a lore entry (P11g)', () {
     testWidgets('a place: Place · world, its sections, Here', (tester) async {
       await _pump(tester, location: Routes.guideEntry(world, 'the-vigil'), guide: _guide);
@@ -391,6 +487,12 @@ void main() {
     ]) {
       testWidgets(name, (tester) async {
         await _pump(tester, location: location, guide: _guide, textScale: 2);
+        expect(tester.takeException(), isNull);
+      });
+    }
+    for (final (name, id) in [('a character described', 'maren-kest'), ('a place described', 'the-vigil')]) {
+      testWidgets(name, (tester) async {
+        await _pump(tester, location: Routes.guideEntry(world, id), guide: _described, textScale: 2);
         expect(tester.takeException(), isNull);
       });
     }

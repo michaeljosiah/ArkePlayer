@@ -29,6 +29,13 @@ String loreKindLabel(LoreKind kind) => switch (kind) {
 /// `After Chapter 6`.
 String afterLabel(GuideAfter after) => 'After Chapter ${after.number}';
 
+/// Whether a gate is the guide's story's end (SPEC-059 R-41, R-42), which every public section of a
+/// version 4 guide waits for.
+bool isStoryEnd(GuideAfter after, GuideAfter? story) => story != null && after.production == story.production && after.chapter == story.chapter;
+
+/// `After the story` for the story's end (P29 rule 2), else `After Chapter 6`.
+String gateLabel(GuideAfter after, GuideAfter? story) => isStoryEnd(after, story) ? 'After the story' : afterLabel(after);
+
 /// What a place is: `Place`, or `Faction` for a faction, which the Studio files with the places
 /// under that role.
 String placeKind(GuidePlace place) => place.role == 'Faction' ? 'Faction' : 'Place';
@@ -285,16 +292,21 @@ class LoreRow extends StatelessWidget {
   }
 }
 
-/// What waits for a chapter, as a row (P11 rule 7): the hidden mark, `After Chapter 6`, Reveal.
+/// What waits for a chapter, as a row (P11 rule 7): the hidden mark, `After Chapter 6`, Reveal. A
+/// row standing for an entry's sections (P29 rule 2) reads `After the story` at the [story]'s end and
+/// carries their [count] under it, `2 sections`.
 class GateRow extends StatelessWidget {
-  const GateRow({required this.after, required this.onReveal, super.key});
+  const GateRow({required this.after, required this.onReveal, this.story, this.count, super.key});
 
   final GuideAfter after;
   final VoidCallback onReveal;
+  final GuideAfter? story;
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
     final surface = context.surface;
+    final text = Theme.of(context).textTheme;
     return _Ruled(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
@@ -303,9 +315,24 @@ class GateRow extends StatelessWidget {
             Icon(Icons.visibility_off_outlined, size: 20, color: surface.mutedForeground),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                afterLabel(after),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase, color: surface.mutedForeground),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    gateLabel(after, story),
+                    style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase, color: surface.mutedForeground),
+                  ),
+                  if (count case final count?)
+                    Text(
+                      count == 1 ? '1 section' : '$count sections',
+                      style: text.bodySmall?.copyWith(
+                        fontSize: ArkeType.sizeXs,
+                        color: surface.mutedForeground,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                ],
               ),
             ),
             FilledButton(
@@ -356,34 +383,68 @@ class GuideLabel extends StatelessWidget {
   );
 }
 
-/// The author's sections, in their order and words (P11 rule 5), each section that waits for a
-/// chapter a row in its place.
+/// A character's or place's description (P29 rule 1): the author's words for a reader meeting them,
+/// first under the hero, with no heading, a step larger than the sections' text.
+class GuideDescription extends StatelessWidget {
+  const GuideDescription(this.text, {this.padding = const EdgeInsets.fromLTRB(16, 14, 16, 4), super.key});
+
+  final String text;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: padding,
+    child: Text(text, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: ArkeType.sizeMd)),
+  );
+}
+
+/// The author's sections, in their order and words (P11 rule 5). In a guide with a [story] (version
+/// 4), what is shown comes first and what waits is one row for each chapter it waits for, with its
+/// count (P29 rule 2): its sections all wait for the story's end, so it shows one `After the story`
+/// row however many there are, grouped by the chapter because Reveal opens a chapter, not a section.
+/// An older guide keeps each waiting section's row in its place, as it always has.
 class GuideProse extends StatelessWidget {
-  const GuideProse({required this.sections, required this.reach, required this.onReveal, super.key});
+  const GuideProse({required this.sections, required this.reach, required this.onReveal, this.story, super.key});
 
   final List<GuideSection> sections;
   final GuideReach reach;
   final ValueChanged<GuideAfter> onReveal;
+  final GuideAfter? story;
+
+  Widget _shown(GuideSection section) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [GuideLabel(section.heading), const SizedBox(height: 6), GuideText(section.text)]),
+  );
+
+  Widget _gate(GuideAfter after, {int? count}) => Padding(
+    padding: const EdgeInsets.only(top: 14),
+    child: GateRow(after: after, story: story, count: count, onReveal: () => onReveal(after)),
+  );
 
   @override
   Widget build(BuildContext context) {
+    if (story == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final section in sections)
+            if (reach.shows(section.after)) _shown(section) else _gate(section.after!),
+        ],
+      );
+    }
+    final waiting = <(String, String), (GuideAfter, int)>{};
+    for (final section in sections) {
+      if (reach.showsSection(section.after, story: story)) continue;
+      final after = section.after!;
+      final key = (after.production, after.chapter);
+      waiting[key] = (after, (waiting[key]?.$2 ?? 0) + 1);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final section in sections)
-          if (reach.shows(section.after))
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [GuideLabel(section.heading), const SizedBox(height: 6), GuideText(section.text)],
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: GateRow(after: section.after!, onReveal: () => onReveal(section.after!)),
-            ),
+          if (reach.showsSection(section.after, story: story)) _shown(section),
+        for (final (after, count) in waiting.values) _gate(after, count: count),
       ],
     );
   }
@@ -452,11 +513,14 @@ String entryName(GuideEntry entry) => switch (entry) {
 };
 
 /// Reveal, asked once (P11h): the chapter, the production and where this phone is in it, then
-/// Reveal or Not now. Reveal shows everything in the production up to that chapter.
+/// Reveal or Not now. Reveal shows everything in the production up to that chapter. For the story's
+/// end it is `After the story`, and where you are is out of its last chapter (P29b).
 Future<void> askReveal(BuildContext context, WidgetRef ref, String worldId, WorldGuide guide, GuideReach reach, GuideAfter after) async {
   final production = guide.guide.productions.where((production) => production.id == after.production).firstOrNull;
   final at = reach.at(after.production);
-  final line = [?production?.title, if (at != null) 'you are at Chapter $at'].join(' · ');
+  final story = guide.guide.story;
+  final end = isStoryEnd(after, story);
+  final line = [?production?.title, if (at != null) end ? 'you are at Chapter $at of ${after.number}' : 'you are at Chapter $at'].join(' · ');
   final revealed = await showArkeSheet<bool>(
     context,
     title: null,
@@ -471,7 +535,7 @@ Future<void> askReveal(BuildContext context, WidgetRef ref, String worldId, Worl
           children: [
             Icon(Icons.visibility_off_outlined, size: 34, color: surface.mutedForeground),
             const SizedBox(height: 12),
-            Text(afterLabel(after), textAlign: TextAlign.center, style: text.titleMedium),
+            Text(gateLabel(after, story), textAlign: TextAlign.center, style: text.titleMedium),
             if (line.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
