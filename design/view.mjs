@@ -47,6 +47,13 @@ const P = {
   bars: '<path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>',
   search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
   users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  // P28's marks: a title's kind at its corner.
+  panels: '<rect width="7" height="18" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/>',
+  split: '<path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/>',
+  chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/>',
+  mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',
+  vplay: '<rect width="13" height="20" x="5.5" y="2" rx="2.5"/><path d="M10.5 9.5v5l4-2.5z"/>',
+  clapper: '<path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
 };
 const FILLED = {
   play: '<path d="M7 4.5v15l13-7.5z"/>',
@@ -55,6 +62,9 @@ const FILLED = {
   next: '<path d="M16 5h2v14h-2zM4 5v14l11-7z"/>',
   more: '<circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/>',
 };
+
+/** P28: the kind each mark says, as a screen reader hears it. */
+export const kindOf = (mark) => ({ headphones: 'Audiobook', book: 'Book', panels: 'Graphic novel', split: 'Interactive movie', chat: 'Visual novel', vplay: 'Micro drama', clapper: 'Film', mic: 'Audio drama' })[mark];
 
 /** One icon. Stroked on Lucide's 24 grid, or filled for the transport. */
 export function ic(name, size = 20, sw = 1.8) {
@@ -102,7 +112,7 @@ export const esc = (t) => String(t).replaceAll('&', '&amp;').replaceAll('<', '&l
 export const cc = ({ img, kind, title, where, at, pos = 'center', w = 300 }) => `<div class="cc" style="width:${w}px;height:${Math.round(w * 9 / 16)}px"><img src="${A}${img}" alt="" style="object-position:${pos}"><div class="shade"></div><span class="go">${ic('play', 16)}</span><div class="tx"><div class="k">${kind}</div><div class="t">${title}</div><div class="w">${where}</div></div><div class="pl"><i style="width:${at}%"></i></div></div>`;
 
 /** A production tile. `state` is one quiet word under the kind, or nothing. */
-export const tile = ({ img, title, kind, pos = 'center', at, w = 160, tag = '', cls = '', mid = '' }) => `<div class="tile ${cls}" style="width:${w}px"><div class="im"><img src="${A}${img}" alt="" style="object-position:${pos}">${tag ? `<span class="tg">${tag}</span>` : ''}${mid ? `<span class="mid">${mid}</span>` : ''}${at != null ? `<div class="pl"><i style="width:${at}%"></i></div>` : ''}</div><div class="t">${title}</div><div class="m">${kind}</div></div>`;
+export const tile = ({ img, title, kind, pos = 'center', at, w = 160, tag = '', cls = '', mid = '', mark = '' }) => `<div class="tile ${cls}" style="width:${w}px"><div class="im"><img src="${A}${img}" alt="" style="object-position:${pos}">${tag ? `<span class="tg">${tag}</span>` : ''}${mark ? `<span class="kb" title="${kindOf(mark)}">${ic(mark, 15, 1.7)}</span>` : ''}${mid ? `<span class="mid">${mid}</span>` : ''}${at != null ? `<div class="pl"><i style="width:${at}%"></i></div>` : ''}</div><div class="t">${title}</div><div class="m">${kind}</div></div>`;
 
 /** A world as a wide card. */
 export const wc = ({ img, name, meta, pos = 'center', cls = '', tag = '', style = '' }) => `<div class="wc ${cls}"${style ? ` style="${style}"` : ''}><img src="${A}${img}" alt="" style="object-position:${pos}"><div class="shade"></div>${tag ? `<div class="tg">${tag}</div>` : ''}<div class="tx"><h3>${name}</h3><div class="m">${meta}</div></div></div>`;

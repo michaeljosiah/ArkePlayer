@@ -362,6 +362,10 @@
 .ap .po .im.fb>img.bl{position:absolute;inset:0;filter:blur(16px) brightness(.62) saturate(120%);transform:scale(1.35)}
 .ap .po .im.fb>img.wd{position:absolute;left:0;right:0;top:50%;height:auto;aspect-ratio:16/9;transform:translateY(-50%)}
 .ap .po .im .tg{position:absolute;left:6px;top:6px}
+/* P28: a title's kind at its top right, never moved by the tags at its left. */
+.ap .po .im .kb,.ap .tile .im .kb{position:absolute;right:6px;top:6px;z-index:2;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--media-overlay-fg);background:color-mix(in srgb,var(--media-overlay-bg) 46%,transparent);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:1px solid color-mix(in srgb,var(--media-overlay-fg) 18%,transparent)}
+.ap .po.sm .im .kb{right:5px;top:5px;width:22px;height:22px}
+.ap .po.sm .im .kb svg{width:12px;height:12px}
 .ap .po .im .mid{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--media-overlay-fg)}
 .ap .po .im .mid.ini{background:var(--secondary);font:var(--weight-semibold) var(--text-2xl)/1 var(--font-sans);letter-spacing:var(--tracking-tight);color:var(--muted-foreground)}
 .ap .po.gated .im{background:var(--secondary)}

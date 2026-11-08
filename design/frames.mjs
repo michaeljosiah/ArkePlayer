@@ -1,7 +1,7 @@
 // Arke Player · the frames, turn by turn. The sample is The Undersong, shared by Helen Marsh with
 // Jonah Pike, beside Copper Saints (shared by Ama Mensah) and Meridian Dust (added from a file).
 // Every picture is in design/assets, recompressed from ArkeStudio's design-system/assets; nothing here is generated.
-import { A, ic, seek, sb, hi, tabs, pill, pill4, dock, frame, cc, tile, wc, sh, row, sheet, gb } from './view.mjs';
+import { A, ic, seek, sb, hi, tabs, pill, pill4, dock, frame, cc, tile, wc, sh, row, sheet, gb, kindOf } from './view.mjs';
 
 // ---- the sample ------------------------------------------------------------------------------
 const W = {
@@ -575,7 +575,7 @@ ${sh('Worlds')}<div class="hrow">${[DUMAH, QUIET, EMBERS].map((w) => wc({ ...w, 
 const JUJU = { img: 'juju-key-art.jpg', pos: '30% 40%', name: 'Na Love or Juju', logline: 'A disciplined Lagos man in his forties falls for a woman who loves him in private and denies him in public, and by the time he learns her hold on him is more than charm, he can no longer tell which of his feelings were ever his own.' };
 const TALL = { ledger: 'maren-ledger-tall.jpg', juju: 'juju-cover-tall.jpg', quiet: 'red-quiet-key-art.jpg', bell: 'char-sereth.jpg' };
 /** A poster: 2:3 from a Tall picture; without one, the Wide whole over its own blur. */
-const poster = ({ tall, img, pos = 'center', title, kind, w = 172, tag = '', mid = '' }) => `<div class="po" style="width:${w}px"><div class="im${tall ? '' : ' fb'}">${tall ? `<img src="${A}${tall}" alt="" style="object-position:${pos}">` : `<img class="bl" src="${A}${img}" alt=""><img class="wd" src="${A}${img}" alt="" style="object-position:${pos}">`}${tag ? `<span class="tg">${tag}</span>` : ''}${mid ? `<span class="mid">${mid}</span>` : ''}</div><div class="t">${title}</div><div class="m">${kind}</div></div>`;
+const poster = ({ tall, img, pos = 'center', title, kind, w = 172, tag = '', mid = '', mark = '' }) => `<div class="po${mark && w <= 120 ? ' sm' : ''}" style="width:${w}px"><div class="im${tall ? '' : ' fb'}">${tall ? `<img src="${A}${tall}" alt="" style="object-position:${pos}">` : `<img class="bl" src="${A}${img}" alt=""><img class="wd" src="${A}${img}" alt="" style="object-position:${pos}">`}${tag ? `<span class="tg">${tag}</span>` : ''}${mark ? `<span class="kb" title="${kindOf(mark)}">${ic(mark, 15, 1.7)}</span>` : ''}${mid ? `<span class="mid">${mid}</span>` : ''}</div><div class="t">${title}</div><div class="m">${kind}</div></div>`;
 const castPoster = (c, kind, w) => c.img ? poster({ tall: c.img, pos: c.pos, title: c.name, kind, w }) : `<div class="po" style="width:${w}px"><div class="im"><span class="mid ini">${c.ini}</span></div><div class="t">${c.name}</div><div class="m">${kind}</div></div>`;
 const gatedPoster = (after, w) => `<div class="po gated" style="width:${w}px"><div class="im"><span class="mid">${ic('eyeoff', 24, 1.7)}</span></div><div class="t mute">${after}</div><div class="m">Character</div></div>`;
 /** The feature: one production, its Tall cover upright on a phone, its Wide on a Fold. */
@@ -1251,4 +1251,34 @@ const P27 = [
   frame('P27r', 'Upright: a graphic novel, one page', 'tabletup media cm', `${sb(true)}<div class="st"></div>${gnPage(3)}${gnTop()}<div class="sbot" style="height:180px"></div>${gnFoot(3)}${hi()}`),
 ];
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20), p21: withSize(P21), p22: withSize(P22), p23: withSize(P23), p24: withSize(P24), p25: withSize(P25), p26: withSize(P26), p27: withSize(P27) };
+// ---- P28 · a title's kind at its corner -----------------------------------------------------------------
+// The owner, 8 November 2026: a corner badge on the story pictures for their kind. Home's Stories mixes
+// audiobooks, comics, interactive and filmed titles, and only the grey line under each poster tells them
+// apart. The mark is an icon in a round of glass, so a word never covers a 112-wide poster; the line
+// under it stays, and teaches it. Low Water, The Lantern Road, The Bell Watch, Undertow, Saltlight and
+// The Tenth Key are the fixture's sample titles; the rest are published.
+const marked = (w = 172) => `${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · The Undersong', w, mark: 'panels' })}${poster({ img: PR.low.img, pos: PR.low.pos, title: PR.low.title, kind: 'Interactive movie · The Undersong', w, mark: 'split' })}${poster({ tall: 'quiet-tall.jpg', title: 'The Red Quiet', kind: 'Audiobook · The Red Quiet', w, mark: 'headphones' })}${poster({ tall: TALL.bell, pos: '50% 28%', title: PR.bell.title, kind: 'Micro drama · The Undersong', w, mark: 'vplay' })}${poster({ img: PR.saltlight.img, pos: PR.saltlight.pos, title: PR.saltlight.title, kind: 'Film · The Undersong', w, mark: 'clapper' })}`;
+const ct = (n) => `<span class="ct num">${n}</span>`;
+
+const P28 = [
+  frame('P28a', 'Home: Stories, each marked with its kind', 'phone', `${sb()}${homePlain}<div class="body">${sh('Stories')}<div class="hrow">${marked()}</div>
+${sh('Teasers')}<div class="hrow">${teaserRow()}</div>
+${sh('Music')}<div class="hrow">${square({ img: 'world-undersong.jpg', pos: '60% 50%', title: 'Songs of the Drowned Quarter', kind: 'Album · The Undersong' })}${square({ img: 'scene4-shot14b.jpg', title: 'The Bell at Low Water', kind: 'Single · The Undersong' })}</div></div>${foot4('Home')}`),
+
+  frame('P28b', 'A world of every kind, grouped', 'phone', `${sb()}${scrolledHead(WD.undersong.name)}${wTabs(WD.undersong, 'Story')}<div class="body">
+${sh('Listen', ct(2))}<div class="hrow">${poster({ tall: WD.undersong.tall, title: STORY.ledger.title, kind: 'Audiobook · Book · 23 chapters', mark: 'headphones' })}${poster({ img: PR.undertow.img, pos: PR.undertow.pos, title: PR.undertow.title, kind: PR.undertow.kind, mark: 'mic' })}</div>
+${sh('Watch', ct(2))}<div class="hrow">${tile({ ...PR.bell, w: TW, mark: 'vplay' })}${tile({ ...PR.saltlight, w: TW, mark: 'clapper' })}</div></div>${foot4('Worlds')}`),
+
+  frame('P28c', 'The same world, further down', 'phone', `${sb()}${scrolledHead(WD.undersong.name)}${wTabs(WD.undersong, 'Story')}<div class="body">
+${sh('Music', ct(1))}<div class="hrow">${square({ img: 'world-undersong.jpg', pos: '60% 50%', title: 'Songs of the Drowned Quarter', kind: 'Album · 9 tracks' })}</div>
+${sh('Play', ct(2))}<div class="hrow">${tile({ ...PR.low, w: TW, mark: 'split' })}${tile({ ...PR.lantern, w: TW, mark: 'chat' })}</div>
+${sh('Read', ct(2))}<div class="hrow">${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · 11 pages', mark: 'panels' })}${poster({ img: PR.tenth.img, pos: PR.tenth.pos, title: PR.tenth.title, kind: 'Book · 31 chapters', mark: 'book' })}</div></div>${foot4('Worlds')}`),
+
+  frame('P28d', 'Beside New and Update, and on a band: titles marked, people not', 'phone', `${sb()}${homePlain}<div class="body">${sh('Stories')}<div class="hrow">${poster({ tall: 'dumah-tall.jpg', title: STORY.whispers.title, kind: 'Audiobook · Legend of Dumah', mark: 'headphones', tag: NEWTAG })}${poster({ img: PR.low.img, pos: PR.low.pos, title: PR.low.title, kind: 'Interactive movie · The Undersong', mark: 'split', tag: '<span class="tag">Update app</span>' })}${poster({ tall: 'ledger-drawn-tall.jpg', title: GN.title, kind: 'Graphic novel · The Undersong', mark: 'panels', tag: '<span class="tag">Update</span>' })}</div>
+${worldBand(WD.juju, (s) => `${poster({ tall: WD.juju.tall, title: 'Na love or Juju', kind: 'Audiobook', w: s, mark: 'headphones' })}${person('juju-ife.jpg', 'Ife', 'Character', { w: s })}${person('juju-ade.jpg', 'Ade', 'Character', { w: s })}`)}</div>${foot4('Home')}`),
+
+  frame('P28e', 'A tablet: the same mark, the same size', 'tablet', tcol(`${sb()}${tPlain}<div class="body" style="padding:0 8px">${sh('Stories')}<div class="hrow">${poster({ tall: WD.undersong.tall, title: STORY.ledger.title, kind: 'Audiobook · The Undersong', w: 260, mark: 'headphones' })}${marked(260)}</div>
+${sh('Teasers')}<div class="hrow">${teaserRow(160)}</div></div>${foot4('Home', true)}`)),
+];
+
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20), p21: withSize(P21), p22: withSize(P22), p23: withSize(P23), p24: withSize(P24), p25: withSize(P25), p26: withSize(P26), p27: withSize(P27), p28: withSize(P28) };
