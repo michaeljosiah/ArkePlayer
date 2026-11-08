@@ -373,8 +373,9 @@ approval and approved the same day.
   microphone. A title of two kinds takes the one it plays as.
 - **Where:** every title's poster and wide tile. Never world covers or cards, characters, places,
   teasers, Continue, Search's rows, or music's squares.
-- **Building it:** the kind is known from `ProductionKind` (`features/production/domain/production_kind.dart`),
-  so `PosterTile` and `ProductionTile` take it and draw the mark; a `SquareTile` never does.
+- **Built:** `KindMark` (`row_widgets.dart`) takes the `ProductionKind`, and `PosterTile` and
+  `ProductionTile` draw it; a `SquareTile` never does. The app's round is the tags' tint, without the
+  backdrop blur the frames draw, so a row of posters does not read the screen back once each.
 
 ## Calls for the owner
 

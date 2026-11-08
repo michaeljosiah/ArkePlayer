@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
+import '../../production/domain/production_kind.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
 const _bg = ArkeColors.mediaOverlayBackground;
@@ -130,10 +131,55 @@ class WholeOverBlur extends StatelessWidget {
   );
 }
 
+/// A title's kind at its top right (P28): an icon in a round, in the overlay's ink whatever the theme
+/// (call 54). The design draws it as glass, but each BackdropFilter breaks the GPU's pass to read the
+/// screen back, and Home alone would carry a score of them in rows that scroll; at 26 across the blur
+/// barely shows, so the round takes the tags' tint, which reads over any picture as theirs does.
+class KindMark extends StatelessWidget {
+  const KindMark(this.kind, {this.small = false, super.key});
+
+  final ProductionKind kind;
+
+  /// On a small poster (P28 rule 1): 22 across rather than 26.
+  final bool small;
+
+  /// A title of two kinds is marked by how it plays (P28 rule 3). Music has none: a square is
+  /// already music (P17 rule 3).
+  static IconData? iconOf(ProductionKind kind) => switch (kind) {
+    ProductionKind.audiobook => Icons.headphones_outlined,
+    ProductionKind.book => Icons.menu_book_outlined,
+    ProductionKind.graphicNovel => Icons.auto_awesome_mosaic_outlined,
+    ProductionKind.interactiveMovie => Icons.call_split_rounded,
+    ProductionKind.visualNovel => Icons.chat_bubble_outline_rounded,
+    ProductionKind.microDrama => Icons.smartphone_outlined,
+    ProductionKind.film || ProductionKind.series => Icons.movie_outlined,
+    ProductionKind.audioDrama => Icons.mic_none_outlined,
+    ProductionKind.album || ProductionKind.single || ProductionKind.soundtrack => null,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final size = small ? 22.0 : 26.0;
+    return Semantics(
+      label: kind.label,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _bg.withValues(alpha: 0.62),
+          border: Border.all(color: _fg.withValues(alpha: 0.18)),
+        ),
+        child: Icon(iconOf(kind), color: _fg, size: small ? 12 : 15),
+      ),
+    );
+  }
+}
+
 /// A poster (P16 rules 3 and 5): 2:3 with its title and kind under it. [tall] fills it; without one,
 /// [wide] shows whole over its own blur. A character's portrait is its [tall] (uncut, where P15 cut
-/// faces to 16:9); a character with none shows its initials. `New` or a [tag] at its top left, a glyph
-/// at its middle (a clip's play). On a band's media colours its words take the overlay's ink.
+/// faces to 16:9); a character with none shows its initials. `New` or a [tag] at its top left, its
+/// [mark] at its top right (P28), a glyph at its middle (a clip's play). On a band's media colours its words take the overlay's ink.
 class PosterTile extends StatelessWidget {
   const PosterTile({
     required this.title,
@@ -148,6 +194,7 @@ class PosterTile extends StatelessWidget {
     this.initials,
     this.pictureAlignment = Alignment.center,
     this.onMedia = false,
+    this.mark,
     super.key,
   });
 
@@ -166,10 +213,14 @@ class PosterTile extends StatelessWidget {
   final Alignment pictureAlignment;
   final bool onMedia;
 
+  /// Its kind at its top right (P28), or none: a character, a place, a teaser.
+  final ProductionKind? mark;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final surface = context.surface;
+    final small = width <= 120;
     final picture = switch ((tall, wide)) {
       (final ImageProvider tall, _) => Image(image: tall, fit: BoxFit.cover, alignment: pictureAlignment),
       (null, final ImageProvider wide) => WholeOverBlur(picture: wide),
@@ -202,6 +253,12 @@ class PosterTile extends StatelessWidget {
                       children: [
                         picture,
                         if (fresh && tag == null) const Positioned(left: 6, top: 6, child: NewTag(onMedia: true)),
+                        if (mark case final kind? when KindMark.iconOf(kind) != null)
+                          Positioned(
+                            right: small ? 5 : 6,
+                            top: small ? 5 : 6,
+                            child: KindMark(kind, small: small),
+                          ),
                         if (tag != null)
                           Positioned(
                             left: 6,

@@ -477,7 +477,7 @@ class _StoryListed extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Widget tile(CatalogueProduction production, double width, _Shape shape) {
+    Widget tile(CatalogueProduction production, double width, _Shape shape, ProductionKind mark) {
       // A story this Player cannot play is shown, and never fetched (R-82), whichever row it is in.
       final tag = production.needsNewerApp ? 'Update app' : null;
       final picture = ref.pictureOf(world, production);
@@ -489,12 +489,13 @@ class _StoryListed extends ConsumerWidget {
           wide: picture,
           width: width,
           tag: tag,
+          mark: mark,
           onOpen: tag == null && production.comic != null && production.alone != null && production.id != null
               ? () => context.push(Routes.production(location, production.id!))
               : null,
         ),
         _Shape.square => SquareTile(title: production.title, kind: production.kind, picture: picture, width: width, tag: tag, onOpen: null),
-        _Shape.wide => ProductionTile(title: production.title, kind: production.kind, picture: picture, width: width, tag: tag, onOpen: null),
+        _Shape.wide => ProductionTile(title: production.title, kind: production.kind, picture: picture, width: width, tag: tag, mark: mark, onOpen: null),
       };
     }
 
@@ -540,14 +541,14 @@ class _StoryHere extends ConsumerWidget {
       );
     }
 
-    Widget tile(Object entry, double width, _Shape shape) {
+    Widget tile(Object entry, double width, _Shape shape, ProductionKind mark) {
       // Whatever a title is, its row's shape draws it (P16 rule 1). The package carries no Tall cover yet:
       // the list's, fetched with it or bundled with the app, is the one there is.
       Widget drawn(String title, String kind, ImageProvider? picture, {ImageProvider? tall, String? tag, bool fresh = false, VoidCallback? onOpen}) =>
           switch (shape) {
-            _Shape.poster => PosterTile(title: title, kind: kind, tall: tall, wide: picture, width: width, tag: tag, fresh: fresh, onOpen: onOpen),
+            _Shape.poster => PosterTile(title: title, kind: kind, tall: tall, wide: picture, width: width, tag: tag, fresh: fresh, mark: mark, onOpen: onOpen),
             _Shape.square => SquareTile(title: title, kind: kind, picture: picture, width: width, tag: tag, onOpen: onOpen),
-            _Shape.wide => ProductionTile(title: title, kind: kind, picture: picture, width: width, tag: tag, fresh: fresh, onOpen: onOpen),
+            _Shape.wide => ProductionTile(title: title, kind: kind, picture: picture, width: width, tag: tag, fresh: fresh, mark: mark, onOpen: onOpen),
           };
       if (entry is CatalogueProduction) {
         return drawn(
@@ -614,7 +615,7 @@ class _Titles<T> extends StatelessWidget {
 
   final List<T> titles;
   final ProductionKind Function(T) kindOf;
-  final Widget Function(T production, double width, _Shape shape) tile;
+  final Widget Function(T production, double width, _Shape shape, ProductionKind mark) tile;
 
   @override
   Widget build(BuildContext context) {
@@ -625,8 +626,8 @@ class _Titles<T> extends StatelessWidget {
           children: [
             for (final title in titles)
               kindOf(title).takenAs == TakenAs.music
-                  ? tile(title, RowSizes.square(context), _Shape.square)
-                  : tile(title, RowSizes.poster(context), _Shape.poster),
+                  ? tile(title, RowSizes.square(context), _Shape.square, kindOf(title))
+                  : tile(title, RowSizes.poster(context), _Shape.poster, kindOf(title)),
           ],
         ),
       );
@@ -640,11 +641,11 @@ class _Titles<T> extends StatelessWidget {
           for (final MapEntry(key: takenAs, value: productions) in groups.entries) ...[
             CountHead(title: takenAs.label, count: productions.length),
             if (takenAs == TakenAs.listen || takenAs == TakenAs.read)
-              TileRow(children: [for (final production in productions) tile(production, RowSizes.poster(context), _Shape.poster)])
+              TileRow(children: [for (final production in productions) tile(production, RowSizes.poster(context), _Shape.poster, kindOf(production))])
             else if (takenAs == TakenAs.music)
-              TileRow(children: [for (final production in productions) tile(production, RowSizes.square(context), _Shape.square)])
+              TileRow(children: [for (final production in productions) tile(production, RowSizes.square(context), _Shape.square, kindOf(production))])
             else
-              TileRow(children: [for (final production in productions) tile(production, rowTileWidth(context), _Shape.wide)]),
+              TileRow(children: [for (final production in productions) tile(production, rowTileWidth(context), _Shape.wide, kindOf(production))]),
           ],
         ],
       ),

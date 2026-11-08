@@ -288,13 +288,16 @@ tablet held upright takes the Tall picture (call 53), and a Fold open, nearly sq
 | P27c – P27i, P27o, P27p | An episode, Here and Episodes beside it, Caught up | `features/players/presentation/episode_player.dart` |
 | P27j – P27n, P27r | A visual novel, a graphic novel, a book, an album, a song | `features/stories/`, `features/comics/`, `features/players/presentation/reader_screen.dart`, `music_player_screen.dart`, `features/worlds/presentation/album_screen.dart` |
 
-## A title's kind at its corner (P28, approved, not built)
+## A title's kind at its corner (P28, built)
 
-Call 54. The owner asked for it and approved it on 8 November 2026.
+Call 54. The owner asked for it and approved it on 8 November 2026. `KindMark` takes a title's
+`ProductionKind`; Home's Stories, New chapters and band, and a world's Story tab, pass it. Library holds
+worlds and files, not titles, so it has nothing to mark yet. The round takes the tags' tint without the
+drawn glass blur: a backdrop blur per poster would read the screen back a score of times a frame.
 
-| Frame | Screen | Would change |
+| Frame | Screen | File |
 |---|---|---|
-| P28a – P28e | A mark on every title's poster and wide tile, on a phone and a tablet | `features/worlds/presentation/row_widgets.dart` (`PosterTile`), `world_widgets.dart` (`ProductionTile`), `features/production/domain/production_kind.dart` |
+| P28a – P28e | A mark on every title's poster and wide tile, on a phone and a tablet | `features/worlds/presentation/row_widgets.dart` (`KindMark`, `PosterTile`), `world_widgets.dart` (`ProductionTile`), `world_screen.dart`, `features/home/presentation/home_screen.dart` |
 
 ## A world already in Library (P10, approved, not built)
 

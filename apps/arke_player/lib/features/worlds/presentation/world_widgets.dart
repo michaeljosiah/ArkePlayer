@@ -10,8 +10,10 @@ import '../../../app/services.dart';
 import '../../../app/theme/tokens.dart';
 import '../../../app/widgets/shelf.dart';
 import '../../parts/application/notices.dart';
+import '../../production/domain/production_kind.dart';
 import '../../settings/application/settings_controller.dart';
 import '../application/worlds.dart';
+import 'row_widgets.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
 const _bg = ArkeColors.mediaOverlayBackground;
@@ -469,7 +471,7 @@ class GroupRow extends StatelessWidget {
 
 /// A wide tile (P1d, P9f, P16 rule 4): 16:9 with its title and kind under it, the width of the
 /// row's tile, or the full width when a world has only the one production (P9 rule 6). `New` at its
-/// top left (P15a); a glyph at its middle, a clip's play.
+/// top left (P15a), its [mark] at its top right (P28); a glyph at its middle, a clip's play.
 class ProductionTile extends StatelessWidget {
   const ProductionTile({
     required this.title,
@@ -482,6 +484,7 @@ class ProductionTile extends StatelessWidget {
     this.initials,
     this.tag,
     this.pictureAlignment = Alignment.center,
+    this.mark,
     super.key,
   });
 
@@ -502,6 +505,9 @@ class ProductionTile extends StatelessWidget {
   /// For a character with no portrait (P15 rule 10).
   final String? initials;
   final Alignment pictureAlignment;
+
+  /// Its kind at its top right (P28), or none: a character, a place, a teaser.
+  final ProductionKind? mark;
 
   @override
   Widget build(BuildContext context) {
@@ -552,6 +558,7 @@ class ProductionTile extends StatelessWidget {
                               ),
                             ),
                           ),
+                        if (mark case final kind? when KindMark.iconOf(kind) != null) Positioned(right: 6, top: 6, child: KindMark(kind)),
                         if (glyph != null)
                           Center(
                             child: Container(
