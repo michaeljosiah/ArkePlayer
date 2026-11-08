@@ -579,15 +579,50 @@ void main() {
       expect(tester.getCenter(find.text('Here')).dx, greaterThan(760));
     });
 
-    testWidgets('a Fold open has Here and Episodes beside the picture, with the bell', (tester) async {
+    // The owner, 8 November 2026: always open on a Fold, the panel hid the picture and would not close.
+    testWidgets('a Fold open shows the whole picture, with Here and Episodes on its rail (P24j)', (tester) async {
       await _pump(tester, size: const Size(984, 1092), at: _minute * 4);
-      expect(tester.getTopLeft(find.text('Here')).dx, greaterThan(984 - 320));
-      expect(tester.getTopLeft(find.text('Episodes')).dx, greaterThan(984 - 320));
-      expect(find.text('Maren Kest'), findsOneWidget);
+      expect(find.text('Maren Kest'), findsNothing);
+      expect(tester.getCenter(find.text('Here')).dx, greaterThan(984 - 70));
+      expect(tester.getSize(find.byType(PageView)).width, 984);
+    });
+
+    testWidgets('on a Fold, Here opens beside the picture, not over it, and it plays on', (tester) async {
+      final engine = await _pump(tester, size: const Size(984, 1092), at: _minute * 4);
+      await tester.tap(find.text('Here'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(tester.getTopLeft(find.text('Maren Kest')).dx, greaterThan(984 - 320));
       await tester.tap(find.text('Episodes'));
       await tester.pumpAndSettle();
       expect(find.text('3 · The Tenth Key'), findsOneWidget);
       expect(find.byTooltip('Notify'), findsOneWidget);
+      expect(engine.pauses, 0);
+    });
+
+    for (final size in const [Size(984, 1092), Size(1280, 800)]) {
+      testWidgets('its head closes it, back to the whole picture, at ${size.width.toInt()} wide', (tester) async {
+        final engine = await _pump(tester, size: size, at: _minute * 4);
+        await tester.tap(find.text('Episodes'));
+        await tester.pumpAndSettle();
+        expect(find.text('3 · The Tenth Key'), findsOneWidget);
+        await tester.tap(find.byTooltip('Hide'));
+        await tester.pumpAndSettle();
+        expect(find.text('3 · The Tenth Key'), findsNothing);
+        expect(tester.getSize(find.byType(PageView)).width, size.width);
+        expect(find.text('Here'), findsOneWidget);
+        expect(engine.pauses, 0);
+      });
+    }
+
+    testWidgets('on a Fold, a tap on the picture closes it too, and pauses nothing', (tester) async {
+      final engine = await _pump(tester, size: const Size(984, 1092), at: _minute * 4);
+      await tester.tap(find.text('Here'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(300, 400));
+      await tester.pumpAndSettle();
+      expect(find.text('Maren Kest'), findsNothing);
+      expect(engine.pauses, 0);
     });
   });
 

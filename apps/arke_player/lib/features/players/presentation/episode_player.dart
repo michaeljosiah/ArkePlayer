@@ -105,7 +105,9 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
   /// A sheet is up: only the picture stays behind it (P24e, P24f).
   bool _sheet = false;
 
-  /// A tablet sideways: `here` or `episodes`, open beside the picture rather than over it (P27f, P27g).
+  /// A Fold open or a tablet sideways: `here` or `episodes`, open beside the picture rather than over
+  /// it (P24j, P27f, P27g), and only when asked. The owner, 8 November 2026: drawn always open on a Fold,
+  /// it could not be closed to see the whole picture.
   String? _beside;
 
   bool get _sideways {
@@ -339,11 +341,13 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
     final held = ref.watch(libraryWorldsProvider).value?.where((world) => world.id == worldId).firstOrNull;
     _production = held?.productions.where((production) => production.narration == widget.item.id).firstOrNull?.id;
     // A phone upright and an upright tablet take Tall (call 53). A phone turned fills with Wide; a Fold
-    // open keeps Wide beside its panel; a tablet sideways fills with it, the panel only when asked (P27).
+    // open shows Wide over its words; a tablet sideways fills with it. On both of those Here and
+    // Episodes open beside the picture, and only when asked (P24j, P27).
     final turned = size.height < WindowBands.fold;
     final sideways = _sideways;
     final side = !turned && !sideways && size.width >= WindowBands.fold && size.width / size.height >= 0.8;
     final upright = !turned && !sideways && !side;
+    final beside = side || sideways;
     return Scaffold(
       backgroundColor: _bg,
       body: StreamBuilder<Duration>(
@@ -359,17 +363,15 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
           final rail = Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (!side) ...[
-                RailPress(icon: Icons.groups_rounded, label: 'Here', onPressed: () => sideways ? setState(() => _beside = 'here') : _showHere(guide, chapter)),
-                const SizedBox(height: 12),
-                RailPress(
-                  icon: Icons.format_list_bulleted_rounded,
-                  label: 'Episodes',
-                  onPressed: () => sideways ? setState(() => _beside = 'episodes') : _showEpisodes(),
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (worldId != null && !side)
+              RailPress(icon: Icons.groups_rounded, label: 'Here', onPressed: () => beside ? setState(() => _beside = 'here') : _showHere(guide, chapter)),
+              const SizedBox(height: 12),
+              RailPress(
+                icon: Icons.format_list_bulleted_rounded,
+                label: 'Episodes',
+                onPressed: () => beside ? setState(() => _beside = 'episodes') : _showEpisodes(),
+              ),
+              const SizedBox(height: 12),
+              if (worldId != null)
                 RailPress(
                   icon: notify ? Icons.notifications_rounded : Icons.notifications_none_rounded,
                   label: 'Notify',
@@ -476,7 +478,7 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                         right: sideways
                             ? (_beside == null ? 160 : 40)
                             : side
-                            ? 28
+                            ? (_beside == null ? 84 : 28)
                             : 84,
                         top: side ? pictureTop + pictureHeight + 32 : null,
                         bottom: side
@@ -486,8 +488,7 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                             : foot + 28,
                         child: _Foot(words: words, title: title, name: widget.item.title, large: side, onName: worldId == null ? null : _openWorld),
                       ),
-                    if (!side && _beside == null)
-                      Positioned(right: sideways ? 32 : 8, bottom: _controls ? foot + 116 : (sideways ? foot + 40 : foot + 24), child: rail),
+                    if (_beside == null) Positioned(right: sideways ? 32 : 8, bottom: _controls ? foot + 116 : (sideways ? foot + 40 : foot + 24), child: rail),
                     if (_beside != null)
                       Positioned(
                         left: 12,
@@ -508,7 +509,7 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                     if (!_controls && side)
                       Positioned(
                         left: 28,
-                        right: 28,
+                        right: _beside == null ? 84 : 28,
                         top: pictureTop + pictureHeight + 148,
                         child: ThinLine(value: length.inMilliseconds == 0 ? 0 : (position - start).inMilliseconds / length.inMilliseconds),
                       ),
@@ -579,12 +580,13 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: stage),
-              if (side || _beside != null)
+              if (beside && _beside != null)
                 SizedBox(
                   width: sideways ? 380 : 320,
                   child: _SidePanel(
                     key: ValueKey(_beside),
                     startsOnEpisodes: _beside == 'episodes',
+                    onClose: () => setState(() => _beside = null),
                     here: _here(guide?.guide, chapter),
                     guide: guide,
                     plan: widget.plan,
@@ -908,9 +910,11 @@ class _HereList extends StatelessWidget {
   );
 }
 
-/// `Here · Episodes` beside the picture (P24j, P27): the same two lists as the sheets, with the bell.
+/// `Here · Episodes` beside the picture (P24j, P27): the same two lists as the sheets, with the bell,
+/// and a way back to the whole picture at its head.
 class _SidePanel extends ConsumerStatefulWidget {
   const _SidePanel({
+    required this.onClose,
     this.startsOnEpisodes = false,
     super.key,
     required this.here,
@@ -936,6 +940,7 @@ class _SidePanel extends ConsumerStatefulWidget {
   final VoidCallback onWorld;
   final ValueChanged<int> onEpisode;
   final bool startsOnEpisodes;
+  final VoidCallback onClose;
 
   @override
   ConsumerState<_SidePanel> createState() => _SidePanelState();
@@ -1012,6 +1017,11 @@ class _SidePanelState extends ConsumerState<_SidePanel> {
                             tooltip: 'Notify',
                             icon: Icon(widget.notify ? Icons.notifications_rounded : Icons.notifications_none_rounded, color: _fg, size: 20),
                           ),
+                        IconButton(
+                          onPressed: widget.onClose,
+                          tooltip: 'Hide',
+                          icon: const Icon(Icons.close_rounded, color: _fg, size: 20),
+                        ),
                       ],
                     ),
                   ),
