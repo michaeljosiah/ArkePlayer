@@ -495,6 +495,31 @@ void main() {
     });
   });
 
+  group('the menus are glass (owner, 8 November 2026)', () {
+    testWidgets('a phone’s Episodes sheet: the picture plays on behind it, blurred, under a light barrier', (tester) async {
+      await _pump(tester, at: _minute * 4);
+      await tester.tap(find.text('Episodes'));
+      await tester.pumpAndSettle();
+      final sheet = find.byType(BottomSheet);
+      expect(find.descendant(of: sheet, matching: find.byType(BackdropFilter)), findsOneWidget);
+      expect(tester.widget<BottomSheet>(sheet).backgroundColor, Colors.transparent);
+      expect(find.byType(PictureOfTheMoment), findsOneWidget);
+      final barrier = tester.widget<ModalBarrier>(find.byType(ModalBarrier).last);
+      expect((barrier.color?.a ?? 0), lessThan(0.2));
+    });
+
+    testWidgets('on a Fold the panel floats over the picture, not beside it', (tester) async {
+      await _pump(tester, size: const Size(984, 1092), at: _minute * 4);
+      await tester.tap(find.text('Here'));
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(PageView)).width, 984, reason: 'the picture runs under the panel');
+      expect(find.byType(BackdropFilter), findsWidgets);
+      final panel = tester.getRect(find.ancestor(of: find.text('Maren Kest'), matching: find.byType(Positioned)).first);
+      expect(panel.right, lessThan(984));
+      expect(panel.top, greaterThan(0));
+    });
+  });
+
   group('Here (P24e, rule 7)', () {
     testWidgets('who the chapter has reached, with their roles, and nobody still waiting', (tester) async {
       await _pump(tester, at: _minute * 4);
@@ -521,7 +546,7 @@ void main() {
       await _pump(tester);
       await tester.tap(find.text('Here'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(OutlinedButton, 'The Undersong'));
+      await tester.tap(find.widgetWithText(FilledButton, 'The Undersong'));
       await tester.pumpAndSettle();
       expect(find.text('world undersong'), findsOneWidget);
     });

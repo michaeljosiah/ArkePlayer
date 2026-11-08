@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' show max;
-import 'dart:ui' show ImageFilter;
 
 import 'package:arke_library/arke_library.dart';
 import 'package:arke_world/arke_world.dart';
@@ -220,6 +219,13 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
     if (_controls) _restSoon();
   }
 
+  /// Here or Episodes, beside the picture: the controls give way to it.
+  void _openBeside(String which) => setState(() {
+    _beside = which;
+    _controls = false;
+    _rest?.cancel();
+  });
+
   void _restSoon() {
     _rest?.cancel();
     _rest = Timer(_controlsRest, () {
@@ -348,6 +354,8 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
     final side = !turned && !sideways && size.width >= WindowBands.fold && size.width / size.height >= 0.8;
     final upright = !turned && !sideways && !side;
     final beside = side || sideways;
+    // What the floating panel takes from the right of the picture, with its margin.
+    final panelRoom = _beside == null ? 0.0 : (sideways ? 380.0 : 320.0) + 24;
     return Scaffold(
       backgroundColor: _bg,
       body: StreamBuilder<Duration>(
@@ -363,13 +371,9 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
           final rail = Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              RailPress(icon: Icons.groups_rounded, label: 'Here', onPressed: () => beside ? setState(() => _beside = 'here') : _showHere(guide, chapter)),
+              RailPress(icon: Icons.groups_rounded, label: 'Here', onPressed: () => beside ? _openBeside('here') : _showHere(guide, chapter)),
               const SizedBox(height: 12),
-              RailPress(
-                icon: Icons.format_list_bulleted_rounded,
-                label: 'Episodes',
-                onPressed: () => beside ? setState(() => _beside = 'episodes') : _showEpisodes(),
-              ),
+              RailPress(icon: Icons.format_list_bulleted_rounded, label: 'Episodes', onPressed: () => beside ? _openBeside('episodes') : _showEpisodes()),
               const SizedBox(height: 12),
               if (worldId != null)
                 RailPress(
@@ -476,9 +480,9 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                             ? 28
                             : 16,
                         right: sideways
-                            ? (_beside == null ? 160 : 40)
+                            ? (_beside == null ? 160 : panelRoom + 28)
                             : side
-                            ? (_beside == null ? 84 : 28)
+                            ? (_beside == null ? 84 : panelRoom + 16)
                             : 84,
                         top: side ? pictureTop + pictureHeight + 32 : null,
                         bottom: side
@@ -502,14 +506,14 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
                     if (!_controls && !side)
                       Positioned(
                         left: sideways ? 40 : 16,
-                        right: sideways ? (_beside == null ? 120 : 40) : 16,
+                        right: sideways ? (_beside == null ? 120 : panelRoom + 28) : 16,
                         bottom: sideways ? foot + 26 : foot + 8,
                         child: ThinLine(value: length.inMilliseconds == 0 ? 0 : (position - start).inMilliseconds / length.inMilliseconds),
                       ),
                     if (!_controls && side)
                       Positioned(
                         left: 28,
-                        right: _beside == null ? 84 : 28,
+                        right: _beside == null ? 84 : panelRoom + 16,
                         top: pictureTop + pictureHeight + 148,
                         child: ThinLine(value: length.inMilliseconds == 0 ? 0 : (position - start).inMilliseconds / length.inMilliseconds),
                       ),
@@ -575,13 +579,18 @@ class _EpisodePlayerState extends ConsumerState<EpisodePlayer> {
               );
             },
           );
-          // One Row always, so opening the panel does not build the stage and its picture again.
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          // One Stack always, so opening the panel does not build the stage and its picture again. The
+          // panel floats over the picture as glass, and what plays shows through it.
+          final pad = MediaQuery.paddingOf(context);
+          return Stack(
+            fit: StackFit.expand,
             children: [
-              Expanded(child: stage),
+              stage,
               if (beside && _beside != null)
-                SizedBox(
+                Positioned(
+                  top: pad.top + 12,
+                  right: pad.right + 12,
+                  bottom: pad.bottom + 12,
                   width: sideways ? 380 : 320,
                   child: _SidePanel(
                     key: ValueKey(_beside),
@@ -828,59 +837,94 @@ class _HereRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final picture = guide == null ? null : guidePicture(guide!, character);
-    return InkWell(
-      onTap: onOpen,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(ArkeRadius.md),
-              child: SizedBox(
-                width: 44,
-                height: 56,
-                child: picture == null
-                    ? ColoredBox(
-                        color: ArkeColors.neutral800,
-                        child: Center(
-                          child: Text(initials(character.name), style: text.labelMedium?.copyWith(color: _fg)),
-                        ),
-                      )
-                    : Image(
-                        image: picture,
-                        fit: BoxFit.cover,
-                        alignment: const Alignment(0, -0.6),
-                        errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    character.name,
-                    style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase, color: _fg),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onOpen,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 7, 10, 7),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 44,
+                    height: 56,
+                    child: picture == null
+                        ? ColoredBox(
+                            color: _fg.withValues(alpha: 0.12),
+                            child: Center(
+                              child: Text(initials(character.name), style: text.labelMedium?.copyWith(color: _fg)),
+                            ),
+                          )
+                        : Image(
+                            image: picture,
+                            fit: BoxFit.cover,
+                            alignment: const Alignment(0, -0.6),
+                            errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+                          ),
                   ),
-                  if (character.role case final role?) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      role,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.68)),
-                    ),
-                  ],
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        character.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodyMedium?.copyWith(fontSize: ArkeType.sizeBase, color: _fg, fontWeight: FontWeight.w500),
+                      ),
+                      if (character.role case final role?) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          role,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.68)),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, size: 18, color: _fg.withValues(alpha: 0.6)),
+              ],
             ),
-            Icon(Icons.chevron_right_rounded, size: 16, color: _fg.withValues(alpha: 0.6)),
-          ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// The world's press at Here's foot: a pill of glass.
+class _WorldPill extends StatelessWidget {
+  const _WorldPill({required this.name, required this.onPressed});
+
+  final String name;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+    child: FilledButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.public, size: 18),
+      label: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(ArkeSizes.widePress),
+        backgroundColor: _fg.withValues(alpha: 0.12),
+        foregroundColor: _fg,
+        shape: const StadiumBorder(),
+        textStyle: const TextStyle(fontFamily: ArkeType.family, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
+      ),
+    ),
+  );
 }
 
 class _HereList extends StatelessWidget {
@@ -897,15 +941,7 @@ class _HereList extends StatelessWidget {
     shrinkWrap: true,
     children: [
       for (final character in here) _HereRow(character: character, guide: guide, onOpen: () => onEntry(character)),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-        child: OutlinedButton.icon(
-          onPressed: onWorld,
-          icon: const Icon(Icons.public, size: 18, color: _fg),
-          label: Text(worldName, style: const TextStyle(color: _fg)),
-          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(ArkeSizes.widePress)),
-        ),
-      ),
+      _WorldPill(name: worldName, onPressed: onWorld),
     ],
   );
 }
@@ -951,103 +987,110 @@ class _SidePanelState extends ConsumerState<_SidePanel> {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    Widget tab(String label, String count, bool on, VoidCallback onTap) => InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        margin: const EdgeInsets.only(right: 22),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: on ? _fg : Colors.transparent, width: 2)),
-        ),
-        child: Row(
-          children: [
-            Text(
-              label,
-              style: text.bodyMedium?.copyWith(
-                fontSize: ArkeType.sizeBase,
-                color: _fg.withValues(alpha: on ? 1 : 0.68),
-                fontWeight: on ? FontWeight.w600 : FontWeight.w500,
+    Widget segment(String label, String count, bool on, VoidCallback onTap) => Semantics(
+      button: true,
+      selected: on,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(color: on ? _fg : Colors.transparent, borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: ArkeType.family,
+                  fontSize: ArkeType.sizeBase,
+                  fontWeight: FontWeight.w600,
+                  color: on ? _bg : _fg.withValues(alpha: 0.86),
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(count, style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.6))),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                count,
+                style: TextStyle(
+                  fontFamily: ArkeType.family,
+                  fontSize: ArkeType.sizeSm,
+                  color: (on ? _bg : _fg).withValues(alpha: 0.6),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
-        child: Container(
-          decoration: BoxDecoration(
-            color: _bg.withValues(alpha: 0.62),
-            border: Border(left: BorderSide(color: _fg.withValues(alpha: 0.12))),
+    final radius = BorderRadius.circular(24);
+    // Floating over the picture, so what plays shows through it (P27f, P27g): the shadow outside the
+    // clip, the glass inside it.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: const [BoxShadow(color: Color(0x59000000), blurRadius: 40, offset: Offset(0, 18))],
+      ),
+      child: PlayerGlass(
+        borderRadius: radius,
+        border: Border.all(color: _fg.withValues(alpha: 0.14)),
+        child: Theme(
+          data: ThemeData.dark(useMaterial3: true).copyWith(
+            textTheme: Theme.of(context).textTheme.apply(bodyColor: _fg, displayColor: _fg),
           ),
-          child: SafeArea(
-            left: false,
-            child: Theme(
-              data: ThemeData.dark(useMaterial3: true).copyWith(
-                textTheme: Theme.of(context).textTheme.apply(bodyColor: _fg, displayColor: _fg),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.only(left: 16, right: 8),
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: _fg.withValues(alpha: 0.14))),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 10, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(color: _fg.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                tab('Here', '${widget.here.length}', !_episodes, () => setState(() => _episodes = false)),
-                                tab('Episodes', '${widget.plan.chapters.length}', _episodes, () => setState(() => _episodes = true)),
+                                segment('Here', '${widget.here.length}', !_episodes, () => setState(() => _episodes = false)),
+                                segment('Episodes', '${widget.plan.chapters.length}', _episodes, () => setState(() => _episodes = true)),
                               ],
                             ),
                           ),
                         ),
-                        if (widget.worldId case final worldId?)
-                          IconButton(
-                            onPressed: () => setNotify(ref, worldId, !widget.notify),
-                            tooltip: 'Notify',
-                            icon: Icon(widget.notify ? Icons.notifications_rounded : Icons.notifications_none_rounded, color: _fg, size: 20),
-                          ),
-                        IconButton(
-                          onPressed: widget.onClose,
-                          tooltip: 'Hide',
-                          icon: const Icon(Icons.close_rounded, color: _fg, size: 20),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: _episodes
-                        ? EpisodeRows(plan: widget.plan, position: widget.position, onOpen: widget.onEpisode)
-                        : ListView(
-                            padding: const EdgeInsets.only(top: 8),
-                            children: [
-                              for (final character in widget.here) _HereRow(character: character, guide: widget.guide, onOpen: () => widget.onEntry(character)),
-                              if (widget.worldName case final name?)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                                  child: OutlinedButton.icon(
-                                    onPressed: widget.onWorld,
-                                    icon: const Icon(Icons.public, size: 18, color: _fg),
-                                    label: Text(name, style: const TextStyle(color: _fg)),
-                                    style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(ArkeSizes.widePress)),
-                                  ),
-                                ),
-                            ],
-                          ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    if (widget.worldId case final worldId?) ...[
+                      GlassRoundPress(
+                        icon: widget.notify ? Icons.notifications_rounded : Icons.notifications_none_rounded,
+                        tooltip: 'Notify',
+                        on: widget.notify,
+                        onPressed: () => setNotify(ref, worldId, !widget.notify),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    GlassRoundPress(icon: Icons.close_rounded, tooltip: 'Hide', onPressed: widget.onClose),
+                  ],
+                ),
               ),
-            ),
+              Expanded(
+                child: _episodes
+                    ? EpisodeRows(plan: widget.plan, position: widget.position, onOpen: widget.onEpisode)
+                    : ListView(
+                        padding: const EdgeInsets.only(top: 2, bottom: 12),
+                        children: [
+                          for (final character in widget.here) _HereRow(character: character, guide: widget.guide, onOpen: () => widget.onEntry(character)),
+                          if (widget.worldName case final name?) _WorldPill(name: name, onPressed: widget.onWorld),
+                        ],
+                      ),
+              ),
+            ],
           ),
         ),
       ),

@@ -1,9 +1,87 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:arke_library/arke_library.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/tokens.dart';
 
 const _fg = ArkeColors.mediaOverlayForeground;
+const _bg = ArkeColors.mediaOverlayBackground;
+
+/// What a player's menus are made of (P24e, P24f, P27f): what plays shows through, blurred and a little
+/// richer, under a light tint of the media colour. The owner, 8 November 2026, asked for them
+/// translucent: they had been 80% black, with nothing behind them blurred.
+final playerGlass = ImageFilter.compose(
+  // Saturation 1.4, as the design's `saturate(140%)`, so the blur keeps the picture's colour.
+  outer: const ColorFilter.matrix([
+    1.31496, -0.28608, -0.02888, 0, 0, //
+    -0.08504, 1.11392, -0.02888, 0, 0, //
+    -0.08504, -0.28608, 1.37112, 0, 0, //
+    0, 0, 0, 1, 0,
+  ]),
+  inner: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+);
+
+/// Glass in a shape: the blur clipped to it, then the tint and an edge of light.
+class PlayerGlass extends StatelessWidget {
+  const PlayerGlass({required this.borderRadius, required this.child, this.border, super.key});
+
+  final BorderRadius borderRadius;
+  final BoxBorder? border;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: borderRadius,
+    child: BackdropFilter(
+      filter: playerGlass,
+      child: DecoratedBox(
+        decoration: BoxDecoration(color: _bg.withValues(alpha: 0.46), borderRadius: borderRadius, border: border),
+        child: child,
+      ),
+    ),
+  );
+}
+
+/// A menu's count, in a pill beside its name.
+class CountPill extends StatelessWidget {
+  const CountPill(this.count, {super.key});
+
+  final String count;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+    decoration: BoxDecoration(color: _fg.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+    child: Text(
+      count,
+      style: TextStyle(
+        color: _fg.withValues(alpha: 0.82),
+        fontSize: ArkeType.sizeSm,
+        fontWeight: FontWeight.w500,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    ),
+  );
+}
+
+/// A round press on glass: a menu's close, its bell.
+class GlassRoundPress extends StatelessWidget {
+  const GlassRoundPress({required this.icon, required this.tooltip, required this.onPressed, this.on = false, super.key});
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    onPressed: onPressed,
+    tooltip: tooltip,
+    style: IconButton.styleFrom(backgroundColor: on ? _fg : _fg.withValues(alpha: 0.12), fixedSize: const Size.square(36), minimumSize: const Size.square(36)),
+    icon: Icon(icon, size: 18, color: on ? _bg : _fg),
+  );
+}
 
 /// A player's top (Studio 156): ⌄ to close, the eyebrow over the title, then the player's own
 /// presses. Always on the media overlay colours.
@@ -180,47 +258,60 @@ class Scrubber extends StatelessWidget {
   }
 }
 
-/// A glass sheet over a player (P5b, P5c, P3e).
+/// A glass sheet over a player (P5b, P5c, P3e): rounded, with its grip, its name and count, and a round
+/// close. The barrier is light, so what plays stays in view behind the glass.
 Future<T?> showPlayerSheet<T>(BuildContext context, {required String title, String? count, required WidgetBuilder builder}) => showModalBottomSheet<T>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
   constraints: const BoxConstraints(maxWidth: 560),
-  backgroundColor: const Color(0xCC0A0A0A),
-  barrierColor: const Color(0x4D0A0A0A),
+  backgroundColor: Colors.transparent,
+  elevation: 0,
+  barrierColor: const Color(0x260A0A0A),
   builder: (context) => Theme(
     data: ThemeData.dark(useMaterial3: true).copyWith(
       textTheme: Theme.of(context).textTheme.apply(bodyColor: _fg, displayColor: _fg),
     ),
     child: ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(color: _fg, fontSize: ArkeType.sizeLg, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  if (count != null)
-                    Text(
-                      count,
-                      style: TextStyle(color: _fg.withValues(alpha: 0.6), fontSize: ArkeType.sizeSm),
-                    ),
-                  IconButton(onPressed: () => Navigator.of(context).pop(), tooltip: 'Close', color: _fg, icon: const Icon(Icons.close, size: 18)),
-                ],
+      child: PlayerGlass(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(top: BorderSide(color: _fg.withValues(alpha: 0.16))),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 12 + MediaQuery.paddingOf(context).bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 10, bottom: 6),
+                  decoration: BoxDecoration(color: _fg.withValues(alpha: 0.32), borderRadius: BorderRadius.circular(ArkeRadius.pill)),
+                ),
               ),
-            ),
-            Flexible(child: builder(context)),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 12, 10),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: _fg, fontSize: ArkeType.sizeXl, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    if (count != null) ...[const SizedBox(width: 10), CountPill(count)],
+                    const Spacer(),
+                    GlassRoundPress(icon: Icons.close_rounded, tooltip: 'Close', onPressed: () => Navigator.of(context).pop()),
+                  ],
+                ),
+              ),
+              Flexible(child: builder(context)),
+            ],
+          ),
         ),
       ),
     ),

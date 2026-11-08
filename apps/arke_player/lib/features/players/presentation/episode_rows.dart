@@ -133,54 +133,62 @@ class _EpisodeRow extends StatelessWidget {
       selected: now,
       label: ['$number · $title', formatClock(length), if (heard) 'Heard'].join(', '),
       child: ExcludeSemantics(
-        child: InkWell(
-          onTap: onOpen,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-            child: Row(
-              children: [
-                EpisodeThumb(picture: picture),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$number · $title',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.bodyMedium?.copyWith(
-                          fontSize: ArkeType.sizeBase,
-                          color: heard ? _fg.withValues(alpha: 0.56) : _fg,
-                          fontWeight: now ? FontWeight.w600 : FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        [formatClock(length), if (left != null) '${formatClock(left)} left'].join(' · '),
-                        style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.66), fontFeatures: const [FontFeature.tabularFigures()]),
-                      ),
-                      if (now) ...[
-                        const SizedBox(height: 7),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(ArkeRadius.pill),
-                          child: LinearProgressIndicator(
-                            value: length.inMilliseconds == 0 ? 0 : (into ?? Duration.zero).inMilliseconds / length.inMilliseconds,
-                            minHeight: 3,
-                            color: _fg,
-                            backgroundColor: _fg.withValues(alpha: 0.2),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: Material(
+            color: now ? _fg.withValues(alpha: 0.12) : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onOpen,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 7, 12, 7),
+                child: Row(
+                  children: [
+                    EpisodeThumb(picture: picture),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$number · $title',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: text.bodyMedium?.copyWith(
+                              fontSize: ArkeType.sizeBase,
+                              color: heard ? _fg.withValues(alpha: 0.56) : _fg,
+                              fontWeight: now ? FontWeight.w600 : FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
+                          const SizedBox(height: 3),
+                          Text(
+                            [formatClock(length), if (left != null) '${formatClock(left)} left'].join(' · '),
+                            style: text.labelSmall?.copyWith(color: _fg.withValues(alpha: 0.66), fontFeatures: const [FontFeature.tabularFigures()]),
+                          ),
+                          if (now) ...[
+                            const SizedBox(height: 7),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(ArkeRadius.pill),
+                              child: LinearProgressIndicator(
+                                value: length.inMilliseconds == 0 ? 0 : (into ?? Duration.zero).inMilliseconds / length.inMilliseconds,
+                                minHeight: 3,
+                                color: _fg,
+                                backgroundColor: _fg.withValues(alpha: 0.2),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    if (now)
+                      Icon(Icons.equalizer_rounded, size: 18, color: _fg.withValues(alpha: 0.8))
+                    else if (heard)
+                      Icon(Icons.check_rounded, size: 18, color: _fg.withValues(alpha: 0.66)),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                if (now)
-                  Icon(Icons.equalizer_rounded, size: 18, color: _fg.withValues(alpha: 0.8))
-                else if (heard)
-                  Icon(Icons.check_rounded, size: 18, color: _fg.withValues(alpha: 0.66)),
-              ],
+              ),
             ),
           ),
         ),
@@ -197,7 +205,7 @@ class EpisodeThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(7),
+    borderRadius: BorderRadius.circular(9),
     child: SizedBox(
       width: 44,
       height: 66,

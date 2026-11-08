@@ -239,51 +239,56 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
           final length = end - chapters[index].start;
           final now = index == playing;
           final done = position >= end;
-          return Material(
-            color: now ? _fg.withValues(alpha: 0.08) : Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                _engine.seek(chapters[index].start);
-                Navigator.of(context).pop();
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 26,
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(color: _fg.withValues(alpha: 0.56), fontSize: ArkeType.sizeSm),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            child: Material(
+              color: now ? _fg.withValues(alpha: 0.12) : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  _engine.seek(chapters[index].start);
+                  Navigator.of(context).pop();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 26,
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(color: _fg.withValues(alpha: 0.56), fontSize: ArkeType.sizeSm),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            chapters[index].title,
-                            style: const TextStyle(color: _fg, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
-                          ),
-                          if (now) ...[
-                            const SizedBox(height: 6),
-                            LinearProgressIndicator(
-                              value: length.inMilliseconds == 0 ? 0 : (position - chapters[index].start).inMilliseconds / length.inMilliseconds,
-                              minHeight: 3,
-                              color: _fg,
-                              backgroundColor: _fg.withValues(alpha: 0.2),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              chapters[index].title,
+                              style: const TextStyle(color: _fg, fontSize: ArkeType.sizeBase, fontWeight: FontWeight.w500),
                             ),
+                            if (now) ...[
+                              const SizedBox(height: 6),
+                              LinearProgressIndicator(
+                                value: length.inMilliseconds == 0 ? 0 : (position - chapters[index].start).inMilliseconds / length.inMilliseconds,
+                                minHeight: 3,
+                                color: _fg,
+                                backgroundColor: _fg.withValues(alpha: 0.2),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      formatClock(length),
-                      style: TextStyle(color: _fg.withValues(alpha: 0.62), fontSize: ArkeType.size2xs),
-                    ),
-                    SizedBox(width: 28, child: done ? Icon(Icons.check, size: 18, color: _fg.withValues(alpha: 0.7)) : null),
-                  ],
+                      const SizedBox(width: 12),
+                      Text(
+                        formatClock(length),
+                        style: TextStyle(color: _fg.withValues(alpha: 0.62), fontSize: ArkeType.size2xs),
+                      ),
+                      SizedBox(width: 28, child: done ? Icon(Icons.check, size: 18, color: _fg.withValues(alpha: 0.7)) : null),
+                    ],
+                  ),
                 ),
               ),
             ),
