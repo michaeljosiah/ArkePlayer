@@ -10,6 +10,7 @@ import 'package:arke_player/app/widgets/shelf.dart';
 import 'package:arke_player/features/home/presentation/home_screen.dart';
 import 'package:arke_player/features/parts/application/notices.dart';
 import 'package:arke_player/features/parts/application/parts.dart';
+import 'package:arke_player/features/production/domain/production_kind.dart';
 import 'package:arke_player/features/settings/application/settings_controller.dart';
 import 'package:arke_player/features/settings/domain/device_settings.dart';
 import 'package:arke_player/features/worlds/application/discover.dart';
@@ -660,6 +661,111 @@ void main() {
         ],
       );
       expect(find.text('New'), findsNothing);
+    });
+  });
+
+  group('a title’s kind at its corner (P28)', () {
+    Finder poster(String line) => find.ancestor(of: find.text(line), matching: find.byType(PosterTile));
+    Finder markOf(Finder tile) => find.descendant(of: tile, matching: find.byType(KindMark));
+    ProductionKind? kindOn(WidgetTester tester, Finder tile) => markOf(tile).evaluate().isEmpty ? null : tester.widget<KindMark>(markOf(tile)).kind;
+
+    testWidgets('Home: every title’s poster and tile at its top right, 26 across, 22 on a band’s; never a teaser or a character (P28a, P28d)', (tester) async {
+      await _pump(tester, location: Routes.home, size: const Size(390, 2400));
+      expect(kindOn(tester, poster('Audio drama · The Undersong')), ProductionKind.audioDrama);
+      expect(kindOn(tester, poster('Micro drama · The Undersong')), ProductionKind.microDrama);
+      expect(kindOn(tester, poster('Film · The Undersong')), ProductionKind.film);
+      // An audiobook with its book is marked by how it plays (P28 rule 3).
+      final ledger = poster('Audiobook · The Undersong');
+      expect(kindOn(tester, ledger), ProductionKind.audiobook);
+      expect(find.descendant(of: ledger, matching: find.byIcon(Icons.headphones_outlined)), findsOneWidget);
+      expect(tester.getSize(markOf(ledger)), const Size(26, 26));
+      expect(tester.getTopRight(markOf(ledger)), tester.getTopRight(ledger) + const Offset(-6, 6));
+
+      final chapter = find.ancestor(of: find.text('Chapter 3 · Legend of Dumah'), matching: find.byType(ProductionTile));
+      expect(kindOn(tester, chapter), ProductionKind.audiobook);
+      expect(tester.getTopRight(markOf(chapter)), tester.getTopRight(chapter) + const Offset(-6, 6));
+
+      final band = find.descendant(of: find.byType(WorldBand), matching: poster('The Ledger of Nights'));
+      expect(kindOn(tester, band), ProductionKind.audiobook);
+      expect(tester.getSize(markOf(band)), const Size(22, 22));
+      expect(tester.getTopRight(markOf(band)), tester.getTopRight(band) + const Offset(-5, 5));
+
+      expect(markOf(poster('Saltmouth bells')), findsNothing);
+      expect(markOf(poster('Maren Kest')), findsNothing);
+      expect(find.descendant(of: find.byType(WorldCover), matching: find.byType(KindMark)), findsNothing);
+    });
+
+    testWidgets('a world’s Story: each title its own; its People none (P28b, P28c)', (tester) async {
+      await _pump(tester, location: Routes.worldsWorld('the-undersong'));
+      expect(kindOn(tester, poster('The Ledger of Nights')), ProductionKind.audiobook);
+      expect(kindOn(tester, poster('Undertow')), ProductionKind.audioDrama);
+      expect(kindOn(tester, poster('The Bell Watch')), ProductionKind.microDrama);
+      expect(kindOn(tester, poster('Saltlight')), ProductionKind.film);
+      await tester.tap(find.text('People'));
+      await tester.pumpAndSettle();
+      expect(markOf(poster('Maren Kest')), findsNothing);
+    });
+
+    testWidgets('past six, the wide tiles carry it too', (tester) async {
+      await _pump(tester, location: Routes.worldsWorld('crowded'), catalogue: [_crowded], size: const Size(390, 2400));
+      Finder tile(String title) => find.ancestor(of: find.text(title), matching: find.byType(ProductionTile));
+      expect(kindOn(tester, tile('Fourth')), ProductionKind.film);
+      expect(kindOn(tester, tile('Fifth')), ProductionKind.microDrama);
+      expect(kindOn(tester, tile('Sixth')), ProductionKind.interactiveMovie);
+      expect(find.descendant(of: tile('Sixth'), matching: find.byIcon(Icons.call_split_rounded)), findsOneWidget);
+      expect(kindOn(tester, poster('Seventh')), ProductionKind.book);
+    });
+
+    testWidgets('New and Update app keep the top left, and the mark its corner beside them (P28d)', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: arkeTheme(Brightness.dark),
+          home: const Scaffold(
+            body: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PosterTile(title: 'Fresh', kind: 'Book', width: 172, onOpen: null, fresh: true, mark: ProductionKind.book),
+                ProductionTile(
+                  title: 'Newer',
+                  kind: 'Interactive movie',
+                  picture: null,
+                  width: 240,
+                  onOpen: null,
+                  tag: 'Update app',
+                  mark: ProductionKind.interactiveMovie,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      final fresh = find.byType(PosterTile);
+      expect(tester.getTopLeft(find.descendant(of: fresh, matching: find.byType(NewTag))), tester.getTopLeft(fresh) + const Offset(6, 6));
+      expect(tester.getTopRight(markOf(fresh)), tester.getTopRight(fresh) + const Offset(-6, 6));
+      final newer = find.byType(ProductionTile);
+      expect(tester.getTopLeft(find.ancestor(of: find.text('Update app'), matching: find.byType(Positioned))), tester.getTopLeft(newer) + const Offset(6, 6));
+      expect(tester.getTopRight(markOf(newer)), tester.getTopRight(newer) + const Offset(-6, 6));
+    });
+
+    test('every kind but music has its own icon; a film and a series share the clapperboard (P28 rule 2)', () {
+      for (final kind in ProductionKind.values) {
+        expect(KindMark.iconOf(kind) == null, kind.takenAs == TakenAs.music, reason: kind.name);
+      }
+      final icons = [for (final kind in ProductionKind.values) ?KindMark.iconOf(kind)];
+      expect(icons.toSet().length, icons.length - 1);
+      expect(KindMark.iconOf(ProductionKind.series), KindMark.iconOf(ProductionKind.film));
+    });
+
+    testWidgets('a music production given one shows none', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: arkeTheme(Brightness.light),
+          home: const Scaffold(
+            body: PosterTile(title: 'Tides', kind: 'Album', width: 172, onOpen: null, mark: ProductionKind.album),
+          ),
+        ),
+      );
+      expect(find.byType(KindMark), findsNothing);
     });
   });
 

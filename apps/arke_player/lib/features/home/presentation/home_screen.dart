@@ -250,6 +250,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               wide: ref.pictureOf(world, production),
               width: smallWidth,
               onMedia: true,
+              mark: kindOf(production),
               onOpen: () => openProduction(world, production.id),
             ),
           if (guide != null)
@@ -321,6 +322,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       picture: ref.pictureOf(item.world, item.production),
                       fresh: releasedThisWeek(item.part, now),
                       width: wideWidth,
+                      mark: item.production == null ? null : kindOf(item.production!),
                       onOpen: () => openProduction(item.world, item.part.production),
                     ),
                 ],
@@ -402,6 +404,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tall: tallFor(world, production),
                       wide: ref.pictureOf(world, production),
                       width: posterWidth,
+                      mark: kindOf(production),
                       onOpen: () => openProduction(world, production.id),
                     ),
                 ],
