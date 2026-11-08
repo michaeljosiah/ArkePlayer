@@ -360,6 +360,22 @@ Not drawn: an 8-inch tablet, a keyboard, picture in picture, an interactive movi
 
 Arke Studio's Bench was offered for new pictures; none was needed. Every picture is published art.
 
+## A title's kind at its corner (P28)
+
+The owner, 8 November 2026, asked for a corner badge on the story pictures to say their kind. Drawn for
+approval and approved the same day.
+
+- **The mark:** an icon in a round of glass at a title's top right, 26 across (22 on a small poster), in
+  the overlay's ink in either theme. The word stays in the line under every title, so the icon is
+  learned from it.
+- **The set:** Audiobook headphones, Book an open book, Graphic novel panels, Interactive movie a forking
+  arrow, Visual novel a speech bubble, Micro drama an upright screen, Film a clapperboard, Audio drama a
+  microphone. A title of two kinds takes the one it plays as.
+- **Where:** every title's poster and wide tile. Never world covers or cards, characters, places,
+  teasers, Continue, Search's rows, or music's squares.
+- **Building it:** the kind is known from `ProductionKind` (`features/production/domain/production_kind.dart`),
+  so `PosterTile` and `ProductionTile` take it and draw the mark; a `SquareTile` never does.
+
 ## Calls for the owner
 
 1. **When a share ends, its downloads go too.** Drawn so (P2g). The alternative — keeping
@@ -477,6 +493,9 @@ Arke Studio's Bench was offered for new pictures; none was needed. Every picture
    tabs at the right. Upright it takes the Fold's.
 53. **A tablet held upright shows the Tall picture** (P27o, approved), revising call 10 for it. A Fold
    open, nearly square, keeps the Wide.
+
+54. **A title's kind is an icon at its corner, never a word** (P28, approved): a word would cover a
+   112-wide poster, and the line under every title already says it.
 
 ## What this rests on
 

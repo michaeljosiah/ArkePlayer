@@ -288,6 +288,14 @@ tablet held upright takes the Tall picture (call 53), and a Fold open, nearly sq
 | P27c – P27i, P27o, P27p | An episode, Here and Episodes beside it, Caught up | `features/players/presentation/episode_player.dart` |
 | P27j – P27n, P27r | A visual novel, a graphic novel, a book, an album, a song | `features/stories/`, `features/comics/`, `features/players/presentation/reader_screen.dart`, `music_player_screen.dart`, `features/worlds/presentation/album_screen.dart` |
 
+## A title's kind at its corner (P28, approved, not built)
+
+Call 54. The owner asked for it and approved it on 8 November 2026.
+
+| Frame | Screen | Would change |
+|---|---|---|
+| P28a – P28e | A mark on every title's poster and wide tile, on a phone and a tablet | `features/worlds/presentation/row_widgets.dart` (`PosterTile`), `world_widgets.dart` (`ProductionTile`), `features/production/domain/production_kind.dart` |
+
 ## A world already in Library (P10, approved, not built)
 
 SPEC-058 R-21, with adding a world package from a file (ArkePlayer #1). Not built.
