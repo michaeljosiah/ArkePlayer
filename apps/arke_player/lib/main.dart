@@ -22,6 +22,10 @@ Future<void> main() async {
     throw UnsupportedError('The isolated development channel currently requires the Android dev application ID.');
   }
   WidgetsFlutterBinding.ensureInitialized();
+  // A worker's plugin registration can warm this engine without an Activity. Wait before
+  // initializing media/UI plugins: a cancelled worker can otherwise strand AudioService.init,
+  // and Home must not write the library alongside the worker's inbox writer (P15i).
+  await waitForFirstForeground();
   await pdfrxFlutterInitialize();
   _registerFontLicences();
 
@@ -40,9 +44,6 @@ Future<void> main() async {
       rewindInterval: Duration(seconds: 15),
     ),
   );
-  // Headless media startup still gets its handler, but must not run Home's downloads or
-  // load/clean the library alongside the scheduler's separate inbox writer (P15i).
-  await waitForFirstForeground();
   // The daily check of Arke's list for a world's new chapters (SPEC-058 R-54); it is scheduled
   // only while a world's Notify is on.
   try {

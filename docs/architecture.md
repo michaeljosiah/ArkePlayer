@@ -64,8 +64,9 @@ newly installed chapter is not hidden behind an older queue. Places remain store
 and offset for illustrated narration. Regression coverage: `apps/arke_player/test/chapter_playback_test.dart`.
 
 Android's daily chapter worker registers the audio-service plugin, which can warm the main
-Flutter engine without an Activity. The audio handler is initialized, but UI startup waits for
-the first resumed lifecycle state. This keeps Home, library cleanup and foreground downloads
+Flutter engine without an Activity. Startup waits for the first resumed lifecycle state before
+initializing media/UI plugins: cancelling the worker can otherwise strand the media handshake.
+This keeps Home, library cleanup and foreground downloads
 from running alongside the worker's read-only library snapshot and inbox download (P15i,
 SPEC-058 R-51/R-54). When the user opens Player or its notification, normal startup resumes
 once; later background audio remains unaffected. Coverage: `foreground_start_test.dart` and
