@@ -67,3 +67,35 @@ results do not qualify physical devices, interactive-movie video, OS notificatio
 delivery, or a nontechnical creator/reviewer pilot. The AONIK runbook records
 package provenance, release/withdrawal operations and any device interruptions
 separately.
+
+## Android background chapter notices (P15i)
+
+Use an ordinary dev APK and a separate synthetic world with one installed audio
+chapter. Keep the earlier reader-progress checkpoints. Confirm Notify defaults
+off, deny the first Android permission request, and check that no daily work is
+scheduled. Grant the subsequent request and check that one uniquely named daily
+WorkManager task exists with the Wi-Fi-only constraint.
+
+Background the app before publishing the verified next part through AONIK. For
+an accelerated rehearsal, stop the background dev process, back up all private
+directories, and advance only its WorkSpec `last_enqueue_time` and hosted-cache
+`fetchedAt` into the past. Preserve task identity, interval, inputs and constraints;
+do not change the device clock or another app. Invoke the real Android scheduler
+job. This qualifies the native worker, not a natural 24-hour wait or OEM scheduling.
+
+Before tapping the notification, verify that the complete library index is
+unchanged, the inbox ZIP matches the approved archive, and the single notification
+names the correct world, chapter and production. A repeated check must not notify
+again for an existing inbox ZIP. Tapping must open the named production, import
+the part once and consume the inbox without changing other worlds' saved places.
+Exercise both a warmed background engine and a cold process, then turn Notify off
+and verify the daily job is cancelled. Withdraw the dev publication and retain
+the downloaded material for the offline/retention checks.
+
+The 9 November rehearsal exposed two linked startup failures: audio-service plugin
+registration warmed the main engine during a worker, allowing Home to install the
+part prematurely; a cancelled worker could also strand the early media handshake.
+`main()` now waits for the first resumed lifecycle before media/UI initialization.
+Already-started playback is unaffected by later pauses. The AONIK evidence record
+distinguishes the failed attempts, corrected reruns, timing acceleration and the
+emulator-only scope.

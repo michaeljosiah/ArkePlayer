@@ -11,6 +11,7 @@ import 'package:workmanager/workmanager.dart';
 
 import 'app/app.dart';
 import 'app/catalogue_channel.dart';
+import 'app/foreground_start.dart';
 import 'app/router/router.dart';
 import 'features/parts/application/notices.dart';
 import 'features/players/application/audio_engine.dart';
@@ -21,6 +22,10 @@ Future<void> main() async {
     throw UnsupportedError('The isolated development channel currently requires the Android dev application ID.');
   }
   WidgetsFlutterBinding.ensureInitialized();
+  // A worker's plugin registration can warm this engine without an Activity. Wait before
+  // initializing media/UI plugins: a cancelled worker can otherwise strand AudioService.init,
+  // and Home must not write the library alongside the worker's inbox writer (P15i).
+  await waitForFirstForeground();
   await pdfrxFlutterInitialize();
   _registerFontLicences();
 
