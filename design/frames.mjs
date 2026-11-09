@@ -1281,4 +1281,39 @@ ${worldBand(WD.juju, (s) => `${poster({ tall: WD.juju.tall, title: 'Na love or J
 ${sh('Teasers')}<div class="hrow">${teaserRow(160)}</div></div>${foot4('Home', true)}`)),
 ];
 
-export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20), p21: withSize(P21), p22: withSize(P22), p23: withSize(P23), p24: withSize(P24), p25: withSize(P25), p26: withSize(P26), p27: withSize(P27), p28: withSize(P28) };
+// ---- P29 · a character, for readers --------------------------------------------------------------------
+// The owner, 8 November 2026: a character's page shows what the author used to make the story (Juju's
+// Appearance was written for the picture model) while what a reader wants waits for the last chapter,
+// because it gives the ending away. A description written for readers comes first and shows to everyone;
+// the rest of what the author made public opens all at once when the story ends, never section by
+// section (call 55). Ife, Ade's House, the headings and the sections' words are Na Love or Juju's
+// published guide, which links no one, so neither page has With or Here; the descriptions are drafts for
+// the owner to change.
+const JC = {
+  ife: { img: 'juju-ife.jpg', pos: '50% 18%', name: 'Ife', role: 'Kept woman, keeper of men' },
+  house: { img: 'juju-ade-house.jpg', pos: '50% 40%', name: 'Ade’s House, Ikoyi', role: 'Place' },
+};
+const ABOUT = {
+  ife: 'Late twenties, and in no hurry about anything. Ife never asks a man for a thing, and men give her everything anyway: the flat, the car, the gold at her ear and wrist. Ade Akinola sees her across a club on Victoria Island and is sure he is the one doing the choosing.',
+  house: 'High walls, two floors and a great deal of window, in Ikoyi. Everything in Ade’s house was earned, and everything in it works, down to the generator that never stutters.',
+};
+const IFE_SECTIONS = `<div class="prose"><div class="lk">Essence</div><p>She cannot make a man want her — she can only make wanting her cost him everything.</p><p style="margin-top:10px">Late twenties, and already unhurried about it. She learned early that a woman who explains herself has begun to negotiate, so she stopped explaining.</p><div class="lk">Appearance</div><p>Everything on her was bought for her, and worn well. Silk slip dresses that move a beat after she does. Heavy gold at the ear and the wrist, the kind that has a sound.</p></div>`;
+const storyGate = (n) => `<div class="lr"><span class="mute">${ic('eyeoff', 20, 1.8)}</span><div class="grow"><div class="t mute">After the story</div><div class="mute num" style="font:var(--type-meta);font-size:var(--text-xs);margin-top:2px">${n} sections</div></div><span class="btn" style="height:36px;padding:0 15px">Reveal</span></div>`;
+const entryHero = (e) => `<div class="wh on-media"><img class="tint" src="${A}${e.img}" alt=""><img class="art" src="${A}${e.img}" alt="" style="object-position:${e.pos}"><div class="top">${back}</div><div class="in"><h1>${e.name}</h1><div class="cd"><span class="grow">${e.role} · ${WD.juju.name}</span></div></div></div>`;
+const readerPage = (e, about, rest, overlay = '') => `${sb(true)}<div class="body">${entryHero(e)}<p class="about">${about}</p>${rest}</div>${foot4('Worlds')}${overlay}`;
+const storyReveal = `<div class="veil"></div>${sheet('', `<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 20px 0"><span class="mute">${ic('eyeoff', 34, 1.8)}</span><div style="margin-top:4px;font:var(--type-h3)">After the story</div><div class="mute num" style="font:var(--type-ui)">${WD.juju.name} · you are at Chapter 3 of 26</div></div><div style="display:flex;flex-direction:column;gap:8px;padding:20px 16px 0"><span class="btn pri wide">Reveal</span><span class="btn ghost wide">Not now</span></div>`)}${hi()}`;
+
+const P29 = [
+  frame('P29a', 'A character: who she is, for everyone; the rest after the story', 'phone', readerPage(JC.ife, ABOUT.ife, `<div style="height:8px"></div>${storyGate(2)}`)),
+
+  frame('P29b', 'Reveal, asked once', 'phone', readerPage(JC.ife, ABOUT.ife, `<div style="height:8px"></div>${storyGate(2)}`, storyReveal)),
+
+  frame('P29c', 'The story finished: all of it', 'phone', readerPage(JC.ife, ABOUT.ife, IFE_SECTIONS)),
+
+  frame('P29d', 'A place: the same', 'phone', readerPage(JC.house, ABOUT.house, `<div style="height:8px"></div>${storyGate(2)}`)),
+
+  frame('P29e', 'A tablet: the description first', 'tablet', `<div class="wh on-media pane portrait"><img class="tint" src="${A}${JC.ife.img}" alt=""><img class="art" src="${A}${JC.ife.img}" alt="" style="object-position:50% 16%">${sb(true)}<div class="top">${back}</div><div class="in"><h1>Ife</h1><div class="cd"><span class="grow">${JC.ife.role} · ${WD.juju.name}</span></div></div></div>
+<div class="wr">${sb()}<div class="body"><p class="about" style="padding:6px 28px 0;max-width:720px">${ABOUT.ife}</p><div style="height:10px;flex:none"></div><div style="padding:0 12px">${storyGate(2)}</div></div></div>${foot4('Worlds', true)}`),
+];
+
+export const FRAMES = { p1: withSize(P1), p2: withSize(P2), p3: withSize(P3), p4: withSize(P4), p5: withSize(P5), p6: withSize(P6), p7: withSize(P7), p8: withSize(P8), p9: withSize(P9), p10: withSize(P10), p11: withSize(P11), p12: withSize(P12), p13: withSize(P13), p14: withSize(P14), p15: withSize(P15), p16: withSize(P16), p17: withSize(P17), p18: withSize(P18), p19: withSize(P19), p20: withSize(P20), p21: withSize(P21), p22: withSize(P22), p23: withSize(P23), p24: withSize(P24), p25: withSize(P25), p26: withSize(P26), p27: withSize(P27), p28: withSize(P28), p29: withSize(P29) };
