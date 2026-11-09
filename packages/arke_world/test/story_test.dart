@@ -7,6 +7,8 @@ import 'package:arke_world/arke_world.dart';
 import 'package:crypto/crypto.dart';
 import 'package:test/test.dart';
 
+import '../bin/pin_world.dart' as pin_cli;
+
 // SPEC-058 R-79 – R-82: these fixtures are the ones ArkeStudio's contracts write and read, so both
 // readers agree on every verdict, and both evaluators on every step of every route (R-81). A change to
 // either evaluator lands with regenerated fixtures, or not at all.
@@ -488,9 +490,8 @@ void main() {
     test('pin_world prints it as the production’s story, with its version, never as its package', () async {
       final (manifest, files) = world(_read('synthetic.json'));
       final zip = pack(manifest, files);
-      final run = await Process.run(Platform.resolvedExecutable, ['run', 'bin/pin_world.dart', zip, 'https://example.org/low-water.zip', '--production']);
-      expect(run.exitCode, 0, reason: '${run.stderr}');
-      final printed = (jsonDecode(run.stdout as String) as Map<String, Object?>)['production']! as Map<String, Object?>;
+      final pin = await pin_cli.pinWorldPackage([zip, 'https://example.org/low-water.zip', '--production']);
+      final printed = pin['production']! as Map<String, Object?>;
       expect(printed.keys, unorderedEquals(['id', 'story']));
       final story = printed['story']! as Map<String, Object?>;
       expect((story['url'], story['version'], story['edition']), ('https://example.org/low-water.zip', 1, '2026-10-28'));

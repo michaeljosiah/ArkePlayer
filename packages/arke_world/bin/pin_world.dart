@@ -20,28 +20,39 @@ import 'package:crypto/crypto.dart';
 /// A story (R-79, R-82), an interactive movie or a visual novel, is a production package too, pinned
 /// with `--production`: it prints the pin with the story document's `version` as the production's
 /// `story`, never as its `package`, which every Player of rev 11 would fetch and could not play.
+/// A graphic novel (SPEC-064 R-51) is likewise pinned as `comic`, with its document's version.
+///
 ///   `dart run arke_world:pin_world <package.zip> <https url>`
 ///   `dart run arke_world:pin_world <part.zip> <https url> --follows <edition fingerprint>`
 ///   `dart run arke_world:pin_world <production.zip> <https url> --production`
 Future<void> main(List<String> args) async {
+  try {
+    stdout.writeln(const JsonEncoder.withIndent('  ').convert(await pinWorldPackage(args)));
+  } on PinRefused catch (refused) {
+    stderr.writeln(refused.reason);
+    exitCode = refused.exitCode;
+  }
+}
+
+/// Reads the package structure and documents, then hashes the outer archive. This does not verify
+/// every inventory asset's bytes: admission and installation must still perform those checks.
+/// Kept separate from stdout and process exit so pin compatibility is tested without a subprocess.
+Future<Map<String, Object?>> pinWorldPackage(List<String> args) async {
   final follows = args.length == 4 && args[2] == '--follows' ? args[3] : null;
   final alone = args.length == 3 && args[2] == '--production';
   if (args.length != 2 && follows == null && !alone) {
-    stderr.writeln('usage: dart run arke_world:pin_world <package.zip> <https url> [--follows <edition fingerprint> | --production]');
-    exit(64);
+    throw const PinRefused(64, 'usage: dart run arke_world:pin_world <package.zip> <https url> [--follows <edition fingerprint> | --production]');
   }
   final zip = File(args[0]);
-  final url = Uri.parse(args[1]);
-  if (url.scheme != 'https') {
-    stderr.writeln('a world is published over HTTPS');
-    exit(64);
+  final url = Uri.tryParse(args[1]);
+  if (url == null || url.scheme != 'https' || url.host.isEmpty) {
+    throw const PinRefused(64, 'a world is published over HTTPS');
   }
   final WorldManifest manifest;
   try {
     manifest = readWorldPackage(zip.path);
   } on WorldPackageRefused catch (refused) {
-    stderr.writeln('not a package the Player reads: ${refused.reason}');
-    exit(65);
+    throw PinRefused(65, 'not a package the Player reads: ${refused.reason}');
   }
   final digest = await sha256.bind(zip.openRead()).first;
   final pin = {
@@ -52,64 +63,66 @@ Future<void> main(List<String> args) async {
     'fingerprint': editionFingerprint(manifest),
   };
   if (alone != manifest.alone) {
-    stderr.writeln(
+    throw PinRefused(
+      manifest.alone ? 64 : 65,
       manifest.alone
           ? 'a production published alone is pinned with --production, on its listed production'
           : 'not a production package: --production is for one',
     );
-    exit(manifest.alone ? 64 : 65);
   }
   if (alone) {
     final production = manifest.productions.single;
-    stdout.writeln(
-      const JsonEncoder.withIndent('  ').convert({
-        'production': manifest.stories.containsKey(production.id)
-            // The reader reads only the versions this Player plays, so the document is one of them.
-            ? {
-                'id': production.id,
-                'story': {...pin, 'version': storyVersion},
-              }
-            : {'id': production.id, 'package': pin, if (manifest.music[production.id] case final music?) 'music': music.kind.name},
-      }),
-    );
-    return;
+    // readWorldPackage accepts only the document versions this Player understands. Dedicated keys
+    // let older readers ignore unsupported stories/comics without fetching a generic package.
+    return {
+      'production': {
+        'id': production.id,
+        if (manifest.comics.containsKey(production.id))
+          'comic': {...pin, 'version': comicVersion}
+        else if (manifest.stories.containsKey(production.id))
+          'story': {...pin, 'version': storyVersion}
+        else ...{
+          'package': pin,
+          if (manifest.music[production.id] case final music?) 'music': music.kind.name,
+        },
+      },
+    };
   }
   final part = manifest.part;
   if (part == null) {
     if (follows != null) {
-      stderr.writeln('not a part: --follows is for a part');
-      exit(64);
+      throw const PinRefused(64, 'not a part: --follows is for a part');
     }
-    stdout.writeln(const JsonEncoder.withIndent('  ').convert(pin));
-    return;
+    return pin;
   }
   if (follows == null) {
-    stderr.writeln('a part is pinned with --follows <the fingerprint of the edition in its list entry>');
-    exit(64);
+    throw const PinRefused(64, 'a part is pinned with --follows <the fingerprint of the edition in its list entry>');
   }
   if (part.fingerprint != follows) {
-    stderr.writeln('this part follows another edition (${part.follows}), not the one given');
-    exit(65);
+    throw PinRefused(65, 'this part follows another edition (${part.follows}), not the one given');
   }
   final production = manifest.productions.single;
   final document = manifest.listening[production.id];
   // The day it is released: its edition label's date, which the Studio writes.
   final released = parseDay(manifest.edition.length >= 10 ? manifest.edition.substring(0, 10) : manifest.edition);
   if (released == null) {
-    stderr.writeln('the part is labelled ${manifest.edition}, which names no day');
-    exit(65);
+    throw PinRefused(65, 'the part is labelled ${manifest.edition}, which names no day');
   }
-  stdout.writeln(
-    const JsonEncoder.withIndent('  ').convert({
-      'part': {
-        ...pin,
-        'released': dayText(released),
-        'production': production.id,
-        'chapters': [
-          for (final chapter in document?.chapters ?? const <ListeningChapter>[]) {'id': chapter.id, 'number': chapter.order, 'title': chapter.title},
-        ],
-      },
-      'production': {'id': production.id, if (part.schedule != null) 'schedule': part.schedule!.toJson()},
-    }),
-  );
+  return {
+    'part': {
+      ...pin,
+      'released': dayText(released),
+      'production': production.id,
+      'chapters': [
+        for (final chapter in document?.chapters ?? const <ListeningChapter>[]) {'id': chapter.id, 'number': chapter.order, 'title': chapter.title},
+      ],
+    },
+    'production': {'id': production.id, if (part.schedule != null) 'schedule': part.schedule!.toJson()},
+  };
+}
+
+class PinRefused implements Exception {
+  const PinRefused(this.exitCode, this.reason);
+  final int exitCode;
+  final String reason;
 }
