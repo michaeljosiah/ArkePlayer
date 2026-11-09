@@ -143,6 +143,41 @@ void main() {
       expect(found(const GuideReach(revealed: {_ledger: 6})), ['The Chorister', 'The Weir', 'The Long Neap']);
     });
 
+    test('a description finds its entry as its name does; a section waiting for the story never does (P29 rule 9)', () {
+      const story = GuideAfter(production: _ledger, chapter: 'ch6', number: 6);
+      const described = Guide(
+        productions: [
+          GuideProduction(
+            id: _ledger,
+            title: 'The Ledger of Nights',
+            chapters: [
+              GuideChapter(id: 'ch1', number: 1),
+              GuideChapter(id: 'ch6', number: 6),
+            ],
+          ),
+        ],
+        characters: [
+          GuideCharacter(
+            id: 'maren-kest',
+            name: 'Maren Kest',
+            description: 'A tide-caller on the Vigil’s night crew, half deaf already.',
+            sections: [GuideSection(heading: 'Relationships', text: 'Trusts Bray with her life.', after: story)],
+          ),
+          GuideCharacter(id: 'the-chorister', name: 'The Chorister', description: 'Keeper of the drowned verse.', after: story, sections: []),
+        ],
+        places: [GuidePlace(id: 'the-vigil', name: 'The Vigil', description: 'A watchtower at the harbour mouth.', sections: [])],
+        lore: [],
+        story: story,
+      );
+      List<String> found(String query, [GuideReach reach = GuideReach.none]) =>
+          _found(searchWorlds(query, [_undersong], {'undersong': (guide: described, reach: reach)}));
+      expect(found('deaf'), ['Maren Kest']);
+      expect(found('watchtower'), ['The Vigil']);
+      expect(found('trusts'), isEmpty, reason: 'a section is never searched, however it waits');
+      expect(found('drowned'), isEmpty, reason: 'a description shows only with its entry');
+      expect(found('drowned', const GuideReach(revealed: {_ledger: 6})), ['The Chorister']);
+    });
+
     test('a world with no guide on the phone is found by its list alone', () {
       expect(_found(searchWorlds('und', [_undersong], const {})), ['The Undersong']);
       expect(searchWorlds('ade', [_undersong], const {}), isEmpty);

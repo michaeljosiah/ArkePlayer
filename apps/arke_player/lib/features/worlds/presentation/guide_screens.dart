@@ -64,6 +64,9 @@ class GuideEntryScreen extends ConsumerWidget {
       for (final other in [for (final id in ids) ?guide.guide.entry(id)])
         if (reach.shows(other.after) && other is! GuideLore) other,
     ];
+    // Every public section of a version 4 guide waits for the story's end (SPEC-059 R-42), which a
+    // row then names as `After the story`; an older guide has none, and reads as it always has.
+    final story = guide.guide.story;
     final music = ref.watch(worldMusicProvider(worldId)).value ?? const <MusicAlbum>[];
     final listed = listedFor(ref.watch(catalogueProvider).value ?? const [], worldId);
     final engine = ref.watch(audioEngineProvider);
@@ -124,8 +127,9 @@ class GuideEntryScreen extends ConsumerWidget {
                 child: ListView(
                   padding: EdgeInsets.only(top: 16, bottom: footRoom(context)),
                   children: [
+                    if (entry.description case final description?) GuideDescription(description, padding: const EdgeInsets.fromLTRB(16, 6, 16, 4)),
                     ...themed(entry.theme),
-                    GuideProse(sections: entry.sections, reach: reach, onReveal: ask),
+                    GuideProse(sections: entry.sections, reach: reach, onReveal: ask, story: story),
                     if (linked(entry.links) case final withs when withs.isNotEmpty) ...[
                       const SectionHead('With'),
                       WithChips(guide: guide, entries: withs, onOpen: open),
@@ -159,8 +163,9 @@ class GuideEntryScreen extends ConsumerWidget {
                 null => null,
               },
             ),
+            if (entry.description case final description?) GuideDescription(description),
             ...themed(entry.theme),
-            GuideProse(sections: entry.sections, reach: reach, onReveal: ask),
+            GuideProse(sections: entry.sections, reach: reach, onReveal: ask, story: story),
             if (linked(entry.links) case final withs when withs.isNotEmpty) ...[
               const SectionHead('With'),
               WithChips(guide: guide, entries: withs, onOpen: open),
@@ -172,8 +177,9 @@ class GuideEntryScreen extends ConsumerWidget {
           padding: EdgeInsets.only(bottom: footRoom(context)),
           children: [
             WorldHero(picture: guidePicture(guide, entry), title: entry.name, meta: [placeKind(entry), ?world].join(' · ')),
+            if (entry.description case final description?) GuideDescription(description),
             ...themed(entry.theme),
-            GuideProse(sections: entry.sections, reach: reach, onReveal: ask),
+            GuideProse(sections: entry.sections, reach: reach, onReveal: ask, story: story),
             // Here: the characters linked to the place, either way round.
             if ([
                   for (final character in guide.guide.characters)

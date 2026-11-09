@@ -75,6 +75,15 @@ void main() {
           };
           expect(theme?.track, probe['track'], reason: probe['entry'] as String);
         }
+        // Revision 10 (R-44): the story's end every section waits for, and who has a description.
+        if (raw.containsKey('story')) expect(guide.story?.number, raw['story']);
+        if (raw['described'] case final List<Object?> described) {
+          final ids = [
+            for (final entry in guide.entries)
+              if (entry case GuideCharacter(description: _?) || GuidePlace(description: _?)) entry.id,
+          ];
+          expect(ids, described);
+        }
         for (final probe in (raw['after'] as List<Object?>? ?? const []).cast<Map<String, Object?>>()) {
           expect(
             _afterOf(guide, probe['entry']! as String, probe['section'] as int?)?.number,
@@ -360,6 +369,20 @@ void main() {
       expect(GuideReach(reached: {ledger.id: (at: 3, through: 3)}, revealed: {ledger.id: 6}).shows(six), isTrue);
       expect(GuideReach.none.shows(six), isFalse);
       expect(GuideReach.none.at(ledger.id), isNull);
+    });
+
+    // P29 rule 3: the story's end is its last chapter heard or read to the end, not begun.
+    test('a section waiting for the story shows once it is finished or revealed; any other gate as before', () {
+      final described = (readGuide(_read('descriptions.json'), _assets()) as GuideOk).guide;
+      final story = described.story!;
+      final end = described.characters.first.sections.first.after;
+      expect(end?.number, story.number);
+      bool shows(GuideReach reach) => reach.showsSection(end, story: story);
+      expect(shows(GuideReach(reached: {story.production: (at: 6, through: 6)})), isFalse, reason: 'the last chapter begun');
+      expect(shows(GuideReach(reached: {story.production: (at: 6, through: reachedAll)})), isTrue);
+      expect(shows(GuideReach(revealed: {story.production: 6})), isTrue);
+      expect(GuideReach(reached: {story.production: (at: 6, through: 6)}).showsSection(end), isTrue, reason: 'with no story it is any chapter');
+      expect(GuideReach.none.showsSection(null, story: story), isTrue);
     });
   });
 }

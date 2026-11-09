@@ -77,6 +77,15 @@ class GuideReach {
   /// Shown: public from the start, or after a chapter reached or revealed.
   bool shows(GuideAfter? after) => after == null || after.number <= max(reached[after.production]?.through ?? 0, revealed[after.production] ?? 0);
 
+  /// A section (SPEC-059 R-42, P29 rule 3). One that waits for the [story]'s end shows once the
+  /// story is finished, not when its last chapter begins: that chapter is where the ending is, and
+  /// beginning it is not having heard it. Revealed, or waiting for any other chapter, it shows as
+  /// [shows] says.
+  bool showsSection(GuideAfter? after, {GuideAfter? story}) {
+    if (after == null || story == null || after.production != story.production || after.chapter != story.chapter) return shows(after);
+    return (reached[after.production]?.through ?? 0) >= reachedAll || (revealed[after.production] ?? 0) >= after.number;
+  }
+
   /// The chapter the reader is at in [production], for Reveal's line; null before they start.
   int? at(String production) => switch (reached[production]?.at) {
     final int at when at > 0 => at,
