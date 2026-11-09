@@ -275,8 +275,12 @@ carries no panel boundaries: guided view is not in this version (P20 call 29). I
 the Studio's by the shared fixtures in `packages/arke_world/test/fixtures/comic`, which ArkeStudio's
 `scripts/comic-fixtures.ts` writes.
 
-**Listing it**: pin it with `pin_world` as a story is pinned, and set the pin on the listed production
-as `comic`, never `package` or `story`. A Player that does not know `comic` ignores it; this one
+**Listing it**: run `dart run arke_world:pin_world <comic.zip> <https url> --production`.
+The helper prints `production.id` and `production.comic`, including document `version: 1`, URL,
+archive byte length and SHA-256, edition and fingerprint. Set that `comic` on the listed production,
+never `package` or `story`. The helper reads the package structure and documents and hashes the outer
+archive; it does **not** verify every inventory asset. Admission and installation still verify all
+asset bytes before use. A Player that does not know `comic` ignores it; this one
 installs a `comic` in a version it reads (`supportedComicVersions`, version 1) and shows `Update app`
 for one it does not, fetching nothing (P20 call 28, P20h). Its kind line is `Graphic novel · N pages`,
 under Read.
