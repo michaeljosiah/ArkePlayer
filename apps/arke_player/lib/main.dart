@@ -11,6 +11,7 @@ import 'package:workmanager/workmanager.dart';
 
 import 'app/app.dart';
 import 'app/catalogue_channel.dart';
+import 'app/foreground_start.dart';
 import 'app/router/router.dart';
 import 'features/parts/application/notices.dart';
 import 'features/players/application/audio_engine.dart';
@@ -39,6 +40,9 @@ Future<void> main() async {
       rewindInterval: Duration(seconds: 15),
     ),
   );
+  // Headless media startup still gets its handler, but must not run Home's downloads or
+  // load/clean the library alongside the scheduler's separate inbox writer (P15i).
+  await waitForFirstForeground();
   // The daily check of Arke's list for a world's new chapters (SPEC-058 R-54); it is scheduled
   // only while a world's Notify is on.
   try {

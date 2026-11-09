@@ -63,6 +63,14 @@ changes, and a queue is reused only while its file, length and chapter metadata 
 newly installed chapter is not hidden behind an older queue. Places remain stored by chapter id
 and offset for illustrated narration. Regression coverage: `apps/arke_player/test/chapter_playback_test.dart`.
 
+Android's daily chapter worker registers the audio-service plugin, which can warm the main
+Flutter engine without an Activity. The audio handler is initialized, but UI startup waits for
+the first resumed lifecycle state. This keeps Home, library cleanup and foreground downloads
+from running alongside the worker's read-only library snapshot and inbox download (P15i,
+SPEC-058 R-51/R-54). When the user opens Player or its notification, normal startup resumes
+once; later background audio remains unaffected. Coverage: `foreground_start_test.dart` and
+the live dev scheduler rehearsal described in `live-publishing-rehearsal.md`.
+
 ## Layout bands
 
 Under 600 wide is a phone: four tabs in a bar, sheets from the foot. From 600 to 1099 is a Fold7 open or a tablet, and from 1100 up is wide: the tabs become an 88-wide rail and the shelves widen (P6 rule 5). `AdaptiveShell` decides by window width, never by device type, so a Fold changes shell when it unfolds.
