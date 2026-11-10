@@ -37,7 +37,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final catalogue = (ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[]).where((world) => world.package != null).toList();
+    final catalogue = (ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[]).where((world) => world.installable).toList();
     final guides = <String, SearchGuide>{};
     final pictures = <String, WorldGuide>{};
     final installed = ref.watch(libraryWorldsProvider).value ?? const <LibraryWorld>[];

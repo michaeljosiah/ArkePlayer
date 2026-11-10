@@ -42,7 +42,7 @@ class _WorldsScreenState extends ConsumerState<WorldsScreen> {
   Widget build(BuildContext context) {
     // Opening Worlds asks Arke's address for its list, at most once a day (P12 rule 1).
     ref.watch(catalogueRefreshProvider);
-    final catalogue = (ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[]).where((world) => world.package != null).toList();
+    final catalogue = (ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[]).where((world) => world.installable).toList();
     final genres = genresOf(catalogue);
     final genre = genres.contains(_genre) ? _genre : null;
     final shown = catalogue.where((world) => genre == null || world.genres.contains(genre)).toList();

@@ -56,7 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // The app opens here, so here the list is first asked for, at most once a day (P12 rule 1), and
     // each world's guide alone, for its faces and teasers (SPEC-059 R-31).
     ref.watch(catalogueRefreshProvider);
-    final catalogue = (ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[]).where((world) => world.package != null).toList();
+    final catalogue = (ref.watch(catalogueProvider).value ?? const <CatalogueWorld>[]).where((world) => world.installable).toList();
     for (final world in catalogue) {
       if (world.guide != null) ref.watch(guideFetchProvider(world.id));
     }
@@ -231,7 +231,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         logline: world.logline,
         onOpen: () => context.push(page),
         press: switch (state) {
-          _ when held != null || world.package == null => null,
+          _ when held != null || !world.installable => null,
           Installing() => BandPress(label: '${(state.fraction * 100).round()}%', progress: state.fraction, onPressed: () => context.push(page)),
           _ => BandPress(
             label: 'Start',

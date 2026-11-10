@@ -82,6 +82,8 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
   late final StorySaves _saves = ref.read(storySavesProvider.notifier);
   late final StoryVoice _voice = ref.read(storyVoiceProvider);
   bool _opening = false;
+  int _openRequest = 0;
+  Future<void> _pendingOpen = Future<void>.value();
 
   /// The controls show (P19 rule 2): a tap shows or hides them; while playing they rest after 2.5 s,
   /// and at a choice or an ending the top stays.
@@ -163,7 +165,8 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     _hold?.cancel();
     _keep(force: true);
     _reel?.changes.removeListener(_tick);
-    unawaited(_reel?.dispose());
+    _openRequest++;
+    unawaited(_pendingOpen.whenComplete(() async => _reel?.dispose()));
     unawaited(_voice.stop().catchError((Object _) {}));
     unawaited(WakelockPlus.disable().catchError((Object _) {}));
     super.dispose();
@@ -293,20 +296,33 @@ class _StoryPlayerState extends ConsumerState<_StoryPlayer> {
     return sum + (into < Duration.zero ? Duration.zero : (into > clip.to - clip.from ? clip.to - clip.from : into));
   }
 
-  Future<void> _open(int index, Duration offset, {required bool play}) async {
+  Future<void> _open(int index, Duration offset, {required bool play}) {
     final reel = _reel!;
     final clip = _scene.clips[_step.play[index]];
+    final path = widget.story.pathOf(clip.asset);
+    final request = ++_openRequest;
     _opening = true;
-    try {
-      await reel.open(widget.story.pathOf(clip.asset));
-      await reel.seek(clip.from + offset);
-      play ? await reel.play() : await reel.pause();
-    } on Object {
-      // A clip that will not open is passed over, as an empty scene is (SPEC-063 R-11).
-    } finally {
-      _opening = false;
-    }
-    if (mounted) setState(() {});
+    // P18 choices remain responsive while a native decoder opens the previous final frame.
+    // Serialize the shared reel and let only the newest request seek/play/pause it; an older
+    // final-frame load must never overwrite or pause the scene the reader has just selected.
+    return _pendingOpen = _pendingOpen.then((_) async {
+      bool current() => mounted && request == _openRequest;
+      if (!current()) return;
+      try {
+        await reel.open(path);
+        if (!current()) return;
+        await reel.seek(clip.from + offset);
+        if (!current()) return;
+        play ? await reel.play() : await reel.pause();
+      } on Object {
+        // A clip that will not open is passed over, as an empty scene is (SPEC-063 R-11).
+      } finally {
+        if (current()) {
+          _opening = false;
+          setState(() {});
+        }
+      }
+    });
   }
 
   void _tick() {

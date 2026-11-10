@@ -158,19 +158,17 @@ class WorldInstaller {
   /// Installs a world from Available (P9): download, check, and add at once.
   Future<LibraryWorld> install(CatalogueWorld world, {void Function(InstallStep step)? onStep, InstallCancel? cancel}) async {
     final package = world.package;
-    if (package == null) throw const NotAPackage();
+    if (!world.installable) throw const NotAPackage();
     for (final installed in store.worlds) {
       if (installed.id == world.id) return installed;
     }
     final control = cancel ?? InstallCancel();
     // The edition, every part since it and every production published on its own, a story this Player
     // plays among them: the world is installed when all of them are (R-50, R-72, R-83).
-    final alone = [for (final production in world.productions) ?production.alone];
-    final needed = await _checkSpace(
-      package.byteLength + package.parts.fold<int>(0, (sum, part) => sum + part.byteLength) + alone.fold<int>(0, (sum, pin) => sum + pin.byteLength),
-    );
+    final needed = await _checkSpace(world.downloadBytes);
     final staging = await store.stageWorld();
     try {
+      if (package == null) return await _installStandaloneWorld(world, staging, onStep, control);
       final zip = '${staging.path}${Platform.pathSeparator}package.zip';
       await _download(package, zip, onStep, control);
       control._check();
@@ -182,6 +180,45 @@ class WorldInstaller {
     } finally {
       if (await staging.exists()) await staging.delete(recursive: true);
     }
+  }
+
+  /// A first standalone production creates a local world container, not a fabricated edition.
+  /// Every supported production is verified before this container becomes visible in the library.
+  Future<LibraryWorld> _installStandaloneWorld(CatalogueWorld listed, Directory staging, void Function(InstallStep step)? onStep, InstallCancel control) async {
+    final content = Directory('${staging.path}${Platform.pathSeparator}world');
+    final container = LibraryWorld(
+      id: listed.id,
+      edition: '',
+      name: listed.name,
+      logline: listed.logline,
+      byteLength: 0,
+      installedAt: DateTime.now().toUtc(),
+      productions: const [],
+    );
+    final (world, items) = await _stageProductions(container, const [], content, staging, listed.productions, onStep, control);
+    // Keep a checked cover independently of a production's folder, which a later update replaces.
+    final picture = world.productions.map((production) => production.picture).whereType<String>().firstOrNull;
+    String? keyArt;
+    var coverBytes = 0;
+    if (picture != null) {
+      final relative = picture.substring('worlds/${world.id}/'.length);
+      final cover = await File('${content.path}/${relative.replaceAll('/', Platform.pathSeparator)}').copy('${content.path}/_cover');
+      coverBytes = await cover.length();
+      keyArt = 'worlds/${world.id}/_cover';
+    }
+    final installed = LibraryWorld(
+      id: world.id,
+      edition: '',
+      name: world.name,
+      logline: world.logline,
+      keyArt: keyArt,
+      byteLength: world.byteLength + coverBytes,
+      installedAt: world.installedAt,
+      productions: world.productions,
+    );
+    control._check();
+    await store.addWorld(installed, items, content);
+    return installed;
   }
 
   /// Adds a part to an installed world (SPEC-058 R-51): its pin's length and SHA-256, every file
@@ -292,37 +329,50 @@ class WorldInstaller {
     void Function(InstallStep step)? onStep,
     InstallCancel control,
   ) async {
+    final (world, items) = await _stageProductions(prepared.world, prepared.items, prepared.content, prepared.staging, listed, onStep, control);
+    return PreparedWorld(
+      manifest: prepared.manifest,
+      world: world,
+      items: items,
+      content: prepared.content,
+      staging: prepared.staging,
+      installed: prepared.installed,
+    );
+  }
+
+  Future<(LibraryWorld, List<LibraryItem>)> _stageProductions(
+    LibraryWorld initial,
+    List<LibraryItem> initialItems,
+    Directory content,
+    Directory staging,
+    List<CatalogueProduction> listed,
+    void Function(InstallStep step)? onStep,
+    InstallCancel control,
+  ) async {
     final alone = [
       for (final production in listed)
-        if (production.alone != null && installedProduction(production, prepared.world) == null) production,
+        if (production.alone != null && installedProduction(production, initial) == null) production,
     ];
-    if (alone.isEmpty) return prepared;
-    var world = prepared.world;
-    final items = [...prepared.items];
+    var world = initial;
+    final items = [...initialItems];
     final separator = Platform.pathSeparator;
     for (final production in alone) {
-      final zip = '${prepared.staging.path}${separator}production.zip';
+      control._check();
+      final zip = '${staging.path}${separator}production.zip';
       await _download(production.alone!, zip, onStep, control);
       control._check();
       // Checked aside, then moved to the folder its own production id names, which its files' paths
       // are under.
-      final checked = Directory('${prepared.staging.path}${separator}production');
+      final checked = Directory('${staging.path}${separator}production');
       final (added, addedItems) = await _describeProduction(zip, checked, world.id, production, onStep, control);
       if (added.package!.fingerprint != production.alone!.fingerprint) throw const FilesDoNotMatch(1);
-      final to = Directory('${prepared.content.path}${separator}_productions$separator${added.id}');
+      final to = Directory('${content.path}${separator}_productions$separator${added.id}');
       await to.parent.create(recursive: true);
       await checked.rename(to.path);
       world = world.copyWith(productions: [...world.productions, added], byteLength: world.byteLength + added.package!.byteLength);
       items.addAll(addedItems);
     }
-    return PreparedWorld(
-      manifest: prepared.manifest,
-      world: world,
-      items: List.unmodifiable(items),
-      content: prepared.content,
-      staging: prepared.staging,
-      installed: prepared.installed,
-    );
+    return (world, List<LibraryItem>.unmodifiable(items));
   }
 
   /// Carries the productions an installed world has on their own into its new edition (R-72): a

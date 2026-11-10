@@ -44,6 +44,19 @@ How a world gets onto Available (P9). The format is [ADR 0005](decisions/0005-wo
 6. **Ship a build, and publish the list.** The list ships with the app (P9 rule 1) and is also fetched from Arke's address (`arkeWorldsList` in `features/worlds/application/worlds.dart`, P12 rule 1), at most once a day. Raise the list's `serial` with every change, commit it, and upload the same `catalogue.json` there, the one file that is replaced in place (`gh release upload arke-player-worlds apps/arke_player/assets/worlds/catalogue.json --clobber --repo michaeljosiah/ArkeStudio`; the release, made 22 October 2026 at serial 1, is never marked Latest, so the Studio's own update check never sees it); a phone takes the list with the higher serial, so a new edition shows on installed phones without a build. A world appears on Available, or an installed world shows `Update`, once its package is pinned in the list a phone has.
 7. **Check it on a phone:** install it from Available, play the narration, and Read the book.
 
+## A standalone production first (SPEC-058 revision 18)
+
+A world may start with a standalone production before any root edition exists. Home, Worlds and
+Search offer it when at least one `package`, supported `story` or supported `comic` is pinned on a
+production. Start downloads and verifies every supported production before adding the world in
+one write. Stories remain under `story`; never put one under the root `package` just to make an
+older Player display it.
+
+The local container has no edition fingerprint and an empty edition label. Each production keeps
+its own edition, fingerprint and saved progress. Its verified cover is retained locally, including
+after catalogue withdrawal. A root edition published later is a normal Update and preserves the
+standalone productions. Worlds containing only unsupported formats are not offered or downloaded.
+
 ## Releasing new chapters as a part (SPEC-058 R-43 – R-56, P15)
 
 A world released a chapter at a time is its edition and one part per release. A part is the

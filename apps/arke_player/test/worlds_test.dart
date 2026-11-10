@@ -167,6 +167,46 @@ Future<void> _pump(
 Finder _start([String size = '386 MB']) => find.text('Start · $size', findRichText: true);
 
 void main() {
+  final standalone = CatalogueWorld(
+    id: 'motion-garden',
+    name: 'Motion Garden',
+    productions: [
+      CatalogueProduction(
+        id: 'paper-lights',
+        title: 'Paper Lights',
+        kind: 'Interactive movie',
+        story: CatalogueStory(
+          url: Uri.parse('https://example.org/movie.zip'),
+          byteLength: 412922,
+          sha256: 'a' * 64,
+          edition: '2026-11-10',
+          fingerprint: 'b' * 64,
+          version: storyVersion,
+        ),
+      ),
+    ],
+  );
+  for (final location in [Routes.home, Routes.worlds, Routes.search]) {
+    testWidgets('a standalone movie world appears at $location without a root edition (P22)', (tester) async {
+      await _pump(tester, location: location, catalogue: [standalone]);
+      if (location == Routes.search) {
+        await tester.enterText(find.byType(TextField), 'Motion');
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Motion Garden'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+  }
+  testWidgets('a standalone movie world starts its verified install from the existing Start press (P25)', (tester) async {
+    final installer = _FakeInstaller();
+    await _pump(tester, location: Routes.world(standalone.id), catalogue: [standalone], installer: installer);
+    await tester.tap(_start(formatBytes(standalone.downloadBytes)));
+    await tester.pump();
+    await tester.pump();
+    expect(installer.installs, 1);
+    expect(find.text('Cancel'), findsOneWidget);
+  });
+
   group('a brand-new install (P25, call 37)', () {
     testWidgets('opens on Home, and a hosted world shows once the list arrives, with no file added', (tester) async {
       final fetched = Completer<void>();
