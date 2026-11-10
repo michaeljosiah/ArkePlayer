@@ -68,6 +68,36 @@ delivery, or a nontechnical creator/reviewer pilot. The AONIK runbook records
 package provenance, release/withdrawal operations and any device interruptions
 separately.
 
+## Native interactive movie (AONIK #403, Player #73)
+
+`integration_test/publishing_movie_dev_test.dart` is separately opt-in with
+`ARKE_LIVE_MOVIE_REHEARSAL=true` and the development channel. It is pinned to
+Motion Garden's exact synthetic archive. It uses the real app, normal Start install,
+native `VideoPlayer` controllers, real widget gestures and file-backed saves. No
+provider, HTTP or media fake is installed. The install phase verifies both clips'
+choices/endings and leaves a mid-scene friend-route save. Android screenshots and
+native controller positions are written beneath `files/arke-worlds-dev/movie-evidence`.
+
+Build with the same profile/ABI and replace-only procedure above, changing the target
+to this test and the opt-in define to `ARKE_LIVE_MOVIE_REHEARSAL=true`. Connect the
+existing VM service with the same driver. The test-control file
+`files/arke-worlds-dev/movie-rehearsal-phase.txt` selects `install` (default), `offline`,
+`refresh` or `withdrawn`. This file is test orchestration, not a saved library record.
+
+After `install`, back up all app files, disable both emulator radios, verify no default
+network, force-stop and launch the same APK with `offline`. It checks Continue resumes
+the saved native video time and route, observes advancement and pauses again. Restore
+networking, withdraw through AONIK's normal authorised workflow, and run `refresh` to
+check a newer catalogue without this world. Disable radios and cold-start `withdrawn`
+to repeat retained playback. Restore networking and the normal dev APK in place.
+Each pass file is written only after all assertions. Record the OS network observations
+separately; a phase named `offline` does not itself disable connectivity.
+
+The first movie batch used a fresh 12 GiB Android 16 emulator after the older device
+refused replacement for insufficient storage. Its original library remained byte-identical.
+Record Windows capture failures separately from on-device screenshots and native decoder
+results; emulator evidence does not qualify physical Android or iOS.
+
 ## Android background chapter notices (P15i)
 
 Use an ordinary dev APK and a separate synthetic world with one installed audio
