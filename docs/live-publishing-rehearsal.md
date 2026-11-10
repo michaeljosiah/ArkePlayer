@@ -99,6 +99,9 @@ check a newer catalogue without this world. Disable radios and cold-start `withd
 to repeat retained playback. Restore networking and the normal dev APK in place.
 Each pass file is written only after all assertions. Record the OS network observations
 separately; a phase named `offline` does not itself disable connectivity.
+If a test interruption leaves the movie at its ending, the optional `replay` phase uses
+Continue, Back to last choice and the friend choice to prepare a new paused position.
+Then repeat the cold `withdrawn` phase. It does not seed, restore or edit a saved position.
 
 The first movie batch used a fresh 12 GiB Android 16 emulator after the older device
 refused replacement for insufficient storage. Its original library remained byte-identical.

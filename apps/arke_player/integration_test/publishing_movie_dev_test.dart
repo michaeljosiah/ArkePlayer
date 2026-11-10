@@ -38,7 +38,7 @@ void main() {
     // External test control only; never a saved place. Reuse one APK across cold restarts.
     final phaseFile = File('${root.parent.path}/movie-rehearsal-phase.txt');
     final phase = await phaseFile.exists() ? (await phaseFile.readAsString()).trim() : 'install';
-    expect(['install', 'offline', 'refresh', 'withdrawn'], contains(phase));
+    expect(['install', 'offline', 'refresh', 'replay', 'withdrawn'], contains(phase));
     final proof = Directory('${root.parent.path}/movie-evidence')..createSync(recursive: true);
     final evidence = <String, Object?>{'phase': phase, 'checkedAtUtc': DateTime.now().toUtc().toIso8601String(), 'world': _world};
     final saveKey = LibraryStore.storyKey(_world, _production);
@@ -76,15 +76,21 @@ void main() {
           .controller;
     }
 
-    Future<void> leavePaused(VideoPlayerController video) async {
+    Future<void> leavePaused(VideoPlayerController video, {String? captureName}) async {
+      await tester.pump();
       if (find.byType(PlayPause).hitTestable().evaluate().isEmpty) {
-        await _tap(tester, find.byType(VideoPlayer));
+        await tester.tap(find.byType(VideoPlayer).first);
+        await tester.pump();
       }
-      await _tap(tester, find.byType(PlayPause));
+      // No route-transition delay here: the visible controls may be about to rest.
+      await _until(tester, () => find.byType(PlayPause).hitTestable().evaluate().isNotEmpty);
+      await tester.tap(find.byType(PlayPause).hitTestable().first);
+      await tester.pump();
       await _until(tester, () => !video.value.isPlaying);
       final position = video.value.position.inMilliseconds;
       expect(position, inInclusiveRange(1000, 11000));
       evidence['pausedAtMs'] = position;
+      if (captureName != null) await capture(captureName);
       router.go(Routes.libraryWorld(_world));
       await _until(tester, () => (store.stories[saveKey]?['at'] as int? ?? 0) >= position - 250);
       await tester.pump(const Duration(milliseconds: 500));
@@ -155,6 +161,16 @@ void main() {
       await _until(tester, () => resumedFriend.value.position.inMilliseconds >= 1500);
       await leavePaused(resumedFriend);
       evidence['bothEndings'] = true;
+    } else if (phase == 'replay') {
+      // Recover an interrupted test through ordinary controls; never inject progress.
+      expect(store.stories[saveKey]!['choosing'], isTrue);
+      router.go(Routes.production(Routes.libraryWorld(_world), _production));
+      await _tap(tester, find.textContaining('Continue'));
+      await _tap(tester, find.text('Back to last choice'));
+      await _tap(tester, find.text('Share it with a friend'));
+      final video = await playing('c003.mp4');
+      await _until(tester, () => video.value.position.inMilliseconds >= 1500);
+      await leavePaused(video, captureName: 'prepared-frame');
     } else if (phase == 'refresh') {
       await container.read(catalogueCheckProvider.notifier).check();
       expect(container.read(catalogueCheckProvider), CatalogueCheck.checked);
@@ -185,8 +201,7 @@ void main() {
       expect(first, lessThan((before['at']! as int) + 2000));
       await _until(tester, () => video.value.position.inMilliseconds > first + 700);
       evidence['resumedNativePositionsMs'] = [first, video.value.position.inMilliseconds];
-      await capture('resumed-frame');
-      await leavePaused(video);
+      await leavePaused(video, captureName: 'resumed-frame');
     }
     final reloaded = LibraryStore(root);
     await reloaded.load();
