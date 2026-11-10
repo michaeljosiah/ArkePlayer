@@ -74,9 +74,16 @@ separately.
 `ARKE_LIVE_MOVIE_REHEARSAL=true` and the development channel. It is pinned to
 Motion Garden's exact synthetic archive. It uses the real app, normal Start install,
 native `VideoPlayer` controllers, real widget gestures and file-backed saves. No
-provider, HTTP or media fake is installed. The install phase verifies both clips'
+provider, HTTP or media fake is installed. The install phase verifies all three clips and both
 choices/endings and leaves a mid-scene friend-route save. Android screenshots and
 native controller positions are written beneath `files/arke-worlds-dev/movie-evidence`.
+An interrupted playback run can use the existing verified installation and the ending's
+ordinary Start again control; it never injects a saved position or clears the library.
+
+The live run also exposed #75: a late final-frame decoder load could pause the clip
+selected from a new choice. Native reel requests are serialized and stale requests cannot
+seek, play or pause the latest scene. A delayed-load regression fails on the old code and
+passes with the repair; the native replay exercises Back to last choice and the same branch again.
 
 Build with the same profile/ABI and replace-only procedure above, changing the target
 to this test and the opt-in define to `ARKE_LIVE_MOVIE_REHEARSAL=true`. Connect the

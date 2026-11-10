@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:arke_player/app/router/routes.dart';
 import 'package:arke_player/features/players/presentation/chrome.dart';
 import 'package:arke_player/features/stories/application/stories.dart';
@@ -559,6 +561,20 @@ void main() {
 
   // P19 call 27: an interactive movie's controls are a film's.
   group('an interactive movie (P19f)', () {
+    testWidgets('choosing while the previous scene opens cannot pause the selected scene', (tester) async {
+      final reel = _DelayedFirstOpenReel();
+      final saves = saved(lowStory, saveAt(lowWater, const []));
+      await pumpStories(tester, Routes.story(worldId, lowWaterId), stories: stories, saves: saves, reel: () => reel);
+      await tester.tap(find.text('Follow the lantern'));
+      await tester.pump();
+      reel.opening.complete();
+      await tester.pumpAndSettle();
+      expect(reel.playing, isTrue, reason: 'a late final-frame load must not pause the newly selected clip');
+      expect(reel.position, Duration.zero);
+      expect(saves.kept.last!['route'], ['ch_follow']);
+      expect(saves.kept.last!['at'], 0);
+    });
+
     testWidgets('back 10 and forward 10 within the scene; the controls rest while it plays, and a tap shows them', (tester) async {
       final reel = PictureReel();
       final saves = saved(lowStory, saveAt(lowWater, const [], place: const StoryAt(Duration(seconds: 20))));
@@ -584,6 +600,20 @@ void main() {
       expect(reel.position, Duration.zero, reason: 'a tap never moves on');
     });
   });
+}
+
+class _DelayedFirstOpenReel extends PictureReel {
+  final opening = Completer<void>();
+  bool _first = true;
+
+  @override
+  Future<void> open(String path) async {
+    if (_first) {
+      _first = false;
+      await opening.future;
+    }
+    await super.open(path);
+  }
 }
 
 /// First Contact as P19d and P19e draw it: a visual novel with no voices, Imani's line, the narration

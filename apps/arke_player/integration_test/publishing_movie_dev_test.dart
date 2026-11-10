@@ -50,18 +50,30 @@ void main() {
     await tester.pump();
 
     Future<void> capture(String name) async {
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump();
+      // Android's image surface can still hold the prior raster frame on the first read.
+      await binding.takeScreenshot('movie-$phase-$name-frame');
+      await tester.pump(const Duration(milliseconds: 100));
       final bytes = await binding.takeScreenshot('movie-$phase-$name');
       await File('${proof.path}/$phase-$name.png').writeAsBytes(bytes, flush: true);
     }
 
-    Future<VideoPlayerController> playing(String clip) async {
+    Future<VideoPlayerController> playing(String clip, {VideoPlayerController? previous}) async {
       await _until(tester, () {
         final widgets = tester.widgetList<VideoPlayer>(find.byType(VideoPlayer));
         return widgets.any(
-          (widget) => widget.controller.dataSource.endsWith(clip) && widget.controller.value.isInitialized && widget.controller.value.isPlaying,
+          (widget) =>
+              widget.controller != previous &&
+              widget.controller.dataSource.endsWith(clip) &&
+              widget.controller.value.isInitialized &&
+              widget.controller.value.isPlaying,
         );
       });
-      return tester.widgetList<VideoPlayer>(find.byType(VideoPlayer)).firstWhere((widget) => widget.controller.dataSource.endsWith(clip)).controller;
+      return tester
+          .widgetList<VideoPlayer>(find.byType(VideoPlayer))
+          .firstWhere((widget) => widget.controller != previous && widget.controller.dataSource.endsWith(clip))
+          .controller;
     }
 
     Future<void> leavePaused(VideoPlayerController video) async {
@@ -85,11 +97,27 @@ void main() {
       final listed = catalogue.singleWhere((world) => world.id == _world);
       expect(listed.package, isNull);
       expect(listed.productions.single.story!.sha256, _archive);
-      expect(store.worlds.where((world) => world.id == _world), isEmpty, reason: 'Use the fresh movie emulator for the first install.');
+      // A harness interrupted after download can resume the same verified installation.
+      // Never clear a real library or manufacture a story save to make a rehearsal repeatable.
+      final priorSave = store.stories[saveKey];
+      evidence['saveBeforePlaybackPhase'] = priorSave;
+      evidence['installedBeforePlaybackPhase'] = store.worlds.any((world) => world.id == _world);
       await _until(tester, () => find.text('Motion Garden Dev 403').evaluate().isNotEmpty);
       await capture('discovery');
       router.go(Routes.world(_world));
-      await _tap(tester, find.textContaining('Start ·', findRichText: true));
+      if (!store.worlds.any((world) => world.id == _world)) {
+        await _tap(tester, find.textContaining('Start ·', findRichText: true));
+        await _until(tester, () => store.worlds.any((world) => world.id == _world));
+      }
+      final installed = store.worlds.singleWhere((world) => world.id == _world);
+      expect(installed.productions.single.package!.fingerprint, '6a3becceacd341d81ee2d5b43c23a6f60cb5fb81157641b26e4755daef106e54');
+      await capture('installed');
+      router.go(Routes.production(Routes.libraryWorld(_world), _production));
+      await _tap(tester, find.textContaining(priorSave == null ? 'Play' : 'Continue', findRichText: true));
+      if (priorSave != null) {
+        // Retry a completed branch through the ordinary ending's Start again control.
+        await _tap(tester, find.text('Start again'));
+      }
       final seed = await playing('c001.mp4');
       expect(seed.value.size.width, 640);
       expect(seed.value.size.height, 360);
@@ -108,7 +136,7 @@ void main() {
       await _until(tester, () => sun.value.position.inMilliseconds >= 1200);
       evidence['sunNativePositionMs'] = sun.value.position.inMilliseconds;
       await capture('sun-playing');
-      await _until(tester, () => find.text('A golden light').evaluate().isNotEmpty);
+      await _until(tester, () => find.text('Back to last choice').hitTestable().evaluate().isNotEmpty);
       expect(store.stories[saveKey]!['route'], ['ch_sun']);
       await capture('sun-ending');
       await _tap(tester, find.text('Back to last choice'));
@@ -117,13 +145,13 @@ void main() {
       await _until(tester, () => friend.value.position.inMilliseconds >= 1200);
       evidence['friendNativePositionMs'] = friend.value.position.inMilliseconds;
       await capture('friend-playing');
-      await _until(tester, () => find.text('Lights together').evaluate().isNotEmpty);
+      await _until(tester, () => find.text('Back to last choice').hitTestable().evaluate().isNotEmpty);
       expect(store.stories[saveKey]!['route'], ['ch_friend']);
       await capture('friend-ending');
       // Leave a real mid-scene save for the separate process, with radios off.
       await _tap(tester, find.text('Back to last choice'));
       await _tap(tester, find.text('Share it with a friend'));
-      final resumedFriend = await playing('c003.mp4');
+      final resumedFriend = await playing('c003.mp4', previous: friend);
       await _until(tester, () => resumedFriend.value.position.inMilliseconds >= 1500);
       await leavePaused(resumedFriend);
       evidence['bothEndings'] = true;
@@ -181,9 +209,11 @@ void main() {
 }
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {
+  // Let a route's previous page leave before matching its identical Start press.
+  await tester.pump(const Duration(milliseconds: 400));
   await _until(tester, () => finder.hitTestable().evaluate().isNotEmpty);
   await tester.tap(finder.hitTestable().first);
-  await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump();
 }
 
 Future<void> _until(WidgetTester tester, bool Function() ready, {int seconds = 40}) async {
@@ -192,5 +222,4 @@ Future<void> _until(WidgetTester tester, bool Function() ready, {int seconds = 4
     await tester.pump(const Duration(milliseconds: 100));
   }
   expect(ready(), isTrue, reason: 'Timed out waiting for real native movie state.');
-  await tester.pump(const Duration(milliseconds: 100));
 }
