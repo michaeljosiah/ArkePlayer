@@ -227,8 +227,17 @@ class CatalogueWorld {
   final PicturePin? keyArtPin;
   final List<CatalogueProduction> productions;
 
-  /// Null until the world's package is published: such a world is not offered.
+  /// The world's edition, when published. Productions may be published first on their own.
   final CataloguePackage? package;
+
+  /// At least one published package this Player understands, including a standalone story.
+  bool get installable => package != null || productions.any((production) => production.alone != null);
+
+  /// All supported packages needed for a first install.
+  int get downloadBytes =>
+      (package?.byteLength ?? 0) +
+      (package?.parts ?? const <CataloguePart>[]).fold<int>(0, (sum, part) => sum + part.byteLength) +
+      productions.fold<int>(0, (sum, production) => sum + (production.alone?.byteLength ?? 0));
 
   /// The world's guide alone, pinned as its package is, so the world can be explored before it is
   /// installed (SPEC-059 R-10, R-23). Null when the world has none.
@@ -549,7 +558,7 @@ Catalogue newestCatalogue(Catalogue shipped, Catalogue? kept) {
 List<CatalogueWorld> availableWorlds(Iterable<CatalogueWorld> catalogue, Iterable<LibraryWorld> installed) {
   return [
     for (final world in catalogue)
-      if (world.package != null && !installed.any((installedWorld) => world.covers(installedWorld.id))) world,
+      if (world.installable && !installed.any((installedWorld) => world.covers(installedWorld.id))) world,
   ];
 }
 

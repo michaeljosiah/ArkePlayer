@@ -134,7 +134,7 @@ void main() {
     );
   }
 
-  CatalogueWorld listed(CataloguePackage edition, [CatalogueStory? pin]) => CatalogueWorld(
+  CatalogueWorld listed(CataloguePackage? edition, [CatalogueStory? pin]) => CatalogueWorld(
     id: 'the-undersong',
     name: 'The Undersong',
     productions: [
@@ -145,6 +145,53 @@ void main() {
   );
 
   LibraryProduction? ringOf(LibraryWorld world) => world.productions.where((production) => production.id == 'ring-once').firstOrNull;
+
+  test('a first standalone movie is available, verified and retained without inventing a world edition', () async {
+    final pin = await story('first');
+    final world = listed(null, pin);
+    expect(availableWorlds([world], store.worlds), [world]);
+    expect(world.downloadBytes, pin.byteLength);
+    final installed = await installer.install(world);
+    expect((installed.edition, installed.fingerprint), ('', null));
+    final held = ringOf(installed)!;
+    expect(File(store.resolve(held.story!.document)).existsSync(), isTrue);
+    final cover = File(store.resolve(installed.keyArt!));
+    expect(cover.readAsBytesSync(), File(store.resolve(held.picture!)).readAsBytesSync());
+    expect(await installer.install(world), same(installed));
+    expect(server.asked, ['ring-once-first.zip']);
+    expect(availableWorlds([world], store.worlds), isEmpty);
+    final reopened = LibraryStore(store.root);
+    await reopened.load();
+    expect(ringOf(reopened.worlds.single)!.story, isNotNull);
+    await reopened.close();
+    // A later world edition is a normal update, carrying the standalone movie with it.
+    final base = await edition();
+    expect(hasUpdate(listed(base, pin), installed), isTrue);
+    await installer.update(listed(base, pin));
+    expect(ringOf(store.worlds.single)!.package!.fingerprint, pin.fingerprint);
+    expect(File(store.resolve(ringOf(store.worlds.single)!.story!.document)).existsSync(), isTrue);
+  });
+
+  test('a standalone world remains absent on a bad digest, cancellation or insufficient space', () async {
+    final pin = await story('first');
+    server.files['ring-once-first.zip']![0] ^= 1;
+    await expectLater(installer.install(listed(null, pin)), throwsA(isA<FilesDoNotMatch>()));
+    expect(store.worlds, isEmpty);
+    expect(store.items, isEmpty);
+    final cancel = InstallCancel()..cancel();
+    await expectLater(installer.install(listed(null, pin), cancel: cancel), throwsA(isA<InstallCancelled>()));
+    final small = WorldInstaller(store: store, freeBytes: (_) async => 1);
+    await expectLater(small.install(listed(null, pin)), throwsA(isA<NeedsSpace>()));
+    expect(store.worlds, isEmpty);
+    expect(server.asked, ['ring-once-first.zip']);
+  });
+
+  test('a world with only an unsupported standalone movie is not offered or fetched', () async {
+    final world = listed(null, await story('future', version: storyVersion + 1));
+    expect(availableWorlds([world], const []), isEmpty);
+    await expectLater(installer.install(world), throwsA(isA<NotAPackage>()));
+    expect(server.asked, isEmpty);
+  });
 
   /// Low Water, drawn, published alone as the Studio writes it: the shared comic fixtures, every
   /// file they name given bytes of its own.
@@ -215,6 +262,34 @@ void main() {
     expect(File(store.resolve(held.comic!.document)).existsSync(), isTrue);
     expect(missingProductions(drawn(pin, low), store.worlds.single), isEmpty);
   });
+
+  for (final broken in [false, true]) {
+    test('first standalone movie and comic commit together; second package broken: $broken', () async {
+      final movie = await story('first');
+      final novel = await comic('first');
+      final world = CatalogueWorld(
+        id: 'the-undersong',
+        name: 'The Undersong',
+        productions: [
+          CatalogueProduction(id: 'ring-once', title: 'Ring Once', kind: 'Interactive movie', story: movie),
+          CatalogueProduction(id: 'low-water-drawn', title: 'Low Water, drawn', kind: 'Graphic novel', comic: novel),
+        ],
+      );
+      if (broken) {
+        server.files[novel.url.path.substring(1)]![0] ^= 1;
+        await expectLater(installer.install(world), throwsA(isA<FilesDoNotMatch>()));
+        expect(store.worlds, isEmpty);
+        expect(store.items, isEmpty);
+        expect(store.worldDirectory(world.id).existsSync(), isFalse);
+      } else {
+        final installed = await installer.install(world);
+        expect(installed.productions, hasLength(2));
+        expect(installed.productions.first.story, isNotNull);
+        expect(installed.productions.last.comic, isNotNull);
+      }
+      expect(server.asked, [movie.url.path.substring(1), novel.url.path.substring(1)]);
+    });
+  }
 
   test('one installed without its comic, by a Player before the fix, is fetched again and mended', () async {
     final pin = await edition();

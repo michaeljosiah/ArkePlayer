@@ -307,16 +307,13 @@ String? _whereIn(LibraryItem? item) {
 /// Asks once on an 18+ world (P22e, call 42), before anything downloads or plays.
 Future<bool> mayOpen(BuildContext context, WidgetRef ref, CatalogueWorld? listed, {required String press}) async {
   if (listed == null || !listed.adult) return true;
-  final size = listed.package == null ? null : formatBytes(worldBytes(listed));
+  final size = listed.installable ? formatBytes(worldBytes(listed)) : null;
   return askAdult(context, ref, title: listed.name, line: [...listed.genres.take(1), ?size].join(' · '), press: 'I am 18 or older · $press');
 }
 
 /// All a world's download comes to: its edition, every part since (SPEC-058 R-50) and the productions
 /// published alone beside it, as the installer adds them up.
-int worldBytes(CatalogueWorld world) =>
-    (world.package?.byteLength ?? 0) +
-    (world.package?.parts ?? const <CataloguePart>[]).fold<int>(0, (sum, part) => sum + part.byteLength) +
-    world.productions.fold<int>(0, (sum, production) => sum + (production.alone?.byteLength ?? 0));
+int worldBytes(CatalogueWorld world) => world.downloadBytes;
 
 /// A song played from where it is listed: no player's route opens for it, so nothing else would ask.
 Future<void> playSong(BuildContext context, WidgetRef ref, String worldId, VoidCallback play) async {
@@ -404,7 +401,7 @@ class WorldPress extends ConsumerWidget {
         ],
       ];
     } else {
-      if (listed == null || listed.package == null) return const SizedBox.shrink();
+      if (listed == null || !listed.installable) return const SizedBox.shrink();
       final press = online
           ? _Press(
               primary: true,

@@ -234,7 +234,7 @@ class InstallController extends Notifier<InstallState> {
     if (state is Installing) return;
     final cancel = _cancel = InstallCancel();
     final updating = ref.read(libraryWorldsProvider).value?.any((installed) => world.covers(installed.id)) ?? false;
-    state = Installing(Downloading(0, world.package?.byteLength ?? 0), updating: updating);
+    state = Installing(Downloading(0, world.downloadBytes), updating: updating);
     try {
       final installer = await ref.read(worldInstallerProvider.future);
       void onStep(InstallStep step) {
