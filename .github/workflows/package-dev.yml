@@ -41,7 +41,12 @@ jobs:
           printf '%s' "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/ci-test.jks"
           printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=arke-ci-test\nkeyPassword=%s\n' "$RUNNER_TEMP/ci-test.jks" "$PASSWORD" "$PASSWORD" > apps/arke_player/android/key.properties
       - name: Build the dev APK for phones and emulators
-        run: flutter build apk --release --dart-define=ARKE_CATALOGUE_CHANNEL=development
+        # Earlier device rehearsals used 4001. Reserve a higher, increasing range for
+        # distributable Dev updates so installing never requires clearing a library.
+        run: |
+          build_number=$((10000 + GITHUB_RUN_NUMBER))
+          echo "ARKE_DEV_BUILD_NUMBER=$build_number" >> "$GITHUB_ENV"
+          flutter build apk --release --build-number="$build_number" --dart-define=ARKE_CATALOGUE_CHANNEL=development
         working-directory: apps/arke_player
       - name: Record build identity and hash
         run: |
@@ -49,7 +54,7 @@ jobs:
           cp apps/arke_player/build/app/outputs/flutter-apk/app-release.apk dev-artifacts/ArkePlayerDev.apk
           cd dev-artifacts
           sha256sum ArkePlayerDev.apk > SHA256SUMS.txt
-          printf 'commit=%s\napplicationId=studio.arke.player.dev\nchannel=arke-worlds-dev\n' "$GITHUB_SHA" > build-info.txt
+          printf 'commit=%s\napplicationId=studio.arke.player.dev\nchannel=arke-worlds-dev\nversionCode=%s\n' "$GITHUB_SHA" "$ARKE_DEV_BUILD_NUMBER" > build-info.txt
       - uses: actions/upload-artifact@v4
         with:
           name: ArkePlayerDev-Android
