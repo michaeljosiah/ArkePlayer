@@ -11,8 +11,10 @@ builds can update the app while retaining downloaded works and progress. A missi
 fails the distributable build instead of silently generating a different key.
 
 Check the checksum and install the APK. For later updates, install over the same Dev application;
-do not uninstall or clear its data. The existing CI arm64 dev APK uses the same unsplit version
-code convention and stable key. The production Player and its library are separate.
+do not uninstall or clear its data. Distributable Dev builds use an increasing version code
+(`10000 +` the packaging workflow's run number), above the earlier rehearsal code 4001,
+and record it in `build-info.txt`. Use this workflow for subsequent Dev updates; an older
+ordinary CI artifact can be refused as a downgrade. The production Player and its library are separate.
 
 Open Available/Discover to fetch approved releases from `arke-worlds-dev`. Submitted or merely
 approved editions are not available until the authorised publisher releases them. Installed
