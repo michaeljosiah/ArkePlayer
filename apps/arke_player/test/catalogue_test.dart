@@ -174,13 +174,13 @@ void main() {
   });
 
   test('Na Love or Juju is pinned to its published package and its guide alone', () {
-    // The Studio's Export → Arke Player of the novel's final text as a book, all 26 chapters
-    // narrated between opening and closing credits, chapter 23's lagoon night told in full, and the
+    // The Studio's Export → Arke Player of the novel's final text as a book, a prologue and 26 chapters
+    // narrated between opening and closing credits, the prologue unnumbered at the lagoon, and the
     // guide alone beside it with its teasers and descriptions (SPEC-059 R-10, R-24, R-39).
     final juju = catalogue.singleWhere((world) => world.id == 'na-love-or-juju');
-    expect(juju.package!.sha256, '6a2f4469d4215e85c7e82f016b3355ead29a7cf57bcf35af5fa39919c86c9c2f');
-    expect(juju.package!.edition, '2026-11-10');
-    expect(juju.guide!.sha256, 'f2f2072c1407fd9db3b0e996bd422709595a10efaf15e3e426a65c784c9995bb');
+    expect(juju.package!.sha256, '791ce0ceee8661af580a9a96f987a5aeecdd168d2c3ed064b082703a18224459');
+    expect(juju.package!.edition, '2026-11-11');
+    expect(juju.guide!.sha256, 'd3f2cc4fd571728151c5679c46bceae6621ace8f55b06203eb5b3590df535005');
     expect(juju.productions.single.title, 'Na love or Juju');
   });
 }
