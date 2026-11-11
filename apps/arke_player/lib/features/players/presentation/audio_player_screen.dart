@@ -116,7 +116,7 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
               children: [
                 PlayerTop(
                   eyebrow: item.title,
-                  title: chaptered ? '${index + 1} · ${item.chapters[index].title}' : (item.author ?? item.format.label),
+                  title: chaptered ? numberedTitle(item.chapters, index) : (item.author ?? item.format.label),
                   actions: [if (chaptered) PlayerPress(icon: Icons.format_list_bulleted, label: 'Chapters', onPressed: () => _chapters(context))],
                 ),
                 const Spacer(),

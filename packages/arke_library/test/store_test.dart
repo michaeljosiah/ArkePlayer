@@ -251,5 +251,24 @@ void main() {
       );
       expect(whereLine(chaptered), 'Chapter 2 · 16 min left');
     });
+
+    test('a prologue takes no number and the chapters after it count from 1 (SPEC-047 R-2)', () {
+      const book = [
+        Chapter(title: 'Prologue — The Lagoon', start: Duration.zero),
+        Chapter(title: 'Gold on Gold', start: Duration(minutes: 8)),
+        Chapter(title: 'Interlude', start: Duration(minutes: 30)),
+        Chapter(title: 'Suya at Midnight', start: Duration(minutes: 33)),
+        Chapter(title: 'Epilogue', start: Duration(minutes: 60)),
+      ];
+      expect([for (var i = 0; i < book.length; i++) chapterNumber(book, i)], [null, 1, null, 2, null]);
+      expect(chapterName(book, 0), 'Prologue — The Lagoon');
+      expect(chapterName(book, 1), 'Chapter 1');
+      expect(numberedTitle(book, 3), '2 · Suya at Midnight');
+      expect(numberedTitle(book, 0), 'Prologue — The Lagoon');
+      expect(numberedChapters(book), 2);
+      // A title that only starts like one is a chapter's title, and a book with none counts by place.
+      const plain = [Chapter(title: 'Prologues and Endings', start: Duration.zero), Chapter(title: 'Neap', start: Duration(minutes: 9))];
+      expect([chapterNumber(plain, 0), chapterNumber(plain, 1)], [1, 2]);
+    });
   });
 }

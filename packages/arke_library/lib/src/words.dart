@@ -45,6 +45,31 @@ String? _extent(LibraryItem item) {
   return null;
 }
 
+final _outsideTheCount = RegExp(r'^(?:prologue|epilogue|interlude|preface|foreword|afterword)(?![\p{L}\p{N}])', caseSensitive: false, unicode: true);
+
+/// The number a chapter is called by (SPEC-047 R-2): its place among the chapters, counted without a prologue, an
+/// interlude or an epilogue before it, and none for one of those itself. The Studio's `chapterNumber`, read from the
+/// titles alone, so a package made before the rule is counted as the Studio now counts it.
+int? chapterNumber(List<Chapter> chapters, int index) {
+  if (_outsideTheCount.hasMatch(chapters[index].title.trim())) return null;
+  return index + 1 - chapters.take(index).where((chapter) => _outsideTheCount.hasMatch(chapter.title.trim())).length;
+}
+
+/// How many of the chapters take a number: the one after them is the next.
+int numberedChapters(List<Chapter> chapters) => chapters.where((chapter) => !_outsideTheCount.hasMatch(chapter.title.trim())).length;
+
+/// `Chapter 3`, or a prologue's own title: what a place in the book is called.
+String chapterName(List<Chapter> chapters, int index) => switch (chapterNumber(chapters, index)) {
+  final number? => 'Chapter $number',
+  null => chapters[index].title.trim(),
+};
+
+/// `3 · The Bell`, or a prologue's title alone.
+String numberedTitle(List<Chapter> chapters, int index) => switch (chapterNumber(chapters, index)) {
+  final number? => '$number · ${chapters[index].title}',
+  null => chapters[index].title,
+};
+
 /// Where a person is, for a Continue card (P1 rule 4): a chapter and the time left in it, else the
 /// time left; a page for a document.
 String whereLine(LibraryItem item) {
@@ -56,7 +81,7 @@ String whereLine(LibraryItem item) {
       final index = item.chapters.lastIndexWhere((chapter) => chapter.start <= position);
       if (index >= 0) {
         final end = index + 1 < item.chapters.length ? item.chapters[index + 1].start : item.duration!;
-        return 'Chapter ${index + 1} · ${_left(end - position)}';
+        return '${chapterName(item.chapters, index)} · ${_left(end - position)}';
       }
     }
     return _left(item.duration! - position);

@@ -42,7 +42,7 @@ class Dock extends ConsumerWidget {
             final art = engine.artwork.value;
             final cover = art == null ? kept : File(art);
             final total = engine.length.inMilliseconds;
-            final chapter = item.chapters.length > 1 ? 'Chapter ${engine.chapterAt(now) + 1} · ' : '';
+            final chapter = item.chapters.length > 1 ? '${chapterName(item.chapters, engine.chapterAt(now))} · ' : '';
             // A song's dock names the track over its album and skips to the next track where a
             // chapter's goes back 15 (SPEC-058 R-75, P17c).
             final album = engine.music;
