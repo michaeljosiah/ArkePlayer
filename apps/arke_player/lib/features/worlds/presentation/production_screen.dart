@@ -156,7 +156,7 @@ class ProductionScreen extends ConsumerWidget {
     if (position == null) return null;
     final index = _chapterAt(item);
     if (index == null) return formatClock(position);
-    return 'Chapter ${index + 1} · ${formatClock(position - item.chapters[index].start)}';
+    return '${chapterName(item.chapters, index)} · ${formatClock(position - item.chapters[index].start)}';
   }
 
   static int? _chapterAt(LibraryItem item) {
@@ -224,7 +224,7 @@ class ProductionContents extends ConsumerWidget {
       final length = ProductionScreen._chapterLength(narration, i);
       final into = i == currentAt ? narration.position : null;
       return _ChapterRow(
-        number: i + 1,
+        number: chapterNumber(narration.chapters, i),
         title: chapter.title,
         length: length,
         day: released[i],
@@ -253,8 +253,8 @@ class ProductionContents extends ConsumerWidget {
             _Ranged(count: narration.chapters.length, startsAt: currentAt ?? 0, row: row),
           if (next != null)
             _ChapterRow.soon(
-              number: narration.chapters.length + 1,
-              chapter: (lastNamed ?? narration.chapters.length) + 1,
+              number: numberedChapters(narration.chapters) + 1,
+              chapter: (lastNamed ?? numberedChapters(narration.chapters)) + 1,
               day: shortDate(next),
               episode: plan != null,
             ),
@@ -369,7 +369,8 @@ class _ChapterRow extends StatelessWidget {
   /// How far into the one you are in.
   final Duration? into;
 
-  final int number;
+  /// What the chapter is called by: none for a prologue (SPEC-047 R-2).
+  final int? number;
   final String title;
   final Duration? length;
   final String? day;
@@ -400,14 +401,14 @@ class _ChapterRow extends StatelessWidget {
             ] else
               SizedBox(
                 width: 28,
-                child: Text('$number', style: text.bodyMedium?.copyWith(color: muted)),
+                child: Text(number == null ? '' : '$number', style: text.bodyMedium?.copyWith(color: muted)),
               ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    episode && !soon ? '$number · $title' : title,
+                    episode && !soon && number != null ? '$number · $title' : title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: text.bodyMedium?.copyWith(
