@@ -26,8 +26,8 @@ String loreKindLabel(LoreKind kind) => switch (kind) {
   LoreKind.thread => 'Thread',
 };
 
-/// `After Chapter 6`.
-String afterLabel(GuideAfter after) => 'After Chapter ${after.number}';
+/// `After Chapter 6`, as the book calls the chapter (a prologue first makes its place 7).
+String afterLabel(GuideAfter after) => 'After ${after.called}';
 
 /// Whether a gate is the guide's story's end (SPEC-059 R-41, R-42), which every public section of a
 /// version 4 guide waits for.
@@ -520,7 +520,9 @@ Future<void> askReveal(BuildContext context, WidgetRef ref, String worldId, Worl
   final at = reach.at(after.production);
   final story = guide.guide.story;
   final end = isStoryEnd(after, story);
-  final line = [?production?.title, if (at != null) end ? 'you are at Chapter $at of ${after.number}' : 'you are at Chapter $at'].join(' · ');
+  final here = at == null ? null : production?.chapters.where((chapter) => chapter.number == at).firstOrNull?.called ?? 'Chapter $at';
+  final of = RegExp(r'^Chapter (\d+)$').firstMatch(after.called)?.group(1);
+  final line = [?production?.title, if (here != null) end && of != null ? 'you are at $here of $of' : 'you are at $here'].join(' · ');
   final revealed = await showArkeSheet<bool>(
     context,
     title: null,

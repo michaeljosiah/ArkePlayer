@@ -301,7 +301,7 @@ String? _whereIn(LibraryItem? item) {
   for (final (i, chapter) in item.chapters.indexed) {
     if (chapter.start <= position) index = i;
   }
-  return 'Chapter ${index + 1}';
+  return chapterName(item.chapters, index);
 }
 
 /// Asks once on an 18+ world (P22e, call 42), before anything downloads or plays.

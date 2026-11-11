@@ -34,7 +34,7 @@ typedef SearchGuide = ({Guide guide, GuideReach reach});
 
 /// A chapter of a production on this phone. A guide knows its chapters by number alone, so only a
 /// world that is here can be searched by a chapter's title.
-typedef SearchChapter = ({CatalogueWorld world, String production, String productionTitle, int number, String title});
+typedef SearchChapter = ({CatalogueWorld world, String production, String productionTitle, String called, String title});
 
 /// Searches Arke's list and each world's guide on the phone, with no account (P22 rule 10, call 43).
 /// A word of a name has to begin with what is typed, so `ade` finds Adeyemi and Ade's House but never
@@ -83,7 +83,7 @@ List<SearchHit> searchWorlds(String query, Iterable<CatalogueWorld> worlds, Map<
         SearchHit(
           kind: SearchKind.chapter,
           title: chapter.title,
-          line: 'Chapter ${chapter.number} · ${chapter.productionTitle}',
+          line: '${chapter.called} · ${chapter.productionTitle}',
           world: chapter.world,
           production: chapter.production,
         ),

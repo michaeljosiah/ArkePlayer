@@ -265,7 +265,7 @@ class ProductionContents extends ConsumerWidget {
             SongRow(
               title: song.album.tracks[song.track].title,
               line: [
-                if (heardPlace(song.heard, world: world, items: items, guide: guide)?.number case final number?) 'Chapter $number',
+                ?heardPlace(song.heard, world: world, items: items, guide: guide)?.called,
                 if (song.album.document.kind == MusicKind.single) 'Single' else song.album.title,
               ].join(' · '),
               cover: song.album.cover == null ? null : FileImage(File(song.album.cover!)),
