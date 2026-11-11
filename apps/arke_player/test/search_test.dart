@@ -70,7 +70,7 @@ final _dumah = CatalogueWorld(
 );
 
 SearchChapter _chapter(int number, String title) =>
-    (world: _undersong, production: _ledger, productionTitle: 'The Ledger of Nights', number: number, title: title);
+    (world: _undersong, production: _ledger, productionTitle: 'The Ledger of Nights', called: 'Chapter $number', title: title);
 
 List<String> _found(List<SearchHit> hits) => [for (final hit in hits) hit.title];
 
@@ -209,7 +209,7 @@ void main() {
         'salt',
         [first, second],
         {'first': (guide: salty, reach: GuideReach.none)},
-        chapters: [(world: first, production: 't', productionTitle: 'Salt Ledger', number: 1, title: 'Salt Water')],
+        chapters: [(world: first, production: 't', productionTitle: 'Salt Ledger', called: 'Chapter 1', title: 'Salt Water')],
       );
       expect([for (final hit in hits) hit.kind], SearchKind.values);
       expect([for (final kind in SearchKind.values) kind.heading], ['Worlds', 'Titles', 'Characters', 'Places', 'Lore', 'Chapters']);

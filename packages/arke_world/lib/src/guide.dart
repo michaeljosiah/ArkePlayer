@@ -34,19 +34,28 @@ enum LoreKind { lore, rule, timeline, location, faction, tone, thread }
 
 /// A chapter an entry or section waits for: a production of the guide and one of its chapters.
 class GuideAfter {
-  const GuideAfter({required this.production, required this.chapter, required this.number});
+  const GuideAfter({required this.production, required this.chapter, required this.number, String? called}) : _called = called;
   final String production;
   final String chapter;
 
-  /// The chapter's number as a reader knows it, After Chapter [number].
+  /// The chapter's place, which a reader's place is compared with.
   final int number;
+  final String? _called;
+
+  /// What the book calls it (SPEC-047 R-2), from the guide's `metadata.called`: `Chapter 1` where a
+  /// prologue makes the place 2, or the prologue's own title. A guide without it: `Chapter [number]`.
+  String get called => _called ?? 'Chapter $number';
 }
 
 /// A chapter of a production the guide names, with the number a reader knows it by.
 class GuideChapter {
-  const GuideChapter({required this.id, required this.number, this.book});
+  const GuideChapter({required this.id, required this.number, this.book, String? called}) : _called = called;
   final String id;
   final int number;
+  final String? _called;
+
+  /// What the book calls it, as [GuideAfter.called].
+  String get called => _called ?? 'Chapter $number';
 
   /// The EPUB content document this chapter reads, so a place in the book finds its chapter.
   final String? book;
@@ -340,12 +349,14 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
 
   final productions = <GuideProduction>[];
   final numbers = <String, Map<String, int>>{};
+  final names = <String, Map<String, String>>{};
   for (final raw in _list(json['productions'], 'productions', _maxProductions)) {
     final p = _object(raw, 'a production', {'id', 'title', 'chapters'});
     final id = _id(p['id'], 'production id');
     if (numbers.containsKey(id)) _notAPackage('production $id repeats');
     final chapters = <GuideChapter>[];
     final byId = <String, int>{};
+    final calledById = <String, String>{};
     for (final rawChapter in _list(p['chapters'], 'production $id chapters', _maxChapters)) {
       final c = _object(rawChapter, 'a chapter of $id', {'id', 'number', 'book'});
       final chapterId = _id(c['id'], 'production $id chapter id');
@@ -356,9 +367,16 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
       final book = c['book'];
       if (book != null && (book is! String || book.isEmpty || book.length > 512)) _notAPackage('production $id chapter $chapterId book');
       byId[chapterId] = number;
-      chapters.add(GuideChapter(id: chapterId, number: number, book: book as String?));
+      // `metadata` is the one key a reader may ignore (SPEC-058 R-15): a name that is not text is ignored.
+      final called = switch (c['metadata']) {
+        {'called': final String name} when name.trim().isNotEmpty && name.length <= 200 => name.trim(),
+        _ => null,
+      };
+      if (called != null) calledById[chapterId] = called;
+      chapters.add(GuideChapter(id: chapterId, number: number, book: book as String?, called: called));
     }
     numbers[id] = byId;
+    names[id] = calledById;
     productions.add(GuideProduction(id: id, title: _text(p['title'], 'production $id title'), chapters: List.unmodifiable(chapters)));
   }
 
@@ -369,7 +387,7 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
     final chapter = _id(a['chapter'], '$what after');
     final number = numbers[production]?[chapter];
     if (number == null) _notAPackage('$what: after names no chapter of the guide');
-    return GuideAfter(production: production, chapter: chapter, number: number);
+    return GuideAfter(production: production, chapter: chapter, number: number, called: names[production]?[chapter]);
   }
 
   String? asset(Object? id, Set<String> mediaTypes, String what) {
@@ -540,7 +558,7 @@ Guide _read(String text, Map<String, WorldAsset> assets) {
     final chapter = _id(t['chapter'], '$what chapter');
     final number = numbers[production]?[chapter];
     if (number == null) _notAPackage('$what names no chapter of the guide');
-    return GuideAfter(production: production, chapter: chapter, number: number);
+    return GuideAfter(production: production, chapter: chapter, number: number, called: names[production]?[chapter]);
   }
 
   final rawTeasers = _list(json['teasers'], 'teasers', 64);

@@ -54,8 +54,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       for (final held in installed)
         if (listedFor(catalogue, held.id) case final world?)
           for (final production in held.productions)
-            for (final (index, chapter) in (items[production.narration]?.chapters ?? const <Chapter>[]).indexed)
-              (world: world, production: production.id, productionTitle: production.title, number: index + 1, title: chapter.title),
+            if (items[production.narration]?.chapters case final narrated?)
+              for (final (index, chapter) in narrated.indexed)
+                (world: world, production: production.id, productionTitle: production.title, called: chapterName(narrated, index), title: chapter.title),
     ];
     final hits = searchWorlds(_field.text, catalogue, guides, chapters: chapters);
     final typed = _field.text.trim().isNotEmpty;

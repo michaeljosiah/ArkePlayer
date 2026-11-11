@@ -165,18 +165,13 @@ class _Teaser {
       ClipTeaser(:final title, :final picture, :final from, :final audio, :final duration) => _Teaser(
         kind: 'Clip · ${formatClock(duration)}',
         title: title,
-        line: 'Chapter ${from.number}',
+        line: from.called,
         picture: assetPicture(picture),
         soundLabel: 'Sound',
         audio: audio,
         length: duration,
       ),
-      PictureTeaser(:final title, :final picture, :final from) => _Teaser(
-        kind: 'Picture',
-        title: title,
-        line: 'Chapter ${from.number}',
-        picture: assetPicture(picture),
-      ),
+      PictureTeaser(:final title, :final picture, :final from) => _Teaser(kind: 'Picture', title: title, line: from.called, picture: assetPicture(picture)),
     };
   }
 

@@ -289,7 +289,7 @@ class _MusicPlayerScreenState extends ConsumerState<MusicPlayerScreen> {
                       PlayerLabelPress(label: 'Tracks', icon: Icons.format_list_bulleted, onPressed: () => _tracks(context, engine, album)),
                       if (opens != null)
                         PlayerLabelPress(
-                          label: 'Chapter ${opens.number}',
+                          label: opens.called ?? 'Chapter ${opens.number}',
                           icon: Icons.menu_book_rounded,
                           onPressed: () => openHeard(context, ref, opens, replace: true),
                         ),

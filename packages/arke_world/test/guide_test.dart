@@ -113,6 +113,25 @@ void main() {
       expect(guide.teasers, isEmpty);
     });
 
+    test('a chapter is named as the book calls it, while a gate keeps its place (SPEC-047 R-2)', () {
+      final json = jsonDecode(_read('valid.json')) as Map<String, Object?>;
+      final chapters = ((json['productions']! as List).single as Map<String, Object?>)['chapters']! as List;
+      // The Studio names each chapter in `metadata`, which a reader may ignore; a prologue first
+      // makes the book's Chapter 1 the guide's place 2.
+      (chapters.first as Map<String, Object?>)['metadata'] = {'called': 'Prologue'};
+      (chapters.last as Map<String, Object?>)['metadata'] = {'called': 'Chapter 5'};
+      final guide = (readGuide(jsonEncode(json), _assets()) as GuideOk).guide;
+      final named = guide.productions.single.chapters;
+      expect([for (final chapter in named) chapter.called], ['Prologue', 'Chapter ${named[1].number}', 'Chapter 5']);
+      expect([named.first.number, named.last.number], [1, 6]);
+      final gated = guide.characters.expand((character) => [?character.after, for (final section in character.sections) ?section.after]);
+      expect({for (final after in gated) after.number: after.called}, {6: 'Chapter 5'});
+      // A name that is not text is ignored, and a guide without one names the place.
+      (chapters.last as Map<String, Object?>)['metadata'] = {'called': 5};
+      final plain = (readGuide(jsonEncode(json), _assets()) as GuideOk).guide;
+      expect(plain.productions.single.chapters.last.called, 'Chapter 6');
+    });
+
     test('what a guide with teasers carries (R-28)', () {
       final guide = (readGuide(_read('teasers.json'), _assets()) as GuideOk).guide;
       final clip = guide.teasers[1] as ClipTeaser;

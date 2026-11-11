@@ -199,11 +199,14 @@ GuideEntry? themeEntry(Guide? guide, GuideReach reach, String productionId, Stri
 /// the chapter's number; and, when the production is installed, its narration and chapter to open
 /// at the moment. Before that the row only names it.
 class HeardPlace {
-  const HeardPlace({required this.title, required this.heard, this.number, this.narration, this.chapter});
+  const HeardPlace({required this.title, required this.heard, this.number, this.called, this.narration, this.chapter});
 
   final String title;
   final MusicHeardIn heard;
   final int? number;
+
+  /// What the book calls the chapter: the guide's name for it, else counted from the narration's titles.
+  final String? called;
   final LibraryItem? narration;
   final Chapter? chapter;
 
@@ -222,11 +225,13 @@ HeardPlace? heardPlace(MusicHeardIn heard, {LibraryWorld? world, Map<String, Lib
   if (title == null) return null;
   final narration = items[production?.narration];
   final index = narration?.chapters.indexWhere((chapter) => chapter.id == heard.chapter) ?? -1;
-  final number = told?.chapters.where((chapter) => chapter.id == heard.chapter).firstOrNull?.number;
+  final guided = told?.chapters.where((chapter) => chapter.id == heard.chapter).firstOrNull;
+  final number = guided?.number;
   return HeardPlace(
     title: title,
     heard: heard,
     number: number ?? (index >= 0 ? index + 1 : null),
+    called: guided?.called ?? (index >= 0 ? chapterName(narration!.chapters, index) : null),
     narration: index >= 0 ? narration : null,
     chapter: index >= 0 ? narration!.chapters[index] : null,
   );
