@@ -1,0 +1,58 @@
+name: Package Player Dev (Android)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['.github/workflows/package-dev.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    # Secrets never run in a fork. A distributable build must retain the stable test key.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.3
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Fit Gradle to the runner
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup
+          mkdir -p ~/.gradle
+          printf '%s\n' 'org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g' 'kotlin.daemon.jvmargs=-Xmx1g' >> ~/.gradle/gradle.properties
+      - name: Use the stable dev test signing key
+        env:
+          KEYSTORE: ${{ secrets.ARKE_CI_KEYSTORE_BASE64 }}
+          PASSWORD: ${{ secrets.ARKE_CI_KEYSTORE_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE" && test -n "$PASSWORD" || { echo 'Stable dev signing key is required'; exit 1; }
+          umask 077
+          printf '%s' "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/ci-test.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=arke-ci-test\nkeyPassword=%s\n' "$RUNNER_TEMP/ci-test.jks" "$PASSWORD" "$PASSWORD" > apps/arke_player/android/key.properties
+      - name: Build the dev APK for phones and emulators
+        run: flutter build apk --release --dart-define=ARKE_CATALOGUE_CHANNEL=development
+        working-directory: apps/arke_player
+      - name: Record build identity and hash
+        run: |
+          mkdir -p dev-artifacts
+          cp apps/arke_player/build/app/outputs/flutter-apk/app-release.apk dev-artifacts/ArkePlayerDev.apk
+          cd dev-artifacts
+          sha256sum ArkePlayerDev.apk > SHA256SUMS.txt
+          printf 'commit=%s\napplicationId=studio.arke.player.dev\nchannel=arke-worlds-dev\n' "$GITHUB_SHA" > build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArkePlayerDev-Android
+          path: dev-artifacts/
+          if-no-files-found: error
+          retention-days: 30
