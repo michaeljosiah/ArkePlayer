@@ -529,9 +529,11 @@ class _StoryHere extends ConsumerWidget {
         if (production.needsNewerApp && installedProduction(production, world) == null) production,
     ];
     final titles = <Object>[...world.productions, ...coming];
-    // On the phone alone: a world whose one title is still on its way has nothing of it to show yet.
+    // P22i / call 44 expands an audiobook's chapters. A book-only title needs its
+    // P22 poster: ProductionContents has no EPUB chapter rows to replace it.
     if (titles.length == 1 &&
         world.productions.length == 1 &&
+        world.productions.single.narration != null &&
         world.productions.single.story == null &&
         world.productions.single.comic == null &&
         world.productions.single.music == null) {

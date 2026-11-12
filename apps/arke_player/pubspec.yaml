@@ -58,6 +58,7 @@ flutter:
 
   # First open's picture (P8a): the app's own, bundled, since no world exists yet.
   assets:
+    - assets/reader/pagination.js
     - assets/images/first-open.jpg
     # The worlds that ship with the app (P9 rule 1): the list, and each world's key art and
     # production pictures, so Available shows offline.

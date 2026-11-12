@@ -43,6 +43,7 @@ You need Flutter 3.41 (Dart 3.11). On this machine one ships inside the `aonik` 
 
 ```bash
 flutter pub get
+node --test test/reader-pagination.test.mjs
 dart analyze --fatal-infos
 dart format --output=none --set-exit-if-changed .
 (cd packages/arke_publication && dart test)
