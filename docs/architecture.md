@@ -43,6 +43,21 @@ Domain code does not import Flutter where it can avoid it. Rules that need no wi
 
 ## The players
 
+The EPUB reader's P5e location is the first readable page, not a sub-pixel overlap
+from the preceding chapter. On Android at fractional device scale, epub.js's
+continuous manager can include that overlap in `visible()` and emit the preceding
+chapter's CFI. The bundled `assets/reader/pagination.js` filters overlaps of at most
+one CSS pixel in horizontal paginated layouts, retaining real partial pages and
+two-page spreads. `ReaderScreen` installs it for each new view and waits for a fresh
+location before persisting progress. Only the bundled script is evaluated; EPUB
+scripts remain disabled. Recheck this integration when upgrading
+`flutter_epub_viewer`; `node --test test/reader-pagination.test.mjs` covers the native
+reproduction bounds, RTL, spreads, scrolling and repeated callbacks.
+
+An installed book-only world's Story section keeps its P22 poster and Read action.
+The single-title shortcut to inline chapters applies to narrations, since EPUB
+chapters are read inside the reader rather than `ProductionContents`.
+
 | Player | Design | Implementation |
 |---|---|---|
 | Film | P3a, P3b (Studio 156's chrome) | Hosted Studio module |

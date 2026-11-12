@@ -16,6 +16,8 @@ jobs:
           node-version: 22
       - name: Check the design master
         run: node design/check.mjs
+      - name: Test EPUB pagination integration
+        run: node --test test/reader-pagination.test.mjs
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.41.3

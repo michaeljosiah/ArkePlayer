@@ -630,6 +630,35 @@ void main() {
     });
   });
 
+  testWidgets('an installed book-only world retains its Story poster and opens its title (P22, P28)', (tester) async {
+    final book = LibraryItem(
+      id: 'seed-library.book',
+      format: FileFormat.epub,
+      title: 'The Seed Library',
+      byteLength: 2000,
+      addedAt: _installedAt,
+      file: 'worlds/seed-library/book.epub',
+      worldId: 'seed-library',
+    );
+    final world = LibraryWorld(
+      id: 'seed-library',
+      edition: '2026-11-11',
+      name: 'Seed Garden',
+      byteLength: 2000,
+      installedAt: _installedAt,
+      productions: const [LibraryProduction(id: 'seed', title: 'The Seed Library', book: 'seed-library.book')],
+    );
+    await _pump(tester, location: Routes.libraryWorld(world.id), worlds: [world], items: [book], catalogue: []);
+    final poster = find.ancestor(of: find.text('The Seed Library'), matching: find.byType(PosterTile));
+    expect(poster, findsOneWidget);
+    expect(tester.widget<KindMark>(find.descendant(of: poster, matching: find.byType(KindMark))).kind, ProductionKind.book);
+    await _reveal(tester, poster);
+    await tester.tap(poster);
+    await tester.pumpAndSettle();
+    expect(find.byType(ProductionScreen), findsOneWidget);
+    expect(find.text('Read'), findsOneWidget);
+  });
+
   group('a production released a chapter at a time (P15e; SPEC-058 R-52, R-53)', () {
     final whispers = Routes.production(Routes.libraryWorld('legend-of-dumah'), 'whispers');
 

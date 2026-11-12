@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:arke_library/arke_library.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_epub_viewer/flutter_epub_viewer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,6 +28,28 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   final _controller = EpubController();
   List<EpubChapter> _chapters = const [];
   EpubLocation? _location;
+  late final Future<String> _paginationScript = rootBundle.loadString('assets/reader/pagination.js');
+  EpubSpread? _spread;
+  int _paginationGeneration = 0;
+  Future<void>? _paginationSetup;
+  bool _paginationReady = false;
+
+  Future<void> _preparePagination(int generation) async {
+    try {
+      final script = await _paginationScript;
+      if (!mounted || generation != _paginationGeneration) return;
+      // Only this bundled script is evaluated; no book content is executable.
+      await _controller.webViewController!.callAsync('eval', [script]);
+      if (!mounted || generation != _paginationGeneration) return;
+      final location = await _controller.getCurrentLocation();
+      if (!mounted || generation != _paginationGeneration) return;
+      _paginationReady = true;
+      _relocated(location);
+    } on Object catch (error, stack) {
+      // Keep the last saved place if the renderer could not establish a reliable one.
+      FlutterError.reportError(FlutterErrorDetails(exception: error, stack: stack, library: 'Arke EPUB pagination'));
+    }
+  }
 
   static const _papers = {
     ReaderPaper.paper: (background: Color(0xFFFFFFFF), ink: Color(0xFF0A0A0A)),
@@ -68,6 +91,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         : size.width >= WindowBands.fold && size.width / size.height < 0.8
         ? EpubSpread.none
         : EpubSpread.auto;
+    if (_spread != spread) {
+      _spread = spread;
+      _paginationGeneration++;
+      _paginationSetup = null;
+      _paginationReady = false;
+    }
+    final generation = _paginationGeneration;
     return Scaffold(
       backgroundColor: colours.background,
       body: SafeArea(
@@ -124,7 +154,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   theme: _theme(settings.readerPaper),
                 ),
                 onChaptersLoaded: (chapters) => setState(() => _chapters = chapters),
-                onRelocated: _relocated,
+                onEpubLoaded: () {
+                  if (generation == _paginationGeneration) _paginationSetup ??= _preparePagination(generation);
+                },
+                onRelocated: (location) {
+                  if (generation == _paginationGeneration && _paginationReady) _relocated(location);
+                },
               ),
             ),
             Padding(
