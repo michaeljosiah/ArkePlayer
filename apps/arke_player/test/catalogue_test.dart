@@ -178,8 +178,8 @@ void main() {
     // narrated between opening and closing credits, the prologue unnumbered at the lagoon, and the
     // guide alone beside it with its teasers and descriptions (SPEC-059 R-10, R-24, R-39).
     final juju = catalogue.singleWhere((world) => world.id == 'na-love-or-juju');
-    expect(juju.package!.sha256, '791ce0ceee8661af580a9a96f987a5aeecdd168d2c3ed064b082703a18224459');
-    expect(juju.package!.edition, '2026-11-11');
+    expect(juju.package!.sha256, '775e269f2eb146f312d548841a2cfce78c3e18c9b8c5b69f1e5e2b8fd30b3071');
+    expect(juju.package!.edition, '2026-11-17');
     expect(juju.guide!.sha256, 'd3f2cc4fd571728151c5679c46bceae6621ace8f55b06203eb5b3590df535005');
     expect(juju.productions.single.title, 'Na love or Juju');
   });
